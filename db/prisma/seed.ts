@@ -1,213 +1,195 @@
-import { PrismaClient } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
+const { PrismaClient } = require('../generated/prisma-client');
+const bcrypt = require('bcrypt');
+
+console.log('Starting seed2.ts...');
 
 const prisma = new PrismaClient();
 
+console.log('PrismaClient created');
+
 async function main() {
-  const user1 = await prisma.user.create({
-    data: {
-      id: uuidv4(),
-      email: 'hans.schmidt@example.com',
-      name: 'Hans Schmidt',
-      password: 'hashedpassword1',
-    },
-  });
+  try {
+    console.log('Entering main function...');
+    
+    // Test database connection
+    console.log('Testing database connection...');
+    await prisma.$connect();
+    console.log('Database connected successfully');
+    
+    // Hash the password "1" for all users
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('1', salt);
 
-  const user2 = await prisma.user.create({
-    data: {
-      id: uuidv4(),
-      email: 'julia.meier@example.com',
-      name: 'Julia Meier',
-      password: 'hashedpassword2',
-    },
-  });
+    console.log('Password hashed successfully');
 
-  const contact1 = await prisma.contact.create({
-    data: {
-      id: uuidv4(),
-      clientName: 'Müller GmbH',
-      organization: 'Müller GmbH',
-      email: 'kontakt@mueller.de',
-      phone: '+49 170 1234567',
-    },
-  });
+    console.log('Starting seeding process...');
 
-  const contact2 = await prisma.contact.create({
-    data: {
-      id: uuidv4(),
-      clientName: 'Schneider AG',
-      organization: 'Schneider AG',
-      email: 'info@schneider-ag.de',
-      phone: '+49 171 7654321',
-    },
-  });
+    // Create admin user
+    const admin = await prisma.user.upsert({
+      where: { email: 'admin@beispiel.de' },
+      update: {},
+      create: {
+        email: 'admin@beispiel.de',
+        name: 'Administrator',
+        role: 'ADMIN',
+        password: hashedPassword,
+      }
+    });
 
-  const contact3 = await prisma.contact.create({
-    data: {
-      id: uuidv4(),
-      clientName: 'Beispiel & Co',
-      organization: 'Beispiel & Co',
-      email: 'hallo@beispiel.co',
-      phone: '+49 172 1122334',
-    },
-  });
+    console.log('Admin user:', admin.email);
 
-  const lead1 = await prisma.deal.create({
-    data: {
-      id: uuidv4(),
-      contactId: contact1.id,
-      creatorId: user1.id,
-      assigneeId: user1.id,
-      stage: 'LEAD',
-      productInterest: 'CRM-System',
-      potentialValue: 3000,
-      notes: {
-        create: [
-          { content: 'Erstes Gespräch mit dem Kunden geführt.', creatorId: user1.id },
-          { content: 'Kunde ist interessiert, möchte aber nächste Woche sprechen.', creatorId: user1.id },
-        ],
-      },
-      appointments: {
-        create: [
-          { datetime: new Date(), type: 'call', notes: 'Telefonat zur Bedarfsermittlung.' },
-        ],
-      },
-    },
-  });
+    // Create 3 employee users
+    const employees: any[] = [];
+    for (let i = 1; i <= 3; i++) {
+      const employee = await prisma.user.upsert({
+        where: { email: `v${i}@loya.care` },
+        update: {},
+        create: {
+          email: `v${i}@loya.care`,
+          name: `Mitarbeiter ${i}`,
+          role: 'EMPLOYEE',
+          password: hashedPassword,
+        }
+      });
+      employees.push(employee);
+      console.log('Employee user:', employee.email);
+    }
 
-  const lead2 = await prisma.deal.create({
-    data: {
-      id: uuidv4(),
-      contactId: contact2.id,
-      creatorId: user1.id,
-      assigneeId: user1.id,
-      stage: 'LEAD',
-      productInterest: 'Marketingberatung',
-      potentialValue: 2500,
-    },
-  });
+    console.log('Creating leads and deals...');
 
-  const lead3 = await prisma.deal.create({
-    data: {
-      id: uuidv4(),
-      contactId: contact3.id,
-      creatorId: user2.id,
-      assigneeId: user2.id,
-      stage: 'LEAD',
-      productInterest: 'E-Commerce Beratung',
-      potentialValue: 4000,
-    },
-  });
+    // For each employee, create 5 Leads and 6 Deals
+    const dealStages = ['QUALIFIED', 'CONTACTED', 'DEMO_SCHEDULED', 'PROPOSAL_SENT', 'NEGOTIATION'];
 
-  const lead4 = await prisma.deal.create({
-    data: {
-      id: uuidv4(),
-      contactId: contact1.id,
-      creatorId: user2.id,
-      assigneeId: user2.id,
-      stage: 'LEAD',
-      productInterest: 'Support Services',
-      potentialValue: 1800,
-    },
-  });
+    for (const employee of employees) {
+      // Create 5 Leads
+      for (let i = 0; i < 5; i++) {
+        await createLead(employee.id);
+      }
 
-  const lead5 = await prisma.deal.create({
-    data: {
-      id: uuidv4(),
-      contactId: contact2.id,
-      creatorId: user2.id,
-      assigneeId: user2.id,
-      stage: 'LEAD',
-      productInterest: 'Cloud Hosting',
-      potentialValue: 3200,
-    },
-  });
+      // Create 6 Deals with different stages
+      for (let i = 0; i < 6; i++) {
+        await createDeal(employee.id, dealStages[i % dealStages.length]);
+      }
+    }
 
-  const deal1 = await prisma.deal.create({
-    data: {
-      id: uuidv4(),
-      contactId: contact1.id,
-      creatorId: user1.id,
-      assigneeId: user1.id,
-      stage: 'QUALIFIED',
-      productInterest: 'ERP-Integration',
-      potentialValue: 9000,
-      notes: {
-        create: [
-          { content: 'Vertrag in Prüfung.', creatorId: user1.id },
-        ],
-      },
-      appointments: {
-        create: [
-          { datetime: new Date(), type: 'meeting', notes: 'Vor-Ort-Präsentation.' },
-        ],
-      },
-    },
-  });
+    console.log('Seeding completed successfully!');
+  } catch (error) {
+    console.error('Error during seeding:', error);
+    throw error;
+  }
+}
 
-  const deal2 = await prisma.deal.create({
-    data: {
-      id: uuidv4(),
-      contactId: contact2.id,
-      creatorId: user1.id,
-      assigneeId: user1.id,
-      stage: 'QUALIFIED',
-      productInterest: 'Webentwicklung',
-      potentialValue: 7500,
-      notes: {
-        create: [
-          { content: 'Designvorschläge gesendet.', creatorId: user1.id },
-        ],
-      },
-    },
-  });
+async function createLead(creatorId: string) {
+  try {
+    // Create unique contact
+    const germanNames = ['Hans Müller', 'Anna Schmidt', 'Klaus Wagner', 'Maria Becker', 'Peter Schulz', 'Lisa Hoffmann', 'Thomas Richter', 'Sabine Bauer', 'Michael Koch', 'Julia Neumann'];
+    const germanOrgs = ['GmbH', 'AG', 'KG', 'OHG', 'e.V.', 'Stiftung', 'Institut', 'Verein', 'Gesellschaft', 'Unternehmen'];
+    const randomName = germanNames[Math.floor(Math.random() * germanNames.length)];
+    const randomOrg = germanOrgs[Math.floor(Math.random() * germanOrgs.length)];
+    const contact = await prisma.contact.create({
+      data: {
+        name: randomName,
+        organization: `${randomOrg} ${Math.random().toString(36).substring(7)}`,
+        email: `kontakt${Math.random().toString(36).substring(7)}@beispiel.de`,
+        phone: `+4912345678${Math.floor(Math.random() * 100)}`,
+      }
+    });
 
-  const deal3 = await prisma.deal.create({
-    data: {
-      id: uuidv4(),
-      contactId: contact3.id,
-      creatorId: user1.id,
-      assigneeId: user1.id,
-      stage: 'QUALIFIED',
-      productInterest: 'App Entwicklung',
-      potentialValue: 10500,
-      notes: {
-        create: [
-          { content: 'Feedback zu Feature-Liste erhalten.', creatorId: user1.id },
-        ],
-      },
-    },
-  });
+    const title = `Titel ${contact.organization}`;
+    const potentialValue = Math.random() * (2500000 - 10) + 10;
 
-  const deal4 = await prisma.deal.create({
-    data: {
-      id: uuidv4(),
-      contactId: contact1.id,
-      creatorId: user2.id,
-      assigneeId: user2.id,
-      stage: 'QUALIFIED',
-      productInterest: 'Schulungen',
-      potentialValue: 2800,
-      notes: {
-        create: [
-          { content: 'Workshop-Termine abgestimmt.', creatorId: user2.id },
-        ],
-      },
-      appointments: {
-        create: [
-          { datetime: new Date(), type: 'meeting', notes: 'Kundengespräch in Berlin.' },
-        ],
-      },
-    },
-  });
+    const deal = await prisma.deal.create({
+      data: {
+        title,
+        contactId: contact.id,
+        creatorId,
+        assigneeId: creatorId,
+        productInterest: 'Produktinteresse',
+        potentialValue,
+        stage: 'LEAD',
+        status: 'ACTIVE',
+      }
+    });
 
-  console.log('Seed completed');
+    // Create 2-4 appointments
+    const numAppointments = Math.floor(Math.random() * 3) + 2;
+    const appointmentTypes = ['CALL', 'MEETING', 'LUNCH'];
+
+    for (let i = 0; i < numAppointments; i++) {
+      await prisma.appointment.create({
+        data: {
+          datetime: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000), // Random future date within 30 days
+          type: appointmentTypes[Math.floor(Math.random() * appointmentTypes.length)],
+          note: `Terminnotiz ${i + 1} für Lead`,
+          dealId: deal.id,
+        }
+      });
+    }
+
+    console.log(`Created lead: ${title}`);
+  } catch (error) {
+    console.error('Error creating lead:', error);
+  }
+}
+
+async function createDeal(creatorId: string, stage: string) {
+  try {
+    // Create unique contact
+    const germanNames = ['Hans Müller', 'Anna Schmidt', 'Klaus Wagner', 'Maria Becker', 'Peter Schulz', 'Lisa Hoffmann', 'Thomas Richter', 'Sabine Bauer', 'Michael Koch', 'Julia Neumann'];
+    const germanOrgs = ['GmbH', 'AG', 'KG', 'OHG', 'e.V.', 'Stiftung', 'Institut', 'Verein', 'Gesellschaft', 'Unternehmen'];
+    const randomName = germanNames[Math.floor(Math.random() * germanNames.length)];
+    const randomOrg = germanOrgs[Math.floor(Math.random() * germanOrgs.length)];
+    const contact = await prisma.contact.create({
+      data: {
+        name: randomName,
+        organization: `${randomOrg} ${Math.random().toString(36).substring(7)}`,
+        email: `kontakt${Math.random().toString(36).substring(7)}@beispiel.de`,
+        phone: `+4912345678${Math.floor(Math.random() * 100)}`,
+      }
+    });
+
+    const title = `Titel ${contact.organization}`;
+    const potentialValue = Math.random() * (2500000 - 10) + 10;
+
+    const deal = await prisma.deal.create({
+      data: {
+        title,
+        contactId: contact.id,
+        creatorId,
+        assigneeId: creatorId,
+        productInterest: 'Produktinteresse',
+        potentialValue,
+        stage,
+        status: 'ACTIVE',
+      }
+    });
+
+    // Create 2-4 appointments
+    const numAppointments = Math.floor(Math.random() * 3) + 2;
+    const appointmentTypes = ['CALL', 'MEETING', 'LUNCH'];
+
+    for (let i = 0; i < numAppointments; i++) {
+      await prisma.appointment.create({
+        data: {
+          datetime: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000), // Random future date within 30 days
+          type: appointmentTypes[Math.floor(Math.random() * appointmentTypes.length)],
+          note: `Terminnotiz ${i + 1} für Deal`,
+          dealId: deal.id,
+        }
+      });
+    }
+
+    console.log(`Created deal: ${title} (${stage})`);
+  } catch (error) {
+    console.error('Error creating deal:', error);
+  }
 }
 
 main()
-  .then(async () => await prisma.$disconnect())
-  .catch(async (e) => {
+  .catch((e) => {
     console.error(e);
-    await prisma.$disconnect();
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });

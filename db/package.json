@@ -2,14 +2,19 @@
   "scripts": {
     "generate": "prisma generate && mkdir -p ../frontend/src/shared/generated/prisma-client/ && cp -R ./generated/prisma-client/* ../frontend/src/shared/generated/prisma-client/ && mkdir -p ../backend/generated/prisma-client/ && cp -R ./generated/prisma-client/* ../backend/generated/prisma-client/",
     "migrate": "prisma migrate dev",
-    "studio": "prisma studio"
+    "studio": "prisma studio",
+    "seed": "npx tsc prisma/seed.ts --outDir temp --module commonjs --target es2015 && node temp/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",
     "@types/uuid": "^10.0.0",
+    "bcrypt": "^6.0.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "prisma": "^6.14.0"
+    "@types/bcrypt": "^6.0.0",
+    "prisma": "^6.14.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
   }
 }
