@@ -1,16 +1,23 @@
 import { LeadsTable } from "@/features";
-import { LeadExt } from "@/entities/lead/types";
-import { NEXT_PUBLIC_API_URL } from "@/shared/config/urls";
-import Container from "node_modules/@mui/material/esm/Container/Container";
+import Container from "@mui/material/Container";
+import { store } from "@/shared/lib/store";
+import { leadApi } from "@/entities/lead/api";
 
 export default async function LeadsPage() {
-  const leads = (await fetch(`${NEXT_PUBLIC_API_URL}/api/leads`).then((res) =>
-    res.json()
-  )) as LeadExt[];
+  // Prefetch data on server for better performance and SEO
+  // Only prefetch in production or when backend API is available
+  if (process.env.NODE_ENV === 'production' || process.env.BACKEND_API_URL) {
+    try {
+      await store.dispatch(leadApi.endpoints.getLeads.initiate());
+    } catch (error) {
+      // Silently fail during build if backend API is not available
+      console.warn('Failed to prefetch leads data:', error);
+    }
+  }
+
   return (
-    <Container maxWidth={false} component="main" style={{ padding: "0 !important" }} sx={{ pl: 0 , m: 0 }}>
-      {/* <h1>Leads</h1> */}
-      {<LeadsTable initialData={leads} />}
+    <Container maxWidth="xl">
+      <LeadsTable />
     </Container>
   );
 }

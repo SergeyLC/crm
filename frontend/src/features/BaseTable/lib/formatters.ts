@@ -31,7 +31,7 @@ export function defaultConvertSrcDataToDataRows<
   TTableData extends BaseTableRowData,
 >(src: T[]): TTableData[] {
   return src.map(
-    (_) =>
+    () =>
       ({
         id: "defaultConvertSrcDataToDataRows should be implemented",
       }) as TTableData
@@ -39,7 +39,7 @@ export function defaultConvertSrcDataToDataRows<
 }
 
 export const currencyFormatter = <T extends BaseTableRowData>(
-  value: any,
+  value: number | string | null | undefined,
   row: T,
   currency: string = "EUR",
   locale: string = "de-DE"
@@ -48,18 +48,21 @@ export const currencyFormatter = <T extends BaseTableRowData>(
     ? defaultCurrencyFormatter(value, currency, locale)
     : null;
 
-export const stageToComponentFormatter = <T extends BaseTableRowData>(
-  value: EnumDealStage,
-  row: T,
+export const stageToComponentFormatter = (
+  value: string | undefined,
 ): React.ReactNode => {
   return (
     value &&
-    React.createElement(DealStageComponent, { stage: value, readOnly: true, compact: true  })
+    React.createElement(DealStageComponent, {
+      stage: value as EnumDealStage,
+      readOnly: true,
+      compact: true,
+    })
   );
 };
 
 export const dateFormatter = <T extends BaseTableRowData>(
-  value: any,
+  value: Date | string,
   row: T,
   locale: string = "de-DE"
 ): React.ReactNode => (value ? formatDate(value, locale) as string : null);

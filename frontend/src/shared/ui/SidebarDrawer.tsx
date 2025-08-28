@@ -24,7 +24,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { use, useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { LogoutButton } from "@/features/app/LogoutButton";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import useMediaQuery from "@mui/material/useMediaQuery";

@@ -102,7 +102,7 @@ export const BaseUpsertForm = <
     (newAppointments: (CreateAppointmentDTO | UpdateAppointmentDTO)[]) => {
       setForm((prev) => ({
         ...prev,
-        appointments: newAppointments as any[],
+        appointments: newAppointments,
       }));
     },
     [setForm]
@@ -112,7 +112,7 @@ export const BaseUpsertForm = <
     (contactData: CreateContactDTO | UpdateContactDTO) => {
       setForm((prev) => ({
         ...prev,
-        contact: contactData as any,
+        contact: contactData,
       }));
     },
     [setForm]

@@ -1,6 +1,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { BACKEND_API_URL } from "@/shared/config/urls";
-import { Deal, DealExt, CreateDealDTO, UpdateDealDTO, DealStatus } from "@/entities/deal/model/types";
+import {
+  Deal,
+  DealExt,
+  CreateDealDTO,
+  UpdateDealDTO,
+  DealStatus,
+} from "@/entities/deal/model/types";
 import { DealStage } from "@/shared/generated/prisma-client/wasm";
 
 export const dealApi = createApi({
@@ -13,13 +19,60 @@ export const dealApi = createApi({
   // Reduce cache time to ensure fresh data but avoid excessive requests
   keepUnusedDataFor: 30, // 30 seconds
   endpoints: (build) => ({
-    getDeals: build.query<DealExt[], { statuses?: DealStatus[], excludeStatuses?: DealStatus[], stages?: DealStage[], excludeStages?: DealStage[] } | undefined | null>({
+    getDeals: build.query<
+      DealExt[],
+      | {
+          statuses?: DealStatus[];
+          excludeStatuses?: DealStatus[];
+          stages?: DealStage[];
+          excludeStages?: DealStage[];
+        }
+      | undefined
+      | null
+    >({
       query: (params) => ({
         url: "deals",
         params: params || undefined,
       }),
       providesTags: ["Deals"],
     }),
+
+    getLostDeals: build.query<
+      DealExt[],
+      | {
+          statuses?: DealStatus[];
+          excludeStatuses?: DealStatus[];
+          stages?: DealStage[];
+          excludeStages?: DealStage[];
+        }
+      | undefined
+      | null
+    >({
+      query: (params) => ({
+        url: "deals/lost",
+        params: params || undefined,
+      }),
+      providesTags: ["Deals"],
+    }),
+
+    getWonDeals: build.query<
+      DealExt[],
+      | {
+          statuses?: DealStatus[];
+          excludeStatuses?: DealStatus[];
+          stages?: DealStage[];
+          excludeStages?: DealStage[];
+        }
+      | undefined
+      | null
+    >({
+      query: (params) => ({
+        url: "deals/won",
+        params: params || undefined,
+      }),
+      providesTags: ["Deals"],
+    }),
+
     getDealById: build.query<DealExt, string>({
       query: (id) => `deals/${id}`,
       providesTags: (_result, _err, id) => [{ type: "Deal", id }],
@@ -52,6 +105,8 @@ export const dealApi = createApi({
 
 export const {
   useGetDealsQuery,
+  useGetLostDealsQuery,
+  useGetWonDealsQuery,
   useGetDealByIdQuery,
   useCreateDealMutation,
   useUpdateDealMutation,

@@ -1,15 +1,21 @@
-import { ArchivedDealsTable, WonLostDealsTable } from "@/features/deal";
-import { DealExt } from "@/entities/deal/model/types";
-import { NEXT_PUBLIC_API_URL } from "@/shared/config/urls";
+import { WonLostDealsTable } from "@/features/deal";
+import { store } from "@/shared/lib/store";
+import { dealApi } from "@/entities/deal/api";
+import { DealStage } from "@/shared/generated/prisma-client";
 
 export default async function WonDealsPage() {
+  // Prefetch won deals data on server
+  // Only prefetch in production or when backend API is available
+  if (process.env.NODE_ENV === 'production' || process.env.BACKEND_API_URL) {
+    try {
+      await store.dispatch(dealApi.endpoints.getWonDeals.initiate({
+        stages: [DealStage.WON]
+      }));
+    } catch (error) {
+      // Silently fail during build if backend API is not available
+      console.warn('Failed to prefetch won deals data:', error);
+    }
+  }
 
-  const deals = (await fetch(`${NEXT_PUBLIC_API_URL}/api/deals/won`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  }).then((res) => res.json())) as DealExt[];
-
-  return <WonLostDealsTable initialData={deals} isWon={true} />;
+  return <WonLostDealsTable isWon={true} />;
 }

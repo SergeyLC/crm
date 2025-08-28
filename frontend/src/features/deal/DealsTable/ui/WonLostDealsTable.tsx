@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import dynamic from "next/dynamic";
 
 import EditIcon from "@mui/icons-material/Edit";
@@ -8,7 +8,8 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import {
   DealExt,
   DealViewSwitcher,
-  useGetDealsQuery,
+  useGetLostDealsQuery,
+  useGetWonDealsQuery,
 } from "@/entities/deal";
 import {
   BaseTable,
@@ -71,8 +72,8 @@ export function WonLostDealsTable<T extends DealExt>({
   const { handleDeleteClick } = useTableActions();
 
   // fetch deals
-  const { data: deals = initialData || [] } = useGetDealsQuery(
-    { statuses: ["ACTIVE"], stages: [isWon ? "WON" : "LOST"] },
+  const useDataQuery = isWon ? useGetWonDealsQuery : useGetLostDealsQuery;
+  const { data: deals = [] } = useDataQuery(undefined,
     {
       refetchOnFocus: true,
     }
@@ -105,15 +106,19 @@ export function WonLostDealsTable<T extends DealExt>({
     [handleRefreshData]
   );
 
-  const ToolbarComponent = ({ selected, clearSelection }: BaseTableToolbarProps) => (
-    <BaseTableToolbar
-      title={
-        <DealViewSwitcher title={isWon ? "Won Deals" : "Lost Deals"} />
-      }
-      selected={selected}
-      menuItems={toolbarMenuItems}
-      clearSelection={clearSelection}
-    />
+  const switcherTitle = useMemo(() => (isWon ? "Won Deals" : "Lost Deals"), [isWon]);
+
+  // Memoize the ToolbarComponent so its identity is stable when passed to BaseTable.
+  const ToolbarComponent = React.useCallback(
+    ({ selected, clearSelection }: BaseTableToolbarProps) => (
+      <BaseTableToolbar
+        title={<DealViewSwitcher title={switcherTitle} />}
+        selected={selected}
+        menuItems={toolbarMenuItems}
+        clearSelection={clearSelection}
+      />
+    ),
+    [switcherTitle, toolbarMenuItems]
   );
 
   return (

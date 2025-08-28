@@ -1,5 +1,5 @@
 export const currencyFormatter = (
-  value: any,
+  value?: number | string | null,
   currency: string = "EUR",
   locale: string = "de-DE"
 ) =>
@@ -8,5 +8,5 @@ export const currencyFormatter = (
         style: "currency",
         currency: currency,
         currencyDisplay: "symbol",
-      }).format(value)
+      }).format(Number(value))
     : null;

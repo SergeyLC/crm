@@ -1,6 +1,5 @@
-import { Column, dateFormatter } from "@/features/BaseTable";
+import { Column } from "@/features/BaseTable";
 import { UserTableRowData } from "./types";
-import { formatDate } from "@/shared";
 
 export const userTableColumns: Column<UserTableRowData>[] = [
   {

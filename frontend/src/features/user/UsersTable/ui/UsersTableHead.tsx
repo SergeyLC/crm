@@ -1,5 +1,5 @@
 import React from "react";
-import { BaseTableHeadProps, BaseTableHead, Column } from "@/features/BaseTable";
+import { BaseTableHeadProps, BaseTableHead } from "@/features/BaseTable";
 import { userTableColumns } from "../model/columns";
 import { UserTableRowData } from "../model/types";
 

@@ -3,37 +3,47 @@ import prisma from "./prisma/client";
 
 const PORT = process.env.PORT || 4000;
 
-// async function main() {
-//   try {
-//     app.listen(PORT, () => {
-//       console.log(`🚀 Server running on http://localhost:${PORT}`);
-//     });
-//   } catch (error) {
-//     console.error('❌ Server failed to start:', error);
-//     process.exit(1);
-//   }
-// }
-// main();
-
 const startServer = async () => {
   try {
-    // Проверка соединения с базой данных
-    await prisma.$connect();
-    console.log("Connected to PostgreSQL via Prisma");
+    console.log('Starting server initialization...');
     
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    // Проверка соединения с базой данных
+    console.log('Connecting to database...');
+    await prisma.$connect();
+    console.log("✅ Connected to PostgreSQL via Prisma");
+    
+    console.log(`🚀 Starting server on port ${PORT}...`);
+    const server = app.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT}`);
+      console.log(`🌐 API available at http://localhost:${PORT}/api`);
     });
+
+    // Обработка сигналов завершения
+    process.on('SIGINT', async () => {
+      console.log('\n🛑 Received SIGINT, shutting down gracefully...');
+      server.close(async () => {
+        console.log('Server closed');
+        await prisma.$disconnect();
+        console.log('Database disconnected');
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGTERM', async () => {
+      console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
+      server.close(async () => {
+        console.log('Server closed');
+        await prisma.$disconnect();
+        console.log('Database disconnected');
+        process.exit(0);
+      });
+    });
+
   } catch (err) {
-    console.error("Failed to connect to database:", err);
+    console.error("❌ Failed to start server:", err);
+    await prisma.$disconnect();
     process.exit(1);
-  } finally {
-    // Обработка закрытия соединений при завершении работы
-    process.on('beforeExit', async () => {
-      console.log("Disconnecting from database...");
-      await prisma.$disconnect();
-    });
   }
 };
+
 startServer();
-// main();

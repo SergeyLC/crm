@@ -1,8 +1,12 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { SxProps, Theme } from "@mui/material";
-import { SimpleViewSwitcher, SimpleViewSwitcherElement } from "./SimpleViewSwitcher";
+import {
+  SimpleViewSwitcher,
+  SimpleViewSwitcherElement,
+} from "./SimpleViewSwitcher";
+import { ContactSupportOutlined } from "@mui/icons-material";
 
 export type UrlViewSwitcherElement = {
   name: string;
@@ -36,6 +40,11 @@ export const UrlViewSwitcher: React.FC<UrlViewSwitcherProps> = ({
   const router = useRouter();
   const pathname = usePathname();
 
+  const pathnameWithoutQuery = useMemo(
+    () => pathname.split("?")[0],
+    [pathname]
+  );
+
   // Convert URL elements to SimpleViewSwitcher format
   const switcherElements: SimpleViewSwitcherElement<string>[] = React.useMemo(
     () =>
@@ -43,7 +52,6 @@ export const UrlViewSwitcher: React.FC<UrlViewSwitcherProps> = ({
         value: element.name,
         icon: element.icon,
         label: element.label,
-        tooltip: element.tooltip || element.label,
       })),
     [elements]
   );
@@ -51,18 +59,18 @@ export const UrlViewSwitcher: React.FC<UrlViewSwitcherProps> = ({
   // Get current active view based on the path
   const getCurrentView = React.useCallback(() => {
     const activeElement = elements.find((element) =>
-      pathname?.endsWith(element.path.split("/").pop() || "")
+      pathnameWithoutQuery?.endsWith(element.path)
     );
-    return activeElement ? activeElement.name : (!isStrictPathFinding && elements[0]?.name ) || "";
-  }, [elements, pathname]);
+    return activeElement?.name || "";
+  }, [elements, pathnameWithoutQuery]);
 
   const currentView = React.useMemo(getCurrentView, [getCurrentView]);
 
   const handleViewChange = React.useCallback(
     (newView: string) => {
-      const activeElement = elements.find((element) => element.name === newView);
-      
-      // Navigate to the corresponding path
+      const activeElement = elements.find(
+        (element) => element.name === newView
+      );
       if (activeElement) {
         router.push(activeElement.path);
       }

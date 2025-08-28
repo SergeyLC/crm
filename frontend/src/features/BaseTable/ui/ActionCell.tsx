@@ -2,6 +2,7 @@ import React from "react";
 import TableCell from "@mui/material/TableCell";
 import IconButton from "@mui/material/IconButton";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { SxProps, Theme } from "@mui/material/styles";
 import { ActionMenu, ActionMenuProps, ActionMenuItemProps } from "./ActionMenu";
 import { BaseTableRowData } from "../model";
 
@@ -10,7 +11,7 @@ type Props<T extends BaseTableRowData> = {
   className?: string;
   MenuComponent?: React.ComponentType<ActionMenuProps<T>>;
   menuItems?: ActionMenuItemProps<T>[];
-  cellSx?: any; // additional sx for TableCell
+  cellSx?: SxProps<Theme>; // additional sx for TableCell
 };
 
 export const ActionCell = <T extends BaseTableRowData>(props: Props<T>) => {

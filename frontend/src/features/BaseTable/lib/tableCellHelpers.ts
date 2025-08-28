@@ -1,20 +1,21 @@
-import { Column, BaseTableRowData } from "../model/types";
+import { Column, BaseTableRowData, TBaseColumnType } from "../model/types";
+import { SxProps, Theme } from "@mui/material/styles";
 
 /**
  * Creates table cell props based on column definition
  */
-export const createCellProps = (
-  col: Column<any>,
-  row: any,
+export const createCellProps = <T extends TBaseColumnType>(
+  col: Column<T>,
+  row: T,
   labelId?: string,
   colIndex?: number
 ) => {
-  const cellProps: any = {
+  const cellProps: Record<string, unknown> = {
     align: col.align || undefined,
     width: col.width || undefined,
   };
 
-  const cellSxProps = {
+  const cellSxProps: SxProps<Theme> = {
     width: col.width || undefined,
     minWidth: col.minWidth || undefined,
     maxWidth: col.maxWidth || undefined,
@@ -29,10 +30,14 @@ export const createCellProps = (
   }
 
   // Generate cell content
-  const value = col.key ? (row[col.key as keyof typeof row] as any) : undefined;
+  const value = col.key ? (row[col.key as keyof typeof row] as string | undefined) : undefined;
   const content = col.formatter ? col.formatter(value, row) : value;
 
-  return { cellProps, cellSxProps, content };
+  return { cellProps, cellSxProps, content } as {
+    cellProps: Record<string, unknown>;
+    cellSxProps: SxProps<Theme>;
+    content: React.ReactNode;
+  };
 };
 
 

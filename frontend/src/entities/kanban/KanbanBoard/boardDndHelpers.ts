@@ -19,7 +19,7 @@ export type CardsByRestStages = {
 /**
  * Creates the DnD sensors configuration
  */
-export const createDndSensors = () => {
+export const useDndSensors = () => {
   return useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(MouseSensor),
@@ -129,7 +129,7 @@ export const findCardById = (stacks: KanbanStackData[], id: string): KanbanCardD
 /**
  * Create draggable card props with proper sizing
  */
-export const createDraggableCardProps = (id: string) => {
+export const useDraggableCardProps = (id: string) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
 
   const style: React.CSSProperties = {

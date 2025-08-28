@@ -91,13 +91,13 @@ export const UserForm: React.FC<UserFormProps> = ({
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<CreateUserDTO | UpdateUserDTO>({
     // Cast to ObjectSchema to satisfy yupResolver typing for object schemas
-    resolver: yupResolver(schema as unknown as yup.ObjectSchema<any, any>),
+    resolver: yupResolver(schema as unknown as yup.ObjectSchema<CreateUserDTO | UpdateUserDTO>),
     defaultValues,
   });
 
-  const onFormSubmit = async (data: any) => {
+  const onFormSubmit = async (data: CreateUserDTO | UpdateUserDTO) => {
     try {
       await onSubmit(data);
     } catch (error) {

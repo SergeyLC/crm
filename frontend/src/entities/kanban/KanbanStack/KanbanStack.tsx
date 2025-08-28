@@ -6,6 +6,7 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
+import { Theme } from "@mui/material/styles";
 import { KanbanCard, KanbanCardData } from "@/entities/kanban";
 import { currencyFormatter } from "@/shared/lib";
 
@@ -56,7 +57,7 @@ export const KanbanStack: React.FC<KanbanStackProps> = React.memo(
           boxSizing: "border-box",
           bgcolor: isDropTarget 
             ? "rgba(25, 118, 210, 0.05)"
-            : (theme: any) =>
+            : (theme: Theme) =>
                 theme.palette.mode === "dark"
                   ? theme.palette.background.paper
                   : theme.palette.grey[100],

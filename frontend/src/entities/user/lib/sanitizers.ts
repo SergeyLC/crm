@@ -11,7 +11,6 @@ export function sanitizeUserData(userData: Partial<UpdateUserDTO>): UpdateUserDT
     password,
     role,
     status,
-    ...rest
   } = userData;
 
   // Формируем объект только с нужными полями

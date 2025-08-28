@@ -31,8 +31,6 @@ import { useEntityDialog } from "@/shared/lib/hooks";
 
 import { DealTableRowData, dealTableColumns } from "../model";
 import { mapDealsToDealRows, useTableActions, useDealOperations } from "../lib";
-// import { DealsTableToolbar } from "./DealsTableToolbar";
-// import { Filter } from "@mui/icons-material";
 
 const DealsTableHead = <TTableData extends BaseTableRowData>(
   props: BaseTableHeadProps<TTableData>

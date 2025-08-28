@@ -6,7 +6,7 @@
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "rootDir": ".",
+    "rootDir": "src",
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": "./",
@@ -17,6 +17,6 @@
     "sourceMap": true,
     "resolveJsonModule": true
   },
-  "include": ["./src/**/*", "./generated/**/*"],
+  "include": ["src/**/*", "generated/**/*"],
   "exclude": ["node_modules", "dist"]
 }

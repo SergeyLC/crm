@@ -3,7 +3,6 @@ import { Providers } from "./store/Providers";
 import Box from "@mui/material/Box";
 import { SidebarDrawer } from "@/shared";
 
-import { ThemeRegistry } from "@/shared/theme/ThemeRegistry";
 import { AuthProvider } from "@/features/auth/ui/AuthProvider";
 
 export default function RootLayout({

@@ -1,24 +1,21 @@
 import { ArchivedDealsTable } from "@/features/deal";
-import { DealExt } from "@/entities/deal/model/types";
-import { NEXT_PUBLIC_API_URL } from "@/shared/config/urls";
+import { store } from "@/shared/lib/store";
+import { dealApi } from "@/entities/deal/api";
 import { DealStatus } from "@/shared/generated/prisma-client";
 
-export default async function DealsPage() {
-  const params = "";
-  new URLSearchParams({
-    status: "ARCHIVED",
-    excludeStatuses: "ACTIVE",
-  });
-
-  const deals = (await fetch(
-    `${NEXT_PUBLIC_API_URL}/api/deals/archived?${params}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+export default async function ArchivedDealsPage() {
+  // Prefetch archived deals data on server
+  // Only prefetch in production or when backend API is available
+  if (process.env.NODE_ENV === 'production' || process.env.BACKEND_API_URL) {
+    try {
+      await store.dispatch(dealApi.endpoints.getDeals.initiate({
+        statuses: [DealStatus.ARCHIVED]
+      }));
+    } catch (error) {
+      // Silently fail during build if backend API is not available
+      console.warn('Failed to prefetch archived deals data:', error);
     }
-  ).then((res) => res.json())) as DealExt[];
+  }
 
-  return <ArchivedDealsTable initialData={deals} />;
+  return <ArchivedDealsTable />;
 }

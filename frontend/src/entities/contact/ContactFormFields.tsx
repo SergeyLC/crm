@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { TextField, Box } from "@mui/material";
 import {
-  Contact,
   CreateContactDTO,
   UpdateContactDTO,
 } from "@/entities/contact/types";
@@ -23,12 +22,9 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
 }) => {
   // Skip the initial fetch if we already have data from SSR
   const skipFetch = !!initialData || !initialData && !contactId;
-  const isNew = !initialData && !contactId;
 
   const {
     data: contactData = initialData,
-    isLoading,
-    isError,
   } = useGetContactByIdQuery(contactId || "", {
     skip: skipFetch,
   });

@@ -30,7 +30,7 @@ export type SimpleViewSwitcherProps<T = string> = {
  * Generic component that can work with any value type.
  */
 export const SimpleViewSwitcher = <T extends string | number>({
-  elements = [],
+  elements,
   value,
   onChange,
   ariaLabel = "view mode",
@@ -40,11 +40,11 @@ export const SimpleViewSwitcher = <T extends string | number>({
 }: SimpleViewSwitcherProps<T>) => {
   const handleViewChange = React.useCallback(
     (_: React.MouseEvent<HTMLElement>, newValue: T | null) => {
-      if (newValue !== null) {
+      if (newValue !== value && newValue !== null) {
         onChange(newValue);
       }
     },
-    [onChange]
+    [onChange, value]
   );
 
   return (
@@ -57,11 +57,11 @@ export const SimpleViewSwitcher = <T extends string | number>({
       sx={sx}
       className={className}
     >
-      {elements.map((element) => (
-        <Tooltip 
-          key={element.value} 
-          title={element.tooltip || element.label} 
-          arrow 
+      {elements?.map((element) => (
+        <Tooltip
+          key={element.value}
+          title={element.tooltip || element.label}
+          arrow
           placement="top"
         >
           <ToggleButton

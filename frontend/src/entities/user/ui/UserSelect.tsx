@@ -1,4 +1,4 @@
-import React, { use, useEffect } from "react";
+import React from "react";
 import { FormControl, InputLabel, Select, MenuItem, CircularProgress } from "@mui/material";
 import { useGetUsersQuery } from "@/entities/user";
 import type { UserExt } from "@/entities/user/types";

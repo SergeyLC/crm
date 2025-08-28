@@ -78,8 +78,9 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
       }
       
       onClose();
-    } catch (err: any) {
-      setError(err.data?.message || "An error occurred");
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
+      setError(error.data?.message || "An error occurred");
       enqueueSnackbar("Operation failed", { variant: "error" });
     }
   };

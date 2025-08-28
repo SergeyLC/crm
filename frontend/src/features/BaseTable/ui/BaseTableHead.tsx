@@ -6,7 +6,8 @@ import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import Checkbox from "@mui/material/Checkbox";
 import { visuallyHidden } from "@mui/utils";
-import { BaseTableHeadProps, TBaseColumnType, Column } from "../model/types";
+import { SxProps, Theme } from "@mui/material/styles";
+import { BaseTableHeadProps, TBaseColumnType } from "../model/types";
 
 export function BaseTableHead<T extends TBaseColumnType>(
   props: BaseTableHeadProps<T>
@@ -28,12 +29,12 @@ export function BaseTableHead<T extends TBaseColumnType>(
     [onRequestSort]
   );
 
-  const stickySx: any = React.useMemo(
+  const stickySx: SxProps<Theme> = React.useMemo(
     () => ({
       position: "sticky",
       top: 0,
-      zIndex: (theme: any) => theme.zIndex.appBar + 6, // header higher than body
-      background: (theme: any) => theme.palette.background.paper,
+      zIndex: (theme: Theme) => theme.zIndex.appBar + 6, // header higher than body
+      background: (theme: Theme) => theme.palette.background.paper,
     }),
     []
   );
@@ -45,7 +46,7 @@ export function BaseTableHead<T extends TBaseColumnType>(
           sx={{
             left: 0,
             ...stickySx,
-            zIndex: (theme: any) => theme.zIndex.appBar + 7,
+            zIndex: (theme: Theme) => theme.zIndex.appBar + 7,
             textOverflow: "clip",
             boxSizing: "content-box", // Ensures checkbox does not affect width calculation
           }}
@@ -88,7 +89,7 @@ export function BaseTableHead<T extends TBaseColumnType>(
                 ...(isSticky
                   ? {
                       right: 0,
-                      zIndex: (theme: any) => theme.zIndex.appBar + 7,
+                      zIndex: (theme: Theme) => theme.zIndex.appBar + 7,
                       textOverflow: "clip",
                       boxSizing: "content-box", // Ensures checkbox does not affect width calculation
                     }

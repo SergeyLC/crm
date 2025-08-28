@@ -3,6 +3,7 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import { Theme } from "@mui/material/styles";
 import {
   DndContext,
   pointerWithin,
@@ -11,18 +12,19 @@ import {
   DragOverEvent,
   useDroppable,
   DragOverlay,
+  CollisionDetection,
 } from "@dnd-kit/core";
 import { KanbanStack, KanbanCard } from "@/entities/kanban";
 import type { KanbanCardData, KanbanStackData } from "@/entities/kanban";
 import Paper from "@mui/material/Paper";
 import {
   CardsByRestStages,
-  createDndSensors,
+  useDndSensors,
   createChangeScheduler,
   processDragOver,
   processDragEnd,
   findCardById,
-  createDraggableCardProps,
+  useDraggableCardProps,
 } from "./boardDndHelpers";
 
 type Props = {
@@ -54,10 +56,10 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
     setLocalStacks(stacks);
   }, [stacks]);
 
-  const sensors = createDndSensors();
+  const sensors = useDndSensors();
 
   // Custom collision detection algorithm for better handling of footer elements
-  const customCollisionDetection = React.useCallback((args: any) => {
+  const customCollisionDetection: CollisionDetection = React.useCallback((args) => {
     const pointerCollisions = pointerWithin(args);
     const rectCollisions = rectIntersection(args);
 
@@ -153,7 +155,7 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
             alignItems: "flex-start",
             py: padding,
             px: padding,
-            gap: (theme: any) => theme.spacing(gap),
+            gap: (theme: Theme) => theme.spacing(gap),
           }}
         >
           {localStacks.map((s) => (
@@ -261,7 +263,7 @@ function ColumnDroppable({
 
 function DraggableCard({ id, card }: { id: string; card: KanbanCardData }) {
   const { attributes, listeners, setNodeRef, style } =
-    createDraggableCardProps(id);
+    useDraggableCardProps(id);
 
   return (
     <div 

@@ -1,3 +1,4 @@
+import { DealStage } from "@/shared/generated/prisma-client/edge";
 import React from "react";
 export type Order = "asc" | "desc";
 
@@ -6,12 +7,19 @@ export type SortableFields<T> = keyof T;
 
 export type TBaseColumnType = { id: string }
 
+type Formatter<T extends TBaseColumnType> = (value: string | undefined, row: T) => React.ReactNode;
+
 export type Column<T extends TBaseColumnType> = {
   key?: keyof T;
   label: string;
   align?: "left" | "right" | "center";
   padding?: "normal" | "checkbox" | "none";
-  formatter?: (value: any, row: T) => React.ReactNode;
+  /**
+   * Optional function to format the cell value for display.
+   * Receives the cell value and the entire row object as arguments.
+   * Should return a React node to be rendered in the cell.
+   */
+  formatter?: Formatter<T>;
   isActions?: boolean;
   width?: number;
   minWidth?: number;

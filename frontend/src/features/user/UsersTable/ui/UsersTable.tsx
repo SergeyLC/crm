@@ -1,5 +1,5 @@
 "use client";
-import React, { use, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import dynamic from "next/dynamic";
 import {
   BaseTable,

@@ -17,7 +17,6 @@ import {
   ListItemButton,
   useMediaQuery
 } from "@mui/material";
-import { Theme } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";

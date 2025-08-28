@@ -1,14 +1,18 @@
 import { DealsTable } from "@/features";
-import { DealExt } from "@/entities/deal/model/types";
-import { NEXT_PUBLIC_API_URL } from "@/shared/config/urls";
+import { store } from "@/shared/lib/store";
+import { dealApi } from "@/entities/deal/api";
 
 export default async function DealsPage() {
-  const deals = (await fetch(`${NEXT_PUBLIC_API_URL}/api/deals`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  }).then((res) => res.json())) as DealExt[];
+  // Prefetch data on server for better performance and SEO
+  // Only prefetch in production or when backend API is available
+  if (process.env.NODE_ENV === 'production' || process.env.BACKEND_API_URL) {
+    try {
+      await store.dispatch(dealApi.endpoints.getDeals.initiate({}));
+    } catch (error) {
+      // Silently fail during build if database is not available
+      console.warn('Failed to prefetch deals data:', error);
+    }
+  }
 
-  return <DealsTable initialData={deals} />;
+  return <DealsTable />;
 }

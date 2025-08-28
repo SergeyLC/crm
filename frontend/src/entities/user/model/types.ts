@@ -1,5 +1,4 @@
 import {
-  Prisma,
   User as PrismaUser,
   UserRole,
   UserStatus,

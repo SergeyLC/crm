@@ -1,6 +1,6 @@
 import React from "react";
 import TablePagination from "@mui/material/TablePagination";
-import { TablePaginationComponent, TablePaginationComponentProps } from "../model/types"; 
+import { TablePaginationComponent } from "../model/types"; 
 
 interface BaseTablePaginationProps {
   count: number;

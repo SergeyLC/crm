@@ -18,7 +18,6 @@ import {
   SortableFields,
   getComparator,
   BaseTableHead,
-  BaseTableToolbar,
   defaultConvertSrcDataToDataRows,
   BaseTableToolbarProps,
 } from "../index";
@@ -30,7 +29,6 @@ import {
 } from "../model/types";
 import { BaseTablePagination } from "./BaseTablePagination";
 import TableRow from "@mui/material/TableRow";
-import { UnknownAction } from "@reduxjs/toolkit";
 import { TConvertSrcDataToDataRows } from "../lib/formatters";
 import { useSelection } from "../hooks/useSelection";
 import { ActionCell } from "./ActionCell";
@@ -87,8 +85,8 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
 
 }: BaseTableProps<T, TTableData> & { columnsConfig?: Column<TTableData>[] }) {
 
-  const columnsConfig: Column<any>[] =
-    (columnsConfigProp as any) || defaultColumnsConfig;
+  const columnsConfig: Column<TTableData>[] =
+    (columnsConfigProp as Column<TTableData>[]) || defaultColumnsConfig;
 
   const data = initialData || (getInitData ? getInitData() : []);
   // Initialize rows state with initial data, then update with data from query
@@ -105,7 +103,11 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
 
   // Update rows when data changes
   React.useEffect(() => {
-      setRows(rowConverter?.((data ?? [] as T[]) || []));
+  // Debug: log when data reference changes to help diagnose update loops.
+  // Remove or guard these logs in production.
+  // eslint-disable-next-line no-console
+  console.debug('[BaseTable] data changed, length=', Array.isArray(data) ? data.length : 'n/a');
+  setRows(rowConverter?.((data ?? [] as T[]) || []));
   }, [data]);
 
   const handleRequestSort = useCallback(
@@ -246,7 +248,7 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
                         slotProps={{ input: { "aria-labelledby": labelId } }}
                       />
                     </TableCell>
-                    {columnsConfig.map((col: Column<any>, colIndex: number) => {
+                    {columnsConfig.map((col: Column<TTableData>, colIndex: number) => {
                       // Use helper function to create cell props
                       const { cellProps, cellSxProps, content } =
                         createCellProps(col, row, labelId, colIndex);
@@ -260,13 +262,16 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
                             menuItems={
                               rowActionMenuItems || createRowActionMenuItems?.(row)
                             }
-                            cellSx={{
-                              ...stickySx,
-                              right: 0,
-                              ...cellSxProps,
-                              textOverflow: "clip",
-                              boxSizing: "content-box", // Ensures checkbox does not affect width calculation
-                            }}
+                            cellSx={Object.assign(
+                              {},
+                              stickySx,
+                              cellSxProps,
+                              {
+                                right: 0,
+                                textOverflow: "clip",
+                                boxSizing: "content-box", // Ensures checkbox does not affect width calculation
+                              }
+                            )}
                           />
                         );
                       }
@@ -274,7 +279,7 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
                       return (
                         <TableCell
                           key={`col-${colIndex}`}
-                          sx={{ ...cellSxProps, ...cellProps }}
+                          sx={cellSxProps}
                           {...cellProps}
                         >
                           {content}
