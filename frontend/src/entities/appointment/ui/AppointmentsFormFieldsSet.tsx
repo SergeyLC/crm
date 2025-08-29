@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button, Stack, IconButton, Box, Divider } from "@mui/material";
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { AppointmentFormFields } from "./AppointmentFormFields";
@@ -38,7 +38,7 @@ export const AppointmentsFormFieldsSet: React.FC<
     ]);
   }, [appointments, onChange, removedAppointments]);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setAppointments((prev) => [
       ...prev,
       {
@@ -46,30 +46,38 @@ export const AppointmentsFormFieldsSet: React.FC<
         note: null,
       },
     ]);
-  };
+  }, [setAppointments]);
 
-  const handleRemove = (idx: number) => {
-    const removedAppointment = appointments[idx] as DeleteAppointmentDTO;
-    // save information about appointments should be deleted
-    if (removedAppointment.id && removedAppointment.dealId) {
-      setRemovedAppointments((prev) => [
-        ...prev,
-        // if appoinment has id and daealId then it exists in the DB and should be deleted
-        {
-          id: removedAppointment.id,
-          dealId: removedAppointment.dealId,
-        },
-      ]);
-    }
-    setAppointments((prev) => prev.filter((_, i) => i !== idx));
-  };
+  const handleRemove = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const idx = Number(e.currentTarget.id);
+      const removedAppointment = appointments[idx] as DeleteAppointmentDTO;
+      // save information about appointments should be deleted
+      if (removedAppointment.id && removedAppointment.dealId) {
+        setRemovedAppointments((prev) => [
+          ...prev,
+          // if appoinment has id and daealId then it exists in the DB and should be deleted
+          {
+            id: removedAppointment.id,
+            dealId: removedAppointment.dealId,
+          },
+        ]);
+      }
+      setAppointments((prev) => prev.filter((_, i) => i !== idx));
+    },
+    [appointments, setRemovedAppointments, setAppointments]
+  );
 
-  const handleChange = (idx: number, value: Appointment) => {
-    setAppointments((prev) =>
-      prev.map((item, i) => (i === idx ? value : item))
-    );
-  };
+  const handleChange = useCallback(
+    (idx: number | string, value: Appointment) => {
+      setAppointments((prev) =>
+        prev.map((item, i) => (i === idx ? value : item))
+      );
+    },
+    [setAppointments]
+  );
 
+  
   return (
     <Stack spacing={1.5}>
       {appointments.map((appointment, idx) => (
@@ -84,13 +92,15 @@ export const AppointmentsFormFieldsSet: React.FC<
             <Box sx={{ flexGrow: 1 }}>
               <AppointmentFormFields
                 initialData={(appointment as Appointment) || undefined}
-                onChange={(value) => handleChange(idx, value)}
+                appointmentId={idx}
+                onChange={handleChange}
               />
             </Box>
             <IconButton
               aria-label="Delete appointment"
               color="error"
-              onClick={() => handleRemove(idx)}
+              id={idx.toString()}
+              onClick={handleRemove}
               sx={{ mt: 1 }}
             >
               <DeleteIcon />

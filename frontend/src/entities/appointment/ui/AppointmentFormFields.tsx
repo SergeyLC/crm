@@ -16,29 +16,28 @@ import dayjs from "dayjs";
 import {
   Appointment,
   AppointmentType,
-  appointmentTypes
+  appointmentTypes,
 } from "@/entities/appointment/types";
 import { useGetAppointmentByIdQuery } from "@/entities/appointment/api";
 
 type AppointmentFormFieldsProps = {
   initialData?: Appointment;
-  appoinintmentId?: string;
-  onChange?: (form: Appointment) => void;
+  appointmentId: string | number;
+  onChange?: (id: string | number, form: Appointment) => void;
 };
 
 export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
   initialData,
-  appoinintmentId,
+  appointmentId,
   onChange,
 }) => {
   // Skip the initial fetch if we already have data from SSR
-  const skipFetch = !!initialData || (!appoinintmentId && !initialData);
+  const skipFetch = !!initialData || (!appointmentId && !initialData);
 
-  const {
-    data: appointmentData = initialData || undefined,
-  } = useGetAppointmentByIdQuery(appoinintmentId || "", {
-    skip: skipFetch,
-  });
+  const { data: appointmentData = initialData || undefined } =
+    useGetAppointmentByIdQuery((appointmentId as string) || "", {
+      skip: skipFetch,
+    });
 
   // Initialize form state with normalized data
   const [form, setForm] = useState<Appointment>(appointmentData as Appointment);
@@ -48,8 +47,8 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
   }, [appointmentData]);
 
   useEffect(() => {
-    onChange?.(form);
-  }, [form, onChange]);
+    onChange?.(appointmentId, form);
+  }, [form, onChange, appointmentId]);
 
   const handleChange = useCallback(
     (
@@ -62,7 +61,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
         [e.target.name]: e.target.value,
       }));
     },
-    []
+    [setForm]
   );
 
   const handleTypeChange = useCallback((e: SelectChangeEvent) => {
@@ -72,12 +71,15 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
     }));
   }, []);
 
-  const handleDateChange = useCallback((value: dayjs.Dayjs | null) => {
-    setForm((prev) => ({
-      ...prev,
-      datetime: value ? value.toDate() : prev.datetime,
-    }));
-  }, []);
+  const handleDateChange = useCallback(
+    (value: dayjs.Dayjs | null) => {
+      setForm((prev) => ({
+        ...prev,
+        datetime: value ? value.toDate() : prev.datetime,
+      }));
+    },
+    [setForm]
+  );
 
   return (
     <Box sx={{ "& > *:not(:last-child)": { mb: 3 } }}>
