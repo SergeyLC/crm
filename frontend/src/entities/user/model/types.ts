@@ -4,10 +4,11 @@ import {
   UserStatus,
 } from "@/shared/generated/prisma-client";
 
-export { UserRole, UserStatus } from "@/shared/generated/prisma-client";
-
 // Тип для фильтрации пользователей по статусу
 export type UserStatusFilter = UserStatus | 'ALL';
+
+// Экспортируем enum'ы
+export { UserRole, UserStatus };
 
 // Базовый тип пользователя
 export type User = PrismaUser;

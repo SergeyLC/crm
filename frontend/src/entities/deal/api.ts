@@ -7,7 +7,7 @@ import {
   UpdateDealDTO,
   DealStatus,
 } from "@/entities/deal/model/types";
-import { DealStage } from "@/shared/generated/prisma-client/wasm";
+import { DealStage } from "@/shared/generated/prisma-client";
 
 export const dealApi = createApi({
   reducerPath: "dealApi",

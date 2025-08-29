@@ -55,6 +55,10 @@ jobs:
           cd backend && npm ci && cd ..
           cd db && npm ci && cd ..
 
+      - name: Generate Prisma client
+        run: |
+          cd db && npm run generate && cd ..
+
       - name: Generate package-lock files
         run: |
           cd frontend && npm install --package-lock-only && cd ..
@@ -94,8 +98,8 @@ jobs:
             echo "Installing frontend dependencies..."
             cd frontend && npm ci --production && cd ..
             
-            echo "Installing backend dependencies..."  
-            cd backend && npm ci --production && cd ..
+            echo "Installing backend dependencies (including dev dependencies for build)..."  
+            cd backend && npm ci && cd ..
             
             echo "Installing db dependencies..."
             cd db && npm ci --production && cd ..
