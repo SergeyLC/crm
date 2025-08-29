@@ -2,7 +2,7 @@
 
 *Complete deployment instructions for CRM system on clean Ubuntu server*
 
-*[🇷🇺 Русский](DEPLOYMENT.ru.md) | 🇺🇸 English | [🇩🇪 Deutsch](DEPLOYMENT.de.md)*
+*[🇸 English | [🇩🇪 Deutsch](DEPLOYMENT.de.md)*
 
 ## 📋 Prerequisites
 
@@ -568,6 +568,182 @@ If you encounter issues:
 2. Check service status: `loyacrm-status.sh`
 3. Check Nginx configuration: `sudo nginx -t`
 4. Contact developer: sergeydaub@gmail.com
+
+---
+
+## 🚀 GitHub Actions CI/CD Setup
+
+### Overview
+This guide covers automated deployment using GitHub Actions for continuous integration and deployment (CI/CD).
+
+### Prerequisites
+- GitHub repository access
+- Server with SSH access
+- Repository secrets configured
+
+### Required GitHub Secrets
+In your repository settings (`Settings` → `Secrets and variables` → `Actions`), add these secrets:
+
+#### SSH Access:
+- `SERVER_HOST` - Server IP address or domain
+- `SERVER_USER` - Server username (usually `root` or your username)
+- `SERVER_SSH_KEY` - Private SSH key for server access
+
+#### Environment Variables:
+- `DATABASE_URL` - Production database connection URL
+- `JWT_SECRET` - JWT secret key
+- `NEXT_PUBLIC_BACKEND_API_URL` - Backend API URL for production
+
+### Server Preparation
+
+#### 1. Install Dependencies
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Node.js 18+
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install PM2
+sudo npm install -g pm2
+
+# Create log directory
+sudo mkdir -p /var/log/pm2
+sudo chown -R $USER:$USER /var/log/pm2
+```
+
+#### 2. Setup PostgreSQL
+```bash
+# Install PostgreSQL
+sudo apt install postgresql postgresql-contrib -y
+
+# Create database and user
+sudo -u postgres psql
+CREATE DATABASE loyacrm;
+CREATE USER loyacrm_user WITH PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE loyacrm TO loyacrm_user;
+\q
+```
+
+#### 3. Clone Repository
+```bash
+sudo mkdir -p /var/www
+cd /var/www
+git clone https://github.com/your-username/LoyaCareCRM.git loyacrm
+cd loyacrm
+```
+
+#### 4. Configure Environment Variables
+Create `.env` files on the server:
+
+**`/var/www/loyacrm/backend/.env`:**
+```bash
+PORT=4000
+DATABASE_URL="postgresql://loyacrm_user:your_secure_password@localhost:5432/loyacrm"
+JWT_SECRET="your_jwt_secret_here"
+USE_MOCK=false
+```
+
+**`/var/www/loyacrm/frontend/.env`:**
+```bash
+NEXT_PUBLIC_BACKEND_API_URL="https://your-domain.com/api"
+```
+
+### GitHub Actions Workflow
+
+The workflow file `.github/workflows/deploy.yml` is already configured and will:
+
+1. **Code Validation** - Run linting and type checking
+2. **Application Build** - Build frontend and backend
+3. **Database Migration** - Apply database migrations
+4. **PM2 Configuration** - Generate `ecosystem.config.js` automatically
+5. **Service Restart** - Stop old processes and start new ones
+6. **Health Check** - Verify application availability
+
+### Important Notes
+
+⚠️ **Security Warning:** The `ecosystem.config.js` file is **NOT** stored in the repository. It is generated automatically on the server during deployment and contains server-specific configurations (paths, ports, logs).
+
+#### File Structure After Deployment:
+```
+/var/www/loyacrm/
+├── frontend/          # Built Next.js application
+├── backend/           # Built Node.js application
+├── db/               # Prisma client and migrations
+├── ecosystem.config.js  # ← Generated automatically!
+├── .env files       # Configured manually
+└── package.json     # Root dependencies
+```
+
+### Manual Deployment Trigger
+
+You can trigger deployment manually:
+1. Go to GitHub repository
+2. Click `Actions` tab
+3. Select `Deploy to Server` workflow
+4. Click `Run workflow`
+
+### Monitoring and Logs
+
+#### Check Deployment Status:
+```bash
+# On server
+cd /var/www/loyacrm
+pm2 status
+pm2 logs
+```
+
+#### View Application Logs:
+```bash
+pm2 logs loyacrm-frontend
+pm2 logs loyacrm-backend
+```
+
+### Troubleshooting
+
+#### If Deployment Fails:
+1. Check GitHub Actions logs for errors
+2. Verify SSH connection: `ssh -T user@server`
+3. Check server resources: `df -h` and `free -h`
+4. Verify environment variables are set correctly
+
+#### Common Issues:
+- **SSH Connection Failed**: Check `SERVER_SSH_KEY` format (should be private key)
+- **Build Failed**: Check Node.js version and dependencies
+- **Migration Failed**: Verify database connection and permissions
+- **Services Not Starting**: Check PM2 logs and port availability
+
+### Security Best Practices
+
+1. **SSH Keys**: Use separate SSH keys for each server
+2. **Environment Variables**: Never commit real values to repository
+3. **Database**: Use strong passwords and limit access
+4. **Firewall**: Configure UFW or iptables properly
+5. **SSL**: Enable HTTPS with Let's Encrypt
+
+### Useful Commands
+
+```bash
+# Check all services
+pm2 status
+
+# View real-time logs
+pm2 logs --lines 50
+
+# Restart services
+pm2 restart all
+
+# Check system resources
+htop
+df -h
+free -h
+
+# Backup database
+pg_dump loyacrm > backup_$(date +%Y%m%d).sql
+```
+
+This setup provides a complete CI/CD pipeline for automated deployment of your LoyaCareCRM application! 🎉
 
 ---
 

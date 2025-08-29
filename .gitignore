@@ -21,6 +21,7 @@
 **/.DS_Store
 **/*.pem
 **/.vscode
+ecosystem.config.js
 
 # debug
 **/npm-debug.log*

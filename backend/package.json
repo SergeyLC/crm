@@ -7,13 +7,17 @@
     "start:prod": "NODE_ENV=production node dist/server.js",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src/**/*.ts",
+    "lint:check": "eslint src/**/*.ts --max-warnings 0",
     "db:migrate": "cd ../db && npm run migrate",
     "db:migrate:deploy": "cd ../db && npm run migrate:deploy",
     "db:generate": "cd ../db && npm run generate",
     "db:studio": "cd ../db && npm run studio",
     "db:seed": "cd ../db && npm run seed",
     "db:reset": "cd ../db && npm run migrate:reset",
-    "db:status": "cd ../db && npm run migrate:status"
+    "db:status": "cd ../db && npm run migrate:status",
+    "deploy:check": "../check-deployment.sh"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",

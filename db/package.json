@@ -6,7 +6,10 @@
     "migrate:reset": "prisma migrate reset --force",
     "migrate:status": "prisma migrate status",
     "studio": "prisma studio",
-    "seed": "npx tsc prisma/seed.ts --outDir temp --module commonjs --target es2015 && node temp/seed.js"
+    "seed": "npx tsc prisma/seed.ts --outDir temp --module commonjs --target es2015 && node temp/seed.js",
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'No linting configured for db'",
+    "lint:check": "echo 'No linting configured for db'"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",
