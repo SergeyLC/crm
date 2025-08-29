@@ -223,7 +223,48 @@ npm run lint
 npm run lint:fix
 ```
 
-## 🔗 API-Endpunkte
+### Qualitätsprüfungen
+```bash
+# Pre-push Hook manuell testen
+./test-pre-push.sh
+
+# Einzelne Prüfungen ausführen
+cd frontend && npm run type-check && npm run lint:check
+cd backend && npm run type-check && npm run lint:check
+```
+
+## �️ Pre-push Qualitätsprüfungen
+
+Das Projekt enthält automatische Qualitätsprüfungen, die vor jedem `git push` ausgeführt werden:
+
+### Was wird geprüft:
+- **Frontend TypeScript-Kompilierung** (`npm run type-check`)
+- **Frontend ESLint-Validierung** (`npm run lint:check`)
+- **Backend TypeScript-Kompilierung** (`npm run type-check`)
+- **Backend ESLint-Validierung** (`npm run lint:check`)
+
+### Wie es funktioniert:
+- Pre-push Hook läuft automatisch bei jedem `git push`
+- Bei fehlgeschlagenen Prüfungen wird der Push blockiert
+- Farbige Ausgabe zeigt den Status jeder Prüfung
+- Alle Prüfungen müssen bestehen, damit der Push fortgesetzt wird
+
+### Manuelles Testen:
+```bash
+# Pre-push Hook manuell testen
+.git/hooks/pre-push
+
+# Oder das bequeme Skript verwenden
+./test-pre-push.sh
+```
+
+### Prüfungen überspringen (nicht empfohlen):
+```bash
+# Push ohne Prüfungen (Hook umgehen)
+git push --no-verify
+```
+
+## �🔗 API-Endpunkte
 
 ### Authentifizierung
 - `POST /api/auth/login` - Anmeldung
