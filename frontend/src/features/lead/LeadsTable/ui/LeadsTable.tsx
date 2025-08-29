@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
 
 import {
   BaseTable,
@@ -16,10 +17,7 @@ import {
   BaseTableToolbarProps,
   ToolbarMenuItem,
 } from "@/features/BaseTable";
-import {
-  useGetLeadsQuery,
-  LeadExt,
-} from "@/entities/lead";
+import { useGetLeadsQuery, LeadExt } from "@/entities/lead";
 import { ActionMenuItemProps } from "@/features/BaseTable";
 
 import { useEntityDialog } from "@/shared";
@@ -34,9 +32,10 @@ import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 
 const EditDialog = dynamic(
-  () => import("@/features/lead/ui/LeadEditDialog").then(
-    (mod) => mod.LeadEditDialog
-  ),
+  () =>
+    import("@/features/lead/ui/LeadEditDialog").then(
+      (mod) => mod.LeadEditDialog
+    ),
   { ssr: false }
 );
 
@@ -60,10 +59,17 @@ export function LeadsTable<T extends LeadExt>({
     entityId: clickedId,
     handleEditClick,
     handleDialogClose,
+    handleCreateClick,
     showDialog,
   } = useEntityDialog();
 
-  const { handleConvert, handleConverts, handleArchive, handleArchives, handleRefreshData } = useLeadOperations();
+  const {
+    handleConvert,
+    handleConverts,
+    handleArchive,
+    handleArchives,
+    handleRefreshData,
+  } = useLeadOperations();
 
   const { data: leads = initialData || [] } = useGetLeadsQuery(undefined, {
     refetchOnMountOrArgChange: true,
@@ -100,26 +106,39 @@ export function LeadsTable<T extends LeadExt>({
       },
       {
         title: "Refresh deals' list",
+        tooltip: "Refresh deals' list",
         icon: <Refresh fontSize="small" />,
         onClick: handleRefreshData,
       },
       {
+        title: "Create lead",
+        tooltip: "Create a new lead",
+        icon: <AddIcon fontSize="small" />,
+        onClick: handleCreateClick,
+      },
+
+      {
         title: "Convert to deal",
+        tooltip: "Convert selected leads to deals",
         icon: <SwapHorizIcon fontSize="small" />,
         onClickMultiple: handleConverts,
         isGroupAction: true,
       },
       {
         title: "Archive",
+        tooltip: "Archive selected leads",
         icon: <ArchiveIcon fontSize="small" />,
         onClickMultiple: handleArchives,
         isGroupAction: true,
       },
     ],
-    [handleConverts, handleArchives, handleRefreshData]
+    [handleConverts, handleArchives, handleRefreshData, handleCreateClick]
   );
 
-  const ToolbarComponent = ({ selected, clearSelection }: BaseTableToolbarProps) => (
+  const ToolbarComponent = ({
+    selected,
+    clearSelection,
+  }: BaseTableToolbarProps) => (
     <BaseTableToolbar
       title="Leads"
       selected={selected}

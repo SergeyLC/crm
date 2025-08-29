@@ -5,3 +5,4 @@ export * from './api';
 export * from './types';
 export * from './selectors';
 export * from './sanitizers';
+export * from './LeadViewSwitcher';

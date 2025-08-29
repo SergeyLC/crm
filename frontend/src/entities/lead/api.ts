@@ -21,6 +21,10 @@ export const leadApi = createApi({
       query: () => "leads",
       providesTags: ["Leads"],
     }),
+    getArchivedLeads: build.query<LeadExt[], void>({
+      query: () => "leads/archived",
+      providesTags: ["Leads"],
+    }),
     getLeadById: build.query<LeadExt, string>({
       query: (id) => `leads/${id}`,
       providesTags: (_result, _err, id) => [{ type: "Lead", id }],
@@ -53,6 +57,7 @@ export const leadApi = createApi({
 
 export const {
   useGetLeadsQuery,
+  useGetArchivedLeadsQuery,
   useGetLeadByIdQuery,
   useCreateLeadMutation,
   useUpdateLeadMutation,
