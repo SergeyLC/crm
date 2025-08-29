@@ -233,7 +233,7 @@ cd frontend && npm run type-check && npm run lint:check
 cd backend && npm run type-check && npm run lint:check
 ```
 
-## �️ Pre-push Qualitätsprüfungen
+## 🛡️ Pre-push Qualitätsprüfungen
 
 Das Projekt enthält automatische Qualitätsprüfungen, die vor jedem `git push` ausgeführt werden:
 
@@ -264,7 +264,7 @@ Das Projekt enthält automatische Qualitätsprüfungen, die vor jedem `git push`
 git push --no-verify
 ```
 
-## �🔗 API-Endpunkte
+## 🔗 API-Endpunkte
 
 ### Authentifizierung
 - `POST /api/auth/login` - Anmeldung
