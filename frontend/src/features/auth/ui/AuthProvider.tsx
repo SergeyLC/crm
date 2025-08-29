@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const user = await authApi.getCurrentUser(token);
         dispatch({ type: "AUTH_CHECK_SUCCESS", payload: { user } });
       } catch (error) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         console.error("Auth check failed:", error);
         localStorage.removeItem("token");
         dispatch({ type: "AUTH_CHECK_FAILURE" });
@@ -74,7 +73,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const user = await authApi.getCurrentUser(token);
       dispatch({ type: "AUTH_CHECK_SUCCESS", payload: { user } });
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       console.error("Auth check failed:", error);
       localStorage.removeItem("token");
       dispatch({ type: "AUTH_CHECK_FAILURE" });

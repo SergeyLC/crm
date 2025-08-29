@@ -105,7 +105,6 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
   React.useEffect(() => {
   // Debug: log when data reference changes to help diagnose update loops.
   // Remove or guard these logs in production.
-  // eslint-disable-next-line no-console
   console.debug('[BaseTable] data changed, length=', Array.isArray(data) ? data.length : 'n/a');
   setRows(rowConverter?.((data ?? [] as T[]) || []));
   }, [data, rowConverter]);

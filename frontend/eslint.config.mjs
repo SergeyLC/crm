@@ -4,7 +4,6 @@ import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
-import path from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,7 +14,7 @@ const compat = new FlatCompat({
     allConfig: js.configs.all,
 });
 
-export default [
+const config = [
     ...compat.extends("next/core-web-vitals", "next/typescript"),
     {
         languageOptions: {
@@ -30,4 +29,15 @@ export default [
             // project-specific overrides
         },
     },
+    {
+        ignores: [
+            "src/shared/generated/**/*",
+            "src/prisma/**/*",
+            ".next/**/*",
+            "**/*.js",
+            "**/*.d.ts",
+        ],
+    },
 ];
+
+export default config;
