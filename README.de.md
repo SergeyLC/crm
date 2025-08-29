@@ -229,8 +229,8 @@ npm run lint:fix
 ./test-pre-push.sh
 
 # Einzelne Prüfungen ausführen
-cd frontend && npm run type-check && npm run lint:check
-cd backend && npm run type-check && npm run lint:check
+cd frontend && npm run type-check && npm run lint:check && npm run build
+cd backend && npm run type-check && npm run lint:check && npm run build
 ```
 
 ## 🛡️ Pre-push Qualitätsprüfungen
@@ -240,8 +240,11 @@ Das Projekt enthält automatische Qualitätsprüfungen, die vor jedem `git push`
 ### Was wird geprüft:
 - **Frontend TypeScript-Kompilierung** (`npm run type-check`)
 - **Frontend ESLint-Validierung** (`npm run lint:check`)
+- **Frontend Build-Integrität** (`npm run build`)
 - **Backend TypeScript-Kompilierung** (`npm run type-check`)
 - **Backend ESLint-Validierung** (`npm run lint:check`)
+- **Backend Build-Integrität** (`npm run build`)
+- **Backend API-Funktionalität** (Server-Start + Ping-Endpunkt)
 
 ### Wie es funktioniert:
 - Pre-push Hook läuft automatisch bei jedem `git push`
