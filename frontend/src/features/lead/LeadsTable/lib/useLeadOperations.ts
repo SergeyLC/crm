@@ -6,7 +6,7 @@ import {
   useLazyGetLeadByIdQuery,
   UpdateLeadDTO,
   LeadExt,
-  prepareToUpdate,
+  sanitizeLeadData,
 } from "@/entities/lead";
 
 export function useLeadOperations() {
@@ -30,7 +30,7 @@ export function useLeadOperations() {
       }
 
       const updatedData = updateData(lead);
-      const preparedUpdate = prepareToUpdate(updatedData);
+      const preparedUpdate = sanitizeLeadData(updatedData);
       const body: UpdateLeadDTO = {
         ...preparedUpdate,
       };
