@@ -1,10 +1,9 @@
 {
-  "type": "module",
   "scripts": {
-    "dev": "nodemon src/server.ts",
+    "dev": "tsx watch --clear-screen=false src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "debug": "nodemon --exec \"node --inspect -r ts-node/register\" src/server.ts",
+    "debug": "tsx watch --inspect --clear-screen=false src/server.ts",
     "start:prod": "NODE_ENV=production node dist/server.js",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
@@ -45,6 +44,7 @@
     "eslint": "^9.34.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
 }
