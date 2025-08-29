@@ -101,11 +101,13 @@ export function DealsTable<T extends DealExt>({
         {
           title: "Edit",
           icon: <EditIcon fontSize="small" />,
+          tooltip: "Edit deal",
           onClick: handleEditClick,
         },
         {
           title: "Archive",
           icon: <ArchiveIcon fontSize="small" />,
+          tooltip: "Archive deal",
           onClick: handleArchive,
         },
       ],
@@ -124,12 +126,12 @@ export function DealsTable<T extends DealExt>({
         onClick: handleRefreshData,
       },
       {
-        title: "Create deal",
+        title: "Create a new deal",
         icon: <AddIcon fontSize="small" />,
         onClick: handleCreateClick,
       },
       {
-        title: "Archive deals",
+        title: "Archive selected deals",
         icon: <ArchiveIcon fontSize="small" />,
         onClickMultiple: handleArchives,
         isGroupAction: true,

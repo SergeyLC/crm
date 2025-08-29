@@ -3,9 +3,10 @@ import React from "react";
 import dynamic from "next/dynamic";
 
 import EditIcon from "@mui/icons-material/Edit";
-import RestoreIcon from "@mui/icons-material/Restore";
 import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import UnarchiveIcon from "@mui/icons-material/Unarchive";
+
 import {
   DealExt,
   DealViewSwitcher,
@@ -82,12 +83,14 @@ export function ArchivedDealsTable<T extends DealExt>({
       () => [
         {
           title: "Edit",
+          tooltip: "Edit deal",
           icon: <EditIcon fontSize="small" />,
           onClick: handleEditClick,
         },
         {
           title: "Restore deal",
-          icon: <RestoreIcon fontSize="small" />,
+          tooltip: "Restore deal from archive",
+          icon: <UnarchiveIcon fontSize="small" />,
           onClick: handleRestore,
         },
       ],
@@ -102,12 +105,14 @@ export function ArchivedDealsTable<T extends DealExt>({
       },
       {
         title: "Refresh deals' list",
+        tooltip: "Refresh deals' list",
         icon: <Refresh fontSize="small" />,
         onClick: handleRefreshData,
       },
       {
         title: "Restore deals",
-        icon: <RestoreIcon fontSize="small" />,
+        tooltip: "Restore selected deals from archive",
+        icon: <UnarchiveIcon fontSize="small" />,
         onClickMultiple: handleRestores,
         isGroupAction: true,
       },

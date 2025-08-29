@@ -110,6 +110,42 @@ export function useLeadOperations() {
     [archiveLead, invalidateLeads]
   );
 
+  const restoreLead = useCallback(async (id: string) =>
+    await update(id, (lead) => ({
+      ...lead,
+      archivedAt: null,
+      status: "ACTIVE",
+    })), [update]);
+
+  const handleRestore = useCallback(
+    async (e?: React.MouseEvent, id?: string) => {
+      e?.stopPropagation();
+      if (!id) return;
+      try {
+        await restoreLead(id);
+        invalidateLeads();
+      } catch (err) {
+        console.error("Restore action failed", err);
+      }
+    },
+    [restoreLead, invalidateLeads]
+  );
+
+  const handleRestores = useCallback(
+    async (e?: React.MouseEvent, selectedIds?: readonly string[]) => {
+      e?.stopPropagation();
+      console.log("Selected ids for restore:", selectedIds);
+      if (!selectedIds?.length) return;
+      try {
+        await Promise.all(selectedIds.map(restoreLead));
+        invalidateLeads();
+      } catch (err) {
+        console.error("Restore action failed", err);
+      }
+    },
+    [restoreLead, invalidateLeads]
+  );
+
   const handleRefreshData = useCallback(async () => {
     invalidateLeads();
   }, [invalidateLeads]);
@@ -119,6 +155,8 @@ export function useLeadOperations() {
     handleConverts,
     handleArchive,
     handleArchives,
+    handleRestore,
+    handleRestores,
     invalidateLeads,
     handleRefreshData,
   };
