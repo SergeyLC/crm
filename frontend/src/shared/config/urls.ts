@@ -1,4 +1,4 @@
 export const NEXT_PUBLIC_API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_API_URL ?? "INVALID NEXT_PUBLIC_API_URL";
 export const BACKEND_API_URL =
-  process.env.BACKEND_API_URL ?? "http://localhost:4000/api";
+  process.env.NEXT_PUBLIC_BACKEND_API_URL ?? "INVALID NEXT_PUBLIC_BACKEND_API_URL";

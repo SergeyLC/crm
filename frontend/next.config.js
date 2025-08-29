@@ -25,9 +25,12 @@ const nextConfig = () => {
     allowedDevOrigins: ["your-production-domain.com", "your-cdn-domain.com"],
     // Optimizations for production
     compiler: {
-      removeConsole: isProduction ? {
-        exclude: ['error'] // Remove console.log but keep console.error
-      } : false,
+      // Remove console.log but keep console.error
+      // removeConsole: isProduction
+      //   ? {
+      //       exclude: ["error"],
+      //     }
+      //   : false,
     },
     // Compression
     compress: true,

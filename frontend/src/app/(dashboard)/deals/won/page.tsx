@@ -6,7 +6,7 @@ import { DealStage } from "@/shared/generated/prisma-client";
 export default async function WonDealsPage() {
   // Prefetch won deals data on server
   // Only prefetch in production or when backend API is available
-  if (process.env.NODE_ENV === 'production' || process.env.BACKEND_API_URL) {
+  if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_BACKEND_API_URL) {
     try {
       await store.dispatch(dealApi.endpoints.getWonDeals.initiate({
         stages: [DealStage.WON]

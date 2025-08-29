@@ -5,7 +5,7 @@ import { dealApi } from "@/entities/deal/api";
 export default async function DealsPage() {
   // Prefetch data on server for better performance and SEO
   // Only prefetch in production or when backend API is available
-  if (process.env.NODE_ENV === 'production' || process.env.BACKEND_API_URL) {
+  if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_BACKEND_API_URL) {
     try {
       await store.dispatch(dealApi.endpoints.getDeals.initiate({}));
     } catch (error) {

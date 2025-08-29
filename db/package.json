@@ -2,6 +2,9 @@
   "scripts": {
     "generate": "prisma generate && mkdir -p ../frontend/src/shared/generated/prisma-client/ && cp -R ./generated/prisma-client/* ../frontend/src/shared/generated/prisma-client/ && mkdir -p ../backend/generated/prisma-client/ && cp -R ./generated/prisma-client/* ../backend/generated/prisma-client/",
     "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:reset": "prisma migrate reset --force",
+    "migrate:status": "prisma migrate status",
     "studio": "prisma studio",
     "seed": "npx tsc prisma/seed.ts --outDir temp --module commonjs --target es2015 && node temp/seed.js"
   },

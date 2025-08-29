@@ -6,7 +6,7 @@ import { leadApi } from "@/entities/lead/api";
 export default async function LeadsPage() {
   // Prefetch data on server for better performance and SEO
   // Only prefetch in production or when backend API is available
-  if (process.env.NODE_ENV === 'production' || process.env.BACKEND_API_URL) {
+  if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_BACKEND_API_URL) {
     try {
       await store.dispatch(leadApi.endpoints.getLeads.initiate());
     } catch (error) {
