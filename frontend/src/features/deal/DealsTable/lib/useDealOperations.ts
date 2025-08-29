@@ -17,7 +17,7 @@ export function useDealOperations() {
   const invalidateDeals = useCallback(() => {
     dispatch(dealApi.util.invalidateTags(["Deals", "Deal"]));
     console.log("Invalidated deals");
-  }, [dispatch, dealApi]);
+  }, [dispatch]);
 
   const update = useCallback(
     async (id: string, updateData: (deal: DealExt) => UpdateDealDTO) => {
@@ -74,7 +74,7 @@ export function useDealOperations() {
         console.error("Archive action failed", err);
       }
     },
-    [update, invalidateDeals]
+    [invalidateDeals, archiveDeal]
   );
 
   const restoreDeal = useCallback(

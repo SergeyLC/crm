@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { BACKEND_API_URL } from "@/shared/config/urls";
+import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
 
 export async function GET() {
   try {
-    const res = await fetch(`${BACKEND_API_URL}/leads/`, {
+    const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/leads/`, {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
     });

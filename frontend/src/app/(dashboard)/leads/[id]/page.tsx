@@ -1,4 +1,4 @@
-import { BACKEND_API_URL } from "@/shared/config/urls";
+import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
 import { LeadExt } from "@/entities/lead/types";
 import LeadCardClient from "./LeadCardClient";
 
@@ -10,7 +10,7 @@ export default async function LeadCardPage({ params }: PageProps) {
   const { id } = await params;
   let leadData: LeadExt | null = null;
   try {
-    const res = await fetch(`${BACKEND_API_URL}/api/leads/${id}`, {
+    const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/api/leads/${id}`, {
       cache: "no-store",
     });
     if (res.ok) {

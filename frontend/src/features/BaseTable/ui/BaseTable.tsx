@@ -88,7 +88,7 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
   const columnsConfig: Column<TTableData>[] =
     (columnsConfigProp as Column<TTableData>[]) || defaultColumnsConfig;
 
-  const data = initialData || (getInitData ? getInitData() : []);
+  const data = React.useMemo(() => initialData || (getInitData ? getInitData() : []), [initialData, getInitData]);
   // Initialize rows state with initial data, then update with data from query
   const [rows, setRows] = React.useState<TTableData[]>(() =>
     rowConverter?.((data as T[]) || [])
@@ -108,7 +108,7 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
   // eslint-disable-next-line no-console
   console.debug('[BaseTable] data changed, length=', Array.isArray(data) ? data.length : 'n/a');
   setRows(rowConverter?.((data ?? [] as T[]) || []));
-  }, [data]);
+  }, [data, rowConverter]);
 
   const handleRequestSort = useCallback(
     (_: React.MouseEvent<unknown>, property: keyof TTableData) => {

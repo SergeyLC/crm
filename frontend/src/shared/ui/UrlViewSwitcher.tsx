@@ -6,7 +6,6 @@ import {
   SimpleViewSwitcher,
   SimpleViewSwitcherElement,
 } from "./SimpleViewSwitcher";
-import { ContactSupportOutlined } from "@mui/icons-material";
 
 export type UrlViewSwitcherElement = {
   name: string;
@@ -19,7 +18,6 @@ export type UrlViewSwitcherElement = {
 export type UrlViewSwitcherProps = {
   elements: UrlViewSwitcherElement[];
   size?: "small" | "medium" | "large";
-  isStrictPathFinding?: boolean;
   ariaLabel?: string;
   sx?: SxProps<Theme>;
   className?: string;
@@ -32,7 +30,6 @@ export type UrlViewSwitcherProps = {
 export const UrlViewSwitcher: React.FC<UrlViewSwitcherProps> = ({
   elements = [],
   size = "small",
-  isStrictPathFinding = false,
   ariaLabel = "view mode",
   sx,
   className,

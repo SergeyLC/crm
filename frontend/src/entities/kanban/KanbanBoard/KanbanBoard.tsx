@@ -50,7 +50,7 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
   const [localStacks, setLocalStacks] = React.useState<KanbanStackData[]>(
     () => stacks
   );
-  const restStagesNames = footerItems?.map((item) => item.id) || [];
+  const restStagesNames = React.useMemo(() => footerItems?.map((item) => item.id) || [], [footerItems]);
 
   React.useEffect(() => {
     setLocalStacks(stacks);
@@ -76,9 +76,9 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
 
   const pendingOnChangeRef = React.useRef<number | null>(null);
 
-  const scheduleOnChange = React.useCallback(
-    createChangeScheduler(onChange, pendingOnChangeRef),
-    [onChange]
+  const scheduleOnChange = React.useMemo(
+    () => createChangeScheduler(onChange, pendingOnChangeRef),
+    [onChange, pendingOnChangeRef]
   );
 
   const [currentOverId, setCurrentOverId] = React.useState<string | null>(null);

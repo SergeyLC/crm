@@ -74,7 +74,7 @@ export function DealEditDialog({
       dispatch(dealApi.util.invalidateTags(["Deals", "Deal"]));
       onClose?.();
     },
-    [id, data, updateDeal, createDeal, onClose]
+    [id, user, dispatch, updateDeal, createDeal, onClose]
   );
 
   if (!open) return null;

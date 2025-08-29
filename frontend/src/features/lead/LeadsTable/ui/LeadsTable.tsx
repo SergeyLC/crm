@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback } from "react";
+import React from "react";
 import dynamic from "next/dynamic";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
@@ -58,9 +58,7 @@ export function LeadsTable<T extends LeadExt>({
 }: BaseTableProps<T, LeadTableRowData>) {
   const {
     entityId: clickedId,
-    isDialogOpen,
     handleEditClick,
-    handleCreateClick,
     handleDialogClose,
     showDialog,
   } = useEntityDialog();
@@ -71,10 +69,6 @@ export function LeadsTable<T extends LeadExt>({
     refetchOnMountOrArgChange: true,
     refetchOnFocus: true,
   });
-
-  const handleDeleteClick = useCallback((selected: readonly string[]) => {
-    console.log("Delete clicked for selected ids:", selected);
-  }, []);
 
   const rowActionMenuItems: ActionMenuItemProps<LeadTableRowData>[] =
     React.useMemo(

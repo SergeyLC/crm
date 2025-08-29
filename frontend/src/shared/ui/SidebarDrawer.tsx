@@ -27,7 +27,6 @@ import { usePathname } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { LogoutButton } from "@/features/app/LogoutButton";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import Box from "@mui/material/Box";
 import Avatar from "@mui/material/Avatar";
 import Collapse from "@mui/material/Collapse";
@@ -44,8 +43,7 @@ export function SidebarDrawer() {
   const [collapsed, setCollapsed] = useState(true);
   const [open, setOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const isSmallScreen = useMediaQuery("(max-width:900px)");
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const pathname = usePathname() || "/";
 
@@ -57,12 +55,8 @@ export function SidebarDrawer() {
     setUserMenuOpen(!userMenuOpen);
   };
 
-  const isActive = (path: string) => {
-    return pathname === path || pathname?.startsWith(`${path}/`);
-  };
-
   // Getting user initials for avatar
-  const getUserInitials = () => {
+  const userInitials = useMemo(() => {
     if (!user || !user.name) return "?";
 
     const nameParts = user.name.split(" ");
@@ -70,9 +64,9 @@ export function SidebarDrawer() {
     return nameParts.length >= 1
       ? `${nameParts[0][0]}`.toUpperCase()
       : user.name.substring(0, 1).toUpperCase();
-  };
+  }, [user]);
 
-  const userInitials = useMemo(() => getUserInitials(), [user]);
+  // const userInitials = useMemo(() => getUserInitials(), [getUserInitials]);
 
   return (
     <Drawer

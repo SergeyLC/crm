@@ -36,8 +36,6 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
 
   const {
     data: appointmentData = initialData || undefined,
-    isLoading,
-    isError,
   } = useGetAppointmentByIdQuery(appoinintmentId || "", {
     skip: skipFetch,
   });
@@ -51,7 +49,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
 
   useEffect(() => {
     onChange?.(form);
-  }, [form]);
+  }, [form, onChange]);
 
   const handleChange = useCallback(
     (

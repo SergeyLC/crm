@@ -3,7 +3,7 @@ import { fn } from 'storybook/test';
 import { Button } from './Button';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
-export default {
+const Page = {
   title: 'Example/Button',
   component: Button,
   parameters: {
@@ -54,3 +54,4 @@ export const Eds = {
     label: "Button"
   }
 };
+ export default Page;

@@ -54,18 +54,29 @@ export const BaseUpsertForm = <
   const [needSubmit, setNeedSubmit] = useState(false);
   const { user, isAuthenticated } = useAuth();
   // If the user is not authenticated, we should not allow form interaction
-  useEffect(() => {
-    if (!isAuthenticated) {
-      // Handle unauthenticated state (e.g., show a message or redirect)
-    }
-  }, [isAuthenticated]);
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     // Handle unauthenticated state (e.g., show a message or redirect)
+  //   }
+  // }, [isAuthenticated]);
 
   // if creating a new form, set the assignee to the current user
+
+  const handleAssigneeChange = React.useCallback(
+    (userId: string | null) => {
+      setForm((prev) => ({
+        ...prev,
+        assigneeId: userId,
+      }));
+    },
+    [setForm]
+  );
+
   useEffect(() => {
     if (isNew && user && isAuthenticated) {
       handleAssigneeChange(user.id);
     }
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, handleAssigneeChange, isNew]);
 
   useEffect(() => {
     if (needSubmit) {
@@ -113,16 +124,6 @@ export const BaseUpsertForm = <
       setForm((prev) => ({
         ...prev,
         contact: contactData,
-      }));
-    },
-    [setForm]
-  );
-
-  const handleAssigneeChange = React.useCallback(
-    (userId: string | null) => {
-      setForm((prev) => ({
-        ...prev,
-        assigneeId: userId,
       }));
     },
     [setForm]

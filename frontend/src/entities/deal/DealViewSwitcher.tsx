@@ -58,8 +58,8 @@ export const DealViewSwitcher: React.FC<DealViewSwitcherProps> = ({
 }) => {
   return (
     <Box sx={{ display: "flex", alignItems: "center" }}>
-      <UrlViewSwitcher elements={viewSwitcherItems} sx={{ mr: 2 }} isStrictPathFinding={true} />
-      <UrlViewSwitcher elements={statusSwitcherItems} isStrictPathFinding={true} ariaLabel="status switcher" sx={{ mr: 2 }} />
+      <UrlViewSwitcher elements={viewSwitcherItems} sx={{ mr: 2 }} />
+      <UrlViewSwitcher elements={statusSwitcherItems} ariaLabel="status switcher" sx={{ mr: 2 }} />
       <Typography variant="h6">{title}</Typography>
     </Box>
   );

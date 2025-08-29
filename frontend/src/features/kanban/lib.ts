@@ -59,11 +59,12 @@ export const findStackChanges = (
   // Map of all cards "before": stackId -> Set(cardIds)
   const oldStackMap = new Map<string, Set<string>>();
   oldStacks.forEach((stack) => {
-    stack.id &&
+    if (stack.id) {
       oldStackMap.set(
         stack.id,
         new Set(stack.cards.map((card) => card.id))
       );
+    }
   });
 
   // Result: list of moved cards { cardId, fromStack, toStack }
@@ -148,7 +149,7 @@ export const processKanbanChanges = (
 
   if (movedCards.length > 0) {
     // Apply changes
-    movedCards.forEach(({ cardId, fromStack, toStack }) => {
+    movedCards.forEach(({ cardId, toStack }) => {
       // If toStack is a DealStage, update the stage
       if (toStack in DealStage) {
         updateDeal(cardId, (deal) => ({

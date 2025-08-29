@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND_API_URL } from "@/shared";
+import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Отправляем запрос к вашему бэкенд API
-    const response = await fetch(`${BACKEND_API_URL}/auth/me`, {
+    const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/auth/me`, {
       headers: {
         Authorization: authHeader,
       },

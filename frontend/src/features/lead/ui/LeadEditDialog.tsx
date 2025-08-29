@@ -60,7 +60,7 @@ export function LeadEditDialog({
       dispatch(leadApi.util.invalidateTags(["Leads"]));
       onClose?.();
     },
-    [id, data, updateLead, createLead, onClose]
+    [id, dispatch, updateLead, createLead, onClose]
   );
 
   if (!open) return null;

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import {BACKEND_API_URL } from '@/shared';
+import {NEXT_PUBLIC_BACKEND_API_URL } from '@/shared';
 
 export async function POST(req: NextRequest) {
   try {
     const credentials = await req.json();
     
     // Отправляем запрос к вашему бэкенд API
-    const response = await fetch(`${BACKEND_API_URL}/auth/login`, {
+    const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -22,8 +22,6 @@ export const LeadFormFields: React.FC<LeadFormProps> = ({
 
   const {
     data: leadData = initialData,
-    isLoading,
-    isError,
   } = useGetLeadByIdQuery(leadId || "", {
     skip: skipFetch,
   });
@@ -34,7 +32,7 @@ export const LeadFormFields: React.FC<LeadFormProps> = ({
 
   useEffect(() => {
     onSubmit?.(form);
-  }, [form]);
+  }, [form, onSubmit]);
 
   const handleChange = (
     e: React.ChangeEvent<

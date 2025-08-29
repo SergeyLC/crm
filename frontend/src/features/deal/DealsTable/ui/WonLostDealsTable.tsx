@@ -69,7 +69,7 @@ export function WonLostDealsTable<T extends DealExt>({
 
   const { handleRefreshData } = useDealOperations();
 
-  const { handleDeleteClick } = useTableActions();
+  const { } = useTableActions();
 
   // fetch deals
   const useDataQuery = isWon ? useGetWonDealsQuery : useGetLostDealsQuery;

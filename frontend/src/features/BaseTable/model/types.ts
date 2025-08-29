@@ -1,4 +1,3 @@
-import { DealStage } from "@/shared/generated/prisma-client/edge";
 import React from "react";
 export type Order = "asc" | "desc";
 

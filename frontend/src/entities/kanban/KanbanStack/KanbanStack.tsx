@@ -25,7 +25,6 @@ export const KanbanStack: React.FC<KanbanStackProps> = React.memo(
     title,
     cards,
     className,
-    compact = true,
     isDropTarget = false,
     renderCard,
   }) {

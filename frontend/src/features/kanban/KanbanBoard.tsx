@@ -18,7 +18,6 @@ import {
 } from "@/entities/deal";
 import { DealStage, DealStatus } from "@/shared/generated/prisma-client";
 import {
-  createKanbanCard,
   prepareStacks,
   moveCardToStage,
   processKanbanChanges

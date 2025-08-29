@@ -2,15 +2,12 @@
 import React from "react";
 import dynamic from "next/dynamic";
 
-import ArchiveIcon from "@mui/icons-material/Archive";
 import EditIcon from "@mui/icons-material/Edit";
 import RestoreIcon from "@mui/icons-material/Restore";
 import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import {
   DealExt,
-  DealStatus,
-  DealStage,
   DealViewSwitcher,
   useGetDealsQuery,
 } from "@/entities/deal";
@@ -70,7 +67,7 @@ export function ArchivedDealsTable<T extends DealExt>({
   const { handleRestore, handleRestores, handleRefreshData } =
     useDealOperations();
 
-  const { handleDeleteClick } = useTableActions();
+  const { } = useTableActions();
 
   // fetch deals
   const { data: deals = initialData || [] } = useGetDealsQuery(

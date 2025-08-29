@@ -36,7 +36,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
 
   useEffect(() => {
     onChange?.(form);    
-  }, [form]);
+  }, [form, onChange]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<

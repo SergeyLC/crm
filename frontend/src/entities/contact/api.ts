@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { BACKEND_API_URL } from "@/shared/config/urls";
+import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
 import {
   Contact,
   ContactExt,
@@ -10,7 +10,7 @@ import {
 export const contactApi = createApi({
   reducerPath: "contactApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: BACKEND_API_URL,
+    baseUrl: NEXT_PUBLIC_BACKEND_API_URL,
     credentials: "include",
   }),
   tagTypes: ["Contacts"],

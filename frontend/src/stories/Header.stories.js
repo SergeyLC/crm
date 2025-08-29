@@ -2,7 +2,7 @@ import { fn } from 'storybook/test';
 
 import { Header } from './Header';
 
-export default {
+const Page = {
   title: 'Example/Header',
   component: Header,
   // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
@@ -28,3 +28,5 @@ export const LoggedIn = {
 export const LoggedOut = {
   args: {},
 };
+
+export default Page;

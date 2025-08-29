@@ -214,8 +214,6 @@ export const createDeal = async (req: Request, res: Response) =>
 
 export const updateDeal = async (req: Request, res: Response) => {
   const {
-    creator,
-    assignee,
     assigneeId,
     contact,
     notes = [],

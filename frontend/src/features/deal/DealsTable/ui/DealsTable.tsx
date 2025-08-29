@@ -83,7 +83,7 @@ export function DealsTable<T extends DealExt>({
   const { handleArchive, handleArchives, handleRefreshData } =
     useDealOperations();
 
-  const { handleDeleteClick } = useTableActions();
+  const { } = useTableActions();
 
   // fetch deals
   const { data: deals = initialData || [] } = useGetDealsQuery(
@@ -135,7 +135,7 @@ export function DealsTable<T extends DealExt>({
         isGroupAction: true,
       },
     ],
-    [handleArchive, handleEditClick, handleCreateClick]
+    [handleCreateClick, handleRefreshData, handleArchives]
   );
 
   const TableToolbarComponent = ({ selected, clearSelection }: BaseTableToolbarProps) => (

@@ -7,12 +7,12 @@ import {
   UpdateUserDTO, 
   UserStatus 
 } from "../model/types";
-import { BACKEND_API_URL } from "@/shared";
+import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared";
 
 export const userApi = createApi({
   reducerPath: "userApi",
     baseQuery: fetchBaseQuery({
-    baseUrl: BACKEND_API_URL,
+    baseUrl: NEXT_PUBLIC_BACKEND_API_URL,
     credentials: "include",
   }),
 //   baseQuery: baseQueryWithAuth,

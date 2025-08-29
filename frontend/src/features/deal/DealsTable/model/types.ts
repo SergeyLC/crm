@@ -1,4 +1,3 @@
-import { Deal, DealStage } from "@/entities";
 import { BaseTableRowData } from "@/features/BaseTable";
 
 export interface DealTableRowData extends BaseTableRowData {

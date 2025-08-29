@@ -47,9 +47,9 @@ export const LeadsList = ({ initialLeads }: { initialLeads: LeadExt[] }) => {
     console.log("Leads uploaded:", leads);
   }, [leads]);
 
-  const onClick = (leadId: string) => {
-    alert(leadId);
-  };
+  // Removed unused onClick function
+
+  // Removed unused onClick function and its reference
 
   return (
     <>

@@ -55,9 +55,11 @@ jobs:
           cd backend && npm ci && cd ..
           cd db && npm ci && cd ..
 
-      - name: Generate Prisma client
+      - name: Generate package-lock files
         run: |
-          cd db && npm run generate && cd ..
+          cd frontend && npm install --package-lock-only && cd ..
+          cd backend && npm install --package-lock-only && cd ..
+          cd db && npm install --package-lock-only && cd ..
 
       - name: Type check
         run: |
@@ -88,8 +90,15 @@ jobs:
             git reset --hard origin/main
 
             echo "📦 Installing production dependencies..."
-            # Dependencies already installed in CI, just update production ones
-            npm ci --production
+            # Install dependencies for each package
+            echo "Installing frontend dependencies..."
+            cd frontend && npm ci --production && cd ..
+            
+            echo "Installing backend dependencies..."  
+            cd backend && npm ci --production && cd ..
+            
+            echo "Installing db dependencies..."
+            cd db && npm ci --production && cd ..
 
             echo "🔨 Building frontend..."
             cd frontend

@@ -37,14 +37,14 @@ export function useLeadOperations() {
       console.log("Updating lead with id:", id, " body:", body);
       await updateLead({ id, body }).unwrap();
     },
-    [triggerGetLeadById, updateLead, invalidateLeads]
+    [triggerGetLeadById, updateLead]
   );
 
-  const convertLead = async (id: string) =>
+  const convertLead = useCallback(async (id: string) =>
     await update(id, (lead) => ({
       ...lead,
       stage: "QUALIFIED",
-    }));
+    })), [update]);
 
   const handleConvert = useCallback(
     async (e: React.MouseEvent | undefined, id?: string) => {
@@ -57,7 +57,7 @@ export function useLeadOperations() {
         console.error("Convert action failed", err);
       }
     },
-    [convertLead]
+    [convertLead, invalidateLeads]
   );
 
   const handleConverts = useCallback(
@@ -71,15 +71,15 @@ export function useLeadOperations() {
         console.error("Convert action failed", err);
       }
     },
-    [update, invalidateLeads]
+    [invalidateLeads, convertLead]
   );
 
-  const archiveLead = async (id: string) =>
+  const archiveLead = useCallback(async (id: string) =>
     await update(id, (lead) => ({
       ...lead,
       archivedAt: new Date(),
       status: "ARCHIVED",
-    }));
+    })), [update]);
 
   const handleArchive = useCallback(
     async (e?: React.MouseEvent, id?: string) => {
@@ -92,7 +92,7 @@ export function useLeadOperations() {
         console.error("Archive action failed", err);
       }
     },
-    [update]
+    [archiveLead, invalidateLeads]
   );
 
   const handleArchives = useCallback(

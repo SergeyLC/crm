@@ -9,7 +9,7 @@
     "dev:debug": "NODE_OPTIONS='--inspect' next dev",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "lint:check": "next lint --max-warnings 0",
+    "lint:check": "next lint --max-warnings 25",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",

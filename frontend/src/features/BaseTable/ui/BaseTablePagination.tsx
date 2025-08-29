@@ -1,15 +1,6 @@
 import React from "react";
 import TablePagination from "@mui/material/TablePagination";
-import { TablePaginationComponent } from "../model/types"; 
-
-interface BaseTablePaginationProps {
-  count: number;
-  page: number;
-  rowsPerPage: number;
-  onPageChange: (event: unknown, newPage: number) => void;
-  onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  rowsPerPageOptions?: number[];
-}
+import { TablePaginationComponent } from "../model/types";
 
 export const BaseTablePagination: TablePaginationComponent = ({
   count,

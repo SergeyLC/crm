@@ -29,7 +29,6 @@ import Refresh from "@mui/icons-material/Refresh";
 import BlockIcon from "@mui/icons-material/Block";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import AddIcon from "@mui/icons-material/Add";
-import { ALL } from "dns";
 
 // Dynamically import the edit dialog
 const UserEditDialog = dynamic(
@@ -85,7 +84,7 @@ export function UsersTable({
     handleRefreshData,
   } = useUserOperations();
 
-  const { handleDeleteClick, isDeleting } = useTableActions();
+  const { } = useTableActions();
 
   // Create row actions using custom hook
   const { rowActionMenuItemsCreator } = useUserRowActions({
@@ -110,7 +109,6 @@ export function UsersTable({
   const handleStatusFilterChange = React.useCallback(
     (filter: UserStatusFilter) => {
       setStatusFilter(filter);
-      headerTitles[filter];
     },
     []
   );
@@ -159,7 +157,7 @@ export function UsersTable({
     ];
 
     return base.concat(groupActions[statusFilter]);
-  }, [statusFilter, handleBlocks, handleRefreshData, handleUnblocks]);
+  }, [statusFilter, handleRefreshData, groupActions, handleCreateClick]);
 
   const ToolbarComponent = ({
     selected,
