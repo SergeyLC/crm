@@ -16,6 +16,35 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release
 ```
 
+### 3. Node.js Installation (Version 24+)
+```bash
+# Install Node.js 24 using NodeSource repository
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Verify installation
+node --version  # Should show v24.x.x
+npm --version   # Should show latest npm
+
+# Optional: Install nvm for version management
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 24
+nvm use 24
+nvm alias default 24
+```
+
+### 4. Verify Node.js Installation
+```bash
+# Run the version check script
+./check-node-version.sh
+```
+
+### 5. PM2 Process Manager
+```bash
+sudo npm install -g pm2
+```
+
 ## 🗄️ PostgreSQL Installation and Setup
 
 ### 1. Install PostgreSQL

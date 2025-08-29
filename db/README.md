@@ -1,5 +1,10 @@
 # Prisma ORM Database Schema for CRM
 
+## Requirements
+
+- **Node.js**: Version 24+ (see `.nvmrc` in project root)
+- **Database**: PostgreSQL
+
 ## Setup
 
 **Initialization**
@@ -46,6 +51,11 @@ Make sure the database connection in `prisma/schema.prisma` is configured correc
 ---
 
 # ORM Prisma Datenbankschema für CRM
+
+## Voraussetzungen
+
+- **Node.js**: Version 24+ (siehe `.nvmrc` im Projektstammverzeichnis)
+- **Datenbank**: PostgreSQL
 
 ## Einrichtung
 
