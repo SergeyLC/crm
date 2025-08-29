@@ -35,6 +35,7 @@ export function useDealOperations() {
       const body: UpdateDealDTO = {
         ...preparedUpdate,
       };
+      console.log("Updating deal", JSON.stringify({ id, body }));
       await updateDeal({ id, body }).unwrap();
     },
     [triggerGetDealById, updateDeal]

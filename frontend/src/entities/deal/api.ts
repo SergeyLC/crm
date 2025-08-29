@@ -91,7 +91,7 @@ export const dealApi = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: (_result, _err, { id }) => [{ type: "Deals", id }],
+      invalidatesTags: (_result, _err, { id }) => [{ type: "Deal", id }],
     }),
     deleteDeal: build.mutation<void, string>({
       query: (id) => ({

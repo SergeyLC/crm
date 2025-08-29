@@ -108,7 +108,7 @@ export const moveCardToStage = (
   id: string,
   update: (id: string, updater: (deal: DealExt) => UpdateDealDTO) => void
 ) => {
-  let updateInfo = {};
+  let updateInfo = {}; //sanitizeDealData({...deal, ...(stage in DealStage ? { stage } : (stage in DealStatus ? { status: stage } : {}))});
   if (stage in DealStage) {
     // If the stage is a valid DealStage
     updateInfo = { stage };
@@ -117,8 +117,8 @@ export const moveCardToStage = (
     // If the stage is a valid DealStatus
     updateInfo = { status: stage };
   }
-
-  console.log(`Moving card ${id} to stage ${stage} with`, updateInfo);
+  
+  console.log(`Moving card ${id} to stage ${stage} with updateInfo=${JSON.stringify(updateInfo)}`);
   update(id, (deal) => ({
     ...deal,
     ...updateInfo,

@@ -17,11 +17,7 @@ import {
   useUpdateDealMutation,
 } from "@/entities/deal";
 import { DealStage, DealStatus } from "@/shared/generated/prisma-client";
-import {
-  prepareStacks,
-  moveCardToStage,
-  processKanbanChanges
-} from "./lib";
+import { prepareStacks, moveCardToStage, processKanbanChanges } from "./lib";
 
 export type KanbanBoardProps = {
   stacks?: KanbanStackData[];
@@ -91,6 +87,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
       const updatedData = updateData(deal);
       const preparedUpdate = sanitizeDealData(updatedData);
+      console.log("Updating deal", id, preparedUpdate);
+
       const body: UpdateDealDTO = {
         ...preparedUpdate,
       };
@@ -105,7 +103,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     },
     [update]
   );
-  
+
   const handleChange = useCallback(
     (newStacks: KanbanStackData[], restStages?: CardsByRestStages) => {
       // Process all changes using the utility function
