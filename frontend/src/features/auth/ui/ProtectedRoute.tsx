@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import ContentSkeleton from '@/shared/ui/ContentSkeleton';
 import { useAuth } from "../hooks";
 import { useRouter, usePathname } from "next/navigation";
 import { UserRole } from "../model/types";
@@ -30,7 +31,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
   }, [isLoading, isAuthenticated, user, router, pathname, allowedRoles]);
 
   if (isLoading) {
-    return <div>Loading user data...</div>;
+    return <ContentSkeleton header={false} blocks={0} lines={1} dense />;
   }
 
   if (isAuthenticated && (!allowedRoles || (user && allowedRoles.includes(user.role)))) {
