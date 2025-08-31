@@ -18,6 +18,7 @@ import {
 } from "@/entities/deal";
 import { DealStage, DealStatus } from "@/shared/generated/prisma-client";
 import { prepareStacks, moveCardToStage, processKanbanChanges } from "./lib";
+import { useTranslation } from "react-i18next";
 
 export type KanbanBoardProps = {
   stacks?: KanbanStackData[];
@@ -36,7 +37,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   gap = 2,
   padding = 1,
 }) => {
+  const { t } = useTranslation("kanban");
   const needToFetchData = !incomingStacks || incomingStacks.length === 0;
+
 
   // load data only if needed
   const { data: deals = [] } = useGetDealsQuery(undefined, {
@@ -52,9 +55,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     if (incomingStacks?.length) {
       return incomingStacks;
     }
-    // Otherwise, create from deals
-    return prepareStacks(deals || []);
-  }, [incomingStacks, deals]);
+    // Otherwise, create from deals 
+  return prepareStacks(deals || [], t);
+  }, [incomingStacks, deals, t]);
 
   // Local state for working with data
   const [stacksInfo, setStacksInfo] = React.useState<KanbanStackData[]>([]);
@@ -69,9 +72,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   }, [dealStacks]);
 
   const footerItems: { id: DealStage | DealStatus; label: string }[] = [
-    { id: "LOST", label: "LOST" },
-    { id: "WON", label: "WON" },
-    { id: "ARCHIVED", label: "ARCHIVED" },
+    { id: "LOST", label: t("footer.lost") },
+    { id: "WON", label: t("footer.won") },
+    { id: "ARCHIVED", label: t("footer.archived") },
   ];
 
   const update = useCallback(

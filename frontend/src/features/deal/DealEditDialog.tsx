@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslation } from 'react-i18next';
 import { useDispatch } from "react-redux";
 
 import {
@@ -26,17 +27,14 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 
 export function DealEditDialog({
   id,
-  titleEdit = "Edit Deal",
-  titleCreate = "Create Deal",
   open,
   onClose,
 }: {
   id?: string;
-  titleEdit?: string;
-  titleCreate?: string;
   open?: boolean;
   onClose?: () => void;
 }) {
+  const { t } = useTranslation('deal');
   const { data, isLoading } = useGetDealByIdQuery(id || "", {
     skip: !id,
   });
@@ -89,7 +87,7 @@ export function DealEditDialog({
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6">{id ? titleEdit : titleCreate}</Typography>
+          <Typography variant="h6">{id ? t('dialog.edit') : t('dialog.create')}</Typography>
           <IconButton
             edge="end"
             color="inherit"
@@ -103,15 +101,15 @@ export function DealEditDialog({
       </DialogTitle>
 
       <DialogContent>
-        {isLoading && id ? (
+    {isLoading && id ? (
           <Box display="flex" justifyContent="center" my={4}>
-            <CircularProgress />
+      <CircularProgress />
           </Box>
         ) : (
           <DealUpsertForm
             initialData={data}
             dealId={id}
-            onSubmit={handleSubmit}
+      onSubmit={handleSubmit}
           />
         )}
       </DialogContent>

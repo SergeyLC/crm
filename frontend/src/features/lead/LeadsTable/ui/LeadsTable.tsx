@@ -28,12 +28,9 @@ import { ActionMenuItemProps } from "@/features/BaseTable";
 
 import { useEntityDialog } from "@/shared";
 
-import {
-  leadTableColumns,
-  LeadTableRowData,
-  mapLeadsToLeadRows,
-} from "../model";
+import { leadTableColumns, LeadTableRowData, mapLeadsToLeadRows } from "../model";
 import { useLeadOperations } from "../lib";
+import { useTranslation } from 'react-i18next';
 import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 
@@ -98,122 +95,116 @@ export function LeadsTable<T extends LeadExt>({
     }
   );
 
-  const rowActionMenuItems: ActionMenuItemProps<LeadTableRowData>[] =
-    React.useMemo(() => {
-      const baseItems = [
-        {
-          title: "Edit",
-          icon: <EditIcon fontSize="small" />,
-          onClick: handleEditClick,
-        },
-      ];
+  const { t } = useTranslation('lead');
 
-      if (showArchived) {
-        // For archived leads: only edit and restore
-        return [
-          ...baseItems,
-          {
-            title: "Restore",
-            tooltip: "Restore leads from archive",
-            icon: <UnarchiveIcon fontSize="small" />,
-            onClick: handleRestore,
-          },
-        ];
-      } else {
-        // For active leads: all actions
-        return [
-          ...baseItems,
-          {
-            title: "Convert to deal",
-            tooltip: "Convert lead to deals",
-            icon: <SwapHorizIcon fontSize="small" />,
-            onClick: handleConvert,
-          },
-          {
-            title: "Archive",
-            tooltip: "Archive lead",
-            icon: <ArchiveIcon fontSize="small" />,
-            onClick: handleArchive,
-          },
-        ];
-      }
-    }, [
-      showArchived,
-      handleEditClick,
-      handleConvert,
-      handleArchive,
-      handleRestore,
-    ]);
+  // Localize column labels at render time (avoid i18next in model layer)
+  const localizedColumns = React.useMemo(() => {
+    const mapping: Record<string, string> = {
+      title: 'lead:table.column.title',
+      assigneeName: 'lead:table.column.assignee',
+      potentialValue: 'lead:table.column.potential',
+      clientName: 'lead:table.column.client'
+    };
+    return leadTableColumns.map(col =>
+      col.key && mapping[col.key as string]
+        ? { ...col, label: t(mapping[col.key as string]) }
+        : col
+    );
+  }, [t]);
 
-  const toolbarMenuItems: ToolbarMenuItem[] = React.useMemo(() => {
+  const rowActionMenuItems: ActionMenuItemProps<LeadTableRowData>[] = React.useMemo(() => {
     const baseItems = [
       {
-        title: "Filter",
-        icon: <FilterListIcon fontSize="small" />,
-      },
-      {
-        title: "Refresh leads' list",
-        tooltip: "Refresh leads' list",
-        icon: <Refresh fontSize="small" />,
-        onClick: handleRefreshData,
+        title: t('lead:table.action.edit'),
+        icon: <EditIcon fontSize="small" />,
+        onClick: handleEditClick,
       },
     ];
 
     if (showArchived) {
-      // For archived leads: only filter, refresh, and restore
       return [
         ...baseItems,
         {
-          title: "Restore leads",
-          tooltip: "Restore selected leads from archive",
+          title: t('lead:table.action.restore'),
+          tooltip: t('lead:table.tooltip.restore'),
+          icon: <UnarchiveIcon fontSize="small" />,
+          onClick: handleRestore,
+        },
+      ];
+    }
+    return [
+      ...baseItems,
+      {
+        title: t('lead:table.action.convert'),
+        tooltip: t('lead:table.tooltip.convert'),
+        icon: <SwapHorizIcon fontSize="small" />,
+        onClick: handleConvert,
+      },
+      {
+        title: t('lead:table.action.archive'),
+        tooltip: t('lead:table.tooltip.archive'),
+        icon: <ArchiveIcon fontSize="small" />,
+        onClick: handleArchive,
+      },
+    ];
+  }, [showArchived, handleEditClick, handleConvert, handleArchive, handleRestore, t]);
+
+  const toolbarMenuItems: ToolbarMenuItem[] = React.useMemo(() => {
+    const baseItems = [
+      {
+        title: t('lead:table.action.filter'),
+        icon: <FilterListIcon fontSize="small" />,
+      },
+      {
+        title: t('lead:table.action.refresh'),
+        tooltip: t('lead:table.tooltip.refresh'),
+        icon: <Refresh fontSize="small" />,
+        onClick: handleRefreshData,
+      },
+    ];
+    if (showArchived) {
+      return [
+        ...baseItems,
+        {
+          title: t('lead:table.action.restore'),
+          tooltip: t('lead:table.tooltip.restoreSelected'),
           icon: <UnarchiveIcon fontSize="small" />,
           onClickMultiple: handleRestores,
           isGroupAction: true,
         },
       ];
-    } else {
-      // For active leads: all actions
-      return [
-        ...baseItems,
-        {
-          title: "Create lead",
-          tooltip: "Create a new lead",
-          icon: <AddIcon fontSize="small" />,
-          onClick: handleCreateClick,
-        },
-        {
-          title: "Convert to deal",
-          tooltip: "Convert selected leads to deals",
-          icon: <SwapHorizIcon fontSize="small" />,
-          onClickMultiple: handleConverts,
-          isGroupAction: true,
-        },
-        {
-          title: "Archive",
-          tooltip: "Archive selected leads",
-          icon: <ArchiveIcon fontSize="small" />,
-          onClickMultiple: handleArchives,
-          isGroupAction: true,
-        },
-      ];
     }
-  }, [
-    showArchived,
-    handleRefreshData,
-    handleCreateClick,
-    handleConverts,
-    handleArchives,
-    handleRestores,
-  ]);
+    return [
+      ...baseItems,
+      {
+        title: t('lead:table.action.create'),
+        tooltip: t('lead:table.tooltip.create'),
+        icon: <AddIcon fontSize="small" />,
+        onClick: handleCreateClick,
+      },
+      {
+        title: t('lead:table.action.convert'),
+        tooltip: t('lead:table.tooltip.convertSelected'),
+        icon: <SwapHorizIcon fontSize="small" />,
+        onClickMultiple: handleConverts,
+        isGroupAction: true,
+      },
+      {
+        title: t('lead:table.action.archive'),
+        tooltip: t('lead:table.tooltip.archiveSelected'),
+        icon: <ArchiveIcon fontSize="small" />,
+        onClickMultiple: handleArchives,
+        isGroupAction: true,
+      },
+    ];
+  }, [showArchived, handleRefreshData, handleCreateClick, handleConverts, handleArchives, handleRestores, t]);
 
   const ToolbarComponent = ({
     selected,
     clearSelection,
   }: BaseTableToolbarProps) => (
     <BaseTableToolbar
-      title={
-        <LeadViewSwitcher title={showArchived ? "Archived Leads" : "Leads"} />
-      }
+      title={<LeadViewSwitcher title={showArchived ? t('lead:table.archivedTitle') : t('lead:table.title')} />}
       selected={selected}
       menuItems={toolbarMenuItems}
       clearSelection={clearSelection}
@@ -227,9 +218,9 @@ export function LeadsTable<T extends LeadExt>({
         order={order}
         orderBy={orderBy}
         TableToolbarComponent={ToolbarComponent}
-        toolbarTitle="Leads"
+        toolbarTitle={t('lead:table.title')}
         TableHeadComponent={LeadsTableHead}
-        columnsConfig={leadTableColumns}
+        columnsConfig={localizedColumns}
         rowMapper={mapLeadsToLeadRows}
         rowActionMenuItems={rowActionMenuItems}
         sx={{ p: 0, m: 0 }}

@@ -1,0 +1,20 @@
+{
+  "field": {
+    "dateTime": "Datum & Uhrzeit",
+    "type": "Typ",
+    "note": "Notiz"
+  },
+  "type": {
+    "CALL": "Anruf",
+    "MEETING": "Meeting",
+    "DEMO": "Demo",
+    "FOLLOW_UP": "Nachverfolgung",
+  "OTHER": "Andere",
+  "LUNCH": "Mittagessen"
+  },
+  "action": {
+    "add": "Termin hinzufügen",
+    "delete": "Termin löschen"
+  },
+  "none": "Keiner"
+}

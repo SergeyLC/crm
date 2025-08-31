@@ -1,0 +1,16 @@
+{
+  "app.title": "LoyaCRM",
+  "app.description": "LoyaCare CRM - Ihre CRM-Lösung",
+  "common.create": "Erstellen",
+  "common.update": "Aktualisieren",
+  "common.filter": "Filtern",
+  "common.save": "Speichern",
+  "common.cancel": "Abbrechen",
+  "common.search": "Suchen",
+  "common.loading": "Lädt",
+  "common.error": "Fehler",
+  "common.success": "Erfolg",
+  "messages.user.updated": "Benutzer erfolgreich aktualisiert",
+  "messages.user.created": "Benutzer erfolgreich erstellt",
+  "messages.operation.failed": "Vorgang fehlgeschlagen"
+}

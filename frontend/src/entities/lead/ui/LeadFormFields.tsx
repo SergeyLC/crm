@@ -1,10 +1,8 @@
+"use client";
 import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { TextField, Button, Stack } from "@mui/material";
-import {
-  LeadExt,
-  CreateLeadDTO,
-  UpdateLeadDTO,
-} from "@/entities/lead/types";
+import { LeadExt, CreateLeadDTO, UpdateLeadDTO } from "@/entities/lead/types";
 import { useGetLeadByIdQuery } from "@/entities/lead/api";
 
 type LeadFormProps = {
@@ -18,11 +16,10 @@ export const LeadFormFields: React.FC<LeadFormProps> = ({
   leadId,
   onSubmit,
 }) => {
+  const { t } = useTranslation('lead');
   const skipFetch = Boolean(initialData);
 
-  const {
-    data: leadData = initialData,
-  } = useGetLeadByIdQuery(leadId || "", {
+  const { data: leadData = initialData } = useGetLeadByIdQuery(leadId || "", {
     skip: skipFetch,
   });
 
@@ -48,21 +45,21 @@ export const LeadFormFields: React.FC<LeadFormProps> = ({
   return (
     <Stack spacing={2}>
       <TextField
-        label="Product"
+        label={t('lead:form.productInterest')}
         name="productInterest"
-        value={form.productInterest || ""}
+        value={form.productInterest || ''}
         onChange={handleChange}
-        placeholder="productInterest"
+        placeholder={t('lead:form.productInterest')}
       />
       <TextField
-        label="Wert"
+        label={t('lead:form.potentialValue')}
         name="potentialValue"
         value={form.potentialValue || undefined}
         onChange={handleChange}
-        placeholder="Wert"
+        placeholder={t('lead:form.potentialValue')}
       />
       <Button variant="contained" type="submit">
-        {initialData ? "Update" : "Create"}
+        {initialData ? t('lead:form.update') : t('lead:form.create')}
       </Button>
     </Stack>
   );

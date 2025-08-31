@@ -1,0 +1,59 @@
+{
+  "view": {
+    "title": "Leads",
+    "active": "Aktive Leads",
+    "archived": "Archivierte Leads",
+    "ariaSwitcher": "Leads Status Umschalter"
+  },
+  "card": {
+    "loading": "Lead wird geladen...",
+    "error": "Fehler beim Laden des Leads."
+  },
+  "dialog": {
+    "editTitle": "Lead bearbeiten",
+    "createTitle": "Lead erstellen"
+  },
+  "list": {
+    "id": "ID",
+    "owner": "Besitzer",
+    "phone": "Telefon",
+    "productInterest": "Produkt",
+    "createdAt": "Lead erstellt",
+    "loading": "Laden..."
+  },
+  "form": {
+    "productInterest": "Produkt",
+    "potentialValue": "Potenzialwert",
+    "create": "Erstellen",
+    "update": "Aktualisieren"
+  },
+  "table": {
+    "title": "Leads",
+    "archivedTitle": "Archivierte Leads",
+    "column": {
+      "title": "Titel",
+      "assignee": "Zuständig",
+      "potential": "Potenzial",
+      "client": "Kunde"
+    },
+    "action": {
+      "edit": "Bearbeiten",
+      "restore": "Wiederherstellen",
+      "convert": "In Verkauf umwandeln",
+      "archive": "Archivieren",
+      "create": "Lead erstellen",
+      "filter": "Filtern",
+      "refresh": "Liste aktualisieren"
+    },
+    "tooltip": {
+      "restore": "Lead aus Archiv wiederherstellen",
+      "convert": "Lead in Verkäufe umwandeln",
+      "archive": "Lead archivieren",
+      "create": "Neuen Lead erstellen",
+      "convertSelected": "Ausgewählte Leads in Verkäufe umwandeln",
+      "archiveSelected": "Ausgewählte Leads archivieren",
+      "restoreSelected": "Ausgewählte Leads aus Archiv wiederherstellen",
+      "refresh": "Lead-Liste aktualisieren"
+    }
+  }
+}

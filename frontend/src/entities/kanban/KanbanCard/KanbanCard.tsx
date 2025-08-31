@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import { currencyFormatter } from "@/shared/lib";
 import { KanbanCardData } from "./types";
+import { useTranslation } from 'react-i18next';
 
 export type Props = {
   data: KanbanCardData;
@@ -20,6 +21,7 @@ export const KanbanCard: React.FC<Props> = React.memo(function KanbanCard({
   backgroundColor,
 }) {
   const formattedValue = currencyFormatter(data.potentialValue);
+  const { t } = useTranslation('kanban');
 
   return (
     <Card 
@@ -64,7 +66,7 @@ export const KanbanCard: React.FC<Props> = React.memo(function KanbanCard({
             component="div"
             sx={{ fontWeight: 700, lineHeight: 1.2 }}
             noWrap
-            title={"Title"}
+            title={t('kanban:card.title')}
           >
             {data.title ?? ""}
           </Typography>
@@ -75,7 +77,7 @@ export const KanbanCard: React.FC<Props> = React.memo(function KanbanCard({
               color="text.secondary"
               sx={{ mt: 0.5 }}
               noWrap
-              title={"Client Name"}
+              title={t('kanban:card.clientName')}
             >
               {data.clientName}
             </Typography>
@@ -87,7 +89,7 @@ export const KanbanCard: React.FC<Props> = React.memo(function KanbanCard({
               color="text.secondary"
               sx={{ mt: 0.5 }}
               noWrap
-              title={"Potential Value"}
+              title={t('kanban:card.potentialValue')}
             >
               {formattedValue}
             </Typography>

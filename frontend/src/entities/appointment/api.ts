@@ -5,7 +5,7 @@ import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
 export const appointmentApi = createApi({
   reducerPath: "appointmentApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: NEXT_PUBLIC_BACKEND_API_URL,
+    baseUrl: NEXT_PUBLIC_BACKEND_API_URL || '/api',
     credentials: "include",
   }),
   tagTypes: ["Appointments"],

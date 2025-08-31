@@ -1,0 +1,16 @@
+{
+  "applicationError": "Anwendungsfehler",
+  "digest": "Prüfsumme",
+  "notFoundHint": "Benutzerdefinierte Not-Found-Seite wird angezeigt. Wenn der Build weiterhin fehlschlägt, tritt das Problem vorher auf.",
+  "debugInfo": "Debug-Informationen",
+  "somethingWentWrong": "Etwas ist schiefgelaufen!",
+  "loading": "Laden...",
+  "adminDashboard": "Admin-Dashboard",
+  "errorLoadingData": "Fehler beim Laden der Daten",
+  "noData": "Keine Daten",
+  "leadCard": "Lead-Karte",
+  "dataLoadingFailed": "Daten konnten nicht geladen werden"
+  ,"unknownError": "Unbekannter Fehler"
+  ,"pageNotFound": "Seite nicht gefunden"
+  ,"tryAgain": "Nochmal versuchen"
+}

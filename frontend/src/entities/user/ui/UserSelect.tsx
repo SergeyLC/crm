@@ -1,4 +1,6 @@
+"use client";
 import React from "react";
+import { useTranslation } from 'react-i18next';
 import { FormControl, InputLabel, Select, MenuItem, CircularProgress } from "@mui/material";
 import { useGetUsersQuery } from "@/entities/user";
 import type { UserExt } from "@/entities/user/model/types";
@@ -16,6 +18,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
   users,
   label = "User",
 }) => {
+  const { t } = useTranslation('user');
   // If users is not provided, we load it via RTK Query
   const { data, isLoading, isError } = useGetUsersQuery(undefined, {
     skip: !!users,
@@ -26,10 +29,10 @@ export const UserSelect: React.FC<UserSelectProps> = ({
 
   return (
     <FormControl fullWidth size="small" sx={{ minWidth: 120 }}>
-      <InputLabel>{label}</InputLabel>
+      <InputLabel>{label || t('user:select.label')}</InputLabel>
       <Select
         value={isValidValue ? value : ""}
-        label={label}
+        label={label || t('user:select.label')}
         onChange={(e) => onChange(e.target.value || "")}
         size="small"
         sx={{ height: 40, padding: "0 8px" }}
@@ -41,7 +44,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
           </MenuItem>
         ) : userList.length === 0 ? (
           <MenuItem value="" disabled>
-            {isError ? "Failed to load" : "No users found"}
+            {isError ? t('user:select.failed') : t('user:select.empty')}
           </MenuItem>
         ) : (
           userList.map((user) => (

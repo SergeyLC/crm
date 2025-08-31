@@ -17,6 +17,7 @@ import {
   Grid,
 } from "@mui/material";
 import { CreateUserDTO, UpdateUserDTO, UserExt, UserRole, UserStatus } from "@/entities/user";
+import { useTranslation } from "react-i18next";
 
 interface UserFormProps {
   user?: UserExt;
@@ -27,45 +28,55 @@ interface UserFormProps {
 }
 
 // Schema of validation for new users
-const createUserSchema = yup.object().shape({
-  name: yup.string().required("Name is required"),
-  email: yup.string().email("Invalid email").required("Email is required"),
-  password: yup
-    .string()
-    .required("Password is required")
-    .min(6, "Password must be at least 6 characters"),
-  role: yup
-    .mixed<UserRole>()
-    .oneOf(Object.values(UserRole), "Invalid role")
-    .required("Role is required"),
-  status: yup
-    .mixed<UserStatus>()
-    .oneOf([UserStatus.ACTIVE, UserStatus.BLOCKED], "Invalid status")
-    .required("Status is required"),
-});
+// Minimal translation function signature compatible with i18next's t
+interface TOptions { [key: string]: unknown }
+const createUserSchema = (t: (key: string, options?: TOptions) => string) =>
+  yup.object().shape({
+    name: yup.string().required(t("form.validation.nameRequired")),
+    email: yup
+      .string()
+      .email(t("form.validation.emailInvalid"))
+      .required(t("form.validation.emailRequired")),
+    password: yup
+      .string()
+      .required(t("form.validation.passwordRequired"))
+      .min(6, t("form.validation.passwordMin")),
+    role: yup
+      .mixed<UserRole>()
+      .oneOf(Object.values(UserRole), t("form.validation.roleInvalid"))
+      .required(t("form.validation.roleRequired")),
+    status: yup
+      .mixed<UserStatus>()
+      .oneOf([UserStatus.ACTIVE, UserStatus.BLOCKED], t("form.validation.statusInvalid"))
+      .required(t("form.validation.statusRequired")),
+  });
 
 // Schema of validation for updating users
-const updateUserSchema = yup.object().shape({
-  name: yup.string().required("Name is required"),
-  email: yup.string().email("Invalid email").required("Email is required"),
-  password: yup
-    .string()
-    .nullable()
-    .transform((value) => (value === "" ? null : value))
-    .test(
-      "password-length",
-      "Password must be at least 6 characters",
-      (value) => value === null || value === undefined || value.length >= 1
-    ),
-  role: yup
-    .string()
-    .oneOf(["ADMIN", "EMPLOYEE"], "Invalid role")
-    .required("Role is required"),
-  status: yup
-    .string()
-    .oneOf(["ACTIVE", "BLOCKED"], "Invalid status")
-    .required("Status is required"),
-});
+const updateUserSchema = (t: (key: string, options?: TOptions) => string) =>
+  yup.object().shape({
+    name: yup.string().required(t("form.validation.nameRequired")),
+    email: yup
+      .string()
+      .email(t("form.validation.emailInvalid"))
+      .required(t("form.validation.emailRequired")),
+    password: yup
+      .string()
+      .nullable()
+      .transform((value) => (value === "" ? null : value))
+      .test(
+        "password-length",
+        t("form.validation.passwordMin"),
+        (value) => value === null || value === undefined || value.length >= 1
+      ),
+    role: yup
+      .string()
+      .oneOf(["ADMIN", "EMPLOYEE"], t("form.validation.roleInvalid"))
+      .required(t("form.validation.roleRequired")),
+    status: yup
+      .string()
+      .oneOf(["ACTIVE", "BLOCKED"], t("form.validation.statusInvalid"))
+      .required(t("form.validation.statusRequired")),
+  });
 
 export const UserForm: React.FC<UserFormProps> = ({
   user,
@@ -74,10 +85,11 @@ export const UserForm: React.FC<UserFormProps> = ({
   isLoading = false,
   error,
 }) => {
+  const { t } = useTranslation("user");
   const isEditing = !!user;
 
   // Select the schema based on the mode (create/edit)
-  const schema = isEditing ? updateUserSchema : createUserSchema;
+  const schema = (isEditing ? updateUserSchema : createUserSchema)(t);
   
   const defaultValues = {
     name: user?.name || "",
@@ -126,7 +138,7 @@ export const UserForm: React.FC<UserFormProps> = ({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Full Name"
+                  label={t("form.field.fullName")}
                   fullWidth
                   error={!!errors.name}
                   helperText={errors.name?.message as string}
@@ -143,7 +155,7 @@ export const UserForm: React.FC<UserFormProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Email"
+                label={t("form.field.email")}
                 fullWidth
                 error={!!errors.email}
                 helperText={errors.email?.message as string}
@@ -162,8 +174,8 @@ export const UserForm: React.FC<UserFormProps> = ({
                 {...field}
                 label={
                   isEditing
-                    ? "Password (leave empty to keep unchanged)"
-                    : "Password"
+                    ? t("form.field.passwordEdit")
+                    : t("form.field.password")
                 }
                 type="password"
                 fullWidth
@@ -177,14 +189,14 @@ export const UserForm: React.FC<UserFormProps> = ({
 
         {/* <Grid xs={12} sm={6}> */}
           <FormControl fullWidth error={!!errors.role} disabled={isLoading}>
-            <InputLabel id="role-label">Role</InputLabel>
+            <InputLabel id="role-label">{t("form.field.role")}</InputLabel>
             <Controller
               name="role"
               control={control}
               render={({ field }) => (
-                <Select {...field} labelId="role-label" label="Role">
-                  <MenuItem value="ADMIN">Admin</MenuItem>
-                  <MenuItem value="EMPLOYEE">Employee</MenuItem>
+                <Select {...field} labelId="role-label" label={t("form.field.role")}> 
+                  <MenuItem value="ADMIN">{t("role.admin")}</MenuItem>
+                  <MenuItem value="EMPLOYEE">{t("role.employee")}</MenuItem>
                 </Select>
               )}
             />
@@ -196,14 +208,14 @@ export const UserForm: React.FC<UserFormProps> = ({
 
         {/* <Grid xs={12} sm={6}> */}
           <FormControl fullWidth error={!!errors.status} disabled={isLoading}>
-            <InputLabel id="status-label">Status</InputLabel>
+            <InputLabel id="status-label">{t("form.field.status")}</InputLabel>
             <Controller
               name="status"
               control={control}
               render={({ field }) => (
-                <Select {...field} labelId="status-label" label="Status">
-                  <MenuItem value="ACTIVE">Active</MenuItem>
-                  <MenuItem value="BLOCKED">Blocked</MenuItem>
+                <Select {...field} labelId="status-label" label={t("form.field.status")}> 
+                  <MenuItem value="ACTIVE">{t("status.active")}</MenuItem>
+                  <MenuItem value="BLOCKED">{t("status.blocked")}</MenuItem>
                 </Select>
               )}
             />
@@ -216,7 +228,7 @@ export const UserForm: React.FC<UserFormProps> = ({
 
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3, gap: 2 }}>
         <Button variant="outlined" onClick={onCancel} disabled={isLoading}>
-          Cancel
+          {t("form.action.cancel")}
         </Button>
         <Button
           type="submit"
@@ -226,7 +238,7 @@ export const UserForm: React.FC<UserFormProps> = ({
             isLoading ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isEditing ? "Update" : "Create"}
+          {isEditing ? t("form.action.update") : t("form.action.create")}
         </Button>
       </Box>
     </Box>

@@ -1,0 +1,20 @@
+{
+  "field": {
+    "dateTime": "Date & Time",
+    "type": "Type",
+    "note": "Note"
+  },
+  "type": {
+    "CALL": "Call",
+    "MEETING": "Meeting",
+    "DEMO": "Demo",
+    "FOLLOW_UP": "Follow-up",
+    "OTHER": "Other",
+    "LUNCH": "Lunch"
+  },
+  "action": {
+    "add": "Add Appointment",
+    "delete": "Delete appointment"
+  },
+  "none": "None"
+}

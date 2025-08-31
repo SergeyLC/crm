@@ -1,0 +1,20 @@
+"use client";
+// import React from 'react';
+// import { useTranslation } from 'react-i18next';
+
+// export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
+//   const { t } = useTranslation();
+//   return (
+//     <div style={{fontFamily:'sans-serif',padding:32,color:'#b00'}}>
+//       <h1>{t('app:applicationError')}</h1>
+//       <p>{error?.message || t('app:unknownError', 'Unknown error')}</p>
+//       {error?.digest && <small>{t('app:digest')}: {error.digest}</small>}
+//     </div>
+//   );
+// }
+
+export default function GlobalError() {
+  return (
+      <h1>Application Error</h1>
+  );
+}

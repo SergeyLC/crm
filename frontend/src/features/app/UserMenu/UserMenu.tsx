@@ -18,11 +18,13 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { LogoutButton } from "../LogoutButton";
 import { useRouter } from "next/navigation";
+import { useLocale, localePath } from '@/shared/lib/hooks/useLocale';
 
 export const UserMenu: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const router = useRouter();
+  const locale = useLocale();
   
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -33,6 +35,7 @@ export const UserMenu: React.FC = () => {
   };
   
   const handleNavigate = (path: string) => {
+    path = localePath(path, locale);
     handleClose();
     router.push(path);
   };
@@ -107,14 +110,14 @@ export const UserMenu: React.FC = () => {
           </Typography>
         </Box>
 
-        <MenuItem onClick={() => handleNavigate("/profile")}>
+  <MenuItem onClick={() => handleNavigate("/profile")}>
           <ListItemIcon>
             <AccountCircleIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Profile</ListItemText>
         </MenuItem>
 
-        <MenuItem onClick={() => handleNavigate("/settings")}>
+  <MenuItem onClick={() => handleNavigate("/settings")}>
           <ListItemIcon>
             <SettingsIcon fontSize="small" />
           </ListItemIcon>

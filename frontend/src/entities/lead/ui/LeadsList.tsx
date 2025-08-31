@@ -7,34 +7,37 @@ import { useGetLeadsQuery } from "@/entities/lead/api";
 
 import * as React from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { useTranslation } from 'react-i18next';
 import Paper from "@mui/material/Paper";
 
-const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", width: 70 },
+const buildColumns = (t: (k: string) => string): GridColDef[] => [
+  { field: 'id', headerName: t('lead:list.id'), width: 70 },
   {
-    field: "name",
-    headerName: "Besitzer",
+    field: 'name',
+    headerName: t('lead:list.owner'),
     width: 130,
     valueGetter: (_value, row) => row.creator.name,
   },
   {
-    field: "",
-    headerName: "Phone",
+    field: 'phone',
+    headerName: t('lead:list.phone'),
     width: 130,
     valueGetter: (_value, row) => row.contact?.phone,
   },
-  { field: "productInterest", headerName: "Product", width: 130 },
+  { field: 'productInterest', headerName: t('lead:list.productInterest'), width: 130 },
   {
-    field: "createdAt",
-    headerName: "Lead erstellt",
+    field: 'createdAt',
+    headerName: t('lead:list.createdAt'),
     width: 130,
-    valueGetter: (value) => formatDate(value) || "",
+    valueGetter: (value) => formatDate(value) || '',
   },
 ];
 
 const paginationModel = { page: 0, pageSize: 5 };
 
 export const LeadsList = ({ initialLeads }: { initialLeads: LeadExt[] }) => {
+  const { t } = useTranslation('lead');
+  const columns = React.useMemo(() => buildColumns(t), [t]);
   const skipFetch = Boolean(initialLeads);
   const { data: leads = initialLeads, isFetching } = useGetLeadsQuery(
     undefined,
@@ -53,7 +56,7 @@ export const LeadsList = ({ initialLeads }: { initialLeads: LeadExt[] }) => {
 
   return (
     <>
-      {isFetching && <p>Loading...</p>}
+  {isFetching && <p>{t('lead:list.loading')}</p>}
       <div style={{ display: "flex", flexDirection: "column" }}>
         <Paper sx={{ height: 400, width: "100%" }}>
           <DataGrid

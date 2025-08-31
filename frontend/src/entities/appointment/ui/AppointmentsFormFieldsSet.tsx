@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from 'react-i18next';
 import { Button, Stack, IconButton, Box, Divider } from "@mui/material";
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { AppointmentFormFields } from "./AppointmentFormFields";
@@ -21,6 +22,7 @@ type AppointmentsFormFieldsSetProps = {
 export const AppointmentsFormFieldsSet: React.FC<
   AppointmentsFormFieldsSetProps
 > = ({ initialAppointments = [], onChange }) => {
+  const { t } = useTranslation('appointment');
   const [appointments, setAppointments] =
     useState<
       (CreateAppointmentDTO | UpdateAppointmentDTO | DeleteAppointmentDTO)[]
@@ -97,7 +99,7 @@ export const AppointmentsFormFieldsSet: React.FC<
               />
             </Box>
             <IconButton
-              aria-label="Delete appointment"
+              aria-label={t('action.delete')}
               color="error"
               id={idx.toString()}
               onClick={handleRemove}
@@ -115,7 +117,7 @@ export const AppointmentsFormFieldsSet: React.FC<
         onClick={handleAdd}
         sx={{ alignSelf: "flex-start", mt: 1 }}
       >
-        Add Appointment
+        {t('action.add')}
       </Button>
     </Stack>
   );

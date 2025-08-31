@@ -1,0 +1,87 @@
+{
+  "view": {
+    "title": "Benutzer",
+    "active": "Aktive Benutzer",
+    "all": "Alle Benutzer",
+    "blocked": "Gesperrte Benutzer",
+    "tooltip": {
+      "active": "Nur aktive Benutzer anzeigen",
+      "all": "Alle Benutzer anzeigen",
+      "blocked": "Nur gesperrte Benutzer anzeigen"
+    },
+    "ariaSwitcher": "Benutzer Status Filter"
+  },
+  "select": {
+    "label": "Benutzer",
+    "failed": "Fehler beim Laden",
+    "empty": "Keine Benutzer gefunden"
+  },
+  "table": {
+    "column": {
+      "name": "Name",
+      "email": "E-Mail",
+      "role": "Rolle",
+      "status": "Status",
+      "createdAt": "Erstellt am",
+      "actions": ""
+    },
+    "action": {
+      "filter": "Filtern",
+      "refresh": "Benutzerliste aktualisieren",
+      "create": "Benutzer erstellen",
+      "blockSelected": "Benutzer sperren",
+  "unblockSelected": "Benutzer entsperren",
+  "edit": "Bearbeiten",
+  "block": "Sperren",
+  "unblock": "Entsperren"
+    }
+  }
+  ,
+  "dialog": {
+    "editTitle": "Benutzer bearbeiten",
+    "createTitle": "Benutzer erstellen",
+    "close": "Schließen"
+  },
+  "form": {
+    "field": {
+      "fullName": "Vollständiger Name",
+      "email": "E-Mail",
+      "password": "Passwort",
+      "passwordEdit": "Passwort (leer lassen, um es zu behalten)",
+      "role": "Rolle",
+      "status": "Status"
+    },
+    "action": {
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "update": "Aktualisieren"
+    },
+    "validation": {
+      "nameRequired": "Name ist erforderlich",
+      "emailInvalid": "Ungültige E-Mail",
+      "emailRequired": "E-Mail ist erforderlich",
+      "passwordRequired": "Passwort ist erforderlich",
+      "passwordMin": "Passwort muss mindestens 6 Zeichen haben",
+      "roleInvalid": "Ungültige Rolle",
+      "roleRequired": "Rolle ist erforderlich",
+      "statusInvalid": "Ungültiger Status",
+      "statusRequired": "Status ist erforderlich"
+    },
+    "notify": {
+      "created": "Benutzer erfolgreich erstellt",
+      "updated": "Benutzer erfolgreich aktualisiert",
+      "failed": "Vorgang fehlgeschlagen"
+    },
+    "error": {
+      "generic": "Ein Fehler ist aufgetreten"
+    }
+  },
+  "role": {
+    "admin": "Admin",
+    "employee": "Mitarbeiter"
+  },
+  "status": {
+    "active": "Aktiv",
+    "blocked": "Gesperrt"
+  }
+}

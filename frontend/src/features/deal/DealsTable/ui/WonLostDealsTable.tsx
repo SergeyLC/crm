@@ -1,6 +1,7 @@
 "use client";
 import React, { useMemo } from "react";
 import dynamic from "next/dynamic";
+import { useTranslation } from 'react-i18next';
 
 import EditIcon from "@mui/icons-material/Edit";
 import Refresh from "@mui/icons-material/Refresh";
@@ -26,18 +27,18 @@ import {
 } from "@/features/BaseTable";
 import { useEntityDialog } from "@/shared/lib/hooks";
 
-import { DealTableRowData, dealTableColumns } from "../model";
+import { DealTableRowData, buildDealTableColumns } from "../model";
+import { TFunction } from 'i18next';
 import { mapDealsToDealRows, useTableActions, useDealOperations } from "../lib";
 
-const TableHead = <TTableData extends BaseTableRowData>(
-  props: BaseTableHeadProps<TTableData>
-) => {
-  return (
+const makeTableHead = (t: TFunction) => {
+  const Head = <TTableData extends BaseTableRowData>(props: BaseTableHeadProps<TTableData>) => (
     <BaseTableHead
       {...props}
-      columns={dealTableColumns as unknown as Column<TTableData>[]}
+      columns={buildDealTableColumns(t) as unknown as Column<TTableData>[]}
     />
   );
+  return Head;
 };
 
 const EditDialog = dynamic(
@@ -60,6 +61,7 @@ export function WonLostDealsTable<T extends DealExt>({
   isWon=true,
   sx,
 }: WonLostDealsTableProps<T>) {
+  const { t } = useTranslation('deal');
   const {
     entityId: clickedId,
     handleEditClick,
@@ -79,34 +81,39 @@ export function WonLostDealsTable<T extends DealExt>({
     }
   );
 
+  const TableHead = React.useMemo(() => makeTableHead(t), [t]);
+
   const rowActionMenuItems: ActionMenuItemProps<DealTableRowData>[] =
     React.useMemo(
       () => [
         {
-          title: "View",
+      title: t('action.view'),
           icon: <EditIcon fontSize="small" />,
           onClick: handleEditClick,
         },
       ],
-      [handleEditClick]
+    [handleEditClick, t]
     );
 
   const toolbarMenuItems: ToolbarMenuItem[] = React.useMemo(
     () => [
       {
-        title: "Filter",
+    title: t('toolbar.filter'),
         icon: <FilterListIcon fontSize="small" />,
       },
       {
-        title: "Refresh list",
+    title: t('toolbar.refreshDeals'),
         icon: <Refresh fontSize="small" />,
         onClick: handleRefreshData,
       },
     ],
-    [handleRefreshData]
+  [handleRefreshData, t]
   );
 
-  const switcherTitle = useMemo(() => (isWon ? "Won Deals" : "Lost Deals"), [isWon]);
+  const switcherTitle = useMemo(
+    () => (isWon ? t('viewSwitcher.wonDeals') : t('viewSwitcher.lostDeals')),
+    [isWon, t]
+  );
 
   // Memoize the ToolbarComponent so its identity is stable when passed to BaseTable.
   const ToolbarComponent = React.useCallback(
@@ -127,7 +134,7 @@ export function WonLostDealsTable<T extends DealExt>({
         initialData={deals?.length > 0 ? deals : initialData}
         order={order}
         orderBy={orderBy}
-        columnsConfig={dealTableColumns}
+  columnsConfig={buildDealTableColumns(t)}
         TableToolbarComponent={ToolbarComponent}
         TableHeadComponent={TableHead}
         rowMapper={mapDealsToDealRows}

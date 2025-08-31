@@ -1,0 +1,47 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+ function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Skip middleware for API routes, static files, etc.
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/api/') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next();
+  }
+
+  // Handle /en/* routes - redirect to (dashboard)/en/*
+  if (pathname.startsWith('/en/')) {
+    const newPathname = pathname.replace('/en', '/(dashboard)/en');
+    const url = request.nextUrl.clone();
+    url.pathname = newPathname;
+    return NextResponse.rewrite(url);
+  }
+
+  // Default to German for root paths
+  if (pathname === '/' || pathname === '/(dashboard)') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/(dashboard)';
+    return NextResponse.rewrite(url);
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
+};
+
+export default middleware;

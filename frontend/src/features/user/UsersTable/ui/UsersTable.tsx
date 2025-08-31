@@ -16,6 +16,7 @@ import {
   UserViewSwitcher,
   useGetUsersQuery,
 } from "@/entities/user";
+import { useTranslation } from "react-i18next";
 import { useEntityDialog } from "@/shared/lib";
 import { UserTableRowData } from "../model/types";
 import { userTableColumns } from "../model/columns";
@@ -37,12 +38,7 @@ const UserEditDialog = dynamic(
   { ssr: false }
 );
 
-const headerTitles: Record<UserStatusFilter, string> = {
-  ACTIVE: "Active users",
-  ALL: "All users",
-  BLOCKED: "Blocked users",
-  INACTIVE: "Inactive users",
-};
+// header titles resolved via i18n inside component
 
 export interface UsersTableProps
   extends Omit<BaseTableProps<UserExt, UserTableRowData>, "initialData"> {
@@ -57,6 +53,7 @@ export function UsersTable({
   sx,
   status,
 }: UsersTableProps) {
+  const { t } = useTranslation("user");
   // Local state for status filter
   const [statusFilter, setStatusFilter] = React.useState<UserStatusFilter>(
     status || "ACTIVE"
@@ -117,7 +114,7 @@ export function UsersTable({
     () => ({
       BLOCKED: [
         {
-          title: "Unblock users",
+          title: t("table.action.unblockSelected"),
           icon: <LockOpenIcon fontSize="small" />,
           onClickMultiple: handleUnblocks,
           isGroupAction: true,
@@ -125,7 +122,7 @@ export function UsersTable({
       ],
       ACTIVE: [
         {
-          title: "Block users",
+          title: t("table.action.blockSelected"),
           icon: <BlockIcon fontSize="small" />,
           onClickMultiple: handleBlocks,
           isGroupAction: true,
@@ -134,30 +131,29 @@ export function UsersTable({
       INACTIVE: [],
       ALL: [],
     }),
-    [handleUnblocks, handleBlocks]
+    [handleUnblocks, handleBlocks, t]
   );
 
   const toolbarMenuItems: ToolbarMenuItem[] = React.useMemo(() => {
     const base = [
       {
-        title: "Filter",
+        title: t("table.action.filter"),
         icon: <FilterList fontSize="small" />,
-        // icon: <FilterListIcon fontSize="small" />,
       },
       {
-        title: "Refresh deals' list",
+        title: t("table.action.refresh"),
         icon: <Refresh fontSize="small" />,
         onClick: handleRefreshData,
       },
       {
-        title: "Create user",
+        title: t("table.action.create"),
         icon: <AddIcon fontSize="small" />,
         onClick: handleCreateClick,
       },
     ];
 
     return base.concat(groupActions[statusFilter]);
-  }, [statusFilter, handleRefreshData, groupActions, handleCreateClick]);
+  }, [statusFilter, handleRefreshData, groupActions, handleCreateClick, t]);
 
   const ToolbarComponent = ({
     selected,
@@ -177,7 +173,31 @@ export function UsersTable({
     />
   );
 
-  const headerTitle = useMemo(() => headerTitles[statusFilter], [statusFilter]);
+  const headerTitle = useMemo(
+    () =>
+      (
+        {
+          ACTIVE: t("view.active"),
+          ALL: t("view.all"),
+          BLOCKED: t("view.blocked"),
+          INACTIVE: t("view.inactive", "Inactive Users"),
+        } as Record<UserStatusFilter, string>
+      )[statusFilter],
+    [statusFilter, t]
+  );
+
+  const localizedColumns = React.useMemo(() => {
+    const mapping: Record<string, string> = {
+      name: 'user:table.column.name',
+      email: 'user:table.column.email',
+      role: 'user:table.column.role',
+      status: 'user:table.column.status',
+      createdAt: 'user:table.column.createdAt'
+    };
+    return userTableColumns.map(col => col.key && mapping[col.key as string]
+      ? { ...col, label: t(mapping[col.key as string]) }
+      : col);
+  }, [t]);
 
   return (
     <>
@@ -185,7 +205,7 @@ export function UsersTable({
         initialData={filteredUsers}
         order={order}
         orderBy={orderBy}
-        columnsConfig={userTableColumns}
+        columnsConfig={localizedColumns}
         TableToolbarComponent={ToolbarComponent}
         TableHeadComponent={UsersTableHead}
         rowMapper={mapUsersToUserRows}

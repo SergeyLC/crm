@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import EditIcon from "@mui/icons-material/Edit";
 import BlockIcon from "@mui/icons-material/Block";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
@@ -20,17 +21,21 @@ export function useUserRowActions({
     row: UserTableRowData
   ) => ActionMenuItemProps<UserTableRowData>[];
 } {
+  const { t } = useTranslation("user");
   const rowActionMenuItemsCreator = useCallback(
     (row: UserTableRowData): ActionMenuItemProps<UserTableRowData>[] => [
       {
-        title: "Edit",
+        title: t("table.action.edit", "Edit"),
         icon: <EditIcon fontSize="small" />,
         onClick: (e: React.MouseEvent) => {
           onEdit(e, row.id);
         },
       },
       {
-        title: row.status === "ACTIVE" ? "Block" : "Unblock",
+        title:
+          row.status === "ACTIVE"
+            ? t("table.action.block", "Block")
+            : t("table.action.unblock", "Unblock"),
         icon:
           row.status === "ACTIVE" ? (
             <BlockIcon fontSize="small" />
@@ -47,7 +52,7 @@ export function useUserRowActions({
         },
       },
     ],
-    [onEdit, onBlock, onUnblock]
+    [onEdit, onBlock, onUnblock, t]
   );
 
   return { rowActionMenuItemsCreator };

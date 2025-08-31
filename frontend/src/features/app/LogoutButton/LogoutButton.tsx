@@ -3,6 +3,7 @@ import React from "react";
 import { Button, CircularProgress, ButtonProps } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth } from "@/features/auth";
+import { useTranslation } from 'react-i18next';
 
 interface LogoutButtonProps {
   variant?: ButtonProps["variant"];
@@ -16,6 +17,7 @@ export const LogoutButton: React.FC<LogoutButtonProps> = ({
   fullWidth = false
 }) => {
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleLogout = async () => {
@@ -40,7 +42,7 @@ export const LogoutButton: React.FC<LogoutButtonProps> = ({
       startIcon={isLoading ? <CircularProgress size={20} /> : <LogoutIcon />}
       fullWidth={fullWidth}
     >
-      {isLoading ? "Logging out..." : "Logout"}
+  {isLoading ? t('nav:loggingOut','Logging out...') : t('nav:logout','Logout')}
     </Button>
   );
 };

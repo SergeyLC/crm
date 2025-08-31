@@ -15,6 +15,7 @@ import {
   CollisionDetection,
 } from "@dnd-kit/core";
 import { KanbanStack, KanbanCard } from "@/entities/kanban";
+import { useTranslation } from 'react-i18next';
 import type { KanbanCardData, KanbanStackData } from "@/entities/kanban";
 import Paper from "@mui/material/Paper";
 import {
@@ -119,6 +120,8 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
     [localStacks, restStagesNames, scheduleOnChange]
   );
 
+  const { t } = useTranslation('kanban');
+
   return (
     <DndContext
       sensors={sensors}
@@ -135,7 +138,7 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
       <Box
         className={className}
         role="region"
-        aria-label="Kanban board"
+        aria-label={t('kanban:board.aria')}
         sx={{
           width: "100%",
           height: "100%",
@@ -191,7 +194,15 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
             }}
           >
             {footerItems.map((it) => (
-              <BottomDropItem key={it.id} id={it.id} label={it.label} />
+              <BottomDropItem
+                key={it.id}
+                id={it.id}
+                label={
+                  t(`kanban:footer.${it.id}`, {
+                    defaultValue: it.label,
+                  })
+                }
+              />
             ))}
           </Box>
         )}

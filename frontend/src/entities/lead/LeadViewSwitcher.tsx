@@ -2,22 +2,24 @@
 import React from "react";
 import { UrlViewSwitcher, UrlViewSwitcherElement } from "@/shared/ui";
 import { Box, Typography } from "@mui/material";
+import { useLocale, localePath } from '@/shared/lib/hooks/useLocale';
 
 import ListIcon from '@mui/icons-material/List';
 import ArchiveIcon from '@mui/icons-material/Archive';
+import { useTranslation } from 'react-i18next';
 
-const statusSwitcherItems: UrlViewSwitcherElement[] = [
+const buildStatusSwitcherItems = (t: (key: string) => string, locale:string): UrlViewSwitcherElement[] => [
   {
-    name: "Active",
-    path: "/leads",
+    name: 'Active',
+    path: localePath('/leads', locale),
     icon: <ListIcon />,
-    label: "Active Leads",
+    label: t('lead:view.active'),
   },
   {
-    name: "Archived",
-    path: "/leads/archived",
+    name: 'Archived',
+    path: localePath('/leads/archived', locale),
     icon: <ArchiveIcon />,
-    label: "Archived Leads",
+    label: t('lead:view.archived'),
   },
 ];
 
@@ -29,13 +31,14 @@ export interface LeadViewSwitcherProps {
  * Component for switching between different lead views.
  * Includes title "Leads" and switch with active and archived views.
  */
-export const LeadViewSwitcher: React.FC<LeadViewSwitcherProps> = ({
-  title = "Leads"
-}) => {
+export const LeadViewSwitcher: React.FC<LeadViewSwitcherProps> = ({ title }) => {
+  const { t } = useTranslation('lead');
+  const locale = useLocale();
+  const items = React.useMemo(() => buildStatusSwitcherItems(t, locale), [t, locale]);
   return (
-    <Box sx={{ display: "flex", alignItems: "center" }}>
-      <UrlViewSwitcher elements={statusSwitcherItems} ariaLabel="leads status switcher" sx={{ mr: 2 }} />
-      <Typography variant="h6">{title}</Typography>
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <UrlViewSwitcher elements={items} ariaLabel={t('lead:view.ariaSwitcher')} sx={{ mr: 2 }} />
+      <Typography variant="h6">{title || t('lead:view.title')}</Typography>
     </Box>
   );
 };

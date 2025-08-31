@@ -1,5 +1,7 @@
+"use client";
 // src/features/lead/edit/ui/LeadEditDialog.tsx
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
 
 import { Dialog, DialogTitle, DialogContent } from "@mui/material";
@@ -14,8 +16,8 @@ import type { CreateLeadDTO, UpdateLeadDTO } from "@/entities/lead/types";
 
 export function LeadEditDialog({
   id,
-  titleEdit = "Edit Lead",
-  titleCreate = "Create Lead",
+  titleEdit,
+  titleCreate,
   open,
   onClose,
 }: {
@@ -25,6 +27,7 @@ export function LeadEditDialog({
   open?: boolean;
   onClose?: () => void;
 }) {
+  const { t } = useTranslation("lead");
   const { data, isLoading } = useGetLeadByIdQuery(id || "", {
     skip: !id,
   });
@@ -71,9 +74,13 @@ export function LeadEditDialog({
       </Dialog>
     );
 
+  const resolvedTitle = id
+    ? titleEdit || t("dialog.editTitle")
+    : titleCreate || t("dialog.createTitle");
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{id ? titleEdit : titleCreate}</DialogTitle>
+      <DialogTitle>{resolvedTitle}</DialogTitle>
       <DialogContent>
         <LeadUpsertForm
           initialData={data}

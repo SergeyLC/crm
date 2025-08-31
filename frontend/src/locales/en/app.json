@@ -1,0 +1,16 @@
+{
+  "applicationError": "Application Error",
+  "digest": "Digest",
+  "notFoundHint": "Custom not-found page is rendering. If build still fails, issue occurs before this component.",
+  "debugInfo": "Debug Info",
+  "somethingWentWrong": "Something went wrong!",
+  "loading": "Loading...",
+  "adminDashboard": "Admin Dashboard",
+  "errorLoadingData": "Error loading data",
+  "noData": "No data",
+  "leadCard": "Lead Card",
+  "dataLoadingFailed": "Data loading failed"
+  ,"unknownError": "Unknown error"
+  ,"pageNotFound": "Page not found"
+  ,"tryAgain": "Try again"
+}

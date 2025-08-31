@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useLocale, localePath } from '@/shared/lib/hooks/useLocale';
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { UserRole } from "@/entities/user";
@@ -16,6 +17,7 @@ export function useAccessControl({
 }: UseAccessControlOptions = {}) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
   const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
@@ -29,14 +31,14 @@ export function useAccessControl({
           setHasAccess(true);
         } else {
           // Если нет доступа - редирект
-          router.push(redirectPath);
+          router.push(localePath(redirectPath, locale));
         }
       } else {
         // Не авторизован - редирект
-        router.push("/login");
+  router.push(localePath('/login', locale));
       }
     }
-  }, [isLoading, isAuthenticated, user, requiredRole, redirectPath, router]);
+  }, [isLoading, isAuthenticated, user, requiredRole, redirectPath, router, locale]);
 
   return {
     hasAccess,

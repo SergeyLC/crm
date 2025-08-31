@@ -15,19 +15,17 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
   const pathname = usePathname();
 
   useEffect(() => {
+    const segments = (pathname || '/').split('/').filter(Boolean);
+    const locale = segments[0] === 'en' ? 'en' : 'de';
+    const withLocale = (p: string) => `/${locale}${p.startsWith('/') ? p : '/' + p}`;
+
     if (!isLoading && !isAuthenticated) {
-      router.push(`/login?returnUrl=${encodeURIComponent(pathname || "")}`);
+      router.push(withLocale(`/login?returnUrl=${encodeURIComponent(pathname || "")}`));
       return;
     }
 
-    if (
-      !isLoading &&
-      isAuthenticated &&
-      user &&
-      allowedRoles &&
-      !allowedRoles.includes(user.role)
-    ) {
-      router.push("/unauthorized");
+    if (!isLoading && isAuthenticated && user && allowedRoles && !allowedRoles.includes(user.role)) {
+      router.push(withLocale('/unauthorized'));
     }
   }, [isLoading, isAuthenticated, user, router, pathname, allowedRoles]);
 

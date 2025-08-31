@@ -12,7 +12,7 @@ export const leadApiReducerPath = "leadApi";
 export const leadApi = createApi({
   reducerPath: "leadApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: NEXT_PUBLIC_BACKEND_API_URL,
+    baseUrl: NEXT_PUBLIC_BACKEND_API_URL || '/api',
     credentials: "include",
   }),
   tagTypes: ["Leads", "Lead"],

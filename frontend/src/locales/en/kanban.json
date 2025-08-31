@@ -1,0 +1,27 @@
+{
+  "board": {
+    "aria": "Kanban board"
+  },
+  "stack": {
+    "cardCount_one": "{{count}} card",
+    "cardCount_other": "{{count}} cards",
+    "total": "Total"
+  },
+  "card": {
+    "title": "Title",
+    "clientName": "Client Name",
+    "potentialValue": "Potential Value"
+  },
+  "footer": {
+    "won": "Won",
+    "lost": "Lost",
+    "archived": "Archived"
+  },
+  "stages": {
+    "qualified": "Qualified",
+    "contacted": "Contacted",
+    "demoScheduled": "Demo Scheduled",
+    "proposalSent": "Proposal Sent",
+    "negotiation": "Negotiation"
+  }
+}

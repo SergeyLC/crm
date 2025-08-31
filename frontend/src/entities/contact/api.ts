@@ -10,7 +10,7 @@ import {
 export const contactApi = createApi({
   reducerPath: "contactApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: NEXT_PUBLIC_BACKEND_API_URL,
+    baseUrl: NEXT_PUBLIC_BACKEND_API_URL || '/api',
     credentials: "include",
   }),
   tagTypes: ["Contacts"],

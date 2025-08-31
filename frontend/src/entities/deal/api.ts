@@ -12,7 +12,7 @@ import { DealStage } from "@/shared/generated/prisma-client";
 export const dealApi = createApi({
   reducerPath: "dealApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: NEXT_PUBLIC_BACKEND_API_URL,
+    baseUrl: NEXT_PUBLIC_BACKEND_API_URL || '/api',
     credentials: "include",
   }),
   tagTypes: ["Deals", "Deal"],

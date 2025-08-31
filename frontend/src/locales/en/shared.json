@@ -1,0 +1,26 @@
+{
+  "leads": "Leads",
+  "deals": "Deals",
+  "users": "Users",
+  "archivedDeals": "Archived Deals",
+  "profile": "Profile",
+  "settings": "Settings",
+  "adminPanel": "Admin Panel",
+  "administrator": "Administrator",
+  "employee": "Employee",
+  "companyName": "Loya Care"
+  ,
+  "form": {
+    "leadInfo": "Lead Information",
+    "contactInfo": "Contact Information",
+    "owner": "Owner",
+    "appointments": "Appointments",
+    "product": "Product",
+    "productInterest": "Product Interest",
+    "potentialValue": "Potential Value",
+    "title": "Title",
+    "assignee": "Assignee",
+    "create": "Create",
+    "update": "Update"
+  }
+}

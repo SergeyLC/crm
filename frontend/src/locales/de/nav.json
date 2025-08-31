@@ -1,0 +1,16 @@
+{
+  "appName": "Loya Care",
+  "leads": "Leads",
+  "deals": "Deals",
+  "users": "Benutzer",
+  "profile": "Profil",
+  "settings": "Einstellungen",
+  "admin": "Admin-Bereich",
+  "archivedDeals": "Archivierte Deals",
+  "view": "Ansehen",
+  "expand": "Seitenleiste erweitern",
+  "collapse": "Seitenleiste einklappen",
+  "userProfile": "Benutzerprofil",
+  "logout": "Abmelden",
+  "loggingOut": "Wird abgemeldet..."
+}

@@ -8,6 +8,7 @@ import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import { Theme } from "@mui/material/styles";
 import { KanbanCard, KanbanCardData } from "@/entities/kanban";
+import { useTranslation } from 'react-i18next';
 import { currencyFormatter } from "@/shared/lib";
 
 export type KanbanStackProps = {
@@ -28,7 +29,9 @@ export const KanbanStack: React.FC<KanbanStackProps> = React.memo(
     isDropTarget = false,
     renderCard,
   }) {
-    const total = React.useMemo(
+  const { t } = useTranslation('kanban');
+
+  const total = React.useMemo(
       () =>
         cards.reduce(
           (acc, c) =>
@@ -75,7 +78,7 @@ export const KanbanStack: React.FC<KanbanStackProps> = React.memo(
               {formattedTotal}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {cards.length} {cards.length === 1 ? "card" : "cards"}
+              {t('kanban:stack.cardCount', { count: cards.length })}
             </Typography>
           </Box>
         </Box>

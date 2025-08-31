@@ -1,15 +1,9 @@
 "use client";
 
-import {
-  DealExt,
-  CreateDealDTO,
-  UpdateDealDTO,
-} from "@/entities/deal/model/types";
+import { DealExt, CreateDealDTO, UpdateDealDTO } from "@/entities/deal/model/types";
 import { useGetDealByIdQuery } from "@/entities/deal/api";
-import {
-  BaseUpsertForm,
-  BaseUpsertFormProps,
-} from "@/features/entityUpsert";
+import { BaseUpsertForm, BaseUpsertFormProps } from "@/features/entityUpsert";
+import { useTranslation } from 'react-i18next';
 
 type DealFormProps = BaseUpsertFormProps<
   DealExt,
@@ -21,8 +15,8 @@ type DealFormProps = BaseUpsertFormProps<
 export const DealUpsertForm: React.FC<DealFormProps> = ({
   initialData,
   dealId,
-  titleCreate = "Create Deal",
-  titleUpdate = "Update Deal",
+  // titleCreate = "Create Deal",
+  // titleUpdate = "Update Deal",
   onSubmit,
 }) => {
   const skipFetch = !!initialData || (!initialData && !dealId);
@@ -35,20 +29,17 @@ export const DealUpsertForm: React.FC<DealFormProps> = ({
     skip: skipFetch,
   });
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  const { t } = useTranslation('deal');
 
-  if (isError) {
-    return <div>Error loading deal data</div>;
-  }
+  if (isLoading) return <div>{t('dialog.loading')}</div>;
+  if (isError) return <div>{t('dialog.errorLoad')}</div>;
 
   return (
     <BaseUpsertForm
       initialData={dealData}
       onSubmit={onSubmit}
-      titleCreate={titleCreate}
-      titleUpdate={titleUpdate}
+  titleCreate={t('dialog.create')}
+  titleUpdate={t('dialog.update')}
       isDeal={true}
     />
   );

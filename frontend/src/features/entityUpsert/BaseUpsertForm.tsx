@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   TextField,
   Button,
@@ -49,6 +50,7 @@ export const BaseUpsertForm = <
   isDeal = false,
 }: BaseUpsertFormProps<TEntity, TState>) => {
   const isNew = !initialData;
+  const { t } = useTranslation(['shared','deal']);
 
   const [form, setForm] = useState<TState>(initialData as unknown as TState);
   const [needSubmit, setNeedSubmit] = useState(false);
@@ -145,37 +147,37 @@ export const BaseUpsertForm = <
                   variant="subtitle1"
                   sx={{ color: "primary.main", fontWeight: 600 }}
                 >
-                  Lead Information
+                  {t('form.leadInfo', { ns: 'shared' })}
                 </Typography>
                 <Stack direction="row" spacing={1.5}>
                   <TextField
                     fullWidth
-                    label="Product"
+                    label={t('form.product', { ns: 'shared' })}
                     name="productInterest"
                     value={form?.productInterest || ""}
                     onChange={handleChange}
-                    placeholder="Product Interest"
+                    placeholder={t('form.productInterest', { ns: 'shared' })}
                     variant="outlined"
                     size="small"
                   />
                   <TextField
                     fullWidth
-                    label="Wert"
+                    label={t('form.potentialValue', { ns: 'shared' })}
                     name="potentialValue"
                     type="number"
                     value={form?.potentialValue || ""}
                     onChange={handleChange}
-                    placeholder="Potential Value"
+                    placeholder={t('form.potentialValue', { ns: 'shared' })}
                     variant="outlined"
                     size="small"
                   />
                 </Stack>
                 <TextField
-                  label="Title"
+                  label={t('form.title', { ns: 'shared' })}
                   name="title"
                   value={form?.title || ""}
                   onChange={handleChange}
-                  placeholder="Title"
+                  placeholder={t('form.title', { ns: 'shared' })}
                   size="small"
                   fullWidth
                 />
@@ -196,7 +198,7 @@ export const BaseUpsertForm = <
                   variant="subtitle1"
                   sx={{ color: "primary.main", fontWeight: 600 }}
                 >
-                  Contact Information
+                  {t('form.contactInfo', { ns: 'shared' })}
                 </Typography>
                 <Box sx={{ "& .MuiTextField-root": { my: 0.5 } }}>
                   <ContactFormFields
@@ -214,12 +216,12 @@ export const BaseUpsertForm = <
                   variant="subtitle1"
                   sx={{ color: "primary.main", fontWeight: 600 }}
                 >
-                  Besitzer
+                  {t('form.owner', { ns: 'shared' })}
                 </Typography>
                 <Box sx={{ "& .MuiTextField-root": { my: 0.5 } }}>
                   <UserSelect
                     value={form?.assigneeId || null}
-                    label={"Assignee"}
+                    label={t('form.assignee', { ns: 'shared' })}
                     onChange={handleAssigneeChange}
                   />
                 </Box>
@@ -233,7 +235,7 @@ export const BaseUpsertForm = <
                   variant="subtitle1"
                   sx={{ color: "primary.main", fontWeight: 600 }}
                 >
-                  Appointments
+                  {t('form.appointments', { ns: 'shared' })}
                 </Typography>
                 <Box sx={{ "& .MuiTextField-root": { my: 0.5 } }}>
                   <AppointmentsFormFieldsSet
@@ -268,7 +270,7 @@ export const BaseUpsertForm = <
               fontWeight: 600,
             }}
           >
-            {isNew ? titleCreate : titleUpdate}
+            {isNew ? t('form.create', { ns: 'shared', defaultValue: titleCreate }) : t('form.update', { ns: 'shared', defaultValue: titleUpdate })}
           </Button>
         </Box>
       </form>

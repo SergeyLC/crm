@@ -1,0 +1,77 @@
+{
+  "action": {
+    "edit": "Bearbeiten",
+    "archive": "Archivieren",
+    "restore": "Wiederherstellen",
+    "view": "Ansehen"
+  },
+  "toolbar": {
+    "filter": "Filter",
+    "refreshDeals": "Dealsliste aktualisieren",
+    "create": "Neuen Deal erstellen",
+    "archiveSelected": "Ausgewählte Deals archivieren",
+    "restoreSelected": "Deals wiederherstellen"
+  },
+  "tooltip": {
+    "editDeal": "Deal bearbeiten",
+    "archiveDeal": "Deal archivieren",
+    "restoreDeal": "Deal aus Archiv wiederherstellen",
+    "refreshDeals": "Dealsliste aktualisieren",
+    "restoreSelected": "Ausgewählte Deals aus Archiv wiederherstellen"
+  },
+  "dialog": {
+    "edit": "Deal bearbeiten",
+    "create": "Deal erstellen",
+    "update": "Deal aktualisieren",
+    "loading": "Laden...",
+    "errorLoad": "Fehler beim Laden der Deal-Daten"
+  },
+  "viewSwitcher": {
+    "deals": "Deals",
+    "archivedDeals": "Archivierte Deals",
+    "wonDeals": "Gewonnene Deals",
+    "lostDeals": "Verlorene Deals",
+    "wonLostDeals": "Gewonnene / Verlorene Deals"
+  },
+  "columns": {
+    "title": "Titel",
+    "organization": "Organisation",
+    "potential": "Potenzial",
+    "client": "Kunde",
+    "stage": "Phase",
+    "product": "Produkt",
+    "assignee": "Zuständig"
+  },
+  "view": {
+    "table": "Tabelle",
+    "tableView": "Tabellenansicht",
+    "kanban": "Kanban",
+    "kanbanView": "Kanban-Ansicht",
+    "won": "Gewonnen",
+    "lost": "Verloren",
+    "archived": "Archiviert",
+    "showArchived": "Archivierte Deals anzeigen"
+  },
+  "list": {
+    "loading": "Laden...",
+    "creatorName": "Ersteller Name",
+    "creatorEmail": "Ersteller E-Mail",
+    "status": "Status",
+    "potentialValue": "Potenzialwert",
+    "contactName": "Kontakt Name",
+    "contactEmail": "Kontakt E-Mail",
+    "contactPhone": "Kontakt Telefon",
+    "createdAt": "Erstellt am",
+    "updatedAt": "Aktualisiert am",
+    "assignedTo": "Zugewiesen an",
+    "contractId": "Kontakt ID",
+    "productInterest": "Produktinteresse"
+  },
+  "stage": {
+    "QUALIFIED": "Qualifiziert",
+    "CONTACTED": "Kontaktiert",
+    "PROPOSAL_SENT": "Angebot gesendet",
+    "DEMO_SCHEDULED": "Demo geplant",
+    "NEGOTIATION": "Verhandlung"
+  }
+}

@@ -1,12 +1,13 @@
 import { DealTableRowData } from "./types";
 import { currencyFormatter, stageToComponentFormatter } from "@/features/BaseTable";
 import type { Column, TGetColumns } from "@/features/BaseTable";
+import { TFunction } from 'i18next';
 
 // Columns definition for the Deals table.
-export const dealTableColumns: Column<DealTableRowData>[] = [
+export const buildDealTableColumns = (t: TFunction): Column<DealTableRowData>[] => ([
   {
     key: "title",
-    label: "Title",
+    label: t('columns.title'),
     padding: "none",
     minWidth: 180,
     width: 180,
@@ -14,14 +15,14 @@ export const dealTableColumns: Column<DealTableRowData>[] = [
   },
   {
     key: "clientOrganization",
-    label: "Organization",
+    label: t('columns.organization'),
     minWidth: 100,
     width: 100,
     maxWidth: 200,
   },
   {
     key: "potentialValue",
-    label: "Potential",
+    label: t('columns.potential'),
     align: "right",
     formatter: currencyFormatter,
     minWidth: 100,
@@ -30,36 +31,29 @@ export const dealTableColumns: Column<DealTableRowData>[] = [
   },
   {
     key: "clientName",
-    label: "Client",
+    label: t('columns.client'),
     minWidth: 170,
     width: 170,
     maxWidth: 200,
   },
   {
     key: "stage",
-    label: "Stage",
+    label: t('columns.stage'),
     minWidth: 100,
     width: 100,
     maxWidth: 100,
     formatter: stageToComponentFormatter,
   },
-  // {
-  //   key: "createdAt",
-  //   label: "Created at",
-  //   minWidth: 200,
-  //   width: 200,
-  //   maxWidth: 300,
-  // },
   {
     key: "productInterest",
-    label: "Product",
+    label: t('columns.product'),
     minWidth: 200,
     width: 200,
     maxWidth: 300,
   },
   {
     key: "assigneeName",
-    label: "Assignee",
+    label: t('columns.assignee'),
     minWidth: 150,
     width: 150,
     maxWidth: 200,
@@ -73,6 +67,6 @@ export const dealTableColumns: Column<DealTableRowData>[] = [
     sortable: false,
     isSticky: true,
   },
-];
+]);
 
-export const getColumns: TGetColumns<DealTableRowData> = () => dealTableColumns;
+export const getColumns: TGetColumns<DealTableRowData> = () => buildDealTableColumns(((k: string) => k) as unknown as TFunction);

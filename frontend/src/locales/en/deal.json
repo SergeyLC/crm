@@ -1,0 +1,77 @@
+{
+  "action": {
+    "edit": "Edit",
+    "archive": "Archive",
+    "restore": "Restore",
+    "view": "View"
+  },
+  "toolbar": {
+    "filter": "Filter",
+    "refreshDeals": "Refresh deals' list",
+    "create": "Create a new deal",
+    "archiveSelected": "Archive selected deals",
+    "restoreSelected": "Restore deals"
+  },
+  "tooltip": {
+    "editDeal": "Edit deal",
+    "archiveDeal": "Archive deal",
+    "restoreDeal": "Restore deal from archive",
+    "refreshDeals": "Refresh deals' list",
+    "restoreSelected": "Restore selected deals from archive"
+  },
+  "dialog": {
+    "edit": "Edit Deal",
+    "create": "Create Deal",
+    "update": "Update Deal",
+    "loading": "Loading...",
+    "errorLoad": "Error loading deal data"
+  },
+  "viewSwitcher": {
+    "deals": "Deals",
+    "archivedDeals": "Archived Deals",
+    "wonDeals": "Won Deals",
+    "lostDeals": "Lost Deals",
+    "wonLostDeals": "Won/ Lost Deals"
+  },
+  "columns": {
+    "title": "Title",
+    "organization": "Organization",
+    "potential": "Potential",
+    "client": "Client",
+    "stage": "Stage",
+    "product": "Product",
+    "assignee": "Assignee"
+  },
+  "view": {
+    "table": "Table",
+    "tableView": "Table View",
+    "kanban": "Kanban",
+    "kanbanView": "Kanban View",
+    "won": "Won",
+    "lost": "Lost",
+    "archived": "Archived",
+    "showArchived": "Show archived deals"
+  },
+  "list": {
+    "loading": "Loading...",
+    "creatorName": "Creator Name",
+    "creatorEmail": "Creator Email",
+    "status": "Status",
+    "potentialValue": "Potential Value",
+    "contactName": "Contact name",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "createdAt": "Created at",
+    "updatedAt": "Updated at",
+    "assignedTo": "Assigned to",
+    "contractId": "Contract ID",
+    "productInterest": "Product Interest"
+  },
+  "stage": {
+    "QUALIFIED": "Qualified",
+    "CONTACTED": "Contacted",
+    "PROPOSAL_SENT": "Proposal sent",
+    "DEMO_SCHEDULED": "Demo Scheduled",
+    "NEGOTIATION": "Negotiation"
+  }
+}

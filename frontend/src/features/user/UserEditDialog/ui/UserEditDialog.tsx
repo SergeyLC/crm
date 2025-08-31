@@ -20,6 +20,7 @@ import {
   sanitizeUserData,
 } from "@/entities/user";
 import { useSnackbar } from "notistack";
+import { useTranslation } from "react-i18next";
 
 interface UserEditDialogProps {
   id?: string;
@@ -34,6 +35,7 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
 }) => {
   const isEditing = !!id;
   const [error, setError] = useState<string | undefined>();
+  const { t } = useTranslation("user");
   
   const { enqueueSnackbar } = useSnackbar();
 
@@ -70,18 +72,18 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
           body: sanitizedData,
         }).unwrap();
         
-        enqueueSnackbar("User updated successfully", { variant: "success" });
+  enqueueSnackbar(t("form.notify.updated"), { variant: "success" });
       } else {
         // User creation
         await createUser(formData as CreateUserDTO).unwrap();
-        enqueueSnackbar("User created successfully", { variant: "success" });
+  enqueueSnackbar(t("form.notify.created"), { variant: "success" });
       }
       
       onClose();
     } catch (err: unknown) {
       const error = err as { data?: { message?: string } };
-      setError(error.data?.message || "An error occurred");
-      enqueueSnackbar("Operation failed", { variant: "error" });
+  setError(error.data?.message || t("form.error.generic"));
+  enqueueSnackbar(t("form.notify.failed"), { variant: "error" });
     }
   };
 
@@ -96,14 +98,14 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography variant="h6">
-            {isEditing ? "Edit User" : "Create User"}
+            {isEditing ? t("dialog.editTitle") : t("dialog.createTitle")}
           </Typography>
           <IconButton
             edge="end"
             color="inherit"
             onClick={onClose}
             disabled={isLoading}
-            aria-label="close"
+            aria-label={t("dialog.close", "close")}
           >
             <CloseIcon />
           </IconButton>

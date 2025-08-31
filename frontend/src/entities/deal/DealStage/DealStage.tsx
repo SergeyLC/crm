@@ -8,9 +8,8 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import CheckIcon from "@mui/icons-material/Check";
 import Box from "@mui/material/Box";
-import type {
-  EnumDealStage
-} from "@/entities/deal/";
+import type { EnumDealStage } from "@/entities/deal/";
+import { useTranslation } from 'react-i18next';
 
 export const DEFAULT_STAGES: EnumDealStage[] = [
   "QUALIFIED",
@@ -21,18 +20,13 @@ export const DEFAULT_STAGES: EnumDealStage[] = [
 ];
 
 /** Visible labels and MUI color mapping for stages */
-const STAGE_META: Record<
-  (EnumDealStage)[number],
-  {
-    label: string;
-    color: "default" | "primary" | "success" | "warning" | "error" | "info";
-  }
-> = {
-  QUALIFIED: { label: "Qualified", color: "info" },
-  CONTACTED: { label: "Contacted", color: "primary" },
-  PROPOSAL_SENT: { label: "Proposal sent", color: "primary" },
-  DEMO_SCHEDULED: { label: "Demo Scheduled", color: "info" },
-  NEGOTIATION: { label: "Negotiation", color: "warning" },
+const STAGE_COLOR: Record<EnumDealStage[number],
+  "default" | "primary" | "success" | "warning" | "error" | "info"> = {
+  QUALIFIED: "info",
+  CONTACTED: "primary",
+  PROPOSAL_SENT: "primary",
+  DEMO_SCHEDULED: "info",
+  NEGOTIATION: "warning",
 };
 
 type Props = {
@@ -78,14 +72,16 @@ export const DealStageComponent: React.FC<Props> = React.memo(function DealStage
     [onChange, stage]
   );
 
-  const meta = STAGE_META[stage as string] ?? { label: stage, color: "default" };
+  const { t } = useTranslation('deal');
+  const label = t(`stage.${stage}`, stage);
+  const color = STAGE_COLOR[stage as string] ?? 'default';
 
   return (
     <Box component="span" className={className}>
       <Chip
         size={compact ? "small" : "medium"}
-        label={meta.label}
-        color={meta.color}
+        label={label}
+        color={color}
         variant={readOnly ? "outlined" : "filled"}
         onClick={handleOpen}
         aria-haspopup={!readOnly ? "menu" : undefined}
@@ -104,7 +100,7 @@ export const DealStageComponent: React.FC<Props> = React.memo(function DealStage
           transformOrigin={{ horizontal: "left", vertical: "top" }}
         >
           {stages.map((s) => {
-            const m = STAGE_META[s as string] ?? { label: s, color: "default" };
+      const lbl = t(`stage.${s}`, s);
             return (
               <MenuItem
                 key={s as string}
@@ -115,7 +111,7 @@ export const DealStageComponent: React.FC<Props> = React.memo(function DealStage
                 <ListItemIcon sx={{ minWidth: 36 }}>
                   {s === stage ? <CheckIcon fontSize="small" /> : null}
                 </ListItemIcon>
-                <ListItemText primary={m.label} />
+        <ListItemText primary={lbl} />
               </MenuItem>
             );
           })}

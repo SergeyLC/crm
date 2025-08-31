@@ -1,0 +1,59 @@
+{
+  "view": {
+    "title": "Leads",
+    "active": "Active Leads",
+    "archived": "Archived Leads",
+    "ariaSwitcher": "leads status switcher"
+  },
+  "card": {
+    "loading": "Loading lead...",
+    "error": "Error loading lead."
+  },
+  "dialog": {
+    "editTitle": "Edit Lead",
+    "createTitle": "Create Lead"
+  },
+  "list": {
+    "id": "ID",
+    "owner": "Owner",
+    "phone": "Phone",
+    "productInterest": "Product",
+    "createdAt": "Lead created",
+    "loading": "Loading..."
+  },
+  "form": {
+    "productInterest": "Product",
+    "potentialValue": "Potential Value",
+    "create": "Create",
+    "update": "Update"
+  },
+  "table": {
+    "title": "Leads",
+    "archivedTitle": "Archived Leads",
+    "column": {
+      "title": "Title",
+      "assignee": "Assignee",
+      "potential": "Potencial",
+      "client": "Client"
+    },
+    "action": {
+      "edit": "Edit",
+      "restore": "Restore",
+      "convert": "Convert to deal",
+      "archive": "Archive",
+      "create": "Create lead",
+      "filter": "Filter",
+      "refresh": "Refresh leads' list"
+    },
+    "tooltip": {
+      "restore": "Restore lead from archive",
+      "convert": "Convert lead to deals",
+      "archive": "Archive lead",
+      "create": "Create a new lead",
+      "convertSelected": "Convert selected leads to deals",
+      "archiveSelected": "Archive selected leads",
+      "restoreSelected": "Restore selected leads from archive",
+      "refresh": "Refresh leads' list"
+    }
+  }
+}

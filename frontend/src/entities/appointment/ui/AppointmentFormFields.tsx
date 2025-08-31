@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   TextField,
   Box,
@@ -81,12 +82,14 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
     [setForm]
   );
 
+  const { t } = useTranslation('appointment');
+
   return (
     <Box sx={{ "& > *:not(:last-child)": { mb: 3 } }}>
       <Stack direction="row" flexWrap="wrap" sx={{ gap: 2 }}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DateTimePicker
-            label="Date & Time"
+            label={t('field.dateTime')}
             value={form?.datetime ? dayjs(form?.datetime) : null}
             onChange={handleDateChange}
             views={["year", "month", "day", "hours", "minutes"]}
@@ -101,31 +104,31 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
           />
         </LocalizationProvider>
         <FormControl size="small" sx={{ flex: 1, minWidth: 200, zIndex: 0 }}>
-          <InputLabel id="type-label">Type</InputLabel>
+          <InputLabel id="type-label">{t('field.type')}</InputLabel>
           <Select
             labelId="type-label"
             name="type"
             value={form?.type || ""}
-            label="Type"
+            label={t('field.type')}
             onChange={handleTypeChange}
           >
             <MenuItem value="">
-              <em>None</em>
+              <em>{t('none')}</em>
             </MenuItem>
             {appointmentTypes.map((type) => (
               <MenuItem key={type} value={type}>
-                {type}
+                {t(`type.${type}`)}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
       </Stack>
       <TextField
-        label="Note"
+        label={t('field.note')}
         name="note"
         value={form?.note || ""}
         onChange={handleChange}
-        placeholder="Note"
+        placeholder={t('field.note')}
         size="small"
         fullWidth
         multiline

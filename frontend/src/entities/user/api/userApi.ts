@@ -12,9 +12,9 @@ import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared";
 export const userApi = createApi({
   reducerPath: "userApi",
     baseQuery: fetchBaseQuery({
-    baseUrl: NEXT_PUBLIC_BACKEND_API_URL,
-    credentials: "include",
-  }),
+      baseUrl: NEXT_PUBLIC_BACKEND_API_URL || '/api',
+      credentials: "include",
+    }),
 //   baseQuery: baseQueryWithAuth,
   tagTypes: ["Users", "User"],
   endpoints: (builder) => ({

@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useTranslation } from 'react-i18next';
 import dynamic from "next/dynamic";
 
 import ArchiveIcon from "@mui/icons-material/Archive";
@@ -29,18 +30,19 @@ import {
 } from "@/features/BaseTable";
 import { useEntityDialog } from "@/shared/lib/hooks";
 
-import { DealTableRowData, dealTableColumns } from "../model";
+import { DealTableRowData, buildDealTableColumns } from "../model";
+import { TFunction } from 'i18next';
 import { mapDealsToDealRows, useTableActions, useDealOperations } from "../lib";
 
-const DealsTableHead = <TTableData extends BaseTableRowData>(
-  props: BaseTableHeadProps<TTableData>
-) => {
-  return (
+// Will inject translated columns inside component (needs t), so export a factory.
+const makeDealsTableHead = (t: TFunction) => {
+  const Head = <TTableData extends BaseTableRowData>(props: BaseTableHeadProps<TTableData>) => (
     <BaseTableHead
       {...props}
-      columns={dealTableColumns as unknown as Column<TTableData>[]}
+      columns={buildDealTableColumns(t) as unknown as Column<TTableData>[]}
     />
   );
+  return Head;
 };
 
 const EditDialog = dynamic(
@@ -69,9 +71,11 @@ export function DealsTable<T extends DealExt>({
   excludeStatuses,
   orderBy = "stage" as SortableFields<DealTableRowData>,
   sx,
-  toolbarTitle = <DealViewSwitcher title="Deals" />,
+  toolbarTitle,
   ToolbarComponent,
 }: DealsTableProps<T>) {
+  const { t } = useTranslation('deal');
+  const effectiveToolbarTitle = toolbarTitle ?? <DealViewSwitcher title={t('viewSwitcher.deals')} />;
   const {
     entityId: clickedId,
     handleEditClick,
@@ -99,46 +103,48 @@ export function DealsTable<T extends DealExt>({
     React.useMemo(
       () => [
         {
-          title: "Edit",
+          title: t('action.edit'),
           icon: <EditIcon fontSize="small" />,
-          tooltip: "Edit deal",
+          tooltip: t('tooltip.editDeal'),
           onClick: handleEditClick,
         },
         {
-          title: "Archive",
+          title: t('action.archive'),
           icon: <ArchiveIcon fontSize="small" />,
-          tooltip: "Archive deal",
+          tooltip: t('tooltip.archiveDeal'),
           onClick: handleArchive,
         },
       ],
-      [handleArchive, handleEditClick]
+      [handleArchive, handleEditClick, t]
     );
 
   const toolbarMenuItems: ToolbarMenuItem[] = React.useMemo(
     () => [
       {
-        title: "Filter",
+        title: t('toolbar.filter'),
         icon: <FilterListIcon fontSize="small" />,
       },
       {
-        title: "Refresh deals' list",
+        title: t('toolbar.refreshDeals'),
         icon: <Refresh fontSize="small" />,
         onClick: handleRefreshData,
       },
       {
-        title: "Create a new deal",
+        title: t('toolbar.create'),
         icon: <AddIcon fontSize="small" />,
         onClick: handleCreateClick,
       },
       {
-        title: "Archive selected deals",
+        title: t('toolbar.archiveSelected'),
         icon: <ArchiveIcon fontSize="small" />,
         onClickMultiple: handleArchives,
         isGroupAction: true,
       },
     ],
-    [handleCreateClick, handleRefreshData, handleArchives]
+    [handleCreateClick, handleRefreshData, handleArchives, t]
   );
+
+  const DealsTableHead = React.useMemo(() => makeDealsTableHead(t), [t]);
 
   const TableToolbarComponent = ({ selected, clearSelection }: BaseTableToolbarProps) => (
     <>
@@ -146,7 +152,7 @@ export function DealsTable<T extends DealExt>({
         <ToolbarComponent selected={selected} clearSelection={clearSelection} />
       ) : (
         <BaseTableToolbar
-          title={toolbarTitle}
+          title={effectiveToolbarTitle}
           selected={selected}
           menuItems={toolbarMenuItems}
           clearSelection={clearSelection}
@@ -161,7 +167,7 @@ export function DealsTable<T extends DealExt>({
         initialData={deals?.length > 0 ? deals : initialData}
         order={order}
         orderBy={orderBy}
-        columnsConfig={dealTableColumns}
+  columnsConfig={buildDealTableColumns(t)}
         TableToolbarComponent={TableToolbarComponent}
         TableHeadComponent={DealsTableHead}
         rowMapper={mapDealsToDealRows}

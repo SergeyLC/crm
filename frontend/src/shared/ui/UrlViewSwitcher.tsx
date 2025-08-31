@@ -37,10 +37,10 @@ export const UrlViewSwitcher: React.FC<UrlViewSwitcherProps> = ({
   const router = useRouter();
   const pathname = usePathname();
 
-  const pathnameWithoutQuery = useMemo(
-    () => pathname.split("?")[0],
-    [pathname]
-  );
+  const pathnameWithoutQuery = useMemo(() => {
+    if (!pathname) return '';
+    return pathname.split('?')[0];
+  }, [pathname]);
 
   // Convert URL elements to SimpleViewSwitcher format
   const switcherElements: SimpleViewSwitcherElement<string>[] = React.useMemo(

@@ -1,0 +1,86 @@
+{
+  "view": {
+    "title": "Users",
+    "active": "Active Users",
+    "all": "All Users",
+    "blocked": "Blocked Users",
+    "tooltip": {
+      "active": "Show active users only",
+      "all": "Show all users",
+      "blocked": "Show blocked users only"
+    },
+    "ariaSwitcher": "user status filter"
+  },
+  "select": {
+    "label": "User",
+    "failed": "Failed to load",
+    "empty": "No users found"
+  },
+  "table": {
+    "column": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "createdAt": "Created At",
+      "actions": ""
+    },
+    "action": {
+      "filter": "Filter",
+      "refresh": "Refresh users' list",
+      "create": "Create user",
+      "blockSelected": "Block users",
+      "unblockSelected": "Unblock users",
+      "edit": "Edit",
+      "block": "Block",
+      "unblock": "Unblock"
+    }
+  },
+  "dialog": {
+    "editTitle": "Edit User",
+    "createTitle": "Create User",
+    "close": "Close"
+  },
+  "form": {
+    "field": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "passwordEdit": "Password (leave empty to keep unchanged)",
+      "role": "Role",
+      "status": "Status"
+    },
+    "action": {
+      "cancel": "Cancel",
+      "create": "Create",
+      "update": "Update"
+    },
+    "validation": {
+      "nameRequired": "Name is required",
+      "emailInvalid": "Invalid email",
+      "emailRequired": "Email is required",
+      "passwordRequired": "Password is required",
+      "passwordMin": "Password must be at least 6 characters",
+      "roleInvalid": "Invalid role",
+      "roleRequired": "Role is required",
+      "statusInvalid": "Invalid status",
+      "statusRequired": "Status is required"
+    },
+    "notify": {
+      "created": "User created successfully",
+      "updated": "User updated successfully",
+      "failed": "Operation failed"
+    },
+    "error": {
+      "generic": "An error occurred"
+    }
+  },
+  "role": {
+    "admin": "Admin",
+    "employee": "Employee"
+  },
+  "status": {
+    "active": "Active",
+    "blocked": "Blocked"
+  }
+}

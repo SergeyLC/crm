@@ -1,0 +1,27 @@
+{
+  "board": {
+    "aria": "Kanban Tafel"
+  },
+  "stack": {
+    "cardCount_one": "{{count}} Karte",
+    "cardCount_other": "{{count}} Karten",
+    "total": "Summe"
+  },
+  "card": {
+    "title": "Titel",
+    "clientName": "Kundenname",
+    "potentialValue": "Potenzialwert"
+  },
+  "footer": {
+    "won": "Gewonnen",
+    "lost": "Verloren",
+    "archived": "Archiviert"
+  },
+  "stages": {
+    "qualified": "Qualifiziert",
+    "contacted": "Kontaktiert",
+    "demoScheduled": "Demo geplant",
+    "proposalSent": "Angebot gesendet",
+    "negotiation": "Verhandlung"
+  }
+}

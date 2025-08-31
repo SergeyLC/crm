@@ -12,6 +12,13 @@ export const leadTableColumns: Column<LeadTableRowData>[] = [
     maxWidth: 200,
   },
   {
+    key: "assigneeName",
+    label: "Assignee",
+    minWidth: 200,
+    width: 200,
+    maxWidth: 300,
+  },
+  {
     key: "potentialValue",
     label: "Potential",
     align: "right",
@@ -26,13 +33,6 @@ export const leadTableColumns: Column<LeadTableRowData>[] = [
     minWidth: 170,
     width: 170,
     maxWidth: 200,
-  },
-  {
-    key: "assigneeName",
-    label: "Assignee",
-    minWidth: 200,
-    width: 200,
-    maxWidth: 300,
   },
   {
     key: "actions",
