@@ -75,6 +75,11 @@ jobs:
           cd frontend && npm run lint:check && cd ..
           cd backend && npm run lint:check && cd ..
 
+      - name: Run tests
+        run: |
+          cd frontend && npm test --silent && cd ..
+          cd backend && npm test --silent && cd ..
+
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:

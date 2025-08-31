@@ -8,7 +8,7 @@ export const BaseTablePagination: TablePaginationComponent = ({
   rowsPerPage,
   onPageChange,
   onRowsPerPageChange,
-  rowsPerPageOptions = [2, 10, 25, 50],
+  rowsPerPageOptions = [10, 25, 50],
 }) => (
   <TablePagination
     rowsPerPageOptions={rowsPerPageOptions}
