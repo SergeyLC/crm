@@ -90,12 +90,12 @@ export function DealsTable<T extends DealExt>({
   const { } = useTableActions();
 
   // fetch deals
+  const skip = Boolean(initialData && initialData.length > 0);
   const { data: deals = initialData || [] } = useGetDealsQuery(
     { statuses, stages, excludeStatuses, excludeStages },
     {
-      // Remove refetchOnMountOrArgChange to prevent double requests
-      // RTK Query will automatically refetch when tags are invalidated
       refetchOnFocus: true,
+      skip,
     }
   );
 

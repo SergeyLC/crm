@@ -1,15 +1,13 @@
 import { LeadsTable } from '@/features';
 import Container from '@mui/material/Container';
-import { store } from '@/shared/lib/store';
-import { leadApi } from '@/entities/lead/api';
+import { ssrFetch } from '@/shared/api/ssrFetch';
+import { LeadExt } from '@/entities/lead/types';
 
 export default async function LeadsPage() {
-  if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_BACKEND_API_URL) {
-    try { await store.dispatch(leadApi.endpoints.getLeads.initiate()); } catch (e) { console.warn('Failed to prefetch leads data:', e); }
-  }
+  const leads = await ssrFetch<LeadExt[]>("leads");
   return (
     <Container maxWidth="xl">
-      <LeadsTable />
+      <LeadsTable initialData={leads || undefined} />
     </Container>
   );
 }

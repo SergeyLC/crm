@@ -7,8 +7,8 @@ export function generateStaticParams() {
   return [{ locale: 'de' }, { locale: 'en' }];
 }
 
-export default function LocaleLayout({ children, params }: { children: ReactNode; params: { locale: string } }) {
-  const { locale } = params;
+export default async function LocaleLayout({ children, params }: { children: ReactNode; params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <Providers>
       <AuthProvider>

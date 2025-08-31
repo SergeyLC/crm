@@ -214,10 +214,15 @@ export const createDeal = async (req: Request, res: Response) =>
 
 export const updateDeal = async (req: Request, res: Response) => {
   const {
+    id: _id, // Exclude id from dealData (not used)
     assigneeId,
     contact,
+    creator, // Extract creator to handle separately
     notes = [],
     appointments = [],
+    createdAt: _createdAt, // Exclude timestamps (auto-generated)
+    updatedAt: _updatedAt, // Exclude timestamps (auto-generated)
+    archivedAt: _archivedAt, // Exclude timestamps (auto-generated)
     ...dealData
   } = req.body;
   console.log("Updating deal assigneeId:", assigneeId);
@@ -259,19 +264,25 @@ export const updateDeal = async (req: Request, res: Response) => {
 
   // Form a nested object for notes
   const notesNested = {
-    update: notesToUpdate.map((note: any) => ({
-      where: { id: note.id },
-      data: note,
-    })),
+    update: notesToUpdate.map((note: any) => {
+      const { id: _noteId, ...noteData } = note;
+      return {
+        where: { id: _noteId },
+        data: noteData,
+      };
+    }),
     create: notesToCreate,
   };
 
   // Form a nested object for appointments
   const appointmentsNested = {
-    update: appointmentsToUpdate.map((app: any) => ({
-      where: { id: app.id },
-      data: app,
-    })),
+    update: appointmentsToUpdate.map((app: any) => {
+      const { id: _appId, ...appData } = app;
+      return {
+        where: { id: _appId },
+        data: appData,
+      };
+    }),
     create: appointmentsToCreate,
     delete: appointmentsToDelete,
   };
@@ -283,11 +294,24 @@ export const updateDeal = async (req: Request, res: Response) => {
     data: {
       ...dealData,
 
+      creator: creator?.id
+        ? {
+            connect: { id: creator.id },
+          }
+        : creator === null
+        ? {
+            disconnect: true,
+          }
+        : undefined,
+
       contact: contact?.id
         ? {
             update: {
               where: { id: contact.id },
-              data: contact,
+              data: (() => {
+                const { id: _contactId, ...contactData } = contact;
+                return contactData;
+              })(),
             },
           }
         : contact
