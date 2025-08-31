@@ -17,11 +17,11 @@ export default function DealsLayout({
       >
         <Container
           maxWidth={false}
-          component="article"
+          component="main"
           sx={{
-            pr: 0,
+            pr: 1,
             pl: 0,
-            pt: 0,
+            pt: 1,
             height: "100%",
             display: "flex",
             flexDirection: "column",
