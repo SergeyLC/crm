@@ -1,7 +1,6 @@
 import { useCallback } from "react";
-import { useDispatch } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  dealApi,
   useLazyGetDealByIdQuery,
   useUpdateDealMutation,
   DealExt,
@@ -10,21 +9,18 @@ import {
 } from "@/entities/deal";
 
 export function useDealOperations() {
-  const dispatch = useDispatch();
-  const [triggerGetDealById] = useLazyGetDealByIdQuery();
-  const [updateDeal] = useUpdateDealMutation();
+  const queryClient = useQueryClient();
+  const triggerGetDealById = useLazyGetDealByIdQuery();
+  const updateDealMutation = useUpdateDealMutation();
 
   const invalidateDeals = useCallback(() => {
-    dispatch(dealApi.util.invalidateTags(["Deals", "Deal"]));
+    queryClient.invalidateQueries({ queryKey: ["deals"] });
     console.log("Invalidated deals");
-  }, [dispatch]);
+  }, [queryClient]);
 
   const update = useCallback(
     async (id: string, updateData: (deal: DealExt) => UpdateDealDTO) => {
-      const getResult = await triggerGetDealById(id);
-      const deal = ("data" in getResult ? getResult.data : undefined) as
-        | DealExt
-        | undefined;
+      const deal = await triggerGetDealById(id);
       if (!deal) {
         console.error("Deal not found for id", id);
         return;
@@ -36,9 +32,9 @@ export function useDealOperations() {
         ...preparedUpdate,
       };
       console.log("Updating deal", JSON.stringify({ id, body }));
-      await updateDeal({ id, body }).unwrap();
+      await updateDealMutation.mutateAsync({ id, body });
     },
-    [triggerGetDealById, updateDeal]
+    [triggerGetDealById, updateDealMutation]
   );
 
   const archiveDeal = useCallback(

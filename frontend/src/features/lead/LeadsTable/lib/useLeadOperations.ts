@@ -1,7 +1,6 @@
 import { useCallback } from "react";
-import { useDispatch } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  leadApi,
   useUpdateLeadMutation,
   useLazyGetLeadByIdQuery,
   UpdateLeadDTO,
@@ -10,20 +9,17 @@ import {
 } from "@/entities/lead";
 
 export function useLeadOperations() {
-  const dispatch = useDispatch();
-  const [triggerGetLeadById] = useLazyGetLeadByIdQuery();
-  const [updateLead] = useUpdateLeadMutation();
+  const queryClient = useQueryClient();
+  const triggerGetLeadById = useLazyGetLeadByIdQuery();
+  const updateLeadMutation = useUpdateLeadMutation();
 
   const invalidateLeads = useCallback(() => {
-    dispatch(leadApi.util.invalidateTags(["Leads"]));
-  }, [dispatch]);
+    queryClient.invalidateQueries({ queryKey: ["leads"] });
+  }, [queryClient]);
 
   const update = useCallback(
     async (id: string, updateData: (lead: LeadExt) => UpdateLeadDTO) => {
-      const getResult = await triggerGetLeadById(id);
-      const lead = ("data" in getResult ? getResult.data : undefined) as
-        | LeadExt
-        | undefined;
+      const lead = await triggerGetLeadById(id);
       if (!lead) {
         console.error("Lead not found for id", id);
         return;
@@ -35,9 +31,9 @@ export function useLeadOperations() {
         ...preparedUpdate,
       };
       console.log("Updating lead with id:", id, " body:", body);
-      await updateLead({ id, body }).unwrap();
+      await updateLeadMutation.mutateAsync({ id, body });
     },
-    [triggerGetLeadById, updateLead]
+    [triggerGetLeadById, updateLeadMutation]
   );
 
   const convertLead = useCallback(async (id: string) =>

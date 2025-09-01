@@ -40,14 +40,12 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
   const { enqueueSnackbar } = useSnackbar();
 
   // API requests
-  const { data: user, isLoading: isLoadingUser } = useGetUserByIdQuery(id || "", {
-    skip: !id || !open,
-  });
+  const { data: user, isLoading: isLoadingUser } = useGetUserByIdQuery(id || "", !(!id || !open));
   
-  const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
-  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+  const createUser = useCreateUserMutation();
+  const updateUser = useUpdateUserMutation();
   
-  const isLoading = isLoadingUser || isCreating || isUpdating;
+  const isLoading = isLoadingUser || createUser.isPending || updateUser.isPending;
 
   useEffect(() => {
     // Reset error on dialog open/close
@@ -67,15 +65,15 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
           delete sanitizedData.password;
         }
         
-        await updateUser({
+        await updateUser.mutateAsync({
           id,
           body: sanitizedData,
-        }).unwrap();
+        });
         
   enqueueSnackbar(t("form.notify.updated"), { variant: "success" });
       } else {
         // User creation
-        await createUser(formData as CreateUserDTO).unwrap();
+        await createUser.mutateAsync(formData as CreateUserDTO);
   enqueueSnackbar(t("form.notify.created"), { variant: "success" });
       }
       

@@ -91,10 +91,7 @@ export function UsersTable({
   });
 
   // Get user data
-  const { data: users = initialData } = useGetUsersQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-    refetchOnFocus: true,
-  });
+  const { data: users = initialData } = useGetUsersQuery(true);
 
   //  Filtering users by status
   const filteredUsers = React.useMemo(() => {

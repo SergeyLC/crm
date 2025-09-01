@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { TextField, Button, Stack } from "@mui/material";
 import { LeadExt, CreateLeadDTO, UpdateLeadDTO } from "@/entities/lead/types";
-import { useGetLeadByIdQuery } from "@/entities/lead/api";
+import { useGetLeadByIdQuery } from "@/entities/lead/api-tanstack";
 
 type LeadFormProps = {
   initialData?: LeadExt;
@@ -19,9 +19,7 @@ export const LeadFormFields: React.FC<LeadFormProps> = ({
   const { t } = useTranslation('lead');
   const skipFetch = Boolean(initialData);
 
-  const { data: leadData = initialData } = useGetLeadByIdQuery(leadId || "", {
-    skip: skipFetch,
-  });
+  const { data: leadData = initialData } = useGetLeadByIdQuery(leadId || "", !skipFetch);
 
   const [form, setForm] = useState<CreateLeadDTO | UpdateLeadDTO>(
     leadData as CreateLeadDTO | UpdateLeadDTO

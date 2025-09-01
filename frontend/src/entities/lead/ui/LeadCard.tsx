@@ -21,9 +21,7 @@ export const LeadCard: React.FC<LeadFormProps> = ({ initialLeadData, onClick }) 
     data: leadData = initialLeadData,
     isLoading,
     isError,
-  } = useGetLeadByIdQuery(initialLeadData.id, {
-    skip: skipFetch,
-  });
+  } = useGetLeadByIdQuery(initialLeadData.id, !skipFetch);
 
   useEffect(() => {
     console.log("Leads uploaded:", leadData);

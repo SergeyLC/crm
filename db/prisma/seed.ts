@@ -1,7 +1,7 @@
 const { PrismaClient } = require('../generated/prisma-client');
 const bcrypt = require('bcrypt');
 
-console.log('Starting seed2.ts...');
+console.log('Starting seed.ts...');
 
 const prisma = new PrismaClient();
 
@@ -26,10 +26,10 @@ async function main() {
 
     // Create admin user
     const admin = await prisma.user.upsert({
-      where: { email: 'admin@beispiel.de' },
+      where: { email: 'admin@loya.care' },
       update: {},
       create: {
-        email: 'admin@beispiel.de',
+        email: 'admin@loya.care',
         name: 'Administrator',
         role: 'ADMIN',
         password: hashedPassword,

@@ -42,12 +42,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
 
   // load data only if needed
-  const { data: deals = [] } = useGetDealsQuery(undefined, {
-    // Remove refetchOnMountOrArgChange to prevent double requests
-    // RTK Query will automatically refetch when tags are invalidated
-    refetchOnFocus: true,
-    skip: !needToFetchData,
-  }) as { data: DealExt[] };
+  const { data: deals = [] } = useGetDealsQuery(
+    needToFetchData ? undefined : undefined
+  );
 
   // Memoize the calculation of stacks to avoid unnecessary recomputations
   const dealStacks = React.useMemo(() => {
@@ -61,8 +58,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   // Local state for working with data
   const [stacksInfo, setStacksInfo] = React.useState<KanbanStackData[]>([]);
-  const [triggerGetDealById] = useLazyGetDealByIdQuery();
-  const [updateDeal] = useUpdateDealMutation();
+  const triggerGetDealById = useLazyGetDealByIdQuery();
+  const updateDeal = useUpdateDealMutation();
 
   // Update state when data source changes
   useEffect(() => {
@@ -79,10 +76,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   const update = useCallback(
     async (id: string, updateData: (deal: DealExt) => UpdateDealDTO) => {
-      const getResult = await triggerGetDealById(id);
-      const deal = ("data" in getResult ? getResult.data : undefined) as
-        | DealExt
-        | undefined;
+      const deal = await triggerGetDealById(id);
       if (!deal) {
         console.error("Deal not found for id", id);
         return;
@@ -95,7 +89,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       const body: UpdateDealDTO = {
         ...preparedUpdate,
       };
-      await updateDeal({ id, body }).unwrap();
+      await updateDeal.mutateAsync({ id, body });
     },
     [triggerGetDealById, updateDeal]
   );

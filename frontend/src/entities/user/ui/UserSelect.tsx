@@ -19,10 +19,8 @@ export const UserSelect: React.FC<UserSelectProps> = ({
   label = "User",
 }) => {
   const { t } = useTranslation('user');
-  // If users is not provided, we load it via RTK Query
-  const { data, isLoading, isError } = useGetUsersQuery(undefined, {
-    skip: !!users,
-  });
+  // If users is not provided, we load it via TanStack Query
+  const { data, isLoading, isError } = useGetUsersQuery(!users);
 
   const userList = users ?? data ?? [];
   const isValidValue = userList.some((user) => user.id === value);

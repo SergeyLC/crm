@@ -19,7 +19,7 @@ import {
   AppointmentType,
   appointmentTypes,
 } from "@/entities/appointment/types";
-import { useGetAppointmentByIdQuery } from "@/entities/appointment/api";
+import { useGetAppointmentByIdQuery } from "@/entities/appointment";
 
 type AppointmentFormFieldsProps = {
   initialData?: Appointment;
@@ -36,9 +36,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
   const skipFetch = !!initialData || (!appointmentId && !initialData);
 
   const { data: appointmentData = initialData || undefined } =
-    useGetAppointmentByIdQuery((appointmentId as string) || "", {
-      skip: skipFetch,
-    });
+    useGetAppointmentByIdQuery((appointmentId as string) || "", !skipFetch);
 
   // Initialize form state with normalized data
   const [form, setForm] = useState<Appointment>(appointmentData as Appointment);

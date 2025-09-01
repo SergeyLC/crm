@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useTranslation } from 'react-i18next';
-import { useDispatch } from "react-redux";
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
   Dialog,
@@ -20,7 +20,7 @@ import {
   useGetDealByIdQuery,
   useUpdateDealMutation,
   useCreateDealMutation,
-  dealApi,
+  dealKeys,
 } from "@/entities";
 import type { CreateDealDTO, UpdateDealDTO } from "@/entities";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -35,19 +35,17 @@ export function DealEditDialog({
   onClose?: () => void;
 }) {
   const { t } = useTranslation('deal');
-  const { data, isLoading } = useGetDealByIdQuery(id || "", {
-    skip: !id,
-  });
-  const [updateDeal] = useUpdateDealMutation();
-  const [createDeal] = useCreateDealMutation();
-  const dispatch = useDispatch();
+  const { data, isLoading } = useGetDealByIdQuery(id || "");
+  const updateDeal = useUpdateDealMutation();
+  const createDeal = useCreateDealMutation();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
 
   const handleSubmit = React.useCallback(
     async (values: CreateDealDTO | UpdateDealDTO, shouldCreate?: boolean) => {
       if (!id || shouldCreate) {
-        await createDeal({ ...values, creatorId: user?.id } as CreateDealDTO);
-        dispatch(dealApi.util.invalidateTags(["Deals", "Deal"]));
+        await createDeal.mutateAsync({ ...values, creatorId: user?.id } as CreateDealDTO);
+        queryClient.invalidateQueries({ queryKey: dealKeys.all });
         onClose?.();
         return;
       }
@@ -67,12 +65,12 @@ export function DealEditDialog({
         values.contactId = undefined;
       }
 
-      await updateDeal({ id: id, body: values as UpdateDealDTO });
+      await updateDeal.mutateAsync({ id: id, body: values as UpdateDealDTO });
       console.log("Deal updated with id:", id, "and values:", values);
-      dispatch(dealApi.util.invalidateTags(["Deals", "Deal"]));
+      queryClient.invalidateQueries({ queryKey: dealKeys.all });
       onClose?.();
     },
-    [id, user, dispatch, updateDeal, createDeal, onClose]
+    [id, user, queryClient, updateDeal, createDeal, onClose]
   );
 
   if (!open) return null;

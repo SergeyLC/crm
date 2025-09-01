@@ -74,12 +74,9 @@ export function WonLostDealsTable<T extends DealExt>({
   const { } = useTableActions();
 
   // fetch deals
-  const useDataQuery = isWon ? useGetWonDealsQuery : useGetLostDealsQuery;
-  const { data: deals = [] } = useDataQuery(undefined,
-    {
-      refetchOnFocus: true,
-    }
-  );
+  const { data: wonDeals = [] } = useGetWonDealsQuery(undefined, isWon);
+  const { data: lostDeals = [] } = useGetLostDealsQuery(undefined, !isWon);
+  const deals = isWon ? wonDeals : lostDeals;
 
   const TableHead = React.useMemo(() => makeTableHead(t), [t]);
 

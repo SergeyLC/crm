@@ -45,3 +45,4 @@ ecosystem.config.js
 **/.nvmrc
 
 db/prisma/migrations
+db/temp/

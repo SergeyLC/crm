@@ -6,7 +6,7 @@ import {
   CreateContactDTO,
   UpdateContactDTO,
 } from "@/entities/contact/types";
-import { useGetContactByIdQuery } from "@/entities/contact/api";
+import { useGetContactByIdQuery } from "@/entities/contact";
 
 
 type ContactFormFieldsProps = {
@@ -25,9 +25,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
 
   const {
     data: contactData = initialData,
-  } = useGetContactByIdQuery(contactId || "", {
-    skip: skipFetch,
-  });
+  } = useGetContactByIdQuery(contactId || "", !skipFetch);
 
   // Initialize form state with normalized data
   const [form, setForm] = useState<CreateContactDTO | UpdateContactDTO>(

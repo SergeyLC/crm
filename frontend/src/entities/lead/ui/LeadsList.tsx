@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { formatDate } from "@/shared/lib/formatDate";
 import { LeadExt } from "@/entities/lead/types";
-import { useGetLeadsQuery } from "@/entities/lead/api";
+import { useGetLeadsQuery } from "@/entities/lead/api-tanstack";
 
 import * as React from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -38,13 +38,7 @@ const paginationModel = { page: 0, pageSize: 5 };
 export const LeadsList = ({ initialLeads }: { initialLeads: LeadExt[] }) => {
   const { t } = useTranslation('lead');
   const columns = React.useMemo(() => buildColumns(t), [t]);
-  const skipFetch = Boolean(initialLeads);
-  const { data: leads = initialLeads, isFetching } = useGetLeadsQuery(
-    undefined,
-    {
-      skip: skipFetch,
-    }
-  );
+  const { data: leads = initialLeads, isFetching } = useGetLeadsQuery();
 
   useEffect(() => {
     console.log("Leads uploaded:", leads);

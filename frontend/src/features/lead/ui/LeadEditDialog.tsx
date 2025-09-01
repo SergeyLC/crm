@@ -1,8 +1,6 @@
 "use client";
-// src/features/lead/edit/ui/LeadEditDialog.tsx
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useDispatch } from "react-redux";
 
 import { Dialog, DialogTitle, DialogContent } from "@mui/material";
 import { LeadUpsertForm } from "./LeadUpsertForm";
@@ -10,8 +8,7 @@ import {
   useGetLeadByIdQuery,
   useUpdateLeadMutation,
   useCreateLeadMutation,
-  leadApi,
-} from "@/entities/lead/api";
+} from "@/entities/lead/api-tanstack";
 import type { CreateLeadDTO, UpdateLeadDTO } from "@/entities/lead/types";
 
 export function LeadEditDialog({
@@ -28,18 +25,14 @@ export function LeadEditDialog({
   onClose?: () => void;
 }) {
   const { t } = useTranslation("lead");
-  const { data, isLoading } = useGetLeadByIdQuery(id || "", {
-    skip: !id,
-  });
-  const [updateLead] = useUpdateLeadMutation();
-  const [createLead] = useCreateLeadMutation();
-  const dispatch = useDispatch();
+  const { data, isLoading } = useGetLeadByIdQuery(id || "", !!id);
+  const updateLeadMutation = useUpdateLeadMutation();
+  const createLeadMutation = useCreateLeadMutation();
 
   const handleSubmit = React.useCallback(
     async (values: CreateLeadDTO | UpdateLeadDTO, shouldCreate?: boolean) => {
       if (!id || shouldCreate) {
-        await createLead(values as CreateLeadDTO);
-        dispatch(leadApi.util.invalidateTags(["Leads"]));
+        await createLeadMutation.mutateAsync(values as CreateLeadDTO);
         onClose?.();
         return;
       }
@@ -48,7 +41,6 @@ export function LeadEditDialog({
         return;
       }
       // Update the lead with the provided values
-      // Assuming the API expects an object with an id and the updated values
       if (typeof values?.potentialValue === "string") {
         values.potentialValue = parseFloat(values.potentialValue);
       }
@@ -59,11 +51,10 @@ export function LeadEditDialog({
         values.contactId = undefined;
       }
 
-      await updateLead({ id: id, body: values as UpdateLeadDTO });
-      dispatch(leadApi.util.invalidateTags(["Leads"]));
+      await updateLeadMutation.mutateAsync({ id: id, body: values as UpdateLeadDTO });
       onClose?.();
     },
-    [id, dispatch, updateLead, createLead, onClose]
+    [id, updateLeadMutation, createLeadMutation, onClose]
   );
 
   if (!open) return null;

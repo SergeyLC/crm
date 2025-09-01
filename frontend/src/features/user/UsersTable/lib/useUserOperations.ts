@@ -1,7 +1,6 @@
 import { useCallback } from "react";
-import { useDispatch } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  userApi,
   useBlockUserMutation,
   useUnblockUserMutation,
   useUpdateUserStatusMutation,
@@ -9,26 +8,26 @@ import {
 import { UserStatus } from "@/entities/user/model/types";
 
 export function useUserOperations() {
-  const dispatch = useDispatch();
-  const [blockUser] = useBlockUserMutation();
-  const [unblockUser] = useUnblockUserMutation();
-  const [updateUserStatus] = useUpdateUserStatusMutation();
+  const queryClient = useQueryClient();
+  const blockUserMutation = useBlockUserMutation();
+  const unblockUserMutation = useUnblockUserMutation();
+  const updateUserStatusMutation = useUpdateUserStatusMutation();
 
   const invalidateUsers = useCallback(() => {
-    dispatch(userApi.util.invalidateTags(["Users"]));
-  }, [dispatch]);
+    queryClient.invalidateQueries({ queryKey: ["users"] });
+  }, [queryClient]);
 
   const handleBlock = useCallback(
     async (e: React.MouseEvent | undefined, id?: string) => {
       e?.stopPropagation();
       if (!id) return;
       try {
-        await blockUser(id).unwrap();
+        await blockUserMutation.mutateAsync(id);
       } catch (err) {
         console.error("Block action failed", err);
       }
     },
-    [blockUser]
+    [blockUserMutation]
   );
 
   const handleBlocks = useCallback(
@@ -36,12 +35,12 @@ export function useUserOperations() {
       e?.stopPropagation();
       if (!ids?.length) return;
       try {
-        await Promise.all(ids.map(async (id) => await blockUser(id).unwrap()));
+        await Promise.all(ids.map(async (id) => await blockUserMutation.mutateAsync(id)));
       } catch (err) {
         console.error("Block action failed", err);
       }
     },
-    [blockUser]
+    [blockUserMutation]
   );
 
   const handleUnblock = useCallback(
@@ -49,12 +48,12 @@ export function useUserOperations() {
       e?.stopPropagation();
       if (!id) return;
       try {
-        await unblockUser(id).unwrap();
+        await unblockUserMutation.mutateAsync(id);
       } catch (err) {
         console.error("Unblock action failed", err);
       }
     },
-    [unblockUser]
+    [unblockUserMutation]
   );
 
   const handleUnblocks = useCallback(
@@ -63,13 +62,13 @@ export function useUserOperations() {
       if (!ids?.length) return;
       try {
         await Promise.all(
-          ids.map(async (id) => await unblockUser(id).unwrap())
+          ids.map(async (id) => await unblockUserMutation.mutateAsync(id))
         );
       } catch (err) {
         console.error("Unblock action failed", err);
       }
     },
-    [unblockUser]
+    [unblockUserMutation]
   );
 
   const handleRefreshData = useCallback(async () => {
@@ -80,12 +79,12 @@ export function useUserOperations() {
     async (e: React.MouseEvent | undefined, id: string, status: UserStatus) => {
       e?.stopPropagation();
       try {
-        await updateUserStatus({ id, status }).unwrap();
+        await updateUserStatusMutation.mutateAsync({ id, status });
       } catch (err) {
         console.error("Status change failed", err);
       }
     },
-    [updateUserStatus]
+    [updateUserStatusMutation]
   );
 
   return {

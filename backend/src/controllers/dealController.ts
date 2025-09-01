@@ -39,11 +39,17 @@ export const getDealsParamsFromRequest = (_req: Request, defaultParams: DealsBas
   const { excludeStatuses, excludeStages, statuses, stages } =
     _req.query as DealsBaseParams;
 
+  // If explicit parameters are provided, don't use conflicting defaults
+  const hasExplicitStatuses = statuses !== undefined;
+  const hasExplicitStages = stages !== undefined;
+  const hasExplicitExcludeStatuses = excludeStatuses !== undefined;
+  const hasExplicitExcludeStages = excludeStages !== undefined;
+
   return {
-    excludeStatuses: excludeStatuses || defaultParams.excludeStatuses,
-    excludeStages: excludeStages || defaultParams.excludeStages,
-    statuses: statuses || defaultParams.statuses,
-    stages: stages || defaultParams.stages,
+    excludeStatuses: hasExplicitExcludeStatuses ? excludeStatuses : defaultParams.excludeStatuses,
+    excludeStages: hasExplicitExcludeStages ? excludeStages : defaultParams.excludeStages,
+    statuses: hasExplicitStatuses ? statuses : defaultParams.statuses,
+    stages: hasExplicitStages ? stages : defaultParams.stages,
   };
 };
 
@@ -66,15 +72,30 @@ export const prepareParams = async ({
       )
     : undefined;
 
+  // Process excludeStatuses and excludeStages to arrays
+  const finalExcludeStatuses: DealStatus[] | undefined = excludeStatuses
+    ? (Array.isArray(excludeStatuses)
+        ? excludeStatuses
+        : (excludeStatuses as string).split(",")
+      ).map((s) => s as DealStatus)
+    : undefined;
+
+  const finalExcludeStages: DealStage[] | undefined = excludeStages
+    ? (Array.isArray(excludeStages)
+        ? excludeStages
+        : (excludeStages as string).split(",")
+      ).map((s) => s as DealStage)
+    : undefined;
+
   const filteredStatuses = finalStatuses
-    ? excludeStatuses ? finalStatuses.filter(
-        (s) => !(excludeStatuses).includes(s)
+    ? finalExcludeStatuses ? finalStatuses.filter(
+        (s) => !finalExcludeStatuses.includes(s)
       ) : finalStatuses
     : undefined;
 
   const filteredStages: DealStage[] | undefined = finalStages
-    ? excludeStages ? finalStages.filter(
-        (s) => !(excludeStages).includes(s)
+    ? finalExcludeStages ? finalStages.filter(
+        (s) => !finalExcludeStages.includes(s)
       ) : finalStages
     : undefined;
 
@@ -141,6 +162,18 @@ export const getLostDeals = async (_req: Request, res: Response) => {
   const defaultParams = {
     stages: ["LOST"],
     // excludeStatuses: ["ARCHIVED"],
+  } as DealsBaseParams;
+
+  const params = getDealsParamsFromRequest(_req, defaultParams);
+  const deals = await getAllDealsBase(params);
+
+  res.json(deals);
+};
+
+export const getActiveDeals = async (_req: Request, res: Response) => {
+  const defaultParams = {
+    statuses: ["ACTIVE"],
+    excludeStages: ["LEAD", "WON", "LOST"],
   } as DealsBaseParams;
 
   const params = getDealsParamsFromRequest(_req, defaultParams);

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { DealExt } from "@/entities/deal/model/types";
-import { useGetDealsQuery } from "@/entities/deal/api";
+import { useGetDealsQuery } from "@/entities/deal/api-tanstack";
 import { formatDate } from "@/shared/lib/formatDate";
 
 export const DealsList = ({
@@ -11,11 +11,10 @@ export const DealsList = ({
 }: {
   initialDeals: DealExt[];
 }) => {
-  const skipFetch = Boolean(initialDeals);
+  const { data: deals = initialDeals, isFetching } = useGetDealsQuery(
+    initialDeals ? undefined : {}
+  );
   const { t } = useTranslation('deal');
-  const { data: deals = initialDeals, isFetching } = useGetDealsQuery(undefined, {
-    skip: skipFetch,
-  });
 
   useEffect(() => {
     console.log("Deals uploaded:", deals);

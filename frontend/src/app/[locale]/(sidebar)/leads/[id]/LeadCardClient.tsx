@@ -1,17 +1,22 @@
 "use client";
-import { LeadCard } from '@/entities/lead/ui/LeadCard';
-import { useTranslation } from 'react-i18next';
-import { useGetLeadByIdQuery } from '@/entities/lead/api';
-import { LeadExt } from '@/entities/lead/types';
+import { LeadCard } from "@/entities/lead/ui/LeadCard";
+import { useTranslation } from "react-i18next";
+import { useGetLeadByIdQuery } from "@/entities/lead/api-tanstack";
+import { LeadExt } from "@/entities/lead/types";
 
 type Props = { id: string; initialLeadData: LeadExt | null };
 export default function LeadCardClient({ id, initialLeadData }: Props) {
   const skipFetch = Boolean(initialLeadData);
-  const { data = initialLeadData, isLoading, isError } = useGetLeadByIdQuery(id, { skip: skipFetch });
+  const {
+    data = initialLeadData,
+    isLoading,
+    isError,
+  } = useGetLeadByIdQuery(id, !skipFetch);
   const lead = data;
   const { t } = useTranslation();
-  if (isLoading && !lead) return <p>{t('app:loading')}</p>;
-  if (isError) return <p className="text-red-500">{t('app:errorLoadingData')}</p>;
-  if (!lead) return <p>{t('app:noData')}</p>;
+  if (isLoading && !lead) return <p>{t("app:loading")}</p>;
+  if (isError)
+    return <p className="text-red-500">{t("app:errorLoadingData")}</p>;
+  if (!lead) return <p>{t("app:noData")}</p>;
   return <LeadCard initialLeadData={lead} />;
 }

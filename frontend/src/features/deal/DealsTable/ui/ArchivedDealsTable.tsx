@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import dynamic from "next/dynamic";
 
 import EditIcon from "@mui/icons-material/Edit";
@@ -8,11 +8,7 @@ import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
 
-import {
-  DealExt,
-  DealViewSwitcher,
-  useGetDealsQuery,
-} from "@/entities/deal";
+import { DealExt, DealViewSwitcher, useGetArchivedDealsQuery } from "@/entities/deal";
 import {
   BaseTable,
   BaseTableHeadProps,
@@ -29,11 +25,13 @@ import {
 import { useEntityDialog } from "@/shared/lib/hooks";
 
 import { DealTableRowData, buildDealTableColumns } from "../model";
-import { TFunction } from 'i18next';
+import { TFunction } from "i18next";
 import { mapDealsToDealRows, useTableActions, useDealOperations } from "../lib";
 
 const makeDealsTableHead = (t: TFunction) => {
-  const Head = <TTableData extends BaseTableRowData>(props: BaseTableHeadProps<TTableData>) => (
+  const Head = <TTableData extends BaseTableRowData>(
+    props: BaseTableHeadProps<TTableData>
+  ) => (
     <BaseTableHead
       {...props}
       columns={buildDealTableColumns(t) as unknown as Column<TTableData>[]}
@@ -60,7 +58,7 @@ export function ArchivedDealsTable<T extends DealExt>({
   orderBy = "stage" as SortableFields<DealTableRowData>,
   sx,
 }: ArchivedDealsTableProps<T>) {
-  const { t } = useTranslation('deal');
+  const { t } = useTranslation("deal");
   const {
     entityId: clickedId,
     handleEditClick,
@@ -71,63 +69,66 @@ export function ArchivedDealsTable<T extends DealExt>({
   const { handleRestore, handleRestores, handleRefreshData } =
     useDealOperations();
 
-  const { } = useTableActions();
+  const {} = useTableActions();
 
   // fetch deals
-  const { data: deals = initialData || [] } = useGetDealsQuery(
-    { statuses: ["ARCHIVED"], excludeStatuses: ["ACTIVE"] },
-    {
-      refetchOnFocus: true,
-    }
-  );
+  const { data: deals = initialData || [], refetch } = useGetArchivedDealsQuery();
+
+  // Refetch data when component mounts to ensure fresh data
+  React.useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const rowActionMenuItems: ActionMenuItemProps<DealTableRowData>[] =
     React.useMemo(
       () => [
         {
-          title: t('action.edit'),
-          tooltip: t('tooltip.editDeal'),
+          title: t("action.edit"),
+          tooltip: t("tooltip.editDeal"),
           icon: <EditIcon fontSize="small" />,
           onClick: handleEditClick,
         },
         {
-          title: t('action.restore'),
-          tooltip: t('tooltip.restoreDeal'),
+          title: t("action.restore"),
+          tooltip: t("tooltip.restoreDeal"),
           icon: <UnarchiveIcon fontSize="small" />,
           onClick: handleRestore,
         },
       ],
-    [handleRestore, handleEditClick, t]
+      [handleRestore, handleEditClick, t]
     );
 
   const toolbarMenuItems: ToolbarMenuItem[] = React.useMemo(
     () => [
       {
-    title: t('toolbar.filter'),
+        title: t("toolbar.filter"),
         icon: <FilterListIcon fontSize="small" />,
       },
       {
-        title: t('toolbar.refreshDeals'),
-        tooltip: t('tooltip.refreshDeals'),
+        title: t("toolbar.refreshDeals"),
+        tooltip: t("tooltip.refreshDeals"),
         icon: <Refresh fontSize="small" />,
         onClick: handleRefreshData,
       },
       {
-        title: t('toolbar.restoreSelected'),
-        tooltip: t('tooltip.restoreSelected'),
+        title: t("toolbar.restoreSelected"),
+        tooltip: t("tooltip.restoreSelected"),
         icon: <UnarchiveIcon fontSize="small" />,
         onClickMultiple: handleRestores,
         isGroupAction: true,
       },
     ],
-  [handleRestores, handleRefreshData, t]
+    [handleRestores, handleRefreshData, t]
   );
 
   const DealsTableHead = React.useMemo(() => makeDealsTableHead(t), [t]);
 
-  const ToolbarComponent = ({ selected, clearSelection }: BaseTableToolbarProps) => (
+  const ToolbarComponent = ({
+    selected,
+    clearSelection,
+  }: BaseTableToolbarProps) => (
     <BaseTableToolbar
-      title={<DealViewSwitcher title={t('viewSwitcher.archivedDeals')} />}
+      title={<DealViewSwitcher title={t("viewSwitcher.archivedDeals")} />}
       selected={selected}
       menuItems={toolbarMenuItems}
       clearSelection={clearSelection}
@@ -140,7 +141,7 @@ export function ArchivedDealsTable<T extends DealExt>({
         initialData={deals ?? initialData}
         order={order}
         orderBy={orderBy}
-  columnsConfig={buildDealTableColumns(t)}
+        columnsConfig={buildDealTableColumns(t)}
         TableToolbarComponent={ToolbarComponent}
         TableHeadComponent={DealsTableHead}
         rowMapper={mapDealsToDealRows}

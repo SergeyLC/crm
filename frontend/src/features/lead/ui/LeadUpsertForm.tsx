@@ -5,7 +5,7 @@ import {
   CreateLeadDTO,
   UpdateLeadDTO,
 } from "@/entities/lead/types";
-import { useGetLeadByIdQuery } from "@/entities/lead/api";
+import { useGetLeadByIdQuery } from "@/entities/lead/api-tanstack";
 import {
   BaseUpsertForm,
   BaseUpsertFormProps,
@@ -31,9 +31,7 @@ export const LeadUpsertForm: React.FC<LeadFormProps> = ({
     data: leadData = initialData,
     isLoading,
     isError,
-  } = useGetLeadByIdQuery(leadId || "", {
-    skip: skipFetch,
-  });
+  } = useGetLeadByIdQuery(leadId || "", !skipFetch);
 
   if (isLoading) {
     return <div>Loading...</div>;

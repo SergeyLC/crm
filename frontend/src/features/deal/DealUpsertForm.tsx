@@ -1,7 +1,7 @@
 "use client";
 
 import { DealExt, CreateDealDTO, UpdateDealDTO } from "@/entities/deal/model/types";
-import { useGetDealByIdQuery } from "@/entities/deal/api";
+import { useGetDealByIdQuery } from "@/entities/deal/api-tanstack";
 import { BaseUpsertForm, BaseUpsertFormProps } from "@/features/entityUpsert";
 import { useTranslation } from 'react-i18next';
 
@@ -19,15 +19,11 @@ export const DealUpsertForm: React.FC<DealFormProps> = ({
   // titleUpdate = "Update Deal",
   onSubmit,
 }) => {
-  const skipFetch = !!initialData || (!initialData && !dealId);
-
   const {
     data: dealData = initialData,
     isLoading,
     isError,
-  } = useGetDealByIdQuery(dealId || "", {
-    skip: skipFetch,
-  });
+  } = useGetDealByIdQuery(dealId || "");
 
   const { t } = useTranslation('deal');
 

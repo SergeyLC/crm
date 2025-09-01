@@ -1,101 +1,165 @@
-# Prisma ORM Database Schema for CRM
+# LoyaCare CRM Database
 
-## Requirements
+This directory contains the Prisma ORM database schema and configuration for the LoyaCare CRM system.
+
+## 📋 Overview
+
+The database layer is built with **Prisma ORM** and uses **PostgreSQL** as the database engine. It provides a type-safe database access layer for the CRM application, managing leads, deals, users, contacts, appointments, and notes.
+
+## 🔧 Requirements
 
 - **Node.js**: Version 24+ (see `.nvmrc` in project root)
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL 13+
+- **Prisma CLI**: Included as dev dependency
 
-## Setup
+## 🚀 Quick Start
 
-**Initialization**
-   Run the following command to initialize Prisma:
-   ```bash
-   npx prisma init
-   ```
-
-**Create Database & Run Migrations**
-Run the migrations to create the database structure:
+### 1. Database Setup
 ```bash
+# Reset database and apply all migrations
+npm run migrate:reset
+
+# Or run migrations in development mode
 npm run migrate
 ```
 
-**Generate Client**
-Generate the Prisma client and copy the data to backend and frontend projects:
+**💡 Note:** This project is already initialized. **DO NOT run `npx prisma init`** as it will overwrite existing configuration.
+
+### 2. Seed Database (Optional)
 ```bash
+# Populate database with test data
+npm run seed
+```
+
+### 3. Generate Prisma Client
+```bash
+# Generate client and copy to frontend/backend
 npm run generate
 ```
 
-💡 Note:
-After running `npm run generate`, the generated data is automatically copied to the backend and frontend projects.
+## � Database Schema
 
-Make sure the database connection in `prisma/schema.prisma` is configured correctly.
+The schema includes the following main entities:
 
-## Available Commands
+- **Users**: Admin and employee accounts with role-based access
+- **Leads**: Potential customers and their information
+- **Deals**: Sales opportunities with status tracking
+- **Contacts**: Customer contact information
+- **Appointments**: Scheduled meetings and calls
+- **Notes**: Activity logs and comments
+
+## 🛠️ Available Commands
+
+### ⚠️ Project Initialization (Only for NEW Projects)
+```bash
+# Initialize NEW Prisma project (⚠️ DO NOT RUN IN EXISTING PROJECTS)
+npx prisma init
+```
+
+**🚨 WARNINGS:**
+- **Only run this in a completely NEW/EMPTY project directory**
+- **DO NOT run this command in existing projects** - it will overwrite your current schema
+- **This command is NOT needed** if you cloned this repository or the project is already set up
+- Use this only when starting a fresh Prisma project from scratch
 
 ### Database Management
-- **`npm run migrate`** - Run database migrations in development mode. Creates and applies new migrations based on schema changes.
-- **`npm run migrate:deploy`** - Deploy migrations to production database without generating new ones.
-- **`npm run migrate:reset`** - Reset the database and apply all migrations from scratch (⚠️ **WARNING**: This will delete all data).
-- **`npm run migrate:status`** - Check the status of migrations and see which ones are applied or pending.
+```bash
+# Development migration (creates new migration if schema changed)
+npm run migrate
+
+# Deploy migrations to production
+npm run migrate:deploy
+
+# Reset database and reapply all migrations (⚠️ DELETES ALL DATA)
+npm run migrate:reset
+
+# Check migration status
+npm run migrate:status
+```
 
 ### Development Tools
-- **`npm run generate`** - Generate Prisma client and automatically copy it to frontend and backend projects.
-- **`npm run studio`** - Open Prisma Studio (web-based database GUI) for viewing and editing data.
-- **`npm run seed`** - Run database seeding script to populate the database with initial/test data.
+```bash
+# Generate Prisma client and copy to projects
+npm run generate
+
+# Open Prisma Studio (database GUI)
+npm run studio
+
+# Run database seeding
+npm run seed
+```
 
 ### Code Quality
-- **`npm run type-check`** - Run TypeScript type checking without emitting files.
-- **`npm run lint`** - Run linting (currently not configured).
-- **`npm run lint:check`** - Check linting status (currently not configured).
-
----
-
-# ORM Prisma Datenbankschema für CRM
-
-## Voraussetzungen
-
-- **Node.js**: Version 24+ (siehe `.nvmrc` im Projektstammverzeichnis)
-- **Datenbank**: PostgreSQL
-
-## Einrichtung
-
-**Initialisierung**
-   Führe den folgenden Befehl aus, um Prisma zu initialisieren:
-   ```bash
-   npx prisma init
-   ```
-
-**Datenbank erstellen & Migrationen durchführen**
-Führe die Migrationen aus, um die Datenbankstruktur zu erstellen:
 ```bash
-npm run migrate
+# TypeScript type checking
+npm run type-check
+
+# Linting (not configured)
+npm run lint
+
+# Lint checking (not configured)
+npm run lint:check
 ```
 
-**Client generieren**
-Generiere den Prisma-Client und kopiere die Daten in die Backend- und Frontend-Projekte:
+## 🔄 Development Workflow
+
+### Making Schema Changes
+1. Update `prisma/schema.prisma`
+2. Run `npm run migrate` to create and apply migration
+3. Run `npm run generate` to update the client
+4. Restart your development servers
+
+### Database Reset (Development)
 ```bash
-npm run generate
+# Complete reset with fresh data
+npm run migrate:reset && npm run seed && npm run generate
 ```
 
-💡 Hinweis:
-Nach `npm run generate` werden die generierten Daten automatisch in die Projekte backend und frontend kopiert.
+## 📁 Project Structure
 
-Stelle sicher, dass die Datenbankverbindung in der `prisma/schema.prisma` korrekt konfiguriert ist.
+```
+db/
+├── prisma/
+│   ├── schema.prisma      # Database schema definition
+│   ├── seed.ts           # Database seeding script
+│   └── migrations/       # Migration files
+├── generated/            # Generated Prisma client (local)
+├── .env                  # Database connection (gitignored)
+└── package.json          # Database-specific scripts
+```
 
-## Verfügbare Befehle
+## ⚙️ Configuration
 
-### Datenbankverwaltung
-- **`npm run migrate`** - Führe Datenbankmigrationen im Entwicklungsmodus aus. Erstellt und wendet neue Migrationen basierend auf Schemaänderungen an.
-- **`npm run migrate:deploy`** - Setze Migrationen auf die Produktionsdatenbank ohne neue zu generieren.
-- **`npm run migrate:reset`** - Setze die Datenbank zurück und wende alle Migrationen von Grund auf neu an (⚠️ **WARNUNG**: Dies löscht alle Daten).
-- **`npm run migrate:status`** - Überprüfe den Status der Migrationen und sieh, welche angewendet oder ausstehend sind.
+### Environment Variables
+Create a `.env` file based on `.env.example`:
 
-### Entwicklungstools
-- **`npm run generate`** - Generiere Prisma-Client und kopiere ihn automatisch in Frontend- und Backend-Projekte.
-- **`npm run studio`** - Öffne Prisma Studio (webbasiertes Datenbank-GUI) zum Anzeigen und Bearbeiten von Daten.
-- **`npm run seed`** - Führe Datenbank-Seed-Script aus, um die Datenbank mit initialen/Testdaten zu füllen.
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/loya_care_crm"
+```
 
-### Codequalität
-- **`npm run type-check`** - Führe TypeScript-Typprüfung aus, ohne Dateien zu erzeugen.
-- **`npm run lint`** - Führe Linting aus (derzeit nicht konfiguriert).
-- **`npm run lint:check`** - Überprüfe Linting-Status (derzeit nicht konfiguriert).
+### Schema Configuration
+The schema is configured in `prisma/schema.prisma` with:
+- PostgreSQL datasource
+- Custom generators for client distribution
+- Database schema definitions
+
+## 🔒 Security Notes
+
+- Database credentials are stored in `.env` (gitignored)
+- Use strong passwords in production
+- Regularly backup your database
+- The `migrate:reset` command deletes all data - use with caution
+
+## 📚 Additional Resources
+
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [Prisma Studio Guide](https://www.prisma.io/studio)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+
+## 🤝 Contributing
+
+When working with database changes:
+1. Always test migrations on a copy of production data first
+2. Update this README if you add new commands
+3. Document any breaking schema changes
+4. Ensure seed data remains realistic and useful
