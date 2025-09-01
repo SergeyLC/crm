@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { login, logout } from '../../src/controllers/authController';
+import { login, logout } from '@/controllers/authController';
 
 // Mock all dependencies at the top
-jest.mock('../../src/prisma/client', () => ({
+// jest.mock("@../../src/prisma/client", () => ({
+jest.mock("@/prisma/client", () => ({
   user: {
     findUnique: jest.fn(),
   },

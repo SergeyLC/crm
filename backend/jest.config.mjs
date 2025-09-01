@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/tests'],
@@ -18,4 +18,9 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 10000,
   moduleFileExtensions: ['ts', 'js'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/tests/(.*)$': '<rootDir>/tests/$1',
+    '^@/generated/(.*)$': '<rootDir>/generated/$1',
+  },
 };

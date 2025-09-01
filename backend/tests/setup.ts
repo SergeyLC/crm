@@ -2,7 +2,7 @@ import { jest, beforeAll, afterAll } from '@jest/globals';
 import { PrismaClient } from '@prisma/client';
 
 // Mock Prisma client
-jest.mock('../src/prisma/client', () => ({
+jest.mock('@/prisma/client', () => ({
   __esModule: true,
   default: {
     user: {

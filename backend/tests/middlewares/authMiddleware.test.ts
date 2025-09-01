@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { NextFunction } from 'express';
-import { authenticateToken, authorizeRoles } from '../../src/middlewares/authMiddleware';
+import { authenticateToken, authorizeRoles } from '@/middlewares/authMiddleware';
 
 describe('Auth Middleware', () => {
   let mockRequest: any;
