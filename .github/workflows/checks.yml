@@ -1,0 +1,82 @@
+name: Checks
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_call:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Cache frontend dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            frontend/node_modules
+          key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-frontend-
+
+      - name: Cache backend dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            backend/node_modules
+          key: ${{ runner.os }}-backend-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-
+
+      - name: Cache db dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            db/node_modules
+          key: ${{ runner.os }}-db-${{ hashFiles('db/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-db-
+
+      - name: Install dependencies
+        run: |
+          cd frontend && npm ci && cd ..
+          cd backend && npm ci && cd ..
+          cd db && npm ci && cd ..
+
+      - name: Generate Prisma client
+        run: |
+          cd db && npm run generate && cd ..
+
+      - name: Type check
+        run: |
+          cd frontend && npm run type-check && cd ..
+          cd backend && npm run type-check && cd ..
+          cd db && npm run type-check && cd ..
+
+      - name: Lint check
+        run: |
+          cd frontend && npm run lint:check && cd ..
+          cd backend && npm run lint:check && cd ..
+          cd db && npm run lint:check && cd ..
+
+      - name: Run tests
+        run: |
+          cd frontend && npm test --silent && cd ..
+          cd backend && npm test --silent && cd ..
