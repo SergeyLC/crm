@@ -138,7 +138,7 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
       <Box
         className={className}
         role="region"
-        aria-label={t('kanban:board.aria')}
+        aria-label="Kanban board"
         sx={{
           width: "100%",
           height: "100%",

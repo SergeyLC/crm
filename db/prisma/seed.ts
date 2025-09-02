@@ -1,5 +1,5 @@
-const { PrismaClient } = require('../generated/prisma-client');
-const bcrypt = require('bcrypt');
+import { PrismaClient, AppointmentType, DealStage } from '../generated/prisma-client';
+import * as bcrypt from 'bcrypt';
 
 console.log('Starting seed.ts...');
 
@@ -24,23 +24,29 @@ async function main() {
 
     console.log('Starting seeding process...');
 
-    // Create admin user
-    const admin = await prisma.user.upsert({
-      where: { email: 'admin@loya.care' },
-      update: {},
-      create: {
-        email: 'admin@loya.care',
-        name: 'Administrator',
-        role: 'ADMIN',
-        password: hashedPassword,
+    // Create admins user
+    const admins: any[] = [];
+    ["admin@loya.care", "admin@beispiel.de", "admin@example.com"].forEach(
+      async (email, index) => {
+        const admin = await prisma.user.upsert({
+          where: { email },
+          update: {},
+          create: {
+            email,
+            name: `Administrator ${index + 1}`,
+            role: "ADMIN",
+            password: hashedPassword,
+          },
+        });
+        admins.push(admin);
+        console.log("Admin users:", admin.email);
       }
-    });
+    );
 
-    console.log('Admin user:', admin.email);
 
-    // Create 3 employee users
+    // Create 10 employee users
     const employees: any[] = [];
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 10; i++) {
       const employee = await prisma.user.upsert({
         where: { email: `v${i}@loya.care` },
         update: {},
@@ -58,7 +64,7 @@ async function main() {
     console.log('Creating leads and deals...');
 
     // For each employee, create 5 Leads and 6 Deals
-    const dealStages = ['QUALIFIED', 'CONTACTED', 'DEMO_SCHEDULED', 'PROPOSAL_SENT', 'NEGOTIATION'];
+    const dealStages: DealStage[] = ['QUALIFIED', 'CONTACTED', 'DEMO_SCHEDULED', 'PROPOSAL_SENT', 'NEGOTIATION'];
 
     for (const employee of employees) {
       // Create 5 Leads
@@ -96,7 +102,7 @@ async function createLead(creatorId: string) {
     });
 
     const title = `Titel ${contact.organization}`;
-    const potentialValue = Math.random() * (2500000 - 10) + 10;
+    const potentialValue = Math.round((Math.random() * (2500000 - 10) + 10) * 100) / 100;
 
     const deal = await prisma.deal.create({
       data: {
@@ -113,7 +119,7 @@ async function createLead(creatorId: string) {
 
     // Create 2-4 appointments
     const numAppointments = Math.floor(Math.random() * 3) + 2;
-    const appointmentTypes = ['CALL', 'MEETING', 'LUNCH'];
+    const appointmentTypes: AppointmentType[] = ['CALL', 'MEETING', 'LUNCH'];
 
     for (let i = 0; i < numAppointments; i++) {
       await prisma.appointment.create({
@@ -132,7 +138,7 @@ async function createLead(creatorId: string) {
   }
 }
 
-async function createDeal(creatorId: string, stage: string) {
+async function createDeal(creatorId: string, stage: DealStage) {
   try {
     // Create unique contact
     const germanNames = ['Hans Müller', 'Anna Schmidt', 'Klaus Wagner', 'Maria Becker', 'Peter Schulz', 'Lisa Hoffmann', 'Thomas Richter', 'Sabine Bauer', 'Michael Koch', 'Julia Neumann'];
@@ -149,7 +155,7 @@ async function createDeal(creatorId: string, stage: string) {
     });
 
     const title = `Titel ${contact.organization}`;
-    const potentialValue = Math.random() * (2500000 - 10) + 10;
+    const potentialValue = Math.round((Math.random() * (2500000 - 10) + 10) * 100) / 100;
 
     const deal = await prisma.deal.create({
       data: {
@@ -166,7 +172,7 @@ async function createDeal(creatorId: string, stage: string) {
 
     // Create 2-4 appointments
     const numAppointments = Math.floor(Math.random() * 3) + 2;
-    const appointmentTypes = ['CALL', 'MEETING', 'LUNCH'];
+    const appointmentTypes: AppointmentType[] = ['CALL', 'MEETING', 'LUNCH'];
 
     for (let i = 0; i < numAppointments; i++) {
       await prisma.appointment.create({

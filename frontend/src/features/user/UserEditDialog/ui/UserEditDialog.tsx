@@ -103,7 +103,7 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
             color="inherit"
             onClick={onClose}
             disabled={isLoading}
-            aria-label={t("dialog.close", "close")}
+            aria-label="Close dialog"
           >
             <CloseIcon />
           </IconButton>

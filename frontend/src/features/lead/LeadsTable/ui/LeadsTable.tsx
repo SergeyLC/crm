@@ -17,6 +17,7 @@ import {
   BaseTableToolbar,
   BaseTableToolbarProps,
   ToolbarMenuItem,
+  BaseTableRowData,
 } from "@/features/BaseTable";
 import {
   useGetLeadsQuery,
@@ -29,7 +30,7 @@ import { ActionMenuItemProps } from "@/features/BaseTable";
 import { useEntityDialog } from "@/shared";
 
 import {
-  leadTableColumns,
+  buildLeadTableColumns,
   LeadTableRowData,
   mapLeadsToLeadRows,
 } from "../model";
@@ -37,8 +38,9 @@ import { useLeadOperations } from "../lib";
 import { useTranslation } from "react-i18next";
 import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { useQueryClient } from '@tanstack/react-query';
-import { leadKeys } from '@/entities/lead/api-tanstack';
+import { useQueryClient } from "@tanstack/react-query";
+import { leadKeys } from "@/entities/lead/api-tanstack";
+import { TFunction } from "i18next/typescript/t";
 
 const EditDialog = dynamic(
   () =>
@@ -48,15 +50,17 @@ const EditDialog = dynamic(
   { ssr: false }
 );
 
-const LeadsTableHead = <TTableData extends LeadTableRowData>(
-  props: BaseTableHeadProps<TTableData>
-) => {
-  return (
+// Will inject translated columns inside component (needs t), so export a factory.
+const makeLeadsTableHead = (t: TFunction) => {
+  const Head = <TTableData extends BaseTableRowData>(
+    props: BaseTableHeadProps<TTableData>
+  ) => (
     <BaseTableHead
       {...props}
-      columns={leadTableColumns as unknown as Column<TTableData>[]}
+      columns={buildLeadTableColumns(t) as unknown as Column<TTableData>[]}
     />
   );
+  return Head;
 };
 
 export function LeadsTable<T extends LeadExt>({
@@ -82,11 +86,12 @@ export function LeadsTable<T extends LeadExt>({
     handleRefreshData,
   } = useLeadOperations();
 
-  const { data: archivedLeads = [] } = useGetArchivedLeadsQuery(showArchived);
-    const { data: activeLeads = [] } = useGetLeadsQuery(!showArchived);
+  const { data: archivedLeads = [], isLoading: isLoadingArchived } = useGetArchivedLeadsQuery(showArchived);
+  const { data: activeLeads = [], isLoading: isLoadingActive } = useGetLeadsQuery(!showArchived);
 
   // Select the appropriate data based on showArchived prop
   const leads = showArchived ? archivedLeads : activeLeads;
+  const isLoading = showArchived ? isLoadingArchived : isLoadingActive;
 
   const queryClient = useQueryClient();
 
@@ -100,21 +105,6 @@ export function LeadsTable<T extends LeadExt>({
   }, [showArchived, queryClient]);
 
   const { t } = useTranslation("lead");
-
-  // Localize column labels at render time (avoid i18next in model layer)
-  const localizedColumns = React.useMemo(() => {
-    const mapping: Record<string, string> = {
-      title: "lead:table.column.title",
-      assigneeName: "lead:table.column.assignee",
-      potentialValue: "lead:table.column.potential",
-      clientName: "lead:table.column.client",
-    };
-    return leadTableColumns.map((col) =>
-      col.key && mapping[col.key as string]
-        ? { ...col, label: t(mapping[col.key as string]) }
-        : col
-    );
-  }, [t]);
 
   const rowActionMenuItems: ActionMenuItemProps<LeadTableRowData>[] =
     React.useMemo(() => {
@@ -219,6 +209,8 @@ export function LeadsTable<T extends LeadExt>({
     t,
   ]);
 
+  const LeadsTableHead = React.useMemo(() => makeLeadsTableHead(t), [t]);
+
   const ToolbarComponent = ({
     selected,
     clearSelection,
@@ -227,7 +219,7 @@ export function LeadsTable<T extends LeadExt>({
       title={
         <LeadViewSwitcher
           title={
-            showArchived ? t("lead:table.archivedTitle") : t("lead:table.title")
+            showArchived ? t('table.archivedTitle') : t('table.title')
           }
         />
       }
@@ -237,6 +229,24 @@ export function LeadsTable<T extends LeadExt>({
     />
   );
 
+  const columnsConfig = React.useMemo(() => buildLeadTableColumns(t), [t]);
+
+  // Show loading state if data is being fetched
+  if (isLoading && leads.length === 0) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '400px',
+        fontSize: '16px',
+        color: '#666'
+      }}>
+        {showArchived ? t('list.loading') : t('list.loading')}
+      </div>
+    );
+  }
+
   return (
     <>
       <BaseTable
@@ -244,9 +254,9 @@ export function LeadsTable<T extends LeadExt>({
         order={order}
         orderBy={orderBy}
         TableToolbarComponent={ToolbarComponent}
-        toolbarTitle={t("lead:table.title")}
+        toolbarTitle={t('table.title')}
         TableHeadComponent={LeadsTableHead}
-        columnsConfig={localizedColumns}
+        columnsConfig={columnsConfig}
         rowMapper={mapLeadsToLeadRows}
         rowActionMenuItems={rowActionMenuItems}
         sx={{ p: 0, m: 0 }}

@@ -107,7 +107,7 @@ export function SidebarDrawer() {
               {t('nav:appName', 'Loya Care')}
             </Typography>
           )}
-          <IconButton onClick={() => setCollapsed((v) => !v)} size="small" aria-label={collapsed ? t('nav:expand','Expand sidebar') : t('nav:collapse','Collapse sidebar')}>
+          <IconButton onClick={() => setCollapsed((v) => !v)} size="small" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
             {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         </Box>
@@ -177,7 +177,7 @@ export function SidebarDrawer() {
         <IconButton
       onClick={handleDrawerToggle}
       sx={{ my: 2 }}
-      aria-label={t('nav:userProfile','User profile')}
+      aria-label="User profile"
         >
           <Avatar
             sx={{ width: "1.5em", height: "1.5em", bgcolor: "primary.main" }}

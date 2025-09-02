@@ -1,11 +1,12 @@
 import { LeadTableRowData } from "./types";
-import { Column, currencyFormatter } from "@/features/BaseTable";
+import { Column, currencyFormatter, TGetColumns } from "@/features/BaseTable";
+import { TFunction } from 'i18next';
 
 // Columns definition for the Leads table.
-export const leadTableColumns: Column<LeadTableRowData>[] = [
+export const buildLeadTableColumns = (t: TFunction): Column<LeadTableRowData>[] => ([
   {
     key: "title",
-    label: "Title",
+    label: t("lead:table.column.title"),
     padding: "none",
     minWidth: 120,
     width: 120,
@@ -13,14 +14,14 @@ export const leadTableColumns: Column<LeadTableRowData>[] = [
   },
   {
     key: "assigneeName",
-    label: "Assignee",
+    label: t("lead:table.column.assignee"),
     minWidth: 200,
     width: 200,
     maxWidth: 300,
   },
   {
     key: "potentialValue",
-    label: "Potential",
+    label: t("lead:table.column.potential"),
     align: "right",
     formatter: currencyFormatter,
     minWidth: 70,
@@ -29,7 +30,7 @@ export const leadTableColumns: Column<LeadTableRowData>[] = [
   },
   {
     key: "clientName",
-    label: "Client",
+    label: t("lead:table.column.client"),
     minWidth: 170,
     width: 170,
     maxWidth: 200,
@@ -44,4 +45,5 @@ export const leadTableColumns: Column<LeadTableRowData>[] = [
     sortable: false,
     isSticky: true,
   },
-];
+]);
+export const getColumns: TGetColumns<LeadTableRowData> = () => buildLeadTableColumns(((k: string) => k) as unknown as TFunction);

@@ -1,10 +1,29 @@
+import { Suspense } from 'react';
 import { LeadsTable } from '@/features';
-import Container from '@mui/material/Container';
 
-export default async function ArchivedLeadsPage() {
+// ISR configuration - will be ignored in development
+export const revalidate = 60;
+
+// Loading component for archived leads
+function ArchivedLeadsLoading() {
   return (
-    <Container maxWidth="xl">
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '400px',
+      fontSize: '16px',
+      color: '#666'
+    }}>
+      Loading...
+    </div>
+  );
+}
+
+export default function ArchivedLeadsPage() {
+  return (
+    <Suspense fallback={<ArchivedLeadsLoading />}>
       <LeadsTable showArchived={true} />
-    </Container>
+    </Suspense>
   );
 }

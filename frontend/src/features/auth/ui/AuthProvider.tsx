@@ -9,7 +9,10 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+/**
+ * Client-side AuthProvider with full authentication logic
+ */
+function ClientAuthProvider({ children }: AuthProviderProps) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   // Check authentication on load
@@ -91,4 +94,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       {children}
     </AuthContext.Provider>
   );
+}
+
+/**
+ * Universal AuthProvider that works on both server and client
+ */
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  // On server, just return children (auth will be handled on client)
+  if (typeof window === 'undefined') {
+    return <>{children}</>;
+  }
+
+  // On client, use the client provider
+  return <ClientAuthProvider>{children}</ClientAuthProvider>;
 };

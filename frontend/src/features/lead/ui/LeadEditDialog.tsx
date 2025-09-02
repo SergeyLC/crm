@@ -61,7 +61,7 @@ export function LeadEditDialog({
   if (isLoading)
     return (
       <Dialog open={open}>
-        <DialogTitle>Loading...</DialogTitle>
+        <DialogTitle>{t("card.loading")}</DialogTitle>
       </Dialog>
     );
 

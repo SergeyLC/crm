@@ -8,6 +8,7 @@ import Box from "@mui/material/Box";
 
 export type ToolbarMenuItem = {
   title?: string | React.ReactNode;
+  ariaLabel?: string;
   onClick?: (e: React.MouseEvent, id?: string) => Promise<void>;
   onClickMultiple?: (e: React.MouseEvent, ids?: readonly string[]) => Promise<void>;
   icon?: React.ReactNode;
@@ -70,26 +71,38 @@ export function BaseTableToolbar(props: BaseTableToolbarProps) {
             {title}
           </Typography>
         )}
-        {numSelected > 0 ? (
-          menuItems.filter(item => item.isGroupAction).map((item, index) => (
-            <Tooltip title={item.title} key={index}>
-              <IconButton onClick={async (e) => {
-                await item.onClickMultiple?.(e, selected);
-                clearSelection?.();
-              }}>
-                {item.icon}
-              </IconButton>
-            </Tooltip>
-          ))
-        ) : (
-          menuItems.filter(item => !item.isGroupAction).map((item, index) => (
-            <Tooltip title={item.title} key={index}>
-              <IconButton onClick={(e) => item.onClick?.(e)}>
-                {item.icon}
-              </IconButton>
-            </Tooltip>
-          ))
-        )}
+        {numSelected > 0
+          ? menuItems
+              .filter((item) => item.isGroupAction)
+              .map((item, index) => (
+                <Tooltip
+                  title={item.title}
+                  aria-label={item.ariaLabel}
+                  key={index}
+                >
+                  <IconButton
+                    onClick={async (e) => {
+                      await item.onClickMultiple?.(e, selected);
+                      clearSelection?.();
+                    }}
+                  >
+                    {item.icon}
+                  </IconButton>
+                </Tooltip>
+              ))
+          : menuItems
+              .filter((item) => !item.isGroupAction)
+              .map((item, index) => (
+                <Tooltip
+                  title={item.title}
+                  aria-label={item.ariaLabel}
+                  key={index}
+                >
+                  <IconButton onClick={(e) => item.onClick?.(e)}>
+                    {item.icon}
+                  </IconButton>
+                </Tooltip>
+              ))}
       </Box>
     </Toolbar>
   );

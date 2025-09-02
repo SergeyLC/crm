@@ -10,6 +10,7 @@ import {
   BaseUpsertForm,
   BaseUpsertFormProps,
 } from "@/features/entityUpsert";
+import { useTranslation } from "react-i18next";
 
 type LeadFormProps = BaseUpsertFormProps<
   LeadExt,
@@ -25,6 +26,7 @@ export const LeadUpsertForm: React.FC<LeadFormProps> = ({
   titleUpdate = "Update Lead",
   onSubmit,
 }) => {
+  const { t } = useTranslation("lead");
   const skipFetch = !!initialData || (!initialData && !leadId);
 
   const {
@@ -34,11 +36,11 @@ export const LeadUpsertForm: React.FC<LeadFormProps> = ({
   } = useGetLeadByIdQuery(leadId || "", !skipFetch);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>{t("card.loading")}</div>;
   }
 
   if (isError) {
-    return <div>Error loading deal data</div>;
+    return <div>{t("card.error")}</div>;
   }
 
   return (

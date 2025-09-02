@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   Dialog,
@@ -34,7 +34,7 @@ export function DealEditDialog({
   open?: boolean;
   onClose?: () => void;
 }) {
-  const { t } = useTranslation('deal');
+  const { t } = useTranslation("deal");
   const { data, isLoading } = useGetDealByIdQuery(id || "");
   const updateDeal = useUpdateDealMutation();
   const createDeal = useCreateDealMutation();
@@ -44,7 +44,10 @@ export function DealEditDialog({
   const handleSubmit = React.useCallback(
     async (values: CreateDealDTO | UpdateDealDTO, shouldCreate?: boolean) => {
       if (!id || shouldCreate) {
-        await createDeal.mutateAsync({ ...values, creatorId: user?.id } as CreateDealDTO);
+        await createDeal.mutateAsync({
+          ...values,
+          creatorId: user?.id,
+        } as CreateDealDTO);
         queryClient.invalidateQueries({ queryKey: dealKeys.all });
         onClose?.();
         return;
@@ -74,18 +77,14 @@ export function DealEditDialog({
   );
 
   if (!open) return null;
-  // if (isLoading)
-  //   return (
-  //     <Dialog open={open}>
-  //       <DialogTitle>Loading...</DialogTitle>
-  //     </Dialog>
-  //   );
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6">{id ? t('dialog.edit') : t('dialog.create')}</Typography>
+          <Typography variant="h6">
+            {id ? t("dialog.edit") : t("dialog.create")}
+          </Typography>
           <IconButton
             edge="end"
             color="inherit"
@@ -99,15 +98,15 @@ export function DealEditDialog({
       </DialogTitle>
 
       <DialogContent>
-    {isLoading && id ? (
+        {isLoading && id ? (
           <Box display="flex" justifyContent="center" my={4}>
-      <CircularProgress />
+            <CircularProgress />
           </Box>
         ) : (
           <DealUpsertForm
             initialData={data}
             dealId={id}
-      onSubmit={handleSubmit}
+            onSubmit={handleSubmit}
           />
         )}
       </DialogContent>

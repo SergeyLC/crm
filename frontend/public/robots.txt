@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Block access to admin areas
+Disallow: /admin/
+Disallow: /api/
+
+# Block access to development files
+Disallow: /_next/
+Disallow: /.next/
+
+# Allow crawling of static assets
+Allow: /public/
+
+# Sitemap
+Sitemap: https://yourdomain.com/sitemap.xml

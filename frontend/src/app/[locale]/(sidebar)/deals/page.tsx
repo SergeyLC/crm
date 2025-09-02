@@ -1,6 +1,7 @@
 import { DealsTable } from "@/features";
 
-export const dynamic = "force-dynamic";
+// ISR configuration - will be ignored in development
+export const revalidate = 60;
 
 export default async function DealsPage() {
   // Data fetching strategy: Using TanStack Query for client-side fetching

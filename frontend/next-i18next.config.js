@@ -1,10 +1,10 @@
-const path = require('path');
+import path from 'path';
 
-module.exports = {
+export default {
   i18n: {
     defaultLocale: 'de',
     locales: ['de', 'en'],
-    localeDetection: false,
+    localeDetection: true,
   },
   defaultNS: 'common',
   localePath: path.resolve('./public/locales'),

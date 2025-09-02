@@ -12,6 +12,7 @@ export type UrlViewSwitcherElement = {
   path: string;
   icon: React.ReactNode;
   label: string;
+  ariaLabel?: string;
   tooltip?: string;
 };
 
@@ -49,6 +50,8 @@ export const UrlViewSwitcher: React.FC<UrlViewSwitcherProps> = ({
         value: element.name,
         icon: element.icon,
         label: element.label,
+        tooltip: element.tooltip,
+        ariaLabel: element.ariaLabel,
       })),
     [elements]
   );

@@ -71,13 +71,17 @@ export function ArchivedDealsTable<T extends DealExt>({
 
   const {} = useTableActions();
 
+  const needToFetchData = !initialData || initialData.length === 0;
   // fetch deals
-  const { data: deals = initialData || [], refetch } = useGetArchivedDealsQuery();
+  const { data: deals = initialData || [], refetch } = useGetArchivedDealsQuery(
+    undefined,
+    needToFetchData
+  );
 
   // Refetch data when component mounts to ensure fresh data
   React.useEffect(() => {
-    refetch();
-  }, [refetch]);
+    if (needToFetchData) refetch();
+  }, [refetch, needToFetchData]);
 
   const rowActionMenuItems: ActionMenuItemProps<DealTableRowData>[] =
     React.useMemo(

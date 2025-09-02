@@ -12,6 +12,7 @@ export type SimpleViewSwitcherElement<T = string> = {
   value: T;
   icon: React.ReactNode;
   label: string;
+  ariaLabel?: string;
   tooltip?: string;
 };
 
@@ -66,7 +67,7 @@ export const SimpleViewSwitcher = <T extends string | number>({
         >
           <ToggleButton
             value={element.value}
-            aria-label={element.label}
+            aria-label={element.ariaLabel}
             sx={{ textTransform: "none" }}
           >
             {element.icon}

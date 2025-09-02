@@ -1,19 +1,17 @@
-import React, { ReactNode } from 'react';
-import { Providers } from '@/app/store/Providers';
-import { AuthProvider } from '@/features/auth/ui';
-import I18nProvider from '@/components/I18nProvider';
+import React, { ReactNode } from "react";
+import I18nProvider from "@/components/I18nProvider";
 
-export function generateStaticParams() {
-  return [{ locale: 'de' }, { locale: 'en' }];
-}
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 
-export default async function LocaleLayout({ children, params }: { children: ReactNode; params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  return (
-    <Providers>
-      <AuthProvider>
-        <I18nProvider locale={locale}>{children}</I18nProvider>
-      </AuthProvider>
-    </Providers>
-  );
+export default async function LocaleLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
+  await params; // Still await to avoid unused variable warning
+
+  return <I18nProvider>{children}</I18nProvider>;
 }

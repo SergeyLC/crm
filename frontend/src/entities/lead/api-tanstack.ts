@@ -20,7 +20,7 @@ const fetchLeads = async (): Promise<LeadExt[]> => {
   return response.json();
 };
 
-const fetchArchivedLeads = async (): Promise<LeadExt[]> => {
+export const fetchArchivedLeads = async (): Promise<LeadExt[]> => {
   const response = await fetch(`${API_BASE_URL}/leads/archived`, {
     credentials: "include",
   });

@@ -99,7 +99,7 @@ export const AppointmentsFormFieldsSet: React.FC<
               />
             </Box>
             <IconButton
-              aria-label={t('action.delete')}
+              aria-label="Delete appointment"
               color="error"
               id={idx.toString()}
               onClick={handleRemove}

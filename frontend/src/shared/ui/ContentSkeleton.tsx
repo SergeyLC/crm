@@ -2,8 +2,6 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Skeleton from '@mui/material/Skeleton';
-import '@/i18n';
-import { useTranslation } from 'react-i18next';
 
 export interface ContentSkeletonProps {
   lines?: number;          // how many text lines after header
@@ -24,7 +22,6 @@ export function SkeletonConfigProvider({ value, children }: { value: ContentSkel
 
 export function ContentSkeleton(props: ContentSkeletonProps = {}) {
   const ctx = useSkeletonConfig();
-  const { t } = useTranslation('app');
   const { lines = 2, dense = false, header = true, blocks = 1 } = { ...ctx, ...props };
 
   const gap = dense ? 1 : 2;
@@ -38,7 +35,7 @@ export function ContentSkeleton(props: ContentSkeletonProps = {}) {
   if (props.children) return <>{props.children}</>;
 
   return (
-    <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap }} aria-label={t('loading','Loading...')}>
+    <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap }} aria-label="Loading content">
       {header && <Skeleton variant="text" width={240} height={headerHeight} />}
       {rectBlocks.map((_, i) => (
         <Skeleton key={i} variant="rectangular" height={rectHeight} sx={{ mb: i === rectBlocks.length - 1 ? 0 : blockGap }} />
