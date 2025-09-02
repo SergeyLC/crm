@@ -6,7 +6,7 @@
     "migrate:reset": "prisma migrate reset --force",
     "migrate:status": "prisma migrate status",
     "studio": "prisma studio",
-    "seed": "npx tsc prisma/seed.ts --outDir temp --module commonjs --target es2020 --lib ES2020 && node temp/seed.js",
+    "seed": "npx tsc && node temp/seed.js",
     "type-check": "tsc --noEmit",
     "lint": "echo 'No linting configured for db'",
     "lint:check": "echo 'No linting configured for db'"
@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
-    "@types/node": "^22.0.0",
+    "@types/node": "latest",
     "prisma": "^6.15.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
