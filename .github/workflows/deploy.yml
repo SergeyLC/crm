@@ -13,12 +13,19 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: check
-    if: startsWith(github.ref, 'refs/tags/v')  # Only v* tags
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git commands
+
       - name: Check if tag is on main
         run: |
-          if ! git branch --contains ${{ github.sha }} | grep -q "main"; then
+          # Check if the current commit (tag) is in main branch
+          if git merge-base --is-ancestor ${{ github.sha }} origin/main 2>/dev/null; then
+            echo "Tag is on main branch, proceeding with deploy"
+          else
             echo "Tag not on main branch, skipping deploy"
             exit 1
           fi
