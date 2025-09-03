@@ -151,14 +151,17 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
       >
         <Stack
           direction="row"
+          aria-label="kanban stacks area"
           sx={{
             display: "flex",
             flex: "0 0 auto",
-            // minHeight: "100%",
             alignItems: "flex-start",
             py: padding,
             px: padding,
             gap: (theme: Theme) => theme.spacing(gap),
+            '& > div': {
+              height: "100%",
+            }
           }}
         >
           {localStacks.map((s) => (

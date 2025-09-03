@@ -57,7 +57,7 @@ export const KanbanStack: React.FC<KanbanStackProps> = React.memo(
           p: 1,
           height: "100%",
           boxSizing: "border-box",
-          bgcolor: isDropTarget 
+          bgcolor: isDropTarget
             ? "rgba(25, 118, 210, 0.05)"
             : (theme: Theme) =>
                 theme.palette.mode === "dark"
@@ -78,28 +78,29 @@ export const KanbanStack: React.FC<KanbanStackProps> = React.memo(
               {formattedTotal}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {t('kanban:stack.cardCount', { count: cards.length })}
+              {t("kanban:stack.cardCount", { count: cards.length })}
             </Typography>
           </Box>
         </Box>
 
         <Divider sx={{ mb: 1 }} />
-
-        <Stack
-          sx={{
-            gap: 1,
-            flex: 1,
-            minHeight: 0,
-            overflowX: "visible",
-            overflowY: "clip",
-            alignSelf: "stretch",
-            pr: 0.5,
-          }}
-        >
-          {cards.map((c, i) =>
-            renderCard ? renderCard(c, i) : <KanbanCard key={c.id} data={c} />
-          )}
-        </Stack>
+        <Box sx={{ flex: 1, minHeight: 0, maxHeight: "100%", overflowY: "auto" }}>
+          <Stack
+            sx={{
+              gap: 1,
+              flex: 1,
+              minHeight: 0,
+              overflowX: "visible",
+              overflowY: "clip",
+              alignSelf: "stretch",
+              pr: 0.5,
+            }}
+          >
+            {cards.map((c, i) =>
+              renderCard ? renderCard(c, i) : <KanbanCard key={c.id} data={c} />
+            )}
+          </Stack>
+        </Box>
       </Paper>
     );
   }
