@@ -13,8 +13,11 @@ echo "  - Build verification"
 echo "  - Basic functionality tests (TypeScript compilation)"
 echo ""
 
-# Run the pre-push hook
-if .git/hooks/pre-push; then
+# Run the pre-push hook with simulated arguments (push to main)
+echo "refs/heads/main abc123 refs/heads/main def456" | .git/hooks/pre-push
+
+# Check exit code
+if [ $? -eq 0 ]; then
     echo ""
     echo "✅ Pre-push hook test passed!"
     echo "Your code is ready for push."
