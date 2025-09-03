@@ -33,6 +33,9 @@ export function BaseTableHead<T extends TBaseColumnType>(
     () => ({
       position: "sticky",
       top: 0,
+      padding: "0 !important",
+      borderBottom: "none !important",
+      // borderTop: "none !important",
       zIndex: (theme: Theme) => theme.zIndex.appBar + 6, // header higher than body
       background: (theme: Theme) => theme.palette.background.paper,
     }),
@@ -44,24 +47,38 @@ export function BaseTableHead<T extends TBaseColumnType>(
         <TableCell
           padding="checkbox"
           sx={{
-            left: 0,
+            left: 1,
             ...stickySx,
             zIndex: (theme: Theme) => theme.zIndex.appBar + 7,
             textOverflow: "clip",
             boxSizing: "content-box", // Ensures checkbox does not affect width calculation
+            padding: "0 !important",
+            borderRight: "none !important",
           }}
         >
-          <Checkbox
-            color="primary"
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-            slotProps={{
-              input: {
-                "aria-label": "select all leads",
-              },
+          <Box
+            sx={{
+              width: "100%",
+              height: "100%",
+              textAlign: "center",
+              borderRight: "1px solid lightsteelblue",
+              borderBottom: "1px solid lightsteelblue",
+              borderTop: "1px solid lightsteelblue",
+              boxSizing: "border-box",
             }}
-          />
+          >
+            <Checkbox
+              color="primary"
+              indeterminate={numSelected > 0 && numSelected < rowCount}
+              checked={rowCount > 0 && numSelected === rowCount}
+              onChange={onSelectAllClick}
+              slotProps={{
+                input: {
+                  "aria-label": "select all rows",
+                },
+              }}
+            />
+          </Box>
         </TableCell>
         {columns?.map((headCell) => {
           const isSticky = !!headCell.isSticky;
@@ -72,11 +89,7 @@ export function BaseTableHead<T extends TBaseColumnType>(
             minWidth: `${headCell.minWidth}px`,
             maxWidth: `${headCell.maxWidth}px`,
             textAlign: textAlign,
-            ...(isSticky && {
-              borderLeft: "1px solid rgba(224, 224, 224, 1)",
-            })
           };
-
 
           return (
             <TableCell
@@ -92,34 +105,55 @@ export function BaseTableHead<T extends TBaseColumnType>(
                       zIndex: (theme: Theme) => theme.zIndex.appBar + 7,
                       textOverflow: "clip",
                       boxSizing: "content-box", // Ensures checkbox does not affect width calculation
+                      borderLeft: "none",
                     }
                   : {}),
               }}
             >
-              {headCell.sortable !== false ? (
-                <TableSortLabel
-                  active={orderBy === headCellId}
-                  direction={orderBy === headCellId ? order : "asc"}
-                  onClick={createSortHandler(headCellId as keyof T)}
-                  // move sort icon on the left if title is right aligned
-                  sx={[{
-                    'svg': {
-                      order: textAlign === "right" ? -1 : 0
-                    }
-                  }]}
-                >
-                  {headCell.label}
-                  {orderBy === headCellId ? (
-                    <Box component="span" sx={visuallyHidden}>
-                      {order === "desc"
-                        ? "sorted descending"
-                        : "sorted ascending"}
-                    </Box>
-                  ) : null}
-                </TableSortLabel>
-              ) : (
-                headCell.label || ""
-              )}
+              <Box
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  textAlign: "center",
+                  borderBottom: "1px solid lightsteelblue",
+                  borderTop: "1px solid lightsteelblue",
+                  boxSizing: "border-box",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  p: "6px",
+                  ...(isSticky && {
+                    borderLeft: "1px solid lightsteelblue",
+                  }),
+                }}
+              >
+                {headCell.sortable !== false ? (
+                  <TableSortLabel
+                    active={orderBy === headCellId}
+                    direction={orderBy === headCellId ? order : "asc"}
+                    onClick={createSortHandler(headCellId as keyof T)}
+                    // move sort icon on the left if title is right aligned
+                    sx={[
+                      {
+                        svg: {
+                          order: textAlign === "right" ? -1 : 0,
+                        },
+                      },
+                    ]}
+                  >
+                    {headCell.label}
+                    {orderBy === headCellId ? (
+                      <Box component="span" sx={visuallyHidden}>
+                        {order === "desc"
+                          ? "sorted descending"
+                          : "sorted ascending"}
+                      </Box>
+                    ) : null}
+                  </TableSortLabel>
+                ) : (
+                  headCell.label || ""
+                )}
+              </Box>
             </TableCell>
           );
         })}

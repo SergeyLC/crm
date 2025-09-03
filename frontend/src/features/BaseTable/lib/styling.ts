@@ -17,6 +17,7 @@ export const createTableSx = () => ({
   width: "100%",
   minWidth: "800px",
   tableLayout: "fixed",
+  // border: "none",
   borderCollapse: "collapse",
   "& th": {
     border: "1px solid rgba(224, 224, 224, 1)",
@@ -25,6 +26,7 @@ export const createTableSx = () => ({
     lineHeight: "1.2",
     fontWeight: 700,
     boxShadow: "0 1px 0 rgba(0,0,0,0.04)",
+    backgroundColor: "rgba(232, 238, 243, 1)",
   },
   "& td": {
     border: "1px solid rgba(224, 224, 224, 1)",

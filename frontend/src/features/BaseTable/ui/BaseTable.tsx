@@ -62,7 +62,9 @@ export interface BaseTableProps<T, TTableData extends BaseTableRowData> {
   ) => (a: TTableData, b: TTableData) => number;
   onRowDoubleClick?: (e: React.MouseEvent, id: string) => void;
   sx?: SxProps<Theme>;
-  rowActionMenuItemsCreator?: (row: TTableData) => ActionMenuItemProps<TTableData>[];
+  rowActionMenuItemsCreator?: (
+    row: TTableData
+  ) => ActionMenuItemProps<TTableData>[];
 }
 
 export function BaseTable<T, TTableData extends BaseTableRowData>({
@@ -81,14 +83,15 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
   rowActionMenuItems,
   onRowDoubleClick,
   sx = {},
-  rowActionMenuItemsCreator: createRowActionMenuItems
-
+  rowActionMenuItemsCreator: createRowActionMenuItems,
 }: BaseTableProps<T, TTableData> & { columnsConfig?: Column<TTableData>[] }) {
-
   const columnsConfig: Column<TTableData>[] =
     (columnsConfigProp as Column<TTableData>[]) || defaultColumnsConfig;
 
-  const data = React.useMemo(() => initialData || (getInitData ? getInitData() : []), [initialData, getInitData]);
+  const data = React.useMemo(
+    () => initialData || (getInitData ? getInitData() : []),
+    [initialData, getInitData]
+  );
   // Initialize rows state with initial data, then update with data from query
   const [rows, setRows] = React.useState<TTableData[]>(() =>
     rowConverter?.((data as T[]) || [])
@@ -97,16 +100,17 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
   const [order, setOrder] = React.useState<Order>(defaultOrder);
   const [orderBy, setOrderBy] =
     React.useState<SortableFields<TTableData>>(defaultOrderBy);
-  const { selected, isSelected, handleClick, handleSelectAll, clearSelection } = useSelection();
+  const { selected, isSelected, handleClick, handleSelectAll, clearSelection } =
+    useSelection();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(50);
 
   // Update rows when data changes
   React.useEffect(() => {
-  // Debug: log when data reference changes to help diagnose update loops.
-  // Remove or guard these logs in production.
-  console.debug('[BaseTable] data changed, length=', Array.isArray(data) ? data.length : 'n/a');
-  setRows(rowConverter?.((data ?? [] as T[]) || []));
+    // Debug: log when data reference changes to help diagnose update loops.
+    // Remove or guard these logs in production.
+    // console.debug('[BaseTable] data changed, length=', Array.isArray(data) ? data.length : 'n/a');
+    setRows(rowConverter?.((data ?? ([] as T[])) || []));
   }, [data, rowConverter]);
 
   const handleRequestSort = useCallback(
@@ -202,6 +206,32 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
           }}
         >
           <Table sx={tableSx} aria-labelledby="tableTitle" size="small">
+            <colgroup>
+              <col
+                style={{
+                  width: 42,
+                  minWidth: 42,
+                  maxWidth: 42,
+                  textAlign: "center",
+                  boxSizing: "content-box",
+                  borderRight: "none",
+                }}
+              />
+              {columnsConfig.map((col, colIndex) => {
+                const { isActions, width, minWidth, maxWidth } = col;
+                return (
+                  <col
+                    key={`col-${colIndex}`}
+                    style={{
+                      width: isActions ? width : "auto",
+                      minWidth,
+                      maxWidth,
+                      boxSizing: "content-box",
+                    }}
+                  />
+                );
+              })}
+            </colgroup>
             {TableHeadComponent && (
               <TableHeadComponent
                 numSelected={selected.length}
@@ -211,7 +241,6 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
                 onRequestSort={handleRequestSort}
                 rowCount={rows.length}
                 columns={columnsConfig}
-                
               />
             )}
             <TableBody>
@@ -235,56 +264,79 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
                       padding="checkbox"
                       sx={{
                         ...stickySx,
-                        left: 0,
+                        left: 1,
                         textOverflow: "clip",
                         boxSizing: "content-box", // Ensures checkbox does not affect width calculation
+                        padding: "0 !important",
+                        borderRight: "none !important",
                       }}
                     >
-                      <Checkbox
-                        onClick={(event) => handleClick(event, row.id)}
-                        color="primary"
-                        checked={isItemSelected}
-                        slotProps={{ input: { "aria-labelledby": labelId } }}
-                      />
+                      <Box
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          textAlign: "center",
+                          borderRight: "1px solid lightsteelblue",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        <Checkbox
+                          onClick={(event) => handleClick(event, row.id)}
+                          color="primary"
+                          checked={isItemSelected}
+                          slotProps={{ input: { "aria-labelledby": labelId } }}
+                        />
+                      </Box>
                     </TableCell>
-                    {columnsConfig.map((col: Column<TTableData>, colIndex: number) => {
-                      // Use helper function to create cell props
-                      const { cellProps, cellSxProps, content } =
-                        createCellProps(col, row, labelId, colIndex);
+                    {columnsConfig.map(
+                      (col: Column<TTableData>, colIndex: number) => {
+                        // Use helper function to create cell props
+                        const { cellProps, cellSxProps, content } =
+                          createCellProps(col, row, labelId, colIndex);
 
-                      if (col.isActions) {
-                        return (
-                          <ActionCell
-                            key={`col-${colIndex}`}
-                            id={row.id}
-                            MenuComponent={rowActionMenuComponent || null}
-                            menuItems={
-                              rowActionMenuItems || createRowActionMenuItems?.(row)
-                            }
-                            cellSx={Object.assign(
-                              {},
-                              stickySx,
-                              cellSxProps,
-                              {
-                                right: 0,
-                                textOverflow: "clip",
-                                boxSizing: "content-box", // Ensures checkbox does not affect width calculation
+                        if (col.isActions) {
+                          const actionSx = {
+                            right: 0,
+                            textOverflow: "clip !important",
+                            boxSizing: "content-box", // Ensures checkbox does not affect width calculation
+                            padding: "0 !important",
+                            borderLeft: "none",
+                          };
+                          const cellSx = Object.assign(
+                            {},
+                            stickySx,
+                            cellSxProps,
+                            actionSx
+                          );
+                          // console.log(
+                          //   `Rendering action cell for row: ${row.id} cellSx=${JSON.stringify(cellSx)}`
+                          // );
+
+                          return (
+                            <ActionCell
+                              key={`col-${colIndex}`}
+                              id={row.id}
+                              MenuComponent={rowActionMenuComponent || null}
+                              menuItems={
+                                rowActionMenuItems ||
+                                createRowActionMenuItems?.(row)
                               }
-                            )}
-                          />
+                              cellSx={cellSx}
+                            />
+                          );
+                        }
+
+                        return (
+                          <TableCell
+                            key={`col-${colIndex}`}
+                            sx={cellSxProps}
+                            {...cellProps}
+                          >
+                            {content}
+                          </TableCell>
                         );
                       }
-
-                      return (
-                        <TableCell
-                          key={`col-${colIndex}`}
-                          sx={cellSxProps}
-                          {...cellProps}
-                        >
-                          {content}
-                        </TableCell>
-                      );
-                    })}
+                    )}
                   </TableRow>
                 );
               })}
