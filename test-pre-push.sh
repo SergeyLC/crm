@@ -9,7 +9,7 @@ echo "This will run the same checks as the actual pre-push hook:"
 echo "  - TypeScript type checking"
 echo "  - ESLint linting"
 echo "  - Test execution"
-echo "  - Build verification"
+echo "  - Build verification (Frontend + Backend)"
 echo "  - Basic functionality tests (TypeScript compilation)"
 echo ""
 

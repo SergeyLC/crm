@@ -82,3 +82,8 @@ jobs:
         run: |
           cd frontend && npm test --silent && cd ..
           cd backend && npm test --silent && cd ..
+
+      - name: Build check
+        run: |
+          cd frontend && npm run build && cd ..
+          cd backend && npm run build && cd ..
