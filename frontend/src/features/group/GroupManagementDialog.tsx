@@ -1,0 +1,607 @@
+"use client";
+import React, { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+  Typography,
+  Avatar,
+  Divider,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  Checkbox,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemAvatar,
+} from '@mui/material';
+import { PersonAdd, Edit, Delete, Add, Remove } from '@mui/icons-material';
+import {
+  Group,
+  useUpdateGroupMutation,
+  useAddGroupMemberMutation,
+  useRemoveGroupMemberMutation,
+  useGetGroupsQuery,
+  useCreateGroupMutation,
+} from '@/entities/group';
+import { useGetUsersQuery } from '@/entities/user';
+
+// Validation schema
+const groupSchema = yup.object().shape({
+  name: yup
+    .string()
+    .required('Gruppenname ist erforderlich')
+    .min(2, 'Gruppenname muss mindestens 2 Zeichen lang sein')
+    .max(100, 'Gruppenname darf maximal 100 Zeichen lang sein')
+    .trim(),
+  leaderId: yup
+    .string()
+    .required('Gruppenleiter ist erforderlich'),
+});
+
+type GroupFormData = yup.InferType<typeof groupSchema>;
+
+interface GroupManagementDialogProps {
+  open: boolean;
+  onClose: () => void;
+  group: Group | null;
+}
+
+export function GroupManagementDialog({ open, onClose, group }: GroupManagementDialogProps) {
+  // Local state for form data
+  const [membersToAdd, setMembersToAdd] = useState<string[]>([]);
+  const [membersToRemove, setMembersToRemove] = useState<string[]>([]);
+  // Dialog state
+  const [addMembersDialogOpen, setAddMembersDialogOpen] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+
+  // React Hook Form setup
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm<GroupFormData>({
+    resolver: yupResolver(groupSchema),
+    defaultValues: {
+      name: '',
+      leaderId: '',
+    },
+  });
+
+  const watchedLeaderId = watch('leaderId');
+
+  // Queries
+  const { data: users = [] } = useGetUsersQuery();
+  const { refetch: refetchGroups } = useGetGroupsQuery();
+
+  // Mutations
+  const updateGroupMutation = useUpdateGroupMutation();
+  const createGroupMutation = useCreateGroupMutation();
+  const addMemberMutation = useAddGroupMemberMutation();
+  const removeMemberMutation = useRemoveGroupMemberMutation();
+
+  // Initialize form data when group changes
+  React.useEffect(() => {
+    if (group) {
+      // Edit mode
+      reset({
+        name: group.name,
+        leaderId: group.leaderId,
+      });
+      setMembersToAdd([]);
+      setMembersToRemove([]);
+    } else {
+      // Create mode
+      reset({
+        name: '',
+        leaderId: '',
+      });
+      setMembersToAdd([]);
+      setMembersToRemove([]);
+    }
+  }, [group, reset]);
+
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = () => {
+    if (group) {
+      // Edit mode
+      const currentValues = watch();
+      return (
+        currentValues.name !== group.name ||
+        currentValues.leaderId !== group.leaderId ||
+        membersToAdd.length > 0 ||
+        membersToRemove.length > 0
+      );
+    } else {
+      // Create mode
+      const currentValues = watch();
+      return currentValues.name.trim() !== '' || currentValues.leaderId !== '' || membersToAdd.length > 0;
+    }
+  };
+
+  const handleRemoveMemberFromQueue = (userId: string) => {
+    if (membersToRemove.includes(userId)) return;
+    setMembersToRemove(prev => [...prev, userId]);
+  };
+
+  const handleUndoAddMember = (userId: string) => {
+    setMembersToAdd(prev => prev.filter(id => id !== userId));
+  };
+
+  const handleUndoRemoveMember = (userId: string) => {
+    setMembersToRemove(prev => prev.filter(id => id !== userId));
+  };
+
+  const handleOpenAddMembersDialog = () => {
+    setSelectedUsers([]);
+    setAddMembersDialogOpen(true);
+  };
+
+  const handleCloseAddMembersDialog = () => {
+    setAddMembersDialogOpen(false);
+    setSelectedUsers([]);
+  };
+
+  const handleToggleUserSelection = (userId: string) => {
+    setSelectedUsers(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleConfirmAddMembers = () => {
+    // Add selected users to the queue, avoiding duplicates
+    const newMembersToAdd = selectedUsers.filter(userId =>
+      !membersToAdd.includes(userId) &&
+      !currentMembers.some(member => member.userId === userId)
+    );
+    setMembersToAdd(prev => [...prev, ...newMembersToAdd]);
+    handleCloseAddMembersDialog();
+  };
+
+  const handleSaveAllChanges = async (formData: GroupFormData) => {
+    try {
+      let groupId: string;
+
+      if (group) {
+        // Update existing group
+        groupId = group.id;
+        if (formData.name !== group.name || formData.leaderId !== group.leaderId) {
+          await updateGroupMutation.mutateAsync({
+            id: group.id,
+            body: {
+              name: formData.name,
+              leaderId: formData.leaderId,
+            },
+          });
+        }
+      } else {
+        // Create new group
+        if (!formData.name.trim() || !formData.leaderId) {
+          console.error('Group name and leader are required');
+          return;
+        }
+
+        const newGroup = await createGroupMutation.mutateAsync({
+          name: formData.name,
+          leaderId: formData.leaderId,
+        });
+        groupId = newGroup.id;
+      }
+
+      // Add new members
+      for (const userId of membersToAdd) {
+        await addMemberMutation.mutateAsync({
+          groupId,
+          userId,
+        });
+      }
+
+      // Remove members (only for existing groups)
+      if (group) {
+        for (const userId of membersToRemove) {
+          await removeMemberMutation.mutateAsync({
+            groupId,
+            userId,
+          });
+        }
+      }
+
+      // Reset local state and close dialog
+      setMembersToAdd([]);
+      setMembersToRemove([]);
+      await refetchGroups();
+      onClose();
+    } catch (error) {
+      console.error('Error saving changes:', error);
+    }
+  };
+
+  // Get current members (excluding those marked for removal)
+  const currentMembers = group?.members.filter(
+    member => !membersToRemove.includes(member.userId)
+  ) || [];
+
+  // Get available users (not already members and not in add queue)
+  const availableUsers = users.filter(user =>
+    !currentMembers.some(member => member.userId === user.id) &&
+    !membersToAdd.includes(user.id) &&
+    user.id !== watchedLeaderId
+  );
+
+  const isCreateMode = !group;
+
+  return (
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Edit />
+            <Typography variant="h6">
+              {isCreateMode ? 'Neue Gruppe erstellen' : `Gruppe verwalten: ${group.name}`}
+            </Typography>
+            {hasUnsavedChanges() && (
+              <Chip label="Ungespeicherte Änderungen" color="warning" size="small" />
+            )}
+          </Box>
+        </DialogTitle>
+
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
+
+            {/* Group Details Section */}
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                Gruppen-Details
+              </Typography>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="Gruppenname"
+                    error={!!errors.name}
+                    helperText={errors.name?.message}
+                    sx={{ mb: 2 }}
+                  />
+                )}
+              />
+
+              <Controller
+                name="leaderId"
+                control={control}
+                render={({ field }) => (
+                  <FormControl fullWidth error={!!errors.leaderId}>
+                    <InputLabel>Gruppenleiter</InputLabel>
+                    <Select
+                      {...field}
+                      label="Gruppenleiter"
+                    >
+                      {users.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar sx={{ width: 24, height: 24 }}>
+                              {user.name.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2">{user.name}</Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {user.email}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {errors.leaderId && (
+                      <Typography variant="caption" color="error" sx={{ mt: 1, ml: 1 }}>
+                        {errors.leaderId.message}
+                      </Typography>
+                    )}
+                  </FormControl>
+                )}
+              />
+            </Box>
+
+            <Divider />
+
+            {/* Members Section */}
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" sx={{ color: 'primary.main' }}>
+                  Gruppenmitglieder ({currentMembers.length + membersToAdd.length})
+                </Typography>
+                {!isCreateMode && (
+                  <Button
+                    variant="contained"
+                    startIcon={<PersonAdd />}
+                    onClick={handleOpenAddMembersDialog}
+                    size="small"
+                  >
+                    Add Mitglied
+                  </Button>
+                )}
+                {isCreateMode && (
+                  <Button
+                    variant="contained"
+                    startIcon={<PersonAdd />}
+                    onClick={handleOpenAddMembersDialog}
+                    size="small"
+                  >
+                    Mitglieder hinzufügen
+                  </Button>
+                )}
+              </Box>
+
+              {/* Members Table */}
+              <TableContainer component={Paper} sx={{ mt: 2 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Mitglied</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>E-Mail</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Rolle</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Aktionen</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {/* Show members to be added */}
+                    {membersToAdd.map((userId) => {
+                      const user = users.find(u => u.id === userId);
+                      if (!user) return null;
+                      return (
+                        <TableRow key={`add-${userId}`} sx={{ bgcolor: 'success.light', opacity: 0.7 }}>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <Avatar sx={{ width: 32, height: 32 }}>
+                                {user.name.charAt(0).toUpperCase()}
+                              </Avatar>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {user.name}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {user.email}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip label="Wird hinzugefügt" color="success" size="small" />
+                          </TableCell>
+                          <TableCell>
+                            <Chip label="Mitglied" size="small" variant="outlined" />
+                          </TableCell>
+                          <TableCell>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleUndoAddMember(userId)}
+                              sx={{ color: 'warning.main' }}
+                              title="Hinzufügung rückgängig machen"
+                            >
+                              <Remove fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+
+                    {/* Show current members (only in edit mode) */}
+                    {!isCreateMode && currentMembers.map((member) => {
+                      const isMarkedForRemoval = membersToRemove.includes(member.userId);
+                      return (
+                        <TableRow
+                          key={member.userId}
+                          hover
+                          sx={{
+                            opacity: isMarkedForRemoval ? 0.5 : 1,
+                            bgcolor: isMarkedForRemoval ? 'error.light' : 'inherit'
+                          }}
+                        >
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <Avatar sx={{ width: 32, height: 32 }}>
+                                {member.user.name.charAt(0).toUpperCase()}
+                              </Avatar>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {member.user.name}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {member.user.email}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            {member.userId === watchedLeaderId ? (
+                              <Chip
+                                label="Gruppenleiter"
+                                color="primary"
+                                size="small"
+                                variant="outlined"
+                              />
+                            ) : isMarkedForRemoval ? (
+                              <Chip label="Wird entfernt" color="error" size="small" />
+                            ) : (
+                              <Chip
+                                label="Mitglied"
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {member.userId !== watchedLeaderId && (
+                              isMarkedForRemoval ? (
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleUndoRemoveMember(member.userId)}
+                                  sx={{ color: 'warning.main' }}
+                                  title="Entfernung rückgängig machen"
+                                >
+                                  <Add fontSize="small" />
+                                </IconButton>
+                              ) : (
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleRemoveMemberFromQueue(member.userId)}
+                                  disabled={removeMemberMutation.isPending}
+                                  sx={{
+                                    color: 'error.main',
+                                    '&:hover': {
+                                      backgroundColor: 'error.light',
+                                      color: 'error.contrastText',
+                                    }
+                                  }}
+                                  title="Zur Entfernung vormerken"
+                                >
+                                  <Delete fontSize="small" />
+                                </IconButton>
+                              )
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+
+                    {currentMembers.length === 0 && membersToAdd.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {isCreateMode ? 'Noch keine Mitglieder hinzugefügt' : 'Keine Mitglieder vorhanden'}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {isCreateMode ? 'Fügen Sie Mitglieder hinzu, bevor Sie die Gruppe erstellen' : 'Fügen Sie Mitglieder hinzu, um mit der Gruppe zu arbeiten'}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          </Box>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={onClose}>Abbrechen</Button>
+          <Button
+            onClick={handleSubmit(handleSaveAllChanges)}
+            variant="contained"
+            disabled={
+              !hasUnsavedChanges() ||
+              updateGroupMutation.isPending ||
+              createGroupMutation.isPending ||
+              addMemberMutation.isPending ||
+              removeMemberMutation.isPending
+            }
+          >
+            {isCreateMode ? 'Gruppe erstellen' : (hasUnsavedChanges() ? 'Alle Änderungen speichern' : 'Keine Änderungen')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Members Dialog */}
+      <Dialog
+        open={addMembersDialogOpen}
+        onClose={handleCloseAddMembersDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Typography variant="h6">Mitglieder hinzufügen</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Wählen Sie einen oder mehrere Benutzer aus, die der Gruppe hinzugefügt werden sollen
+          </Typography>
+        </DialogTitle>
+
+        <DialogContent>
+          <List sx={{ width: '100%' }}>
+            {availableUsers.map((user) => {
+              const isSelected = selectedUsers.includes(user.id);
+              return (
+                <ListItem
+                  key={user.id}
+                  onClick={() => handleToggleUserSelection(user.id)}
+                  sx={{
+                    borderRadius: 1,
+                    mb: 1,
+                    cursor: 'pointer',
+                    bgcolor: isSelected ? 'action.selected' : 'inherit',
+                    '&:hover': {
+                      bgcolor: isSelected ? 'action.selected' : 'action.hover',
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <Checkbox
+                      edge="start"
+                      checked={isSelected}
+                      tabIndex={-1}
+                      disableRipple
+                    />
+                  </ListItemIcon>
+                  <ListItemAvatar>
+                    <Avatar sx={{ width: 40, height: 40 }}>
+                      {user.name.charAt(0).toUpperCase()}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={user.name}
+                    secondary={user.email}
+                  />
+                </ListItem>
+              );
+            })}
+            {availableUsers.length === 0 && (
+              <ListItem>
+                <ListItemText
+                  primary="Keine verfügbaren Benutzer"
+                  secondary="Alle Benutzer sind bereits Mitglieder dieser Gruppe"
+                />
+              </ListItem>
+            )}
+          </List>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={handleCloseAddMembersDialog}>
+            Abbrechen
+          </Button>
+          <Button
+            onClick={handleConfirmAddMembers}
+            variant="contained"
+            disabled={selectedUsers.length === 0}
+          >
+            {selectedUsers.length} Mitglied{selectedUsers.length !== 1 ? 'er' : ''} hinzufügen
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}

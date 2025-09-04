@@ -18,6 +18,7 @@ import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
+import GroupIcon from "@mui/icons-material/Group";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 
@@ -55,6 +56,12 @@ const buildMenuItems = (t: (k: string) => string, locale: string) => [
     permissions: UserPermission.CAN_EDIT_USERS,
     href: localePath("/users", locale),
     icon: <PeopleIcon />,
+  },
+  {
+    text: "Gruppen",
+    permissions: UserPermission.CAN_VIEW_GROUPS,
+    href: localePath("/groups", locale),
+    icon: <GroupIcon />,
   },
 ];
 
