@@ -18,44 +18,67 @@ import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
-import ArchiveIcon from "@mui/icons-material/Archive";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { LogoutButton } from "@/features/app/LogoutButton";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useTranslation } from 'react-i18next';
+import { useAuth } from "@/features/auth/hooks";
+import { useUserPermissions, userHasPermission } from "@/entities/user";
+import { useTranslation } from "react-i18next";
 import Box from "@mui/material/Box";
 import Avatar from "@mui/material/Avatar";
 import Collapse from "@mui/material/Collapse";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { UserPermission } from "@/entities/user";
 const drawerWidth = 220;
 const collapsedWidth = 60;
 
-import { useLocale, localePath } from '@/shared/lib/hooks/useLocale';
-const buildMenuItems = (t:(k:string)=>string, locale:string) => [
-  { text: t('nav:leads'), href: localePath('/leads', locale), icon: <AssignmentIcon /> },
-  { text: t('nav:deals'), href: localePath('/deals', locale), icon: <MonetizationOnIcon /> },
-  { text: t('nav:users'), href: localePath('/users', locale), icon: <PeopleIcon /> },
+import { useLocale, localePath } from "@/shared/lib/hooks/useLocale";
+const buildMenuItems = (t: (k: string) => string, locale: string) => [
+  {
+    text: t("nav:leads"),
+    permissions: UserPermission.CAN_VIEW_LEADS,
+    href: localePath("/leads", locale),
+    icon: <AssignmentIcon />,
+  },
+  {
+    text: t("nav:deals"),
+    permissions: UserPermission.CAN_VIEW_DEALS,
+    href: localePath("/deals", locale),
+    icon: <MonetizationOnIcon />,
+  },
+  {
+    text: t("nav:users"),
+    permissions: UserPermission.CAN_EDIT_USERS,
+    href: localePath("/users", locale),
+    icon: <PeopleIcon />,
+  },
 ];
 
 export function SidebarDrawer() {
   const [collapsed, setCollapsed] = useState(true);
-  const [open, setOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const userPermissions = useUserPermissions();
   const { t } = useTranslation();
   const locale = useLocale();
-  const menuItems = React.useMemo(()=>buildMenuItems(t, locale), [t, locale]);
+  const menuItems = React.useMemo(() => buildMenuItems(t, locale), [t, locale]);
 
   const pathname = usePathname() || "/";
 
-  const handleDrawerToggle = () => {
-    setOpen(!open);
-  };
+   const handleDrawerToggle = () => {
+     setOpen(!open);
+   };
+
+  useEffect(() => {
+    console.log(
+      `can UserPermission.CAN_VIEW_USERS: ${userHasPermission(userPermissions, UserPermission.CAN_VIEW_USERS)}  userPermissions ${JSON.stringify(userPermissions)}`
+    );
+  }, [userPermissions]);
 
   const toggleUserMenu = () => {
     setUserMenuOpen(!userMenuOpen);
@@ -99,26 +122,51 @@ export function SidebarDrawer() {
       }}
     >
       <Toolbar
-        sx={{ flexDirection: 'column', alignItems: 'stretch', p: 1, gap: 1 }}
+        sx={{ flexDirection: "column", alignItems: "stretch", p: 1, gap: 1 }}
       >
-        <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between' }}>
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: collapsed ? "center" : "space-between",
+          }}
+        >
           {!collapsed && (
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              {t('nav:appName', 'Loya Care')}
+              {t("nav:appName", "Loya Care")}
             </Typography>
           )}
-          <IconButton onClick={() => setCollapsed((v) => !v)} size="small" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+          <IconButton
+            onClick={() => setCollapsed((v) => !v)}
+            size="small"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
             {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         </Box>
         {/* Language switcher */}
-        <Box sx={{ display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start' }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: collapsed ? "center" : "flex-start",
+          }}
+        >
           <LanguageSwitcher />
         </Box>
       </Toolbar>
       <Divider />
       <List>
         {menuItems.map((item) => {
+          if (item.permissions) {
+            const hasPermission = userHasPermission(
+              userPermissions,
+              item.permissions
+            );
+            if (!hasPermission) {
+              return null; // Skip rendering this item if no permission
+            }
+          }
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
           return (
@@ -173,11 +221,11 @@ export function SidebarDrawer() {
       <Box sx={{ flexGrow: 1 }} />
 
       {/* User Avatar behind the collapsed sidebar */}
-    {isAuthenticated && user && collapsed && (
+      {isAuthenticated && user && collapsed && (
         <IconButton
-      onClick={handleDrawerToggle}
-      sx={{ my: 2 }}
-      aria-label="User profile"
+          onClick={handleDrawerToggle}
+          sx={{ my: 2 }}
+          aria-label="User profile"
         >
           <Avatar
             sx={{ width: "1.5em", height: "1.5em", bgcolor: "primary.main" }}
@@ -187,41 +235,50 @@ export function SidebarDrawer() {
         </IconButton>
       )}
       {/* User profile and menu */}
-  {isAuthenticated && !collapsed && user ? (
+      {isAuthenticated && !collapsed && user ? (
         <>
           <ListItemButton onClick={toggleUserMenu} sx={{ pl: 2, py: 1.5 }}>
             <ListItemIcon>
               <Avatar sx={{ bgcolor: "primary.main" }}>{userInitials}</Avatar>
             </ListItemIcon>
-            <ListItemText
-      primary={user.name}
-      secondary={secondaryUserLine}
-            />
+            <ListItemText primary={user.name} secondary={secondaryUserLine} />
             {userMenuOpen ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
 
           <Collapse in={userMenuOpen} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 4 }} component={Link} href={localePath('/profile', locale)}>
+              <ListItemButton
+                sx={{ pl: 4 }}
+                component={Link}
+                href={localePath("/profile", locale)}
+              >
                 <ListItemIcon>
                   <AccountCircleIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary={t('nav:profile', 'Profile')} />
+                <ListItemText primary={t("nav:profile", "Profile")} />
               </ListItemButton>
 
-              <ListItemButton sx={{ pl: 4 }} component={Link} href={localePath('/settings', locale)}>
+              <ListItemButton
+                sx={{ pl: 4 }}
+                component={Link}
+                href={localePath("/settings", locale)}
+              >
                 <ListItemIcon>
                   <SettingsIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary={t('nav:settings', 'Settings')} />
+                <ListItemText primary={t("nav:settings", "Settings")} />
               </ListItemButton>
 
               {user.role === "ADMIN" && (
-                <ListItemButton sx={{ pl: 4 }} component={Link} href={localePath('/admin', locale)}>
+                <ListItemButton
+                  sx={{ pl: 4 }}
+                  component={Link}
+                  href={localePath("/admin", locale)}
+                >
                   <ListItemIcon>
                     <AdminPanelSettingsIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText primary={t('nav:admin', 'Admin Panel')} />
+                  <ListItemText primary={t("nav:admin", "Admin Panel")} />
                 </ListItemButton>
               )}
 
@@ -234,22 +291,6 @@ export function SidebarDrawer() {
           <Divider sx={{ my: 1 }} />
         </>
       ) : null}
-
-      {/* Additional links */}
-      <List>
-        <ListItemButton
-          component={Link}
-          href={localePath('/deals/archived', locale)}
-          sx={{ pl: 2, py: 1.5 }}
-        >
-          <ListItemIcon>
-            <ArchiveIcon />
-          </ListItemIcon>
-          <ListItemText primary={t('nav:archivedDeals', 'Archived Deals')}>
-            <Link href={localePath('/deals/archived', locale)}>{t('nav:view', 'View')}</Link>
-          </ListItemText>
-        </ListItemButton>
-      </List>
     </Drawer>
   );
 }
