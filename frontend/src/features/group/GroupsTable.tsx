@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Table,
   TableBody,
@@ -23,6 +24,7 @@ import { useUserPermissions } from '@/entities/user';
 import { GroupManagementDialog } from './GroupManagementDialog';
 
 export function GroupsTable() {
+  const { t, ready } = useTranslation('group');
   const [managementDialogOpen, setManagementDialogOpen] = useState(false);
   const [selectedGroupForManagement, setSelectedGroupForManagement] = useState<Group | null>(null);
 
@@ -51,10 +53,15 @@ export function GroupsTable() {
     setSelectedGroupForManagement(null);
   };
 
+  // Don't render if translations are not ready
+  if (!ready) {
+    return <div>Loading translations...</div>;
+  }
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h4">Gruppen</Typography>
+        <Typography variant="h4">{t('table.title')}</Typography>
         <Box>
           <Button
             variant="contained"
@@ -63,22 +70,22 @@ export function GroupsTable() {
             sx={{ mr: 1 }}
             disabled={!canCreateGroup}
           >
-            Neue Gruppe
+            {t('table.action.create')}
           </Button>
         </Box>
       </Box>
 
       {groupsLoading ? (
-        <Typography>Lade Gruppen...</Typography>
+        <Typography>{t('table.loading')}</Typography>
       ) : (
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Gruppenleiter</TableCell>
-                <TableCell>Mitglieder</TableCell>
-                <TableCell>Aktionen</TableCell>
+                <TableCell>{t('table.column.name')}</TableCell>
+                <TableCell>{t('table.column.leader')}</TableCell>
+                <TableCell>{t('table.column.members')}</TableCell>
+                <TableCell>{t('table.column.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -87,7 +94,7 @@ export function GroupsTable() {
                   <TableCell>{group.name}</TableCell>
                   <TableCell>{group.leader.name}</TableCell>
                   <TableCell>
-                    {group.members.length} Mitglieder
+                    {group.members.length} {t('members.table.count')}
                   </TableCell>
                   <TableCell>
                     <IconButton onClick={() => openManagementDialog(group)} disabled={!canEditGroups}>

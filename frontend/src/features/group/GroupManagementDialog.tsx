@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -49,13 +50,13 @@ import { useGetUsersQuery } from '@/entities/user';
 const groupSchema = yup.object().shape({
   name: yup
     .string()
-    .required('Gruppenname ist erforderlich')
-    .min(2, 'Gruppenname muss mindestens 2 Zeichen lang sein')
-    .max(100, 'Gruppenname darf maximal 100 Zeichen lang sein')
+    .required('validation.nameRequired')
+    .min(2, 'validation.nameMinLength')
+    .max(100, 'validation.nameMaxLength')
     .trim(),
   leaderId: yup
     .string()
-    .required('Gruppenleiter ist erforderlich'),
+    .required('validation.leaderRequired'),
 });
 
 type GroupFormData = yup.InferType<typeof groupSchema>;
@@ -67,6 +68,7 @@ interface GroupManagementDialogProps {
 }
 
 export function GroupManagementDialog({ open, onClose, group }: GroupManagementDialogProps) {
+  const { t, ready } = useTranslation('group');
   // Local state for form data
   const [membersToAdd, setMembersToAdd] = useState<string[]>([]);
   const [membersToRemove, setMembersToRemove] = useState<string[]>([]);
@@ -253,6 +255,11 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
 
   const isCreateMode = !group;
 
+  // Don't render if translations are not ready
+  if (!ready) {
+    return null;
+  }
+
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -260,10 +267,10 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Edit />
             <Typography variant="h6">
-              {isCreateMode ? 'Neue Gruppe erstellen' : `Gruppe verwalten: ${group.name}`}
+              {isCreateMode ? t('dialog.title.create') : t('dialog.title.edit', { name: group.name })}
             </Typography>
             {hasUnsavedChanges() && (
-              <Chip label="Ungespeicherte Änderungen" color="warning" size="small" />
+              <Chip label={t('dialog.unsavedChanges')} color="warning" size="small" />
             )}
           </Box>
         </DialogTitle>
@@ -274,7 +281,7 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
             {/* Group Details Section */}
             <Box>
               <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-                Gruppen-Details
+                {t('sections.groupDetails')}
               </Typography>
               <Controller
                 name="name"
@@ -283,9 +290,9 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                   <TextField
                     {...field}
                     fullWidth
-                    label="Gruppenname"
+                    label={t('fields.groupName')}
                     error={!!errors.name}
-                    helperText={errors.name?.message}
+                    helperText={errors.name ? t(errors.name.message || '') : ''}
                     sx={{ mb: 2 }}
                   />
                 )}
@@ -296,10 +303,10 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={!!errors.leaderId}>
-                    <InputLabel>Gruppenleiter</InputLabel>
+                    <InputLabel>{t('fields.groupLeader')}</InputLabel>
                     <Select
                       {...field}
-                      label="Gruppenleiter"
+                      label={t('fields.groupLeader')}
                     >
                       {users.map((user) => (
                         <MenuItem key={user.id} value={user.id}>
@@ -319,7 +326,7 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                     </Select>
                     {errors.leaderId && (
                       <Typography variant="caption" color="error" sx={{ mt: 1, ml: 1 }}>
-                        {errors.leaderId.message}
+                        {t(errors.leaderId.message || '')}
                       </Typography>
                     )}
                   </FormControl>
@@ -333,7 +340,7 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6" sx={{ color: 'primary.main' }}>
-                  Gruppenmitglieder ({currentMembers.length + membersToAdd.length})
+                  {t('sections.members', { count: currentMembers.length + membersToAdd.length })}
                 </Typography>
                 {!isCreateMode && (
                   <Button
@@ -342,7 +349,7 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                     onClick={handleOpenAddMembersDialog}
                     size="small"
                   >
-                    Add Mitglied
+                    {t('buttons.addMember')}
                   </Button>
                 )}
                 {isCreateMode && (
@@ -352,7 +359,7 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                     onClick={handleOpenAddMembersDialog}
                     size="small"
                   >
-                    Mitglieder hinzufügen
+                    {t('buttons.addMembers')}
                   </Button>
                 )}
               </Box>
@@ -362,10 +369,10 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Mitglied</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>E-Mail</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Rolle</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Aktionen</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>{t('table.headers.member')}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>{t('table.headers.email')}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>{t('table.headers.role')}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>{t('table.headers.actions')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -391,17 +398,17 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                             </Typography>
                           </TableCell>
                           <TableCell>
-                            <Chip label="Wird hinzugefügt" color="success" size="small" />
+                            <Chip label={t('status.adding')} color="success" size="small" />
                           </TableCell>
                           <TableCell>
-                            <Chip label="Mitglied" size="small" variant="outlined" />
+                            <Chip label={t('roles.member')} size="small" variant="outlined" />
                           </TableCell>
                           <TableCell>
                             <IconButton
                               size="small"
                               onClick={() => handleUndoAddMember(userId)}
                               sx={{ color: 'warning.main' }}
-                              title="Hinzufügung rückgängig machen"
+                              title={t('tooltips.undoAdd')}
                             >
                               <Remove fontSize="small" />
                             </IconButton>
@@ -440,16 +447,16 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                           <TableCell>
                             {member.userId === watchedLeaderId ? (
                               <Chip
-                                label="Gruppenleiter"
+                                label={t('roles.leader')}
                                 color="primary"
                                 size="small"
                                 variant="outlined"
                               />
                             ) : isMarkedForRemoval ? (
-                              <Chip label="Wird entfernt" color="error" size="small" />
+                              <Chip label={t('status.removing')} color="error" size="small" />
                             ) : (
                               <Chip
-                                label="Mitglied"
+                                label={t('roles.member')}
                                 size="small"
                                 variant="outlined"
                               />
@@ -462,7 +469,7 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                                   size="small"
                                   onClick={() => handleUndoRemoveMember(member.userId)}
                                   sx={{ color: 'warning.main' }}
-                                  title="Entfernung rückgängig machen"
+                                  title={t('tooltips.undoRemove')}
                                 >
                                   <Add fontSize="small" />
                                 </IconButton>
@@ -478,7 +485,7 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                                       color: 'error.contrastText',
                                     }
                                   }}
-                                  title="Zur Entfernung vormerken"
+                                  title={t('tooltips.markForRemoval')}
                                 >
                                   <Delete fontSize="small" />
                                 </IconButton>
@@ -493,10 +500,10 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
                       <TableRow>
                         <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
                           <Typography variant="body2" color="text.secondary">
-                            {isCreateMode ? 'Noch keine Mitglieder hinzugefügt' : 'Keine Mitglieder vorhanden'}
+                            {isCreateMode ? t('messages.noMembersAdded') : t('messages.noMembers')}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {isCreateMode ? 'Fügen Sie Mitglieder hinzu, bevor Sie die Gruppe erstellen' : 'Fügen Sie Mitglieder hinzu, um mit der Gruppe zu arbeiten'}
+                            {isCreateMode ? t('messages.addMembersBeforeCreate') : t('messages.addMembersToWork')}
                           </Typography>
                         </TableCell>
                       </TableRow>
@@ -509,7 +516,7 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={onClose}>Abbrechen</Button>
+          <Button onClick={onClose}>{t('buttons.cancel')}</Button>
           <Button
             onClick={handleSubmit(handleSaveAllChanges)}
             variant="contained"
@@ -521,7 +528,7 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
               removeMemberMutation.isPending
             }
           >
-            {isCreateMode ? 'Gruppe erstellen' : (hasUnsavedChanges() ? 'Alle Änderungen speichern' : 'Keine Änderungen')}
+            {isCreateMode ? t('buttons.createGroup') : (hasUnsavedChanges() ? t('buttons.saveAllChanges') : t('buttons.noChanges'))}
           </Button>
         </DialogActions>
       </Dialog>
@@ -534,9 +541,9 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
         fullWidth
       >
         <DialogTitle>
-          <Typography variant="h6">Mitglieder hinzufügen</Typography>
+          <Typography variant="h6">{t('dialog.addMembers.title')}</Typography>
           <Typography variant="body2" color="text.secondary">
-            Wählen Sie einen oder mehrere Benutzer aus, die der Gruppe hinzugefügt werden sollen
+            {t('dialog.addMembers.description')}
           </Typography>
         </DialogTitle>
 
@@ -581,8 +588,8 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
             {availableUsers.length === 0 && (
               <ListItem>
                 <ListItemText
-                  primary="Keine verfügbaren Benutzer"
-                  secondary="Alle Benutzer sind bereits Mitglieder dieser Gruppe"
+                  primary={t('messages.noAvailableUsers')}
+                  secondary={t('messages.allUsersAreMembers')}
                 />
               </ListItem>
             )}
@@ -591,14 +598,14 @@ export function GroupManagementDialog({ open, onClose, group }: GroupManagementD
 
         <DialogActions>
           <Button onClick={handleCloseAddMembersDialog}>
-            Abbrechen
+            {t('buttons.cancel')}
           </Button>
           <Button
             onClick={handleConfirmAddMembers}
             variant="contained"
             disabled={selectedUsers.length === 0}
           >
-            {selectedUsers.length} Mitglied{selectedUsers.length !== 1 ? 'er' : ''} hinzufügen
+            {t('buttons.addSelectedMembers', { count: selectedUsers.length })}
           </Button>
         </DialogActions>
       </Dialog>
