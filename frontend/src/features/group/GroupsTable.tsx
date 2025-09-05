@@ -13,6 +13,11 @@ import {
   IconButton,
   Typography,
   Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import { Add, Delete, Edit } from '@mui/icons-material';
 import {
@@ -20,6 +25,7 @@ import {
   useDeleteGroupMutation,
   Group,
 } from '@/entities/group';
+import { useSnackbar } from 'notistack';
 import { useUserPermissions } from '@/entities/user';
 import { GroupManagementDialog } from './GroupManagementDialog';
 
@@ -34,13 +40,55 @@ export function GroupsTable() {
 
   // Mutations
   const deleteGroupMutation = useDeleteGroupMutation();
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteGroupMutation.mutateAsync(id);
-    } catch (error) {
+      // Directly call DELETE on the backend and surface its message
+      const result = await deleteGroupMutation.mutateAsync(id);
+
+      // result may be an object with { message }
+      let message = t('notifications.groupDeleted');
+      if (result && typeof result === 'object' && 'message' in result) {
+        message = String((result as Record<string, unknown>).message as string);
+      }
+      try {
+        enqueueSnackbar(String(message), { variant: 'success' });
+      } catch {
+        // ignore snackbar errors (e2e/test env)
+      }
+    } catch (error: unknown) {
       console.error('Error deleting group:', error);
+      // Try to show error message from error instance
+      let msg = t('notifications.deleteFailed') || 'Failed to delete group';
+      try {
+        if (error instanceof Error && error.message) msg = error.message;
+      } catch {
+        // ignore
+      }
+      enqueueSnackbar(msg, { variant: 'error' });
     }
+  };
+
+  // Confirmation dialog state
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [groupPendingDelete, setGroupPendingDelete] = useState<{ id: string; name: string } | null>(null);
+
+  const openConfirmDelete = (id: string, name: string) => {
+    setGroupPendingDelete({ id, name });
+    setConfirmDeleteOpen(true);
+  };
+
+  const closeConfirmDelete = () => {
+    setConfirmDeleteOpen(false);
+    setGroupPendingDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!groupPendingDelete) return;
+    const id = groupPendingDelete.id;
+    closeConfirmDelete();
+    await handleDelete(id);
   };
 
   const openManagementDialog = (group: Group | null) => {
@@ -105,7 +153,7 @@ export function GroupsTable() {
                       <Edit />
                     </IconButton>
                     <IconButton
-                      onClick={() => handleDelete(group.id)}
+                      onClick={() => openConfirmDelete(group.id, group.name)}
                       disabled={deleteGroupMutation.isPending || !canEditGroups}
                     >
                       <Delete />
@@ -124,6 +172,22 @@ export function GroupsTable() {
         onClose={closeManagementDialog}
         group={selectedGroupForManagement}
       />
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={confirmDeleteOpen} onClose={closeConfirmDelete} aria-labelledby="confirm-delete-title">
+        <DialogTitle id="confirm-delete-title">{t('confirmDelete.title')}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t('confirmDelete.message', { name: groupPendingDelete?.name ?? '' })}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeConfirmDelete}>{t('buttons.cancel')}</Button>
+          <Button color="error" variant="contained" onClick={confirmDelete} disabled={deleteGroupMutation.isPending}>
+            {t('confirmDelete.confirm')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

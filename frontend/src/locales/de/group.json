@@ -88,7 +88,15 @@
   "notifications": {
     "groupCreated": "Gruppe erstellt",
     "groupUpdated": "Gruppe aktualisiert",
-    "membersUpdated": "Gruppen-Mitglieder aktualisiert",
-    "saveFailed": "Fehler beim Speichern der Änderungen"
+    "groupDeleted": "Gruppe gelöscht",
+     "membersUpdated": "Gruppen-Mitglieder aktualisiert",
+     "saveFailed": "Fehler beim Speichern der Änderungen",
+     "deleteFailed": "Fehler beim Löschen der Gruppe"
+  }
+  ,
+  "confirmDelete": {
+    "title": "Gruppe löschen?",
+    "message": "Möchten Sie die Gruppe '{{name}}' wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirm": "Löschen"
   }
 }

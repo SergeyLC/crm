@@ -89,7 +89,15 @@
   "notifications": {
     "groupCreated": "Group created",
     "groupUpdated": "Group updated",
+  "groupDeleted": "Group deleted",
     "membersUpdated": "Group members updated",
-    "saveFailed": "Failed to save changes"
+  "saveFailed": "Failed to save changes",
+  "deleteFailed": "Failed to delete group"
+  }
+  ,
+  "confirmDelete": {
+    "title": "Delete group?",
+    "message": "Are you sure you want to delete the group '{{name}}'? This action cannot be undone.",
+    "confirm": "Delete"
   }
 }

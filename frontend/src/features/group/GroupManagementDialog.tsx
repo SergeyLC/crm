@@ -18,9 +18,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Edit, PersonAdd } from "@mui/icons-material";
 import { GroupManagementDialogProps } from "./types";
 import { useGroupManagement } from "./hooks/useGroupManagement";
-import { GroupDetailsForm } from "./components/GroupDetailsForm";
-import { MembersTable } from "./components/MembersTable";
-import { AddMembersDialog } from "./components/AddMembersDialog";
+import { GroupDetailsForm } from "./ui/GroupDetailsForm";
+import { MembersTable } from "./ui/MembersTable";
+import { AddMembersDialog } from "./ui/AddMembersDialog";
 
 export function GroupManagementDialog({
   open,

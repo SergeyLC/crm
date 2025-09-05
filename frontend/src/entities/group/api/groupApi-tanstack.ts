@@ -63,14 +63,44 @@ const updateGroup = async ({ id, body }: { id: string; body: UpdateGroupDTO }): 
   return response.json();
 };
 
-const deleteGroup = async (id: string): Promise<void> => {
+const deleteGroup = async (id: string): Promise<unknown> => {
   const response = await fetch(`${API_BASE_URL}/groups/${id}`, {
     method: 'DELETE',
     credentials: "include",
   });
+
+  const contentType = response.headers.get('content-type') || '';
+
   if (!response.ok) {
-    throw new Error('Failed to delete group');
+    // Try to read a JSON error body, otherwise read text
+  let errorBody: unknown = null;
+    try {
+      if (contentType.includes('application/json')) {
+    errorBody = await response.json();
+      } else {
+        const text = await response.text();
+    errorBody = { message: text };
+      }
+  } catch {
+    // ignore parse errors
+    }
+    let message = 'Failed to delete group';
+    try {
+      if (errorBody && typeof errorBody === 'object' && 'message' in errorBody) {
+    message = String((errorBody as Record<string, unknown>).message as string);
+      }
+    } catch {
+      // fallback
+    }
+    throw new Error(message);
   }
+
+  // On success, return parsed JSON if present so callers can show backend messages
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  return { message: 'Group deleted' };
 };
 
 const addGroupMember = async ({ groupId, userId }: { groupId: string; userId: string }): Promise<GroupMember> => {
