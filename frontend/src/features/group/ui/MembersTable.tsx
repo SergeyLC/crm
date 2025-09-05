@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import {
   Table,
@@ -79,13 +80,13 @@ export function MembersTable({
         </TableHead>
         <TableBody>
           {/* Show members to be added */}
-          {membersToAdd.map((userId) => {
+      {membersToAdd.map((userId) => {
             const user = users.find((u) => u.id === userId);
             if (!user) return null;
             return (
               <TableRow
-                key={`add-${userId}`}
-                sx={{ bgcolor: "success.light", opacity: 0.7 }}
+        key={`add-${userId}`}
+        sx={(theme) => ({ bgcolor: alpha(theme.palette.success.main, 0.12) })}
               >
                 <TableCell>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>

@@ -28,7 +28,7 @@
       "edit": "Manage Group: {{name}}"
     },
     "unsavedChanges": "Unsaved Changes",
-  "savingOperations": "Saving {{count}} operation(s)...",
+    "savingOperations": "Saving {{count}} operation(s)...",
     "addMembers": {
       "title": "Add Members",
       "description": "Select one or more users to add to the group"
@@ -84,17 +84,15 @@
     "nameMinLength": "Group name must be at least 2 characters long",
     "nameMaxLength": "Group name can be maximum 100 characters long",
     "leaderRequired": "Group leader is required"
-  }
-  ,
+  },
   "notifications": {
     "groupCreated": "Group created",
     "groupUpdated": "Group updated",
-  "groupDeleted": "Group deleted",
+    "groupDeleted": "Group deleted",
     "membersUpdated": "Group members updated",
-  "saveFailed": "Failed to save changes",
-  "deleteFailed": "Failed to delete group"
-  }
-  ,
+    "saveFailed": "Failed to save changes",
+    "deleteFailed": "Failed to delete group"
+  },
   "confirmDelete": {
     "title": "Delete group?",
     "message": "Are you sure you want to delete the group '{{name}}'? This action cannot be undone.",

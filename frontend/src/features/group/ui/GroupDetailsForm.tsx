@@ -1,5 +1,4 @@
 "use client";
-"use client";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Controller, Control } from "react-hook-form";
@@ -62,31 +61,25 @@ export function GroupDetailsForm({
               onChange={(_, newValue) => {
                 field.onChange(newValue ? newValue.id : "");
               }}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
+              isOptionEqualToValue={(option, value) => option.id === (value as User | null)?.id}
               renderOption={(props, option) => {
                 const { name, email, id } = option as User;
+                // props may contain a key; React warns if key is passed via spread.
+                // Extract it and pass explicitly, with a fallback to option id.
+                const { key: propKey, ...rest } = props as { key?: React.Key } & Record<string, unknown>;
+                const liKey = propKey ?? id;
                 return (
-                  <Box
-                    {...props}
-                    key={id}
-                    component="li"
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      size: "middle",
-                      gap: 1,
-                    }}
-                  >
-                    <Avatar sx={{ width: 18, height: 18 }}>
-                      {name.charAt(0).toUpperCase()}
-                    </Avatar>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography variant="body2">{name}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        ({email})
-                      </Typography>
-                    </Box>
-                  </Box>
+                  <li key={liKey} {...(rest as Record<string, unknown>)}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Avatar sx={{ width: 18, height: 18 }}>
+                        {name.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Typography variant="body2">{name}</Typography>
+                        <Typography variant="body2" color="text.secondary">({email})</Typography>
+                      </div>
+                    </div>
+                  </li>
                 );
               }}
               renderInput={(params) => {

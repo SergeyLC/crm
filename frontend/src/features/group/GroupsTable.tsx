@@ -48,14 +48,22 @@ export function GroupsTable() {
       const result = await deleteGroupMutation.mutateAsync(id);
 
       // result may be an object with { message }
-      let message = t('notifications.groupDeleted');
-      if (result && typeof result === 'object' && 'message' in result) {
-        message = String((result as Record<string, unknown>).message as string);
-      }
+      // Prefer the localized success message from translations so the UI
+      // matches the selected locale. Backend messages are logged for
+      // debugging but not shown raw to the user to avoid English text.
+      const localizedSuccess = t('notifications.groupDeleted');
       try {
-        enqueueSnackbar(String(message), { variant: 'success' });
+        enqueueSnackbar(localizedSuccess, { variant: 'success' });
       } catch {
         // ignore snackbar errors (e2e/test env)
+      }
+      // Keep backend message in console for debugging if present
+      try {
+        if (result && typeof result === 'object' && 'message' in result) {
+          console.debug('Backend delete message:', (result as Record<string, unknown>).message);
+        }
+      } catch {
+        // ignore
       }
     } catch (error: unknown) {
       console.error('Error deleting group:', error);
@@ -75,6 +83,18 @@ export function GroupsTable() {
   const [groupPendingDelete, setGroupPendingDelete] = useState<{ id: string; name: string } | null>(null);
 
   const openConfirmDelete = (id: string, name: string) => {
+    // If the element that triggered the dialog still has focus, blurring it
+    // prevents aria-hidden from being applied while a focused descendant remains
+    // in that subtree (accessibility violation). Do this safely in browser.
+    try {
+      const active = document.activeElement as HTMLElement | null;
+      if (active && typeof active.blur === 'function') {
+        active.blur();
+      }
+    } catch {
+      // ignore when document is not available (SSR/test env)
+    }
+
     setGroupPendingDelete({ id, name });
     setConfirmDeleteOpen(true);
   };
@@ -92,6 +112,16 @@ export function GroupsTable() {
   };
 
   const openManagementDialog = (group: Group | null) => {
+    // Blur currently focused element to avoid aria-hidden on a focused node
+    try {
+      const active = document.activeElement as HTMLElement | null;
+      if (active && typeof active.blur === 'function') {
+        active.blur();
+      }
+    } catch {
+      // ignore when document is not available (SSR/test env)
+    }
+
     setSelectedGroupForManagement(group);
     setManagementDialogOpen(true);
   };

@@ -58,7 +58,7 @@ export const useUserPermissions = (): UserPermissions => {
     canCreateLeads: isAdmin || isEmployee,
     canEditLeads: isAdmin || isEmployee,
     canDeleteLeads: isAdmin,
-    canViewGroups: isAdmin || isEmployee,
+    canViewGroups: isAdmin,
     canEditGroups: isAdmin,
     canCreateGroup: isAdmin,
     role,
