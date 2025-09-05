@@ -48,16 +48,19 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            echo "📦 Installing production dependencies..."
-            # Install dependencies for each package
+            echo "📦 Preparing dependencies and generated client..."
+
+            # Generate Prisma client first so both frontend and backend can use it
+            echo "Installing db dependencies and generating Prisma client..."
+            cd db && npm ci && npm run generate && cd ..
+
+            # Install frontend deps (including dev deps needed by next build)
             echo "Installing frontend dependencies..."
-            cd frontend && npm ci --production && cd ..
-            
-            echo "Installing backend dependencies (including dev dependencies for build)..."  
+            cd frontend && npm ci && cd ..
+
+            # Install backend deps (dev deps required for tsc build)
+            echo "Installing backend dependencies (including dev dependencies for build)..."
             cd backend && npm ci && cd ..
-            
-            echo "Installing db dependencies..."
-            cd db && npm ci --production && cd ..
 
             echo "🔨 Building frontend..."
             cd frontend
@@ -74,8 +77,23 @@ jobs:
             echo "🗄️ Applying database migrations..."
             cd db
             npm run migrate:deploy
-            npm run generate
             cd ..
+
+            echo "🧹 Pruning devDependencies for runtime (frontend/backend)..."
+            # Only reinstall without dev deps if node_modules exists (avoid unnecessary work)
+            if [ -d "frontend/node_modules" ]; then
+              echo "Pruning frontend devDependencies..."
+              cd frontend && npm prune --production && cd ..
+            else
+              echo "frontend/node_modules not found — skipping frontend prune"
+            fi
+
+            if [ -d "backend/node_modules" ]; then
+              echo "Pruning backend devDependencies..."
+              cd backend && npm prune --production && cd ..
+            else
+              echo "backend/node_modules not found — skipping backend prune"
+            fi
 
             echo "⚙️ Copying PM2 configuration..."
             cp .github/ecosystem.config.template.js ecosystem.config.js
