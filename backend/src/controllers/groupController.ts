@@ -110,7 +110,7 @@ export const addUserToGroup = async (req: Request, res: Response) => {
     if (!userId) {
       return res.status(400).json({ error: 'UserId is required' });
     }
-
+    console.log(`Adding user ${userId} to group: ${groupId}`);
     const member = await prisma.groupMember.create({
       data: { groupId, userId },
       include: {
@@ -153,5 +153,90 @@ export const getGroupMembers = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching group members:', error);
     res.status(500).json({ error: 'Failed to fetch group members' });
+  }
+};
+
+export const addMembersBatch = async (req: Request, res: Response) => {
+  try {
+    const { groupId } = req.params;
+    const userIds: string[] = req.body;
+
+    if (!Array.isArray(userIds)) {
+      return res.status(400).json({ error: 'Expected an array of userIds' });
+    }
+
+    const results = await prisma.$transaction(async (tx) => {
+      for (const userId of userIds) {
+        if (!userId) continue;
+        await tx.groupMember.create({ data: { groupId, userId } }).catch(() => {});
+      }
+
+      const members = await tx.groupMember.findMany({ where: { groupId }, include: { user: true } });
+      return members;
+    });
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error('Error adding members batch:', error);
+    res.status(500).json({ error: 'Failed to add members batch' });
+  }
+};
+
+export const removeMembersBatch = async (req: Request, res: Response) => {
+  try {
+    const { groupId } = req.params;
+    const userIds: string[] = req.body;
+
+    if (!Array.isArray(userIds)) {
+      return res.status(400).json({ error: 'Expected an array of userIds' });
+    }
+
+    const results = await prisma.$transaction(async (tx) => {
+      await tx.groupMember.deleteMany({ where: { groupId, userId: { in: userIds } } });
+      const members = await tx.groupMember.findMany({ where: { groupId }, include: { user: true } });
+      return members;
+    });
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error('Error removing members batch:', error);
+    res.status(500).json({ error: 'Failed to remove members batch' });
+  }
+};
+
+export const replaceMembersBatch = async (req: Request, res: Response) => {
+  try {
+    const { groupId } = req.params;
+    const newUserIds: string[] = req.body;
+
+    if (!Array.isArray(newUserIds)) {
+      return res.status(400).json({ error: 'Expected an array of userIds' });
+    }
+
+    const results = await prisma.$transaction(async (tx) => {
+      // Fetch current members
+      const current = await tx.groupMember.findMany({ where: { groupId } });
+      const currentIds = current.map((m) => m.userId);
+
+      const toAdd = newUserIds.filter((id) => !currentIds.includes(id));
+      const toRemove = currentIds.filter((id) => !newUserIds.includes(id));
+
+      if (toRemove.length > 0) {
+        await tx.groupMember.deleteMany({ where: { groupId, userId: { in: toRemove } } });
+      }
+
+      for (const userId of toAdd) {
+        if (!userId) continue;
+        await tx.groupMember.create({ data: { groupId, userId } }).catch(() => {});
+      }
+
+      const members = await tx.groupMember.findMany({ where: { groupId }, include: { user: true } });
+      return members;
+    });
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error('Error replacing members batch:', error);
+    res.status(500).json({ error: 'Failed to replace members batch' });
   }
 };

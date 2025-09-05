@@ -1,11 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import {
   Group,
   GroupsResponse,
   CreateGroupDTO,
   UpdateGroupDTO,
   GroupMember,
+  GroupRole,
 } from "../model/types";
+import { UsersResponse, UserExt } from '@/entities/user';
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
 
 const API_BASE_URL = NEXT_PUBLIC_BACKEND_API_URL || '/api';
@@ -13,7 +15,7 @@ const API_BASE_URL = NEXT_PUBLIC_BACKEND_API_URL || '/api';
 // API functions
 const fetchGroups = async (): Promise<GroupsResponse> => {
   const response = await fetch(`${API_BASE_URL}/groups`, {
-    credentials: "include",
+    credentials: "include",    
   });
   if (!response.ok) {
     throw new Error('Failed to fetch groups');
@@ -119,7 +121,9 @@ export const useGetGroupByIdQuery = (id: string, enabled = true) => {
     queryKey: groupKeys.detail(id),
     queryFn: () => fetchGroupById(id),
     enabled: !!id && enabled,
-  });
+    // Keep previous data while refetching to avoid UI briefly falling back to parent props
+    keepPreviousData: true,
+  } as UseQueryOptions<Group, Error, Group, ReturnType<typeof groupKeys.detail>>);
 };
 
 export const useCreateGroupMutation = () => {
@@ -161,9 +165,59 @@ export const useAddGroupMemberMutation = () => {
 
   return useMutation({
     mutationFn: addGroupMember,
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
+    // Optimistic update: immediately add member to group's detail cache
+    onMutate: async (variables: { groupId: string; userId: string }) => {
+      const { groupId, userId } = variables;
+
+      await queryClient.cancelQueries({ queryKey: groupKeys.detail(groupId) });
+      await queryClient.cancelQueries({ queryKey: groupKeys.lists() });
+
+      const previousGroup = queryClient.getQueryData<Group>(groupKeys.detail(groupId));
+      const previousList = queryClient.getQueryData<GroupsResponse>(groupKeys.lists());
+
+      // Try to get user info from users cache to build a GroupMember preview
+  const usersCache = queryClient.getQueryData<UsersResponse>(['users', 'list']);
+  const newUser: UserExt | { id: string; name: string; email: string } = usersCache?.find((u) => u.id === userId) || { id: userId, name: '…', email: '' };
+
+      const optimisticMember: Partial<GroupMember> = {
+        id: `optimistic-${userId}`,
+        groupId,
+        userId,
+  user: newUser as UserExt,
+        joinedAt: new Date().toISOString(),
+        role: GroupRole.MEMBER,
+      };
+
+      if (previousGroup) {
+        queryClient.setQueryData<Group>(groupKeys.detail(groupId), {
+          ...previousGroup,
+          members: [...previousGroup.members, optimisticMember as GroupMember],
+        });
+      }
+
+      // Also optimistically update the groups list if present
+      if (previousList) {
+        queryClient.setQueryData<GroupsResponse>(groupKeys.lists(),
+          previousList.map((g) =>
+            g.id === groupId ? { ...g, members: [...g.members, optimisticMember as GroupMember] } : g
+          )
+        );
+      }
+
+      return { previousGroup, previousList };
+    },
+    onError: (err, variables, context: { previousGroup?: Group; previousList?: GroupsResponse } | undefined) => {
+      const { groupId } = variables as { groupId: string; userId: string };
+      if (context?.previousGroup) {
+        queryClient.setQueryData<Group>(groupKeys.detail(groupId), context.previousGroup);
+      }
+      if (context?.previousList) {
+        queryClient.setQueryData<GroupsResponse>(groupKeys.lists(), context.previousList);
+      }
+    },
+    onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({ queryKey: groupKeys.detail(variables.groupId) });
+      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
     },
   });
 };
@@ -173,9 +227,45 @@ export const useRemoveGroupMemberMutation = () => {
 
   return useMutation({
     mutationFn: removeGroupMember,
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
+    // Optimistic update: immediately remove member from group's detail cache
+    onMutate: async (variables: { groupId: string; userId: string }) => {
+      const { groupId, userId } = variables;
+
+      await queryClient.cancelQueries({ queryKey: groupKeys.detail(groupId) });
+      await queryClient.cancelQueries({ queryKey: groupKeys.lists() });
+
+      const previousGroup = queryClient.getQueryData<Group>(groupKeys.detail(groupId));
+      const previousList = queryClient.getQueryData<GroupsResponse>(groupKeys.lists());
+
+      if (previousGroup) {
+        queryClient.setQueryData<Group>(groupKeys.detail(groupId), {
+          ...previousGroup,
+          members: previousGroup.members.filter((m) => m.userId !== userId),
+        });
+      }
+
+      if (previousList) {
+        queryClient.setQueryData<GroupsResponse>(groupKeys.lists(),
+          previousList.map((g) =>
+            g.id === groupId ? { ...g, members: g.members.filter((m) => m.userId !== userId) } : g
+          )
+        );
+      }
+
+      return { previousGroup, previousList };
+    },
+    onError: (err, variables, context: { previousGroup?: Group; previousList?: GroupsResponse } | undefined) => {
+      const { groupId } = variables as { groupId: string; userId: string };
+      if (context?.previousGroup) {
+        queryClient.setQueryData<Group>(groupKeys.detail(groupId), context.previousGroup);
+      }
+      if (context?.previousList) {
+        queryClient.setQueryData<GroupsResponse>(groupKeys.lists(), context.previousList);
+      }
+    },
+    onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({ queryKey: groupKeys.detail(variables.groupId) });
+      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
     },
   });
 };

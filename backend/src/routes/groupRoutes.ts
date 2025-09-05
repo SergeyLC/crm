@@ -7,6 +7,9 @@ import {
   deleteGroup,
   addUserToGroup,
   removeUserFromGroup,
+  addMembersBatch,
+  removeMembersBatch,
+  replaceMembersBatch,
   getGroupMembers
 } from '../controllers/groupController';
 
@@ -22,5 +25,8 @@ router.delete('/:id', deleteGroup);
 router.get('/:id/members', getGroupMembers);
 router.post('/:groupId/members', addUserToGroup);
 router.delete('/:groupId/members/:userId', removeUserFromGroup);
+router.post('/:groupId/members/batch', addMembersBatch);
+router.put('/:groupId/members/batch', replaceMembersBatch);
+router.delete('/:groupId/members/batch', removeMembersBatch);
 
 export default router;

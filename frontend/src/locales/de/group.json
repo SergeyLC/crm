@@ -28,6 +28,7 @@
       "edit": "Gruppe verwalten: {{name}}"
     },
     "unsavedChanges": "Ungespeicherte Änderungen",
+  "savingOperations": "Speichere {{count}} Vorgänge…",
     "addMembers": {
       "title": "Mitglieder hinzufügen",
       "description": "Wählen Sie einen oder mehrere Benutzer aus, die der Gruppe hinzugefügt werden sollen"
@@ -48,7 +49,8 @@
     "noChanges": "Keine Änderungen",
     "addMember": "Mitglied hinzufügen",
     "addMembers": "Mitglieder hinzufügen",
-    "addSelectedMembers": "{{count}} Mitglied{{plural}} hinzufügen"
+    "addSelectedMembers_one": "1 Mitglied hinzufügen",
+    "addSelectedMembers_other": "{{count}} Mitglieder hinzufügen"
   },
   "status": {
     "adding": "Wird hinzugefügt",
@@ -70,6 +72,11 @@
     "addMembersToWork": "Fügen Sie Mitglieder hinzu, um mit der Gruppe zu arbeiten",
     "noAvailableUsers": "Keine verfügbaren Benutzer",
     "allUsersAreMembers": "Alle Benutzer sind bereits Mitglieder dieser Gruppe"
+  },
+  "members": {
+    "table": {
+      "count": "Mitglieder"
+    }
   },
   "validation": {
     "nameRequired": "Gruppenname ist erforderlich",
