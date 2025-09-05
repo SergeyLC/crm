@@ -84,4 +84,11 @@
     "nameMaxLength": "Gruppenname darf maximal 100 Zeichen lang sein",
     "leaderRequired": "Gruppenleiter ist erforderlich"
   }
+  ,
+  "notifications": {
+    "groupCreated": "Gruppe erstellt",
+    "groupUpdated": "Gruppe aktualisiert",
+    "membersUpdated": "Gruppen-Mitglieder aktualisiert",
+    "saveFailed": "Fehler beim Speichern der Änderungen"
+  }
 }

@@ -85,4 +85,11 @@
     "nameMaxLength": "Group name can be maximum 100 characters long",
     "leaderRequired": "Group leader is required"
   }
+  ,
+  "notifications": {
+    "groupCreated": "Group created",
+    "groupUpdated": "Group updated",
+    "membersUpdated": "Group members updated",
+    "saveFailed": "Failed to save changes"
+  }
 }

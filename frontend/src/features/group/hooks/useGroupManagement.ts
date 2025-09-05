@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from '@tanstack/react-query';
+import { useSnackbar } from "notistack";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Group,
   useUpdateGroupMutation,
@@ -14,8 +15,8 @@ import {
   useCreateGroupMutation,
   GroupRole,
 } from "@/entities/group";
-import { NEXT_PUBLIC_BACKEND_API_URL } from '@/shared/config/urls';
-import { UsersResponse, UserExt } from '@/entities/user';
+import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
+import { UsersResponse, UserExt } from "@/entities/user";
 import { groupSchema, GroupFormData } from "../validation";
 import { useGroupUsers } from "./useGroupUsers";
 // removed unused useQueryClient import
@@ -23,12 +24,14 @@ import { useGroupUsers } from "./useGroupUsers";
 export function useGroupManagement(group: Group | null) {
   const { t, ready } = useTranslation("group");
   const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
 
   // Local state for form data
   const [membersToAdd, setMembersToAdd] = useState<string[]>([]);
   const [membersToRemove, setMembersToRemove] = useState<string[]>([]);
   // Track in-flight per-member network operations started by this hook
-  const [inFlightMemberRequests, setInFlightMemberRequests] = useState<number>(0);
+  const [inFlightMemberRequests, setInFlightMemberRequests] =
+    useState<number>(0);
 
   // React Hook Form setup
   const formMethods = useForm<GroupFormData>({
@@ -49,7 +52,10 @@ export function useGroupManagement(group: Group | null) {
   const watchedLeaderId = watch("leaderId");
 
   // Subscribe to detailed group data so this hook always uses the freshest source of truth
-  const { data: freshGroup } = useGetGroupByIdQuery(group?.id ?? "", !!group?.id);
+  const { data: freshGroup } = useGetGroupByIdQuery(
+    group?.id ?? "",
+    !!group?.id
+  );
   const sourceGroup = freshGroup ?? group;
 
   // Use the separate users hook (sourceGroup is the authoritative group object)
@@ -147,6 +153,9 @@ export function useGroupManagement(group: Group | null) {
               leaderId: formData.leaderId,
             },
           });
+          enqueueSnackbar(t("notifications.groupUpdated"), {
+            variant: "success",
+          });
         }
       } else {
         // Create new group
@@ -160,30 +169,52 @@ export function useGroupManagement(group: Group | null) {
           leaderId: formData.leaderId,
         });
         groupId = newGroup.id;
+        enqueueSnackbar(t("notifications.groupCreated"), {
+          variant: "success",
+        });
       }
 
       // Prepare and apply batch optimistic members update before firing per-member ops
       if (compareGroup) {
-        previousGroupSnapshot = queryClient.getQueryData<Group>(["groups", "detail", compareGroup.id]);
-  previousListSnapshot = queryClient.getQueryData<Group[]>(["groups", "list"]);
+        previousGroupSnapshot = queryClient.getQueryData<Group>([
+          "groups",
+          "detail",
+          compareGroup.id,
+        ]);
+        previousListSnapshot = queryClient.getQueryData<Group[]>([
+          "groups",
+          "list",
+        ]);
 
         // Build final members: existing members minus removals + optimistic new members
         const existingMembers = compareGroup.members || [];
-        const membersAfterRemoval = existingMembers.filter((m) => !membersToRemove.includes(m.userId));
+        const membersAfterRemoval = existingMembers.filter(
+          (m) => !membersToRemove.includes(m.userId)
+        );
 
         // Try to obtain user objects from users cache
-        const usersCache = queryClient.getQueryData<UsersResponse>(["users", "list"]);
+        const usersCache = queryClient.getQueryData<UsersResponse>([
+          "users",
+          "list",
+        ]);
 
-        const optimisticNewMembers: Group["members"] = membersToAdd.map((userId) => ({
-          id: `optimistic-batch-${userId}`,
-          groupId: compareGroup.id,
-          userId,
-          user: (usersCache?.find((u) => u.id === userId) as UserExt) || { id: userId, name: '…', email: '' } as UserExt,
-          joinedAt: new Date().toISOString(),
-          role: GroupRole.MEMBER,
-        }));
+        const optimisticNewMembers: Group["members"] = membersToAdd.map(
+          (userId) => ({
+            id: `optimistic-batch-${userId}`,
+            groupId: compareGroup.id,
+            userId,
+            user:
+              (usersCache?.find((u) => u.id === userId) as UserExt) ||
+              ({ id: userId, name: "…", email: "" } as UserExt),
+            joinedAt: new Date().toISOString(),
+            role: GroupRole.MEMBER,
+          })
+        );
 
-        finalOptimisticMembers = [...membersAfterRemoval, ...optimisticNewMembers];
+        finalOptimisticMembers = [
+          ...membersAfterRemoval,
+          ...optimisticNewMembers,
+        ];
 
         // Apply to detail cache
         queryClient.setQueryData(["groups", "detail", compareGroup.id], {
@@ -193,9 +224,12 @@ export function useGroupManagement(group: Group | null) {
 
         // Apply to groups list cache if present
         if (previousListSnapshot) {
-          queryClient.setQueryData(["groups", "list"],
+          queryClient.setQueryData(
+            ["groups", "list"],
             previousListSnapshot.map((g: Group) =>
-              g.id === compareGroup.id ? { ...g, members: finalOptimisticMembers } : g
+              g.id === compareGroup.id
+                ? { ...g, members: finalOptimisticMembers }
+                : g
             )
           );
         }
@@ -203,7 +237,7 @@ export function useGroupManagement(group: Group | null) {
 
       // Use idempotent PUT to replace the group's members with the final list of userIds.
       // This keeps the frontend simple: compute the final userId set and send in one request.
-      const API_BASE_URL = NEXT_PUBLIC_BACKEND_API_URL || '/api';
+      const API_BASE_URL = NEXT_PUBLIC_BACKEND_API_URL || "/api";
 
       // Compute final list of userIds that should be members after save
       let finalUserIds: string[] = [];
@@ -218,12 +252,15 @@ export function useGroupManagement(group: Group | null) {
       if (totalOps > 0) setInFlightMemberRequests(totalOps);
 
       // Send idempotent replace request
-      const resp = await fetch(`${API_BASE_URL}/groups/${groupId}/members/batch`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(finalUserIds),
-      });
+      const resp = await fetch(
+        `${API_BASE_URL}/groups/${groupId}/members/batch`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(finalUserIds),
+        }
+      );
 
       if (!resp.ok) {
         const text = await resp.text();
@@ -233,34 +270,49 @@ export function useGroupManagement(group: Group | null) {
       // consume response (final members list)
       await resp.json();
 
+      enqueueSnackbar(t("notifications.membersUpdated"), {
+        variant: "success",
+      });
+
       // clear in-flight counter
       setInFlightMemberRequests(0);
 
       // Invalidate once to refresh authoritative state
-      queryClient.invalidateQueries({ queryKey: ['groups', 'detail', groupId] });
-      queryClient.invalidateQueries({ queryKey: ['groups', 'list'] });
+      queryClient.invalidateQueries({
+        queryKey: ["groups", "detail", groupId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["groups", "list"] });
 
-  // Reset local state and close dialog
-  setMembersToAdd([]);
-  setMembersToRemove([]);
-  // ensure in-flight counter is cleared (defensive)
-  setInFlightMemberRequests(0);
-       // Note: No need to call refetchGroups() here as mutations already invalidate queries
+      // Reset local state and close dialog
+      setMembersToAdd([]);
+      setMembersToRemove([]);
+      // ensure in-flight counter is cleared (defensive)
+      setInFlightMemberRequests(0);
+      // Note: No need to call refetchGroups() here as mutations already invalidate queries
     } catch (error) {
       console.error("Error saving changes:", error);
       // Rollback optimistic batch if we snapshot previous
       try {
         if (previousGroupSnapshot && compareGroup) {
-          queryClient.setQueryData(["groups", "detail", compareGroup.id], previousGroupSnapshot);
+          queryClient.setQueryData(
+            ["groups", "detail", compareGroup.id],
+            previousGroupSnapshot
+          );
         }
         if (previousListSnapshot) {
           queryClient.setQueryData(["groups", "list"], previousListSnapshot);
         }
       } catch (err) {
-        console.error('Error rolling back optimistic update', err);
+        console.error("Error rolling back optimistic update", err);
       }
-  // ensure in-flight counter is cleared on error
-  setInFlightMemberRequests(0);
+      // ensure in-flight counter is cleared on error
+      setInFlightMemberRequests(0);
+      // Show error toast
+      try {
+        enqueueSnackbar(t("notifications.saveFailed"), { variant: "error" });
+      } catch {
+        // ignore toast errors during tests
+      }
     }
   };
 
@@ -290,10 +342,10 @@ export function useGroupManagement(group: Group | null) {
     createGroupMutation,
     addMemberMutation,
     removeMemberMutation,
-  // Internal state
-  isSaving,
-  // Number of in-flight per-member operations
-  pendingMemberOps: inFlightMemberRequests,
+    // Internal state
+    isSaving,
+    // Number of in-flight per-member operations
+    pendingMemberOps: inFlightMemberRequests,
 
     // Helpers
     hasUnsavedChanges,

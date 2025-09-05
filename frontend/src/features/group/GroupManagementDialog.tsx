@@ -179,6 +179,7 @@ export function GroupManagementDialog({
                 </Typography>
                 {!isCreateMode && (
                   <Button
+                    data-testid="group-add-members"
                     variant="contained"
                     startIcon={<PersonAdd />}
                     onClick={handleOpenAddMembersDialog}
@@ -220,6 +221,7 @@ export function GroupManagementDialog({
         <DialogActions>
           <Button onClick={onClose}>{t("buttons.cancel")}</Button>
           <Button
+            data-testid="group-save-all"
             onClick={handleSubmit(handleSaveAllChanges)}
             variant="contained"
             disabled={!hasUnsavedChanges() || isAnyPending}

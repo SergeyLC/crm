@@ -98,6 +98,7 @@ export function GroupsTable() {
                   </TableCell>
                   <TableCell sx={{ pt: 0, pb: 0 }}>
                     <IconButton
+                      data-testid={`group-edit-${group.id}`}
                       onClick={() => openManagementDialog(group)}
                       disabled={!canEditGroups}
                     >
