@@ -1,0 +1,101 @@
+{
+  "table": {
+    "title": "Groups",
+    "column": {
+      "name": "Name",
+      "leader": "Group Leader",
+      "members": "Members",
+      "actions": "Actions"
+    },
+    "action": {
+      "create": "New Group",
+      "edit": "Edit",
+      "delete": "Delete",
+      "addMember": "Add User"
+    },
+    "loading": "Loading groups...",
+    "empty": "No groups found",
+    "headers": {
+      "member": "Member",
+      "email": "Email",
+      "role": "Role",
+      "actions": "Actions"
+    }
+  },
+  "dialog": {
+    "title": {
+      "create": "Create New Group",
+      "edit": "Manage Group: {{name}}"
+    },
+    "unsavedChanges": "Unsaved Changes",
+    "savingOperations": "Saving {{count}} operation(s)...",
+    "addMembers": {
+      "title": "Add Members",
+      "description": "Select one or more users to add to the group"
+    }
+  },
+  "sections": {
+    "groupDetails": "Group Details",
+    "members": "Group Members"
+  },
+  "fields": {
+    "groupName": "Group Name",
+    "groupLeader": "Group Leader"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "createGroup": "Create Group",
+    "saveAllChanges": "Save All Changes",
+    "noChanges": "No Changes",
+    "addMember": "Add Member",
+    "addMembers": "Add Members",
+    "addSelectedMembers_one": "Add 1 Member",
+    "addSelectedMembers_other": "Add {{count}} Members"
+  },
+  "status": {
+    "adding": "Being Added",
+    "removing": "Being Removed"
+  },
+  "roles": {
+    "member": "Member",
+    "leader": "Group Leader"
+  },
+  "tooltips": {
+    "undoAdd": "Undo Addition",
+    "undoRemove": "Undo Removal",
+    "markForRemoval": "Mark for Removal"
+  },
+  "messages": {
+    "noMembers": "No members found",
+    "noMembersAdded": "No members added yet",
+    "addMembersBeforeCreate": "Add members before creating the group",
+    "addMembersToWork": "Add members to start working with the group",
+    "noAvailableUsers": "No available users",
+    "allUsersAreMembers": "All users are already members of this group"
+  },
+  "members": {
+    "table": {
+      "count_one": "member",
+      "count_other": "members"
+    }
+  },
+  "validation": {
+    "nameRequired": "Group name is required",
+    "nameMinLength": "Group name must be at least 2 characters long",
+    "nameMaxLength": "Group name can be maximum 100 characters long",
+    "leaderRequired": "Group leader is required"
+  },
+  "notifications": {
+    "groupCreated": "Group created",
+    "groupUpdated": "Group updated",
+    "groupDeleted": "Group deleted",
+    "membersUpdated": "Group members updated",
+    "saveFailed": "Failed to save changes",
+    "deleteFailed": "Failed to delete group"
+  },
+  "confirmDelete": {
+    "title": "Delete group?",
+    "message": "Are you sure you want to delete the group '{{name}}'? This action cannot be undone.",
+    "confirm": "Delete"
+  }
+}

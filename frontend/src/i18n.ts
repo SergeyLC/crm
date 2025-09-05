@@ -20,6 +20,8 @@ import userDe from "./locales/de/user.json";
 import userEn from "./locales/en/user.json";
 import kanbanDe from "./locales/de/kanban.json";
 import kanbanEn from "./locales/en/kanban.json";
+import groupDe from "./locales/de/group.json";
+import groupEn from "./locales/en/group.json";
 
 const resources = {
   de: {
@@ -32,6 +34,7 @@ const resources = {
     lead: leadDe,
     user: userDe,
     kanban: kanbanDe,
+    group: groupDe,
   },
   en: {
     common: commonEn,
@@ -43,6 +46,7 @@ const resources = {
     lead: leadEn,
     user: userEn,
     kanban: kanbanEn,
+    group: groupEn,
   },
 };
 
@@ -63,9 +67,12 @@ i18n
       "lead",
       "user",
       "kanban",
+      "group",
     ],
     supportedLngs: ["de", "en"],
     load: "languageOnly",
+    preload: ["de", "en"],
+    partialBundledLanguages: true,
 
     interpolation: {
       escapeValue: false,

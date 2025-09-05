@@ -20,6 +20,8 @@ model User {
   createdDeals  Deal[]   @relation("DealsCreatedByUser")
   assignedDeals Deal[]   @relation("DealsAssignedToUser")
   notes         Note[]
+  ledGroups     Group[]  @relation("GroupLeader")
+  groupMemberships GroupMember[] @relation("GroupMembers")
 }
 
 enum UserRole {
@@ -107,4 +109,29 @@ enum AppointmentType {
   CALL
   MEETING
   LUNCH
+}
+
+model Group {
+  id        String   @id @default(uuid())
+  name      String
+  leaderId  String
+  leader    User     @relation("GroupLeader", fields: [leaderId], references: [id])
+  members   GroupMember[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GroupMember {
+  id        String   @id @default(uuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("GroupMembers", fields: [userId], references: [id])
+  joinedAt  DateTime @default(now())
+  role      GroupRole @default(MEMBER)
+}
+
+enum GroupRole {
+  LEADER
+  MEMBER
 }

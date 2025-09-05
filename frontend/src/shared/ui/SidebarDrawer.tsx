@@ -12,18 +12,19 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import PeopleIcon from "@mui/icons-material/People";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { LogoutButton } from "@/features/app/LogoutButton";
 import { useAuth } from "@/features/auth/hooks";
 import { useUserPermissions, userHasPermission } from "@/entities/user";
@@ -54,7 +55,13 @@ const buildMenuItems = (t: (k: string) => string, locale: string) => [
     text: t("nav:users"),
     permissions: UserPermission.CAN_EDIT_USERS,
     href: localePath("/users", locale),
-    icon: <PeopleIcon />,
+  icon: <PersonOutlineIcon />,
+  },
+  {
+    text: "Gruppen",
+    permissions: UserPermission.CAN_VIEW_GROUPS,
+    href: localePath("/groups", locale),
+  icon: <GroupAddIcon />,
   },
 ];
 
@@ -74,11 +81,11 @@ export function SidebarDrawer() {
      setOpen(!open);
    };
 
-  useEffect(() => {
-    console.log(
-      `can UserPermission.CAN_VIEW_USERS: ${userHasPermission(userPermissions, UserPermission.CAN_VIEW_USERS)}  userPermissions ${JSON.stringify(userPermissions)}`
-    );
-  }, [userPermissions]);
+  // useEffect(() => {
+  //   console.log(
+  //     `can UserPermission.CAN_VIEW_USERS: ${userHasPermission(userPermissions, UserPermission.CAN_VIEW_USERS)}  userPermissions ${JSON.stringify(userPermissions)}`
+  //   );
+  // }, [userPermissions]);
 
   const toggleUserMenu = () => {
     setUserMenuOpen(!userMenuOpen);
@@ -185,19 +192,26 @@ export function SidebarDrawer() {
               >
                 <ListItemButton
                   sx={{
-                    justifyContent: "center",
+                    // When collapsed we keep icons centered; when expanded
+                    // align items to the left and add a gap between icon and text.
+                    display: 'flex',
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    alignItems: 'center',
+                    gap: collapsed ? 0 : 1.5,
                     minHeight: 48,
-                    bgcolor: isActive ? "action.selected" : "transparent",
-                    "&:hover": {
-                      bgcolor: isActive ? "action.selected" : "action.hover",
+                    bgcolor: isActive ? 'action.selected' : 'transparent',
+                    '&:hover': {
+                      bgcolor: isActive ? 'action.selected' : 'action.hover',
                     },
                   }}
                 >
                   <ListItemIcon
                     sx={{
                       minWidth: 0,
-                      justifyContent: "center",
-                      color: isActive ? "primary.main" : "inherit",
+                      justifyContent: 'center',
+                      color: isActive ? 'primary.main' : 'inherit',
+                      // Add separation between icon and text when expanded
+                      mr: collapsed ? 0 : 1,
                     }}
                   >
                     {item.icon}

@@ -21,7 +21,10 @@ export type UserPermissionKey =
   | "canViewReports"
   | "canCreateLeads"
   | "canEditLeads"
-  | "canDeleteLeads";
+  | "canDeleteLeads"
+  | "canViewGroups"
+  | "canEditGroups"
+  | "canCreateGroup";
 
 /**
  * Enum for user permissions with string values
@@ -37,6 +40,9 @@ export enum UserPermission {
   CAN_CREATE_LEADS = "canCreateLeads",
   CAN_EDIT_LEADS = "canEditLeads",
   CAN_DELETE_LEADS = "canDeleteLeads",
+  CAN_VIEW_GROUPS = "canViewGroups",
+  CAN_EDIT_GROUPS = "canEditGroups",
+  CAN_CREATE_GROUP = "canCreateGroup",
 }
 
 /**
@@ -63,6 +69,12 @@ export interface UserPermissions {
   canEditLeads: boolean;
   /** Can delete leads */
   canDeleteLeads: boolean;
+  /** Can view groups */
+  canViewGroups: boolean;
+  /** Can edit groups */
+  canEditGroups: boolean;
+  /** Can create new groups */
+  canCreateGroup: boolean;
   /** Current user's role */
   role: UserRole | null;
   /** Whether user is admin */
