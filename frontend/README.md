@@ -38,3 +38,26 @@ Guidelines:
 - Do NOT reintroduce a `pages/` directory; mixing routers increases bundle size & complexity.
 
 If you ever need to add legacy pages (not recommended), ensure a proper `_app.tsx` is defined—otherwise keep relying solely on the App Router.
+
+### Component-local locales
+
+You can colocate small i18n JSON files next to a component or feature instead of editing the central `src/locales` directory.
+
+- Place locale files under a `locales/` folder next to the component, for example:
+	- `src/features/group/ui/locales/en.json`
+	- `src/features/group/ui/locales/de.json`
+
+- During development and CI the repository runs a small collector script that discovers these folders and generates a consolidated TypeScript module at `src/locales/generated_i18n.ts`.
+
+- The collector script is available at `scripts/collect-locales.js` and is wired into `predev`/`prebuild` so it runs automatically before `next dev` / `next build`.
+
+- The generated module exports:
+	- `default` — a language → namespace → payload object used by the app at runtime
+	- `generatedNS` — an ordered list of namespaces discovered by the collector
+
+- At app initialization `src/i18n.ts` imports the generated payloads and deep-merges them into the central `resources` object. Deep merge is used so component-local JSON can add or override only specific nested keys without clobbering existing entries from central locale files.
+
+Notes & recommendations:
+- Prefer small, component-scoped JSONs for UI text that belongs to a single feature.
+- If a key exists both in the central `src/locales/*` file and in a component-local file, the collector + deep-merge strategy preserves nested keys (component entries merge into the namespace). If you want a different override priority, update `scripts/collect-locales.js` to change merge order.
+- Generated files (e.g. `src/locales/generated_i18n.ts`) are committed by the collector during local dev for convenience; CI also runs the collector to ensure the file is present on build agents.
