@@ -31,6 +31,7 @@ import { GroupManagementDialog } from './GroupManagementDialog';
 
 export function GroupsTable() {
   const { t, ready } = useTranslation('group');
+  // ...existing code...
   const [managementDialogOpen, setManagementDialogOpen] = useState(false);
   const [selectedGroupForManagement, setSelectedGroupForManagement] = useState<Group | null>(null);
 

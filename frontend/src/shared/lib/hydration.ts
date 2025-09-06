@@ -7,18 +7,21 @@ const HYDRATE = "__NEXT_REDUX_WRAPPER_HYDRATE__";
  * Creates a hydrated RTK Query API for Next.js SSR
  * This provides proper SSR support without requiring next-redux-wrapper
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createHydratedApi(options: any) {
-  return createApi({
-    ...options,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    extractRehydrationInfo(action: any, { reducerPath }: { reducerPath: string }) {
-      if (action?.type === HYDRATE) {
-        return action.payload?.[reducerPath];
+export function createHydratedApi<T extends Parameters<typeof createApi>[0]>(options: T) {
+  // We build the options object dynamically then cast to unknown to avoid
+  // TypeScript structural mismatch with createApi's complex generic types.
+  const opts = {
+    ...(options as Parameters<typeof createApi>[0]),
+    extractRehydrationInfo(action: unknown, { reducerPath }: { reducerPath: string }) {
+      const act = action as { type?: string; payload?: Record<string, unknown> } | undefined;
+      if (act?.type === HYDRATE) {
+        return act.payload?.[reducerPath];
       }
       return undefined;
     },
-  });
+  };
+
+  return createApi(opts as unknown as Parameters<typeof createApi>[0]);
 }
 
 /**

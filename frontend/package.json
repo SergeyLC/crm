@@ -17,8 +17,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "clean": "rm -rf .next out node_modules/.cache",
-    "predev": "npm run clean && node scripts/ensure-no-legacy-pages.js",
-    "prebuild": "npm run clean && node scripts/ensure-no-legacy-pages.js",
+  "collect-locales": "node scripts/collect-locales.js",
+  "predev": "npm run clean && npm run collect-locales && node scripts/ensure-no-legacy-pages.js",
+  "prebuild": "npm run clean && npm run collect-locales && node scripts/ensure-no-legacy-pages.js",
     "analyze": "ANALYZE=true next build",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"

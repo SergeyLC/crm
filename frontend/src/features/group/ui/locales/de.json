@@ -1,0 +1,25 @@
+{
+  "table": {
+    "headers": {
+      "member": "Mitglied",
+      "email": "E-Mail",
+      "role": "Rolle",
+      "actions": "Aktionen"
+    }
+  },
+  "roles": {
+    "member": "Mitglied",
+    "leader": "Gruppenleiter"
+  },
+  "tooltips": {
+    "undoAdd": "Hinzufügen rückgängig",
+    "undoRemove": "Entfernen rückgängig",
+    "markForRemoval": "Zum Entfernen markieren"
+  },
+  "messages": {
+    "noMembers": "Keine Mitglieder gefunden",
+    "noMembersAdded": "Noch keine Mitglieder hinzugefügt",
+    "addMembersBeforeCreate": "Fügen Sie Mitglieder vor dem Erstellen hinzu",
+    "addMembersToWork": "Fügen Sie Mitglieder hinzu, um mit der Gruppe zu arbeiten"
+  }
+}
