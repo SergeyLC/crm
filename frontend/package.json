@@ -13,6 +13,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
+    "pretype-check": "npm run collect-locales",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

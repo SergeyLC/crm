@@ -66,6 +66,10 @@ jobs:
         run: |
           cd db && npm run generate && cd ..
 
+      - name: Generate i18n files for frontend
+        run: |
+          cd frontend && npm run collect-locales && cd ..
+
       - name: Type check
         run: |
           cd frontend && npm run type-check && cd ..
