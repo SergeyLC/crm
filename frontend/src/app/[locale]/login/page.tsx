@@ -6,12 +6,12 @@ import { Providers } from "@/app/store/Providers";
 import { I18nProvider } from "@/components/I18nProvider";
 
 export default function LoginPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('login');
   return (
     <Providers>
       <I18nProvider>
         <AuthProvider>
-          <Suspense fallback={<div>{t("app:loading")}</div>}>
+          <Suspense fallback={<div>{t("loading")}</div>}>
             <LoginForm />
           </Suspense>
         </AuthProvider>

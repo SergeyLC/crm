@@ -1,9 +1,13 @@
 {
-  "login.title": "Anmeldung bei LoyaCRM",
-  "login.email": "E-Mail-Adresse",
-  "login.password": "Passwort",
-  "login.button": "Anmelden",
-  "login.loading": "Anmeldung läuft...",
-  "logout.button": "Abmelden",
-  "logout.loading": "Abmeldung läuft..."
+  "login": {
+    "title": "Anmeldung bei LoyaCRM",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "button": "Anmelden",
+    "loading": "Anmeldung läuft..."
+  },
+  "logout": {
+    "button": "Abmelden",
+    "loading": "Abmeldung läuft..."
+  }
 }

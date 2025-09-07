@@ -1,8 +1,12 @@
 {
-  "login.email": "Email Address",
-  "login.password": "Password",
-  "login.button": "Login",
-  "login.loading": "Logging in...",
-  "logout.button": "Logout",
-  "logout.loading": "Logging out..."
+  "login": {
+    "email": "Email Address",
+    "password": "Password",
+    "button": "Login",
+    "loading": "Logging in..."
+  },
+  "logout": {
+    "button": "Logout",
+    "loading": "Logging out..."
+  }
 }
