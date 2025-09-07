@@ -1,0 +1,10 @@
+{
+  "boardTitle": "Kanban Tafel",
+  "page": {
+    "addNewDeal": "Neuen Deal hinzufügen",
+    "search": "Suchen",
+    "filter": "Filter",
+    "refresh": "Aktualisieren",
+    "noDeals": "Keine Deals in dieser Spalte"
+  }
+}

@@ -1,2 +1,2 @@
-export * from "./KanbanBoard"
+export * from "./ui/KanbanBoard"
 // export * from "./lib"

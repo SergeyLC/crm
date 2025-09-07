@@ -1,0 +1,14 @@
+{
+  "footer": {
+    "won": "Won",
+    "lost": "Lost",
+    "archived": "Archived"
+  },
+  "stages": {
+    "qualified": "Qualified",
+    "contacted": "Contacted",
+    "demoScheduled": "Demo Scheduled",
+    "proposalSent": "Proposal Sent",
+    "negotiation": "Negotiation"
+  }
+}

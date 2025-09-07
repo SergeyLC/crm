@@ -27,7 +27,7 @@ import {
 } from "@/entities/lead";
 import { ActionMenuItemProps } from "@/features/BaseTable";
 
-import { useEntityDialog } from "@/shared";
+import { useEntityDialog } from "@/shared/lib/hooks";
 
 import {
   buildLeadTableColumns,

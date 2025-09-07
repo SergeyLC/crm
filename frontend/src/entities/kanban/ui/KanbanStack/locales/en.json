@@ -1,0 +1,12 @@
+{
+  "cardCount_one": "{{count}} card",
+  "cardCount_other": "{{count}} cards",
+  "total": "Total",
+  "stages": {
+    "qualified": "Qualified",
+    "contacted": "Contacted",
+    "demoScheduled": "Demo Scheduled",
+    "proposalSent": "Proposal Sent",
+    "negotiation": "Negotiation"
+  }
+}

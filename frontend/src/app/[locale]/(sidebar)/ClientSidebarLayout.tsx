@@ -1,6 +1,6 @@
 "use client";
 import React, { ReactNode, useMemo } from "react";
-import { SidebarDrawer } from "@/shared/ui/SidebarDrawer";
+import { SidebarDrawer } from "@/shared/ui/SidebarDrawer/SidebarDrawer";
 import Box from "@mui/material/Box";
 import { usePathname } from "next/navigation";
 import { SkeletonConfigProvider } from "@/shared/ui/ContentSkeleton";

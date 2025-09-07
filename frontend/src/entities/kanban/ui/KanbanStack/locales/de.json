@@ -1,0 +1,12 @@
+{
+  "cardCount_one": "{{count}} Karte",
+  "cardCount_other": "{{count}} Karten",
+  "total": "Summe",
+  "stages": {
+    "qualified": "Qualifiziert",
+    "contacted": "Kontaktiert",
+    "demoScheduled": "Demo geplant",
+    "proposalSent": "Angebot gesendet",
+    "negotiation": "Verhandlung"
+  }
+}

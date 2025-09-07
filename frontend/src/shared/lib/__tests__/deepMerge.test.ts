@@ -1,4 +1,4 @@
-import deepMergeObjects from '../deepMerge';
+import deepMergeObjects from '../utils/deepMerge';
 
 describe('deepMergeObjects', () => {
   it('merges nested objects without mutating inputs', () => {

@@ -4,6 +4,7 @@ import { NEXT_PUBLIC_API_URL, NEXT_PUBLIC_BACKEND_API_URL } from "../config";
 
 /**
  * Generic SSR fetch utility for authenticated API requests.
+ * For use in Server Components only.
  * @param endpoint API endpoint (e.g. "deals", "leads")
  * @returns Parsed JSON or null on error
  */

@@ -1,0 +1,10 @@
+{
+  "boardTitle": "Kanban Board",
+  "page": {
+    "addNewDeal": "Add New Deal",
+    "search": "Search",
+    "filter": "Filter",
+    "refresh": "Refresh",
+    "noDeals": "No deals in this column"
+  }
+}

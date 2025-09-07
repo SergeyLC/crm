@@ -46,10 +46,6 @@ export const login = async (req: Request, res: Response) => {
     });
 
     // Returning user data and token
-    console.log(
-      "Login successful:",
-      JSON.stringify({ success: true, user, token }, null, 2)
-    );
     return res.status(200).json({
       success: true,
       user: {

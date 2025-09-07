@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import type { ReactNode } from 'react';
-import { QueryProvider } from '@/shared/lib/QueryProvider';
+import { QueryProvider } from '@/shared/lib/query';
 import { SnackbarProvider } from 'notistack';
 
 interface ProvidersProps { children: ReactNode }

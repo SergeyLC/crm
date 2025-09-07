@@ -4,8 +4,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const srcDir = path.join(root, 'src');
-const outDir = path.join(root, 'src', 'locales', 'collected');
-const generatedFile = path.join(root, 'src', 'locales', 'generated_i18n.ts');
+const generatedFile = path.join(root, 'src', 'shared', 'generated', 'i18n', 'generated_i18n.ts');
 
 function ensureDir(p) {
   if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
@@ -31,21 +30,6 @@ function findLocaleFiles(dir, results = []) {
   return results;
 }
 
-function deepMerge(target, source) {
-  for (const key of Object.keys(source)) {
-    if (
-      source[key] && typeof source[key] === 'object' &&
-      !Array.isArray(source[key]) &&
-      target[key] && typeof target[key] === 'object' &&
-      !Array.isArray(target[key])
-    ) {
-      deepMerge(target[key], source[key]);
-    } else {
-      target[key] = source[key];
-    }
-  }
-}
-
 function inferNamespace(filePath) {
   // Determine namespace based on file name and location.
   // If filename is a language file (e.g. en.json), infer namespace from ancestor feature/shared folder.
@@ -53,13 +37,36 @@ function inferNamespace(filePath) {
   const parts = filePath.split(path.sep);
   const langFileMatch = /^[a-z]{2}(?:-[A-Z]{2})?\.json$/;
   if (langFileMatch.test(filename)) {
-    const idx = parts.indexOf('features');
-    if (idx >= 0 && parts.length > idx + 1) return parts[idx + 1];
-    // otherwise use the parent folder of the 'locales' dir
-    const dir = path.dirname(filePath); // .../locales
-    const maybe = path.basename(path.dirname(dir)); // parent of locales
-    return maybe || 'shared';
+    // Get index of the locales directory
+    const localesIdx = parts.indexOf('locales');
+    if (localesIdx >= 0) {
+      // For FSD segments (ui, model, api, lib), use the parent component name
+      // Example: /features/app/ui/UserMenu/locales/en.json -> namespace should be UserMenu
+      const segments = ['ui', 'model', 'api', 'lib'];
+      const segmentIdx = parts.findIndex(part => segments.includes(part));
+      
+      if (segmentIdx >= 0 && segmentIdx + 1 < localesIdx) {
+        // Return the directory name after the segment (ui/UserMenu -> UserMenu)
+        return parts[segmentIdx + 1];
+      }
+      
+      // Check for features directory
+      const featuresIdx = parts.indexOf('features');
+      if (featuresIdx >= 0 && parts.length > featuresIdx + 1) return parts[featuresIdx + 1];
+      
+      // Check for entities directory
+      const entitiesIdx = parts.indexOf('entities');
+      if (entitiesIdx >= 0 && parts.length > entitiesIdx + 1) return parts[entitiesIdx + 1];
+      
+      // otherwise use the parent folder of the 'locales' dir
+      const dir = path.dirname(filePath); // .../locales
+      const maybe = path.basename(path.dirname(dir)); // parent of locales
+      return maybe || 'shared';
+    }
   }
+
+  // If filename itself encodes the namespace (e.g. group.json), use that.
+  return path.basename(filePath, '.json');
 
   // If filename itself encodes the namespace (e.g. group.json), use that.
   return path.basename(filePath, '.json');
@@ -72,8 +79,11 @@ function run() {
     console.log('No component-local locale files found.');
     return;
   }
+  console.log(`Found ${files.length} locale files.`);
   // Prepare structure: lang -> ns -> [filePaths]
   const map = {};
+  const nsPathMap = {}; // Mapping of namespaces to the paths they were created from
+
   for (const file of files) {
     try {
       const lang = path.basename(file, '.json');
@@ -81,8 +91,25 @@ function run() {
       map[lang] = map[lang] || {};
       map[lang][ns] = map[lang][ns] || [];
       map[lang][ns].push(file);
+      
+      // Добавляем информацию о пути в nsPathMap
+      nsPathMap[ns] = nsPathMap[ns] || [];
+      if (!nsPathMap[ns].includes(file)) {
+        nsPathMap[ns].push(file);
+      }
     } catch (err) {
       console.error('Failed to process', file, err.message);
+    }
+  }
+
+  // Output namespace to path mapping
+  console.log('\nNamespace to path mapping:');
+  for (const ns of Object.keys(nsPathMap).sort()) {
+    console.log(`\nNamespace: "${ns}"`);
+    for (const file of nsPathMap[ns]) {
+      // Show relative path for better readability
+      const relativePath = path.relative(root, file);
+      console.log(`  - ${relativePath}`);
     }
   }
 
@@ -104,7 +131,8 @@ function run() {
       const varNames = [];
       for (const f of list) {
         importIndex += 1;
-        const rel = './' + path.relative(path.join(root, 'src', 'locales'), f).replace(/\\/g, '/');
+        // Use absolute paths with @/ alias instead of relative
+        const rel = '@/' + path.relative(path.join(root, 'src'), f).replace(/\\/g, '/');
         const v = safeVar(`${ns}_${lang}_${importIndex}`);
         imports.push(`import ${v} from '${rel}';`);
         varNames.push(v);
@@ -156,7 +184,11 @@ function run() {
   out += `export const generatedNS = ${JSON.stringify(finalNs, null, 2)};\n`;
 
   fs.writeFileSync(generatedFile, out, 'utf8');
-  console.log(`Wrote ${path.relative(root, generatedFile)}`);
+  console.log(`\nWrote ${path.relative(root, generatedFile)}`);
+
+  // Output summary information about the generated namespaces
+  console.log('\nGenerated namespaces:');
+  console.log(finalNs.map(ns => `  - ${ns}`).join('\n'));
 }
 
 run();

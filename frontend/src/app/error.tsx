@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect } from 'react';
-import '@/i18n';
+import '@/shared/lib/i18n/client';
 import { useTranslation } from 'react-i18next';
 
 // Global error boundary for root (outside locale segment). For errors inside [locale], Next will still surface this.

@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import '@/i18n';
+import '@/shared/lib/i18n/client';
 import { useTranslation } from 'react-i18next';
 
 export default function NotFound() {

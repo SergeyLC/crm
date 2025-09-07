@@ -2,7 +2,7 @@
 
 import { DealExt, CreateDealDTO, UpdateDealDTO } from "@/entities/deal/model/types";
 import { useGetDealByIdQuery } from "@/entities/deal/api-tanstack";
-import { BaseUpsertForm, BaseUpsertFormProps } from "@/features/entityUpsert";
+import { BaseUpsertForm, BaseUpsertFormProps } from "@/features/form";
 import { useTranslation } from 'react-i18next';
 
 type DealFormProps = BaseUpsertFormProps<

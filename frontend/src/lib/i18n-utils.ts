@@ -1,4 +1,4 @@
-import i18n from '../i18n';
+import i18n from '@/shared/lib/i18n/server';
 
 /**
  * Initialize i18n with the correct language for server-side rendering

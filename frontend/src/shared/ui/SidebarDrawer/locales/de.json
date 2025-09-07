@@ -2,11 +2,12 @@
   "leads": "Leads",
   "deals": "Verkäufe",
   "users": "Benutzer",
+  "groups": "Gruppen",
   "archivedDeals": "Archivierte Verkäufe",
   "profile": "Profil",
   "settings": "Einstellungen",
   "adminPanel": "Admin-Panel",
-  "administrator": "Administrator",
+  "admin": "Administrator",
   "employee": "Mitarbeiter",
   "companyName": "Loya Care"
 }

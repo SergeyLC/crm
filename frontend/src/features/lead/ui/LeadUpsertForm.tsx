@@ -9,7 +9,7 @@ import { useGetLeadByIdQuery } from "@/entities/lead/api-tanstack";
 import {
   BaseUpsertForm,
   BaseUpsertFormProps,
-} from "@/features/entityUpsert";
+} from "@/features/form";
 import { useTranslation } from "react-i18next";
 
 type LeadFormProps = BaseUpsertFormProps<
