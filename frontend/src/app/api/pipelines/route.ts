@@ -9,7 +9,7 @@ export async function GET() {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      next: { revalidate: 60 }, // Cache für 60 Sekunden
+      // next: { revalidate: 60 }, // Cache für 60 Sekunden
     });
 
     if (!response.ok) {

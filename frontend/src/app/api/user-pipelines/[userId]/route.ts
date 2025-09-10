@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, { params }: Params) {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        next: { revalidate: 60 },
+       // next: { revalidate: 60 },
       }
     );
 
