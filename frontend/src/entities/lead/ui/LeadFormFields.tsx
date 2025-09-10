@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { TextField, Button, Stack } from "@mui/material";
-import { LeadExt, CreateLeadDTO, UpdateLeadDTO } from "@/entities/lead/types";
-import { useGetLeadByIdQuery } from "@/entities/lead/api-tanstack";
+import { LeadExt, CreateLeadDTO, UpdateLeadDTO } from "@/entities/lead";
+import { useGetLeadByIdQuery } from "@/entities/lead/";
 
 type LeadFormProps = {
   initialData?: LeadExt;

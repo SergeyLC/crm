@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import { useTranslation } from 'react-i18next';
-import { DealExt } from "@/entities/deal/model/types";
-import { useGetDealsQuery } from "@/entities/deal/api-tanstack";
-import { formatDate } from "@/shared/lib/formatDate";
+import { useGetDealsQuery, DealExt } from "@/entities/deal";
+import { formatDate } from "@/shared/lib";
 
 export const DealsList = ({
   initialDeals,
@@ -16,9 +14,9 @@ export const DealsList = ({
   );
   const { t } = useTranslation('deal');
 
-  useEffect(() => {
-    console.log("Deals uploaded:", deals);
-  }, [deals]);
+  // useEffect(() => {
+  //   console.log("Deals uploaded:", deals);
+  // }, [deals]);
 
   return (
     <>

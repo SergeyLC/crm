@@ -9,30 +9,20 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  name          String
-  role          UserRole     @default(EMPLOYEE)
-  status        UserStatus @default(ACTIVE)
-  password      String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  createdDeals  Deal[]   @relation("DealsCreatedByUser")
-  assignedDeals Deal[]   @relation("DealsAssignedToUser")
-  notes         Note[]
-  ledGroups     Group[]  @relation("GroupLeader")
-  groupMemberships GroupMember[] @relation("GroupMembers")
-}
-
-enum UserRole {
-  ADMIN
-  EMPLOYEE
-}
-
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-  BLOCKED
+  id               String         @id @default(uuid())
+  email            String         @unique
+  name             String
+  role             UserRole       @default(EMPLOYEE)
+  status           UserStatus     @default(ACTIVE)
+  password         String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  assignedDeals    Deal[]         @relation("DealsAssignedToUser")
+  createdDeals     Deal[]         @relation("DealsCreatedByUser")
+  ledGroups        Group[]        @relation("GroupLeader")
+  groupMemberships GroupMember[]  @relation("GroupMembers")
+  notes            Note[]
+  pipelines        PipelineUser[]
 }
 
 model Contact {
@@ -47,26 +37,108 @@ model Contact {
 }
 
 model Deal {
-  id        String  @id @default(uuid())
-  title     String?
-  contactId String
-  contact   Contact @relation(fields: [contactId], references: [id])
-
-  creatorId  String
-  creator    User    @relation("DealsCreatedByUser", fields: [creatorId], references: [id])
-  assigneeId String?
-  assignee   User?   @relation("DealsAssignedToUser", fields: [assigneeId], references: [id])
-
+  id              String        @id @default(uuid())
+  title           String?
+  contactId       String
+  creatorId       String
+  assigneeId      String?
   productInterest String?
   potentialValue  Float?
-  status          DealStatus @default(ACTIVE)
-  stage           DealStage  @default(LEAD)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  status          DealStatus    @default(ACTIVE)
+  stage           DealStage     @default(LEAD)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   archivedAt      DateTime?
+  appointments    Appointment[]
+  assignee        User?         @relation("DealsAssignedToUser", fields: [assigneeId], references: [id])
+  contact         Contact       @relation(fields: [contactId], references: [id])
+  creator         User          @relation("DealsCreatedByUser", fields: [creatorId], references: [id])
+  notes           Note[]
+}
 
-  notes        Note[]
-  appointments Appointment[]
+model Note {
+  id        String   @id @default(uuid())
+  creatorId String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  dealId    String
+  creator   User     @relation(fields: [creatorId], references: [id])
+  deal      Deal     @relation(fields: [dealId], references: [id])
+}
+
+model Appointment {
+  id       String           @id @default(uuid())
+  datetime DateTime
+  type     AppointmentType?
+  note     String?
+  dealId   String
+  deal     Deal             @relation(fields: [dealId], references: [id])
+}
+
+model Group {
+  id          String          @id @default(uuid())
+  name        String
+  leaderId    String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  description String?
+  leader      User            @relation("GroupLeader", fields: [leaderId], references: [id])
+  members     GroupMember[]
+  pipelines   PipelineGroup[]
+}
+
+model GroupMember {
+  id       String    @id @default(uuid())
+  groupId  String
+  userId   String
+  joinedAt DateTime  @default(now())
+  role     GroupRole @default(MEMBER)
+  group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User      @relation("GroupMembers", fields: [userId], references: [id])
+}
+
+model Pipeline {
+  id          String          @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  groups      PipelineGroup[]
+  users       PipelineUser[]
+}
+
+model PipelineUser {
+  id         String   @id @default(uuid())
+  pipelineId String
+  userId     String
+  createdAt  DateTime @default(now())
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([pipelineId, userId])
+}
+
+model PipelineGroup {
+  id         String   @id @default(uuid())
+  pipelineId String
+  groupId    String
+  createdAt  DateTime @default(now())
+  group      Group    @relation(fields: [groupId], references: [id])
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id])
+
+  @@unique([pipelineId, groupId])
+}
+
+enum UserRole {
+  ADMIN
+  EMPLOYEE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
 }
 
 enum DealStage {
@@ -85,50 +157,10 @@ enum DealStatus {
   ARCHIVED
 }
 
-model Note {
-  id        String   @id @default(uuid())
-  creatorId String
-  creator   User     @relation(fields: [creatorId], references: [id])
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  dealId    String
-  deal      Deal     @relation(fields: [dealId], references: [id])
-}
-
-model Appointment {
-  id       String           @id @default(uuid())
-  datetime DateTime
-  type     AppointmentType?
-  note     String?
-  dealId   String
-  deal     Deal             @relation(fields: [dealId], references: [id])
-}
-
 enum AppointmentType {
   CALL
   MEETING
   LUNCH
-}
-
-model Group {
-  id        String   @id @default(uuid())
-  name      String
-  leaderId  String
-  leader    User     @relation("GroupLeader", fields: [leaderId], references: [id])
-  members   GroupMember[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model GroupMember {
-  id        String   @id @default(uuid())
-  groupId   String
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation("GroupMembers", fields: [userId], references: [id])
-  joinedAt  DateTime @default(now())
-  role      GroupRole @default(MEMBER)
 }
 
 enum GroupRole {

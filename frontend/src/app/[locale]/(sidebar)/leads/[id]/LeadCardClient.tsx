@@ -1,10 +1,10 @@
 "use client";
 import { LeadCard } from "@/entities/lead/ui/LeadCard";
 import { useTranslation } from "react-i18next";
-import { useGetLeadByIdQuery } from "@/entities/lead/api-tanstack";
-import { LeadExt } from "@/entities/lead/types";
+import { useGetLeadByIdQuery } from "@/entities/lead";
+import { LeadExt } from "@/entities/lead";
 
-type Props = { id: string; initialLeadData: LeadExt | null };
+type Props = { id: string; initialLeadData?: LeadExt | null };
 export default function LeadCardClient({ id, initialLeadData }: Props) {
   const skipFetch = Boolean(initialLeadData);
   const {

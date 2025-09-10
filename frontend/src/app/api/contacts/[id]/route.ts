@@ -13,6 +13,7 @@ export async function GET(
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -44,6 +45,7 @@ export async function PUT(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -72,6 +74,7 @@ export async function DELETE(
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: "include",
     });
 
     if (!response.ok) {

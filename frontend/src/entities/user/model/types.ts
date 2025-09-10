@@ -2,23 +2,23 @@ import {
   User as PrismaUser,
   UserRole,
   UserStatus,
-} from "@/shared/generated/prisma-client";
+} from "@/shared/generated/prisma";
 
-// Тип для фильтрации пользователей по статусу
+// Type for filtering users by status
 export type UserStatusFilter = UserStatus | 'ALL';
 
-// Экспортируем enum'ы
+// Exporting enums
 export { UserRole, UserStatus };
 
-// Базовый тип пользователя
+// Base user type
 export type User = PrismaUser;
 
-// Расширенный тип пользователя с дополнительными полями
+// Extended user type with additional fields
 export interface UserExt extends User {
   createdByUser?: User | null;
 }
 
-// DTO для создания пользователя
+// DTO for creating a user
 export interface CreateUserDTO {
   name: string;
   email: string;
@@ -28,7 +28,7 @@ export interface CreateUserDTO {
   createdById?: string;
 }
 
-// DTO для обновления пользователя
+// DTO for updating a user
 export interface UpdateUserDTO {
   name?: string;
   email?: string;
@@ -37,5 +37,5 @@ export interface UpdateUserDTO {
   status?: UserStatus;
 }
 
-// Тип для ответа с пользователями
+// Type for user response
 export type UsersResponse = UserExt[];

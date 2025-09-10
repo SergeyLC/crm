@@ -39,7 +39,7 @@
     "**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts"
-, "src/features/sideMenu/AppBar/AppBar.tsx.bak"  ],
+ ],
   "exclude": [
     "node_modules",
     ".next"

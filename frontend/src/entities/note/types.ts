@@ -1,7 +1,7 @@
 import {
   Prisma,
   Note,
-} from "@/shared/generated/prisma-client";
+} from "@/shared/generated/prisma";
 
 
 type NoteExt = Prisma.NoteGetPayload<{

@@ -3,7 +3,7 @@ import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared";
 
 export async function GET(req: NextRequest) {
   try {
-    // Получаем токен из заголовка запроса
+    // Receiving token from request header
     const authHeader = req.headers.get("Authorization");
     
     if (!authHeader) {
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Отправляем запрос к вашему бэкенд API
+    // Sending request to your backend API
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/auth/me`, {
       headers: {
         Authorization: authHeader,

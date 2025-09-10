@@ -3,6 +3,7 @@ import React from 'react';
 import type { ReactNode } from 'react';
 import { QueryProvider } from '@/shared/lib/query';
 import { SnackbarProvider } from 'notistack';
+import { DialogProvider } from '@/shared/lib/dialog';
 
 interface ProvidersProps { children: ReactNode }
 
@@ -14,9 +15,11 @@ export function Providers({ children }: ProvidersProps) {
     <QueryProvider>
       <SnackbarProvider
         maxSnack={3}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        {children}
+        <DialogProvider>
+          {children}
+        </DialogProvider>
       </SnackbarProvider>
     </QueryProvider>
   );

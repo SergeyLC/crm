@@ -6,20 +6,12 @@ export async function DELETE(
   { params }: { params: { id: string; userId: string } }
 ) {
   try {
-    const authHeader = req.headers.get("Authorization");
-
-    if (!authHeader) {
-      return NextResponse.json(
-        { message: "Authorization header missing" },
-        { status: 401 }
-      );
-    }
-
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/groups/${params.id}/members/${params.userId}`, {
       method: "DELETE",
       headers: {
-        Authorization: authHeader,
+        "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     if (!response.ok) {

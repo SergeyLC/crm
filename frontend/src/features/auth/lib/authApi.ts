@@ -1,10 +1,10 @@
 // shared/auth/api.ts
 import { User, LoginCredentials } from "../model";
-import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared";
+import { NEXT_PUBLIC_API_URL } from "@/shared";
 
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<{user: User, token: string}> => {
-    const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/auth/login`, {
+    const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -21,7 +21,7 @@ export const authApi = {
   },
   
   getCurrentUser: async (token: string): Promise<User> => {
-    const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/auth/me`, {
+    const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -39,7 +39,7 @@ export const authApi = {
   },
   
   logout: async (token: string): Promise<void> => {
-    await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/auth/logout`, {
+    await fetch(`${NEXT_PUBLIC_API_URL}/api/auth/logout`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

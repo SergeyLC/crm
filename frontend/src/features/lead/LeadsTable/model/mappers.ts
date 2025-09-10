@@ -1,5 +1,5 @@
 import { formatDate } from "@/shared/lib/formatDate";
-import { LeadExt } from "@/entities/lead/types";
+import { LeadExt } from "@/entities/lead/model/types";
 import { LeadTableRowData } from "./types";
 
 export function mapLeadsToLeadRows(leads: LeadExt[]): LeadTableRowData[] {

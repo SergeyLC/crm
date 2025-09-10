@@ -4,8 +4,8 @@ import {
   LeadExt,
   CreateLeadDTO,
   UpdateLeadDTO,
-} from "@/entities/lead/types";
-import { useGetLeadByIdQuery } from "@/entities/lead/api-tanstack";
+  useGetLeadByIdQuery,
+} from "@/entities/lead";
 import {
   BaseUpsertForm,
   BaseUpsertFormProps,

@@ -8,8 +8,8 @@ import {
   useGetLeadByIdQuery,
   useUpdateLeadMutation,
   useCreateLeadMutation,
-} from "@/entities/lead/api-tanstack";
-import type { CreateLeadDTO, UpdateLeadDTO } from "@/entities/lead/types";
+} from "@/entities/lead";
+import type { CreateLeadDTO, UpdateLeadDTO } from "@/entities/lead/model/types";
 
 export function LeadEditDialog({
   id,

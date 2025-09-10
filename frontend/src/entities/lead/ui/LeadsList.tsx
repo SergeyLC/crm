@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { formatDate } from "@/shared/lib/formatDate";
-import { LeadExt } from "@/entities/lead/types";
-import { useGetLeadsQuery } from "@/entities/lead/api-tanstack";
+import { formatDate } from "@/shared/lib";
+import { LeadExt, useGetLeadsQuery } from "@/entities/lead";
 
 import * as React from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -40,9 +38,9 @@ export const LeadsList = ({ initialLeads }: { initialLeads: LeadExt[] }) => {
   const columns = React.useMemo(() => buildColumns(t), [t]);
   const { data: leads = initialLeads, isFetching } = useGetLeadsQuery();
 
-  useEffect(() => {
-    console.log("Leads uploaded:", leads);
-  }, [leads]);
+  // useEffect(() => {
+  //   console.log("Leads uploaded:", leads);
+  // }, [leads]);
 
   // Removed unused onClick function
 

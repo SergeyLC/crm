@@ -6,6 +6,7 @@ export async function GET() {
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/deals/lost`, {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
+      credentials: "include",
     });
 
     if (!res.ok) {

@@ -10,6 +10,7 @@ export async function GET(
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/deals/${id}`, {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -42,6 +43,7 @@ export async function PUT(
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -71,6 +73,7 @@ export async function DELETE(
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/deals/${id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
     });
 
     if (!res.ok) {

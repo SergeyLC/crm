@@ -12,8 +12,8 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["./src/*"],
-      "@/tests/*": ["../tests/*"],
-      "@/generated": ["../generated/*"]
+      "@/tests/*": ["./tests/*"],
+      "@/generated": ["./generated/*"]
     },
     "sourceMap": true,
     "resolveJsonModule": true

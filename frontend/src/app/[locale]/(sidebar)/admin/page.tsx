@@ -1,7 +1,13 @@
-export default function AdminPage() {
+import { ProtectedRoute } from '@/features/auth';
+import { PipelineManagement } from '@/features/pipeline';
+import { Box } from '@mui/material';
+
+export default async function AdminPage() {
   return (
-    <div>
-      <h1>Admin Dashboard</h1>
-    </div>
+    <Box sx={{ p: 3 }}>
+      <ProtectedRoute allowedRoles={["ADMIN"]}>
+        <PipelineManagement />
+      </ProtectedRoute>
+    </Box>
   );
 }

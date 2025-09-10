@@ -1,7 +1,7 @@
 import {
   Prisma,
   Contact,
-} from "@/shared/generated/prisma-client";
+} from "@/shared/generated/prisma";
 
 
 type ContactExt = Prisma.ContactGetPayload<{

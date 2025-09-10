@@ -16,27 +16,7 @@ function ClientAuthProvider({ children }: AuthProviderProps) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   // Check authentication on load
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        dispatch({ type: "AUTH_CHECK_FAILURE" });
-        return;
-      }
-
-      try {
-        dispatch({ type: "AUTH_CHECK_START" });
-        const user = await authApi.getCurrentUser(token);
-        dispatch({ type: "AUTH_CHECK_SUCCESS", payload: { user } });
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        localStorage.removeItem("token");
-        dispatch({ type: "AUTH_CHECK_FAILURE" });
-      }
-    };
-
-    checkAuth();
-  }, []);
+  useEffect(() => { checkAuth(); }, []);
 
   // Function for logging in
   const login = async (credentials: LoginCredentials) => {

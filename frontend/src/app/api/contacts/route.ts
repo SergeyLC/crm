@@ -9,6 +9,7 @@ export async function GET() {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      credentials: "include",
     });
 
     if (!response.ok) {

@@ -7,6 +7,7 @@ import contactRoutes from './contactRoutes';
 import noteRoutes from './noteRoutes';
 import authRouter from "./authRoutes";
 import groupRoutes from './groupRoutes';
+import pipelineRoutes from './pipelineRoutes';
 
 const router = Router();
 
@@ -18,6 +19,7 @@ router.use('/contacts', contactRoutes);
 router.use('/notes', noteRoutes);
 router.use('/auth', authRouter);
 router.use('/groups', groupRoutes);
+router.use('/pipelines', pipelineRoutes);
 
 router.get('/ping', (_req, res) => res.send('pong'));
 

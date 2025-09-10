@@ -39,7 +39,7 @@ import { useTranslation } from "react-i18next";
 import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { useQueryClient } from "@tanstack/react-query";
-import { leadKeys } from "@/entities/lead/api-tanstack";
+import { leadKeys } from "@/entities/lead";
 import { TFunction } from "i18next/typescript/t";
 
 const EditDialog = dynamic(

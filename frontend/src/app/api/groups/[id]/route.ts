@@ -6,19 +6,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authHeader = req.headers.get("Authorization");
-
-    if (!authHeader) {
-      return NextResponse.json(
-        { message: "Authorization header missing" },
-        { status: 401 }
-      );
-    }
-
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/groups/${params.id}`, {
       headers: {
-        Authorization: authHeader,
+        "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     const data = await response.json();
@@ -45,23 +37,14 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authHeader = req.headers.get("Authorization");
-
-    if (!authHeader) {
-      return NextResponse.json(
-        { message: "Authorization header missing" },
-        { status: 401 }
-      );
-    }
-
     const body = await req.json();
 
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/groups/${params.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: authHeader,
       },
+      credentials: "include",
       body: JSON.stringify(body),
     });
 
@@ -89,20 +72,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authHeader = req.headers.get("Authorization");
-
-    if (!authHeader) {
-      return NextResponse.json(
-        { message: "Authorization header missing" },
-        { status: 401 }
-      );
-    }
-
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/groups/${params.id}`, {
       method: "DELETE",
       headers: {
-        Authorization: authHeader,
+        "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     if (!response.ok) {

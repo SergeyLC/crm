@@ -1,6 +1,6 @@
 import {
   User,
-} from "@/shared/generated/prisma-client";
+} from "@/shared/generated/prisma";
 import { UserRole } from "../../features/auth/model/types";
 
 export type { User };

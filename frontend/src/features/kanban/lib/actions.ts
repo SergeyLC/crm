@@ -1,6 +1,6 @@
 import { DealExt, UpdateDealDTO } from "@/entities/deal";
 import { CardsByRestStages, KanbanStackData } from "@/entities/kanban";
-import { DealStage, DealStatus } from "@/shared/generated/prisma-client";
+import { DealStage, DealStatus } from "@/shared/generated/prisma";
 
 /**
  * Find cards that have moved between stacks

@@ -4,4 +4,6 @@
 
 // Note: avoid importing ssrFetch directly in client components,
 // use clientFetch instead if you need the same API shape
-export * from './clientFetch';
+// export { clientFetch } from './clientFetch';
+// export { ssrFetch } from './ssrFetch';
+export { apiRequest } from './apiRequest';

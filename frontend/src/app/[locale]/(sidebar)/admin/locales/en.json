@@ -1,0 +1,10 @@
+{
+  "pipelineAdministration": "Pipeline Administration",
+  "pipelineAdminDescription": "Here you can create and manage pipelines and assign users and groups.",
+  "accessControl": "Access Control",
+  "managePipelines": "Manage Pipelines",
+  "pipelineStatistics": "Pipeline Statistics",
+  "totalPipelines": "Total Pipelines: {count}",
+  "activePipelines": "Active Pipelines: {count}",
+  "pipelineUsers": "Users with Pipeline Access: {count}"
+}

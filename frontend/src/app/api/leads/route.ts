@@ -6,6 +6,7 @@ export async function GET() {
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/leads/`, {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest) {
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/leads/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(body),
     });
 

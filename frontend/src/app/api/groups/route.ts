@@ -3,19 +3,11 @@ import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared";
 
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("Authorization");
-
-    if (!authHeader) {
-      return NextResponse.json(
-        { message: "Authorization header missing" },
-        { status: 401 }
-      );
-    }
-
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/groups`, {
       headers: {
-        Authorization: authHeader,
+        "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     const data = await response.json();
@@ -39,23 +31,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("Authorization");
-
-    if (!authHeader) {
-      return NextResponse.json(
-        { message: "Authorization header missing" },
-        { status: 401 }
-      );
-    }
-
     const body = await req.json();
 
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/groups`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: authHeader,
       },
+      credentials: "include",
       body: JSON.stringify(body),
     });
 

@@ -1,0 +1,10 @@
+{
+  "pipelineAdministration": "Pipeline-Administration",
+  "pipelineAdminDescription": "Hier können Sie Pipelines erstellen und verwalten sowie Benutzer und Gruppen zuweisen.",
+  "accessControl": "Zugriffssteuerung",
+  "managePipelines": "Pipelines verwalten",
+  "pipelineStatistics": "Pipeline-Statistiken",
+  "totalPipelines": "Gesamtzahl der Pipelines: {count}",
+  "activePipelines": "Aktive Pipelines: {count}",
+  "pipelineUsers": "Benutzer mit Pipeline-Zugriff: {count}"
+}

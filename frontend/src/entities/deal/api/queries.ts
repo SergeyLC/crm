@@ -5,8 +5,8 @@ import {
   CreateDealDTO,
   UpdateDealDTO,
   DealStatus,
-  DealStage,
-} from '@/entities/deal/model/types';
+} from "@/entities/deal";
+import { DealStage } from "@/shared/generated/prisma";
 
 // API functions
 const fetchDeals = async (params?: {
@@ -27,6 +27,82 @@ const fetchDeals = async (params?: {
   if (!response.ok) throw new Error('Failed to fetch deals');
   return response.json();
 };
+
+const fetchLostDeals = async (params?: {
+  statuses?: DealStatus[];
+  excludeStatuses?: DealStatus[];
+  stages?: DealStage[];
+  excludeStages?: DealStage[];
+}): Promise<DealExt[]> => {
+  const searchParams = new URLSearchParams();
+  if (params?.statuses) searchParams.set('statuses', params.statuses.join(','));
+  if (params?.excludeStatuses) searchParams.set('excludeStatuses', params.excludeStatuses.join(','));
+  if (params?.stages) searchParams.set('stages', params.stages.join(','));
+  if (params?.excludeStages) searchParams.set('excludeStages', params.excludeStages.join(','));
+
+  const response = await fetch(`/api/deals/lost?${searchParams}`, {
+    credentials: 'include',
+  });
+  if (!response.ok) throw new Error('Failed to fetch lost deals');
+  return response.json();
+};
+
+const fetchArchivedDeals = async (params?: {
+  statuses?: DealStatus[];
+  excludeStatuses?: DealStatus[];
+  stages?: DealStage[];
+  excludeStages?: DealStage[];
+}): Promise<DealExt[]> => {
+  const searchParams = new URLSearchParams();
+  if (params?.statuses) searchParams.set('statuses', params.statuses.join(','));
+  if (params?.excludeStatuses) searchParams.set('excludeStatuses', params.excludeStatuses.join(','));
+  if (params?.stages) searchParams.set('stages', params.stages.join(','));
+  if (params?.excludeStages) searchParams.set('excludeStages', params.excludeStages.join(','));
+
+  const response = await fetch(`/api/deals/archived?${searchParams}`, {
+    credentials: 'include',
+  });
+  if (!response.ok) throw new Error('Failed to fetch archived deals');
+  return response.json();
+};
+
+const fetchWonDeals = async (params?: {
+  statuses?: DealStatus[];
+  excludeStatuses?: DealStatus[];
+  stages?: DealStage[];
+  excludeStages?: DealStage[];
+}): Promise<DealExt[]> => {
+  const searchParams = new URLSearchParams();
+  if (params?.statuses) searchParams.set('statuses', params.statuses.join(','));
+  if (params?.excludeStatuses) searchParams.set('excludeStatuses', params.excludeStatuses.join(','));
+  if (params?.stages) searchParams.set('stages', params.stages.join(','));
+  if (params?.excludeStages) searchParams.set('excludeStages', params.excludeStages.join(','));
+
+  const response = await fetch(`/api/deals/won?${searchParams}`, {
+    credentials: 'include',
+  });
+  if (!response.ok) throw new Error('Failed to fetch won deals');
+  return response.json();
+};
+
+// const fetchActiveDeals = async (params?: {
+//   statuses?: DealStatus[];
+//   excludeStatuses?: DealStatus[];
+//   stages?: DealStage[];
+//   excludeStages?: DealStage[];
+// }): Promise<DealExt[]> => {
+//   const searchParams = new URLSearchParams();
+//   if (params?.statuses) searchParams.set('statuses', params.statuses.join(','));
+//   if (params?.excludeStatuses) searchParams.set('excludeStatuses', params.excludeStatuses.join(','));
+//   if (params?.stages) searchParams.set('stages', params.stages.join(','));
+//   if (params?.excludeStages) searchParams.set('excludeStages', params.excludeStages.join(','));
+
+//   const response = await fetch(`/api/deals/active?${searchParams}`, {
+//     credentials: 'include',
+//   });
+//   if (!response.ok) throw new Error('Failed to fetch active deals');
+//   return response.json();
+// };
 
 const fetchDealById = async (id: string): Promise<DealExt> => {
   const response = await fetch(`/api/deals/${id}`, {
@@ -80,16 +156,73 @@ export const dealKeys = {
   detail: (id: string) => [...dealKeys.details(), id] as const,
 };
 
-// Hooks
+export const useGetActiveDealsQuery = (params?: {
+  statuses?: DealStatus[];
+  excludeStatuses?: DealStatus[];
+  stages?: DealStage[];
+  excludeStages?: DealStage[];
+}, enabled = true) => {
+  return useQuery({
+    queryKey: [...dealKeys.lists(), "active", params],
+    queryFn: () => fetchDeals(params),
+    enabled,
+    staleTime: 0,
+  });
+};
+
 export const useGetDealsQuery = (params?: {
   statuses?: DealStatus[];
   excludeStatuses?: DealStatus[];
   stages?: DealStage[];
   excludeStages?: DealStage[];
-}) => {
+}, enabled = true) => {
   return useQuery({
     queryKey: dealKeys.list(params),
     queryFn: () => fetchDeals(params),
+    enabled,
+    staleTime: 0, // Always consider data stale
+  });
+};
+
+export const useGetLostDealsQuery = (params?: {
+  statuses?: DealStatus[];
+  excludeStatuses?: DealStatus[];
+  stages?: DealStage[];
+  excludeStages?: DealStage[];
+}, enabled = true) => {
+  return useQuery({
+    queryKey: [...dealKeys.lists(), 'lost', params],
+    queryFn: () => fetchLostDeals(params),
+    enabled,
+    staleTime: 0,
+  });
+};
+
+export const useGetArchivedDealsQuery = (params?: {
+  statuses?: DealStatus[];
+  excludeStatuses?: DealStatus[];
+  stages?: DealStage[];
+  excludeStages?: DealStage[];
+}, enabled = true) => {
+  return useQuery({
+    queryKey: [...dealKeys.lists(), 'archived', params],
+    queryFn: () => fetchArchivedDeals(params),
+    enabled,
+    staleTime: 0,
+  });
+};
+
+export const useGetWonDealsQuery = (params?: {
+  statuses?: DealStatus[];
+  excludeStatuses?: DealStatus[];
+  stages?: DealStage[];
+  excludeStages?: DealStage[];
+}, enabled = true) => {
+  return useQuery({
+    queryKey: [...dealKeys.lists(), 'won', params],
+    queryFn: () => fetchWonDeals(params),
+    enabled,
+    staleTime: 0,
   });
 };
 
@@ -98,7 +231,18 @@ export const useGetDealByIdQuery = (id: string) => {
     queryKey: dealKeys.detail(id),
     queryFn: () => fetchDealById(id),
     enabled: !!id,
+    staleTime: 0,
   });
+};
+
+export const useLazyGetDealByIdQuery = () => {
+  const queryClient = useQueryClient();
+  return (id: string) => {
+    return queryClient.fetchQuery({
+      queryKey: dealKeys.detail(id),
+      queryFn: () => fetchDealById(id),
+    });
+  };
 };
 
 export const useCreateDealMutation = () => {

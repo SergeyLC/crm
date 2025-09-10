@@ -16,7 +16,7 @@ import {
   useLazyGetDealByIdQuery,
   useUpdateDealMutation,
 } from "@/entities/deal";
-import { DealStage, DealStatus } from "@/shared/generated/prisma-client";
+import { DealStage, DealStatus } from "@/shared/generated/prisma";
 import { prepareStacks, moveCardToStage, processKanbanChanges } from "../lib";
 import { useTranslation } from "react-i18next";
 
@@ -105,7 +105,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
       const updatedData = updateData(deal);
       const preparedUpdate = sanitizeDealData(updatedData);
-      console.log("Updating deal", id, preparedUpdate);
+      // console.log("Updating deal", id, preparedUpdate);
 
       const body: UpdateDealDTO = {
         ...preparedUpdate,

@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { LeadCardType } from "@/entities/lead/types";
+import { LeadCardType } from "@/entities/lead/model/types";
 import { formatDate } from "@/shared/lib/formatDate";
 
 type LeadCardProps = {

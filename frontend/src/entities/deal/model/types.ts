@@ -3,7 +3,7 @@ import {
   Deal,
   DealStatus,
   DealStage,
-} from "@/shared/generated/prisma-client";
+} from "@/shared/generated/prisma";
 
 type DealWithCreatorContact = Prisma.DealGetPayload<{
   include: { creator: true; contact: true; appointments: true; assignee: true };

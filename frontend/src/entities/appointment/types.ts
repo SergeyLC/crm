@@ -2,7 +2,7 @@ import {
   Prisma,
   Appointment,
   AppointmentType,
-} from "@/shared/generated/prisma-client";
+} from "@/shared/generated/prisma";
 
 type AppointmentExt = Prisma.AppointmentGetPayload<{
   include: { deal: true };

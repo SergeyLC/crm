@@ -1,6 +1,6 @@
 import { DealExt } from "@/entities/deal";
 import { KanbanStackData } from "@/entities/kanban";
-import { DealStage } from "@/shared/generated/prisma-client";
+import { DealStage } from "@/shared/generated/prisma";
 import { TFunction } from "i18next";
 
 const stacksBaseInfo: { id: DealStage; key: string }[] = [

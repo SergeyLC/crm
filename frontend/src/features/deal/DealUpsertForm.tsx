@@ -1,7 +1,7 @@
 "use client";
 
-import { DealExt, CreateDealDTO, UpdateDealDTO } from "@/entities/deal/model/types";
-import { useGetDealByIdQuery } from "@/entities/deal/api-tanstack";
+import { DealExt, CreateDealDTO, UpdateDealDTO } from "@/entities/deal";
+import { useGetDealByIdQuery } from "@/entities/deal";
 import { BaseUpsertForm, BaseUpsertFormProps } from "@/features/form";
 import { useTranslation } from 'react-i18next';
 

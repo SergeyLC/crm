@@ -6,6 +6,7 @@ export async function GET() {
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/deals/`, {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      credentials: "include",
     });
 
     if (!res.ok) {

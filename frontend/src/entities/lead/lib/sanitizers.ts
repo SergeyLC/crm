@@ -1,4 +1,4 @@
-import { UpdateLeadDTO } from "./types";
+import { UpdateLeadDTO } from "../model/types";
 
 export const sanitizeLeadData = (lead: UpdateLeadDTO) => ({
   ...lead,

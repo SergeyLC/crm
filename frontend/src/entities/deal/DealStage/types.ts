@@ -1,6 +1,6 @@
 import {
   DealStage,
-} from "@/shared/generated/prisma-client";
+} from "@/shared/generated/prisma";
 
 export type EnumDealStage = Omit<DealStage, "LEAD" | "WON" | "LOST">;
 

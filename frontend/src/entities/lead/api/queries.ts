@@ -5,7 +5,7 @@ import {
   LeadExt,
   CreateLeadDTO,
   UpdateLeadDTO,
-} from "@/entities/lead/types";
+} from "@/entities/lead";
 
 const API_BASE_URL = NEXT_PUBLIC_BACKEND_API_URL || '/api';
 
