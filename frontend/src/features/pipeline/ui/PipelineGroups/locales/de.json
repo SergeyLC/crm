@@ -1,0 +1,13 @@
+{
+  "groups": "Gruppen",
+  "addGroups": "Gruppen hinzufügen",
+  "name": "Name",
+  "description": "Beschreibung",
+  "actions": "Aktionen",
+  "noGroupsAssigned": "Keine Gruppen zugewiesen",
+  "selectGroupsToAdd": "Gruppen zum Hinzufügen auswählen",
+  "noAvailableGroups": "Keine verfügbaren Gruppen",
+  "cancel": "Abbrechen",
+  "add": "Hinzufügen",
+  "errorAddingGroups": "Fehler beim Hinzufügen von Gruppen"
+}

@@ -1,0 +1,16 @@
+{
+  "loading": "Loading pipelines...",
+  "errorLoading": "Error loading pipelines",
+  "pipelineManagement": "Pipeline Management",
+  "createPipeline": "Create Pipeline",
+  "name": "Name",
+  "description": "Description",
+  "actions": "Actions",
+  "edit": "Edit",
+  "delete": "Delete",
+  "deleteConfirmationTitle": "Delete Pipeline",
+  "deleteConfirmationMessage": "Are you sure you want to delete this pipeline? This action cannot be undone.",
+  "cancel": "Cancel",
+  "confirm": "Delete",
+  "noPipelines": "No pipelines found"
+}

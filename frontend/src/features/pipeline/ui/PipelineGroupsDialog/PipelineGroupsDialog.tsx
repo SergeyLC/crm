@@ -25,7 +25,7 @@ export const PipelineGroupsDialog: React.FC<PipelineGroupsDialogProps> = ({
   pipeline,
   onSuccess
 }) => {
-  const { t } = useTranslation('pipeline');
+  const { t } = useTranslation("PipelineGroupsDialog");
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   
   const { data: allGroups, isLoading, isError } = useAllGroups();

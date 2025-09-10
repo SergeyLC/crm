@@ -1,0 +1,16 @@
+{
+  "loading": "Pipelines werden geladen...",
+  "errorLoading": "Fehler beim Laden der Pipelines",
+  "pipelineManagement": "Pipeline-Verwaltung",
+  "createPipeline": "Pipeline erstellen",
+  "name": "Name",
+  "description": "Beschreibung",
+  "actions": "Aktionen",
+  "edit": "Bearbeiten",
+  "delete": "Löschen",
+  "deleteConfirmationTitle": "Pipeline löschen",
+  "deleteConfirmationMessage": "Sind Sie sicher, dass Sie diese Pipeline löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+  "cancel": "Abbrechen",
+  "confirm": "Löschen",
+  "noPipelines": "Keine Pipelines gefunden"
+}

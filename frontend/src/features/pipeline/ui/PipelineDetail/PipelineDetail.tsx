@@ -44,7 +44,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export const PipelineDetail = () => {
-  const { t } = useTranslation('pipeline');
+  const { t } = useTranslation("PipelineDetail");
   const { id } = useParams();
   const pipelineId = Array.isArray(id) ? id[0] : id || (() => { throw new Error('Pipeline ID is required'); })();
 

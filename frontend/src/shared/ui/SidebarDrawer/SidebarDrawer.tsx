@@ -21,6 +21,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import FilterListIcon from "@mui/icons-material/FilterList";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -55,13 +56,19 @@ const buildMenuItems = (t: (k: string) => string, locale: string) => [
     text: t("users"),
     permissions: UserPermission.CAN_EDIT_USERS,
     href: localePath("/users", locale),
-  icon: <PersonOutlineIcon />,
+    icon: <PersonOutlineIcon />,
   },
   {
     text: t("groups"),
     permissions: UserPermission.CAN_VIEW_GROUPS,
     href: localePath("/groups", locale),
-  icon: <GroupAddIcon />,
+    icon: <GroupAddIcon />,
+  },
+  {
+    text: t("pipelines"),
+    permissions: UserPermission.CAN_EDIT_PIPELINES || UserPermission.CAN_CREATE_PIPELINES,
+    href: localePath("/pipelines", locale),
+    icon: <FilterListIcon />,
   },
 ];
 

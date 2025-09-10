@@ -1,0 +1,11 @@
+{
+  "pipelineName": "Pipeline Name",
+  "description": "Description",
+  "cancel": "Cancel",
+  "update": "Update",
+  "create": "Create",
+  "saveFailed": "Failed to save pipeline",
+  "formTitle": "Pipeline Details",
+  "nameRequired": "Name is required",
+  "saving": "Saving..."
+}

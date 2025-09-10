@@ -5,7 +5,9 @@
       "name": "Name",
       "leader": "Gruppenleiter",
       "members": "Mitglieder",
-      "actions": "Aktionen"
+      "actions": "Aktionen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen"
     },
     "action": {
       "create": "Neue Gruppe",
@@ -95,6 +97,7 @@
   "confirmDelete": {
     "title": "Gruppe löschen?",
     "message": "Möchten Sie die Gruppe '{{name}}' wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
-    "confirm": "Löschen"
+    "confirm": "Löschen",
+    "cancel": "Abbrechen"
   }
 }

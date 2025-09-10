@@ -5,7 +5,9 @@
       "name": "Name",
       "leader": "Group Leader",
       "members": "Members",
-      "actions": "Actions"
+      "actions": "Actions",
+      "delete": "Delete",
+      "edit": "Edit"
     },
     "action": {
       "create": "New Group",
@@ -96,6 +98,7 @@
   "confirmDelete": {
     "title": "Delete group?",
     "message": "Are you sure you want to delete the group '{{name}}'? This action cannot be undone.",
-    "confirm": "Delete"
+    "confirm": "Delete",
+    "cancel": "Cancel"
   }
 }

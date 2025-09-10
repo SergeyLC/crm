@@ -1,0 +1,13 @@
+{
+  "groups": "Groups",
+  "addGroups": "Add Groups",
+  "name": "Name",
+  "description": "Description",
+  "actions": "Actions",
+  "noGroupsAssigned": "No groups assigned",
+  "selectGroupsToAdd": "Select Groups to Add",
+  "noAvailableGroups": "No available groups",
+  "cancel": "Cancel",
+  "add": "Add",
+  "errorAddingGroups": "Error adding groups"
+}

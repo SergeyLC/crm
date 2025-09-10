@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -16,11 +16,11 @@ import {
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { Edit, PersonAdd } from "@mui/icons-material";
-import { GroupManagementDialogProps } from "./types";
+import { GroupFormData, GroupManagementDialogProps } from "./types";
 import { useGroupManagement } from "./hooks/useGroupManagement";
 import { GroupDetailsForm } from "./ui/GroupDetailsForm";
 import { MembersTable } from "./ui/MembersTable";
-import { AddMembersDialog } from "./ui/AddMembersDialog";
+import { SelectUsersDialog } from "@/shared/ui";
 
 export function GroupManagementDialog({
   open,
@@ -30,6 +30,9 @@ export function GroupManagementDialog({
   const { t, ready } = useTranslation("group");
   const [addMembersDialogOpen, setAddMembersDialogOpen] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  
+  // Добавляем состояние для отслеживания успешного создания группы
+  const [groupCreated, setGroupCreated] = useState(false);
 
   const {
     control,
@@ -49,12 +52,10 @@ export function GroupManagementDialog({
     createGroupMutation,
     addMemberMutation,
     removeMemberMutation,
-  isSaving,
-  pendingMemberOps,
+    isSaving,
+    pendingMemberOps,
+    reset, // Добавляем функцию reset из useGroupManagement
   } = useGroupManagement(group);
-
-  // derive isSaving from the hook (includes in-flight per-member ops)
-  // const isSaving = addMemberMutation.isPending || removeMemberMutation.isPending || updateGroupMutation.isPending || createGroupMutation.isPending;
 
   // Event handlers
   const handleRemoveMemberFromQueue = (userId: string) => {
@@ -102,6 +103,39 @@ export function GroupManagementDialog({
     setMembersToRemove((prev) => prev.filter((id) => !newMembersToAdd.includes(id)));
     handleCloseAddMembersDialog();
   };
+  
+  // Модифицируем функцию сохранения, чтобы отслеживать успешное создание группы
+  const handleSaveGroup = async (
+    data: GroupFormData
+  ) => {
+    const result = await handleSaveAllChanges(data);
+
+    // Если мы в режиме создания и операция была успешной
+    if (isCreateMode && result) {
+      setGroupCreated(true);
+    }
+
+    return result;
+  };
+  
+  // Отслеживаем завершение создания группы
+  useEffect(() => {
+    // Если группа была создана успешно
+    if (groupCreated) {
+      // Очищаем форму
+      reset({
+        name: '',
+        leaderId: '',
+      });
+      
+      // Сбрасываем списки членов
+      setMembersToAdd([]);
+      setMembersToRemove([]);
+      
+      // Сбрасываем флаг создания группы
+      setGroupCreated(false);
+    }
+  }, [groupCreated, reset, setMembersToAdd, setMembersToRemove]);
 
   const isCreateMode = !group;
   const isAnyPending =
@@ -222,7 +256,7 @@ export function GroupManagementDialog({
           <Button onClick={onClose}>{t("buttons.cancel")}</Button>
           <Button
             data-testid="group-save-all"
-            onClick={handleSubmit(handleSaveAllChanges)}
+            onClick={handleSubmit(handleSaveGroup)}
             variant="contained"
             disabled={!hasUnsavedChanges() || isAnyPending}
             startIcon={isAnyPending ? <CircularProgress size={16} color="inherit" /> : undefined}
@@ -236,15 +270,20 @@ export function GroupManagementDialog({
         </DialogActions>
       </Dialog>
 
-      <AddMembersDialog
+      <SelectUsersDialog
         open={addMembersDialogOpen}
+        title={t("dialog.addMembers.title")}
+        description={t("dialog.addMembers.description")}
+        confirmButtonText={t("buttons.addSelectedMembers", { count: selectedUsers.length })}
         onClose={handleCloseAddMembersDialog}
         availableUsers={availableUsers}
-        selectedUsers={selectedUsers}
+        selectedUserIds={selectedUsers}
         onToggleUser={handleToggleUserSelection}
         onConfirm={handleConfirmAddMembers}
         isPending={addMemberMutation.isPending}
-  isSaving={isSaving}
+        isSaving={isSaving}
+        emptyListMessage={t("messages.noAvailableUsers")}
+        emptyListSubMessage={t("messages.allUsersAreMembers")}
       />
     </>
   );

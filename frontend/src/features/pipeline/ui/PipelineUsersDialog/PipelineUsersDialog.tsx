@@ -26,7 +26,7 @@ export const PipelineUsersDialog: React.FC<PipelineUsersDialogProps> = ({
   pipeline,
   onSuccess
 }) => {
-  const { t } = useTranslation("pipeline");
+  const { t } = useTranslation("PipelineUsersDialog");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

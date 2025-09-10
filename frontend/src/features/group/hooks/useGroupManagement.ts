@@ -289,6 +289,7 @@ export function useGroupManagement(group: Group | null) {
       // ensure in-flight counter is cleared (defensive)
       setInFlightMemberRequests(0);
       // Note: No need to call refetchGroups() here as mutations already invalidate queries
+      return true;
     } catch (error) {
       console.error("Error saving changes:", error);
       // Rollback optimistic batch if we snapshot previous
@@ -314,6 +315,7 @@ export function useGroupManagement(group: Group | null) {
         // ignore toast errors during tests
       }
     }
+    return false;
   };
 
   return {

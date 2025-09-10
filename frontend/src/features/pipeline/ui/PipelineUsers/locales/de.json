@@ -1,0 +1,15 @@
+{
+  "users": "Benutzer",
+  "addUsers": "Benutzer hinzufügen",
+  "name": "Name",
+  "email": "E-Mail",
+  "actions": "Aktionen",
+  "noUsersAssigned": "Keine Benutzer zugewiesen",
+  "selectUsersToAdd": "Benutzer zum Hinzufügen auswählen",
+  "selectUsersDescription": "Wählen Sie Benutzer aus, die Sie dieser Pipeline hinzufügen möchten",
+  "addSelectedUsers": "{{count}} ausgewählte Benutzer hinzufügen",
+  "addSelectedUsers_one": "1 ausgewählten Benutzer hinzufügen",
+  "addSelectedUsers_other": "{{count}} ausgewählte Benutzer hinzufügen",
+  "noAvailableUsers": "Keine verfügbaren Benutzer",
+  "errorAddingUsers": "Fehler beim Hinzufügen von Benutzern"
+}

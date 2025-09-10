@@ -21,7 +21,7 @@ export const PipelineForm: React.FC<PipelineFormProps> = ({
   onSuccess,
   onCancel 
 }) => {
-  const { t } = useTranslation('pipeline');
+  const { t } = useTranslation("PipelineForm");
   const [name, setName] = useState(pipeline?.name || '');
   const [description, setDescription] = useState(pipeline?.description || '');
   const [isSubmitting, setIsSubmitting] = useState(false);

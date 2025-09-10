@@ -1,3 +1,20 @@
+/**
+ * Group Details Form Component
+ * 
+ * This component renders the form fields for creating or editing group details.
+ * It handles the primary group information including name and group leader.
+ * 
+ * Features:
+ * - Group name input field with validation
+ * - Group leader selection via autocomplete from available users
+ * - Integration with react-hook-form for form state management
+ * - Validation error display
+ * - Material UI components for consistent styling
+ * 
+ * The component receives control and errors from a parent form component
+ * and a list of available users for the leader selection.
+ */
+
 "use client";
 import React from "react";
 import { useTranslation } from "react-i18next";

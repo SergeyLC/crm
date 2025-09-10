@@ -17,6 +17,6 @@ export type { GroupFormData as ValidationGroupFormData } from './validation';
 export { useGroupManagement } from './hooks/useGroupManagement';
 
 // Sub-components
-export { AddMembersDialog } from './ui/AddMembersDialog';
+// export { AddMembersDialog } from './ui/AddMembersDialog';
 export { MembersTable } from './ui/MembersTable';
 export { GroupDetailsForm } from './ui/GroupDetailsForm';

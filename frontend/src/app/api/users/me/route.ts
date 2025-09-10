@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config";
 
 // GET /api/users/me - Aktuellen Benutzer abrufen
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/users/me`, {
       headers: {

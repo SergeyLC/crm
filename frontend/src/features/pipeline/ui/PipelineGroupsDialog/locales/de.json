@@ -1,0 +1,8 @@
+{
+  "selectGroups": "Gruppen auswählen",
+  "save": "Speichern",
+  "loadError": "Fehler beim Laden der Gruppen",
+  "saveError": "Fehler beim Aktualisieren der Pipeline-Gruppen",
+  "noGroupsAvailable": "Keine Gruppen verfügbar",
+  "groupsAssigned": "Gruppen erfolgreich zugewiesen"
+}

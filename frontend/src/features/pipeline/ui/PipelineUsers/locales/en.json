@@ -1,0 +1,15 @@
+{
+  "users": "Users",
+  "addUsers": "Add Users",
+  "name": "Name",
+  "email": "Email",
+  "actions": "Actions",
+  "noUsersAssigned": "No users assigned",
+  "selectUsersToAdd": "Select Users to Add",
+  "selectUsersDescription": "Select users you want to add to this pipeline",
+  "addSelectedUsers": "Add {{count}} Selected Users",
+  "addSelectedUsers_one": "Add 1 Selected User",
+  "addSelectedUsers_other": "Add {{count}} Selected Users",
+  "noAvailableUsers": "No available users",
+  "errorAddingUsers": "Error adding users"
+}

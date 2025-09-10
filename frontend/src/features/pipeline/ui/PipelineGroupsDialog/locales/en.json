@@ -1,0 +1,8 @@
+{
+  "selectGroups": "Select Groups",
+  "save": "Save",
+  "loadError": "Error loading groups",
+  "saveError": "Failed to update pipeline groups",
+  "noGroupsAvailable": "No groups available",
+  "groupsAssigned": "Groups assigned successfully"
+}

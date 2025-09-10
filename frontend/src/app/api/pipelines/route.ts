@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config";
 
 // GET /api/pipelines - Alle Pipelines abrufen
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/pipelines`, {
       headers: {

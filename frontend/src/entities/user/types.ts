@@ -24,7 +24,10 @@ export type UserPermissionKey =
   | "canDeleteLeads"
   | "canViewGroups"
   | "canEditGroups"
-  | "canCreateGroup";
+  | "canCreateGroups"
+  | "canViewPipelines"
+  | "canEditPipelines"
+  | "canCreatePipelines";
 
 /**
  * Enum for user permissions with string values
@@ -42,7 +45,10 @@ export enum UserPermission {
   CAN_DELETE_LEADS = "canDeleteLeads",
   CAN_VIEW_GROUPS = "canViewGroups",
   CAN_EDIT_GROUPS = "canEditGroups",
-  CAN_CREATE_GROUP = "canCreateGroup",
+  CAN_CREATE_GROUPS = "canCreateGroups",
+  CAN_CREATE_PIPELINES = "canCreatePipelines",
+  CAN_EDIT_PIPELINES = "canEditPipelines",
+  CAN_VIEW_PIPELINES = "canViewPipelines",
 }
 
 /**
@@ -74,7 +80,13 @@ export interface UserPermissions {
   /** Can edit groups */
   canEditGroups: boolean;
   /** Can create new groups */
-  canCreateGroup: boolean;
+  canCreateGroups: boolean;
+  /** Can view pipelines */
+  canViewPipelines: boolean;
+  /** Can edit pipelines */
+  canEditPipelines: boolean;
+  /** Can create new pipelines */
+  canCreatePipelines: boolean;
   /** Current user's role */
   role: UserRole | null;
   /** Whether user is admin */

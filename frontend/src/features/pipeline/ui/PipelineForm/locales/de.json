@@ -1,0 +1,11 @@
+{
+  "pipelineName": "Pipeline-Name",
+  "description": "Beschreibung",
+  "cancel": "Abbrechen",
+  "update": "Aktualisieren",
+  "create": "Erstellen",
+  "saveFailed": "Pipeline konnte nicht gespeichert werden",
+  "formTitle": "Pipeline-Details",
+  "nameRequired": "Name ist erforderlich",
+  "saving": "Speichern..."
+}

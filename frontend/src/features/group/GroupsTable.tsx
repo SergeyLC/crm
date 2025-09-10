@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableBody,
@@ -10,34 +10,29 @@ import {
   TableRow,
   Paper,
   Button,
-  IconButton,
   Typography,
   Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-} from '@mui/material';
-import { Add, Delete, Edit } from '@mui/icons-material';
+} from "@mui/material";
+import { Add } from "@mui/icons-material";
 import {
   useGetGroupsQuery,
   useDeleteGroupMutation,
   Group,
-} from '@/entities/group';
-import { useSnackbar } from 'notistack';
-import { useUserPermissions } from '@/entities/user';
-import { GroupManagementDialog } from './GroupManagementDialog';
+} from "@/entities/group";
+import { useSnackbar } from "notistack";
+import { useUserPermissions } from "@/entities/user";
+import { GroupManagementDialog } from "./GroupManagementDialog";
+import { ConfirmDeleteDialog } from "@/shared/ui";
 
 export function GroupsTable() {
-  const { t, ready } = useTranslation('group');
-  // ...existing code...
+  const { t, ready } = useTranslation("group");
   const [managementDialogOpen, setManagementDialogOpen] = useState(false);
-  const [selectedGroupForManagement, setSelectedGroupForManagement] = useState<Group | null>(null);
+  const [selectedGroupForManagement, setSelectedGroupForManagement] =
+    useState<Group | null>(null);
 
   // Queries
   const { data: groups = [], isLoading: groupsLoading } = useGetGroupsQuery();
-  const { canCreateGroup, canEditGroups } = useUserPermissions();
+  const { canCreateGroups } = useUserPermissions();
 
   // Mutations
   const deleteGroupMutation = useDeleteGroupMutation();
@@ -52,36 +47,42 @@ export function GroupsTable() {
       // Prefer the localized success message from translations so the UI
       // matches the selected locale. Backend messages are logged for
       // debugging but not shown raw to the user to avoid English text.
-      const localizedSuccess = t('notifications.groupDeleted');
+      const localizedSuccess = t("notifications.groupDeleted");
       try {
-        enqueueSnackbar(localizedSuccess, { variant: 'success' });
+        enqueueSnackbar(localizedSuccess, { variant: "success" });
       } catch {
         // ignore snackbar errors (e2e/test env)
       }
       // Keep backend message in console for debugging if present
       try {
-        if (result && typeof result === 'object' && 'message' in result) {
-          console.debug('Backend delete message:', (result as Record<string, unknown>).message);
+        if (result && typeof result === "object" && "message" in result) {
+          console.debug(
+            "Backend delete message:",
+            (result as Record<string, unknown>).message
+          );
         }
       } catch {
         // ignore
       }
     } catch (error: unknown) {
-      console.error('Error deleting group:', error);
+      console.error("Error deleting group:", error);
       // Try to show error message from error instance
-      let msg = t('notifications.deleteFailed') || 'Failed to delete group';
+      let msg = t("notifications.deleteFailed") || "Failed to delete group";
       try {
         if (error instanceof Error && error.message) msg = error.message;
       } catch {
         // ignore
       }
-      enqueueSnackbar(msg, { variant: 'error' });
+      enqueueSnackbar(msg, { variant: "error" });
     }
   };
 
   // Confirmation dialog state
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [groupPendingDelete, setGroupPendingDelete] = useState<{ id: string; name: string } | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [groupPendingDelete, setGroupPendingDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const openConfirmDelete = (id: string, name: string) => {
     // If the element that triggered the dialog still has focus, blurring it
@@ -89,7 +90,7 @@ export function GroupsTable() {
     // in that subtree (accessibility violation). Do this safely in browser.
     try {
       const active = document.activeElement as HTMLElement | null;
-      if (active && typeof active.blur === 'function') {
+      if (active && typeof active.blur === "function") {
         active.blur();
       }
     } catch {
@@ -97,18 +98,18 @@ export function GroupsTable() {
     }
 
     setGroupPendingDelete({ id, name });
-    setConfirmDeleteOpen(true);
+    setDeleteDialogOpen(true);
   };
 
-  const closeConfirmDelete = () => {
-    setConfirmDeleteOpen(false);
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
     setGroupPendingDelete(null);
   };
 
-  const confirmDelete = async () => {
+  const handleConfirmDelete = async () => {
     if (!groupPendingDelete) return;
     const id = groupPendingDelete.id;
-    closeConfirmDelete();
+    handleCloseDeleteDialog();
     await handleDelete(id);
   };
 
@@ -116,7 +117,7 @@ export function GroupsTable() {
     // Blur currently focused element to avoid aria-hidden on a focused node
     try {
       const active = document.activeElement as HTMLElement | null;
-      if (active && typeof active.blur === 'function') {
+      if (active && typeof active.blur === "function") {
         active.blur();
       }
     } catch {
@@ -138,7 +139,7 @@ export function GroupsTable() {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 1, pt: 3 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Typography variant="h4">{t("table.title")}</Typography>
         <Box>
@@ -147,7 +148,7 @@ export function GroupsTable() {
             startIcon={<Add />}
             onClick={() => openManagementDialog(null)}
             sx={{ mr: 1 }}
-            disabled={!canCreateGroup}
+            disabled={!canCreateGroups}
           >
             {t("table.action.create")}
           </Button>
@@ -171,24 +172,28 @@ export function GroupsTable() {
               {groups.map((group) => (
                 <TableRow key={group.id} sx={{ p: 0 }}>
                   <TableCell sx={{ pt: 0, pb: 0 }}>{group.name}</TableCell>
-                  <TableCell sx={{ pt: 0, pb: 0 }}>{group.leader.name}</TableCell>
+                  <TableCell sx={{ pt: 0, pb: 0 }}>
+                    {group.leader.name}
+                  </TableCell>
                   <TableCell sx={{ pt: 0, pb: 0 }}>
                     {group.members.length} {t("members.table.count")}
                   </TableCell>
-                  <TableCell sx={{ pt: 0, pb: 0 }}>
-                    <IconButton
-                      data-testid={`group-edit-${group.id}`}
+                  <TableCell sx={{ textAlign: "right" }}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
                       onClick={() => openManagementDialog(group)}
-                      disabled={!canEditGroups}
+                      sx={{ mr: 1 }}
                     >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
+                      {t("table.column.edit")}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
                       onClick={() => openConfirmDelete(group.id, group.name)}
-                      disabled={deleteGroupMutation.isPending || !canEditGroups}
                     >
-                      <Delete />
-                    </IconButton>
+                      {t("table.column.delete")}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -205,20 +210,15 @@ export function GroupsTable() {
       />
 
       {/* Delete confirmation dialog */}
-      <Dialog open={confirmDeleteOpen} onClose={closeConfirmDelete} aria-labelledby="confirm-delete-title">
-        <DialogTitle id="confirm-delete-title">{t('confirmDelete.title')}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {t('confirmDelete.message', { name: groupPendingDelete?.name ?? '' })}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeConfirmDelete}>{t('buttons.cancel')}</Button>
-          <Button color="error" variant="contained" onClick={confirmDelete} disabled={deleteGroupMutation.isPending}>
-            {t('confirmDelete.confirm')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        title={t("confirmDelete.title")}
+        message={t("confirmDelete.message", { "name": groupPendingDelete?.name || '' })}
+        confirmText={t("confirmDelete.confirm")}
+        cancelText={t("confirmDelete.cancel")}
+        onClose={handleCloseDeleteDialog}
+        onConfirm={handleConfirmDelete}
+      />
     </Box>
   );
 }
