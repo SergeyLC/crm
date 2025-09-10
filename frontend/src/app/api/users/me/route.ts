@@ -9,7 +9,7 @@ export async function GET() {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      next: { revalidate: 60 }
+      // next: { revalidate: 60 }
     });
 
     if (!response.ok) {
