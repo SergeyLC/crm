@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import prisma from "../prisma/client";
-import { Note, Appointment } from "generated/prisma";
+import { Note, Appointment } from "@/generated/prisma";
 
-import type { DealStage, DealStatus } from "generated/prisma";
+import type { DealStage, DealStatus } from "@/generated/prisma";
 
 export const shouldAllLinkedDatelsIncluded = {
   contact: true,

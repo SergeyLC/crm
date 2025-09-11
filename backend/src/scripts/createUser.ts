@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import prisma from "../prisma/client";
-import { UserRole } from "generated/prisma";
+import { UserRole } from "@/generated/prisma";
 
 dotenv.config();
 

@@ -13,11 +13,11 @@
     "paths": {
       "@/*": ["./src/*"],
       "@/tests/*": ["./tests/*"],
-      // "@/generated": ["./generated/*"]
+      "@/generated/*": ["./generated/*"]
     },
     "sourceMap": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "generated", "./generated", "**/generated/**"]
+  "include": ["src/**/*", "generated/prisma/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

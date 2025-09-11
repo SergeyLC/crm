@@ -9,7 +9,7 @@ import {
   assignGroupsToPipeline, removeGroupFromPipeline,
   removeGroupsFromPipeline // Neue Controller-Methode importieren
 } from '../controllers/pipelineAssignmentController';
-import { getUserPipelines } from '@/controllers/userPipelineController';
+import { getUserPipelines } from '../controllers/userPipelineController';
 
 const router = Router();
 
