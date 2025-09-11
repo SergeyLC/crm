@@ -5,7 +5,6 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 import { Pipeline, CreatePipelineDTO, User, Group, UpdatePipelineDTO } from "../model/types";
-import { apiRequest } from "@/shared/api/apiRequest";
 import { useCallback } from "react";
 
 // Query Keys für Caching und Invalidierung
@@ -27,89 +26,210 @@ export const pipelineKeys = {
 // Pipeline API-Funktionen
 export const fetchPipelines = async (): Promise<Pipeline[]> => {
     console.log("Fetching pipelines from API:", `$/api/pipelines`);
-  return apiRequest.get("/api/pipelines");
+  const response = await fetch(`/api/pipelines`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch pipelines");
+  }
+  return response.json();
 };
 
 export const fetchPipelineById = async (id: string): Promise<Pipeline> => {
-  return apiRequest.get(`/api/pipelines/${id}`);
+  const response = await fetch(`/api/pipelines/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch pipeline");
+  }
+  return response.json();
 };
 
 export const createPipeline = async (
   data: CreatePipelineDTO
 ): Promise<Pipeline> => {
-  return apiRequest.post("/api/pipelines", data);
+  const response = await fetch("/api/pipelines", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to create pipeline");
+  }
+  return response.json();
 };
 
 export const updatePipeline = async (
   id: string,
   data: Partial<CreatePipelineDTO>
 ): Promise<Pipeline> => {
-  return apiRequest.put(`/api/pipelines/${id}`, data);
+  const response = await fetch(`/api/pipelines/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to update pipeline");
+  }
+  return response.json();
 };
 
 export const deletePipeline = async (id: string): Promise<void> => {
-  return apiRequest.delete(`/api/pipelines/${id}`);
+  const response = await fetch(`/api/pipelines/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to delete pipeline");
+  }
 };
 
 // User/Group Pipeline Zuweisungen
 export const fetchUsers = async (): Promise<User[]> => {
-  return apiRequest.get("/api/users");
+  const response = await fetch("/api/users", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch users");
+  }
+  return response.json();
 };
 
 export const fetchGroups = async (): Promise<Group[]> => {
-  return apiRequest.get("/api/groups");
+  const response = await fetch("/api/groups", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch groups");
+  }
+  return response.json();
 };
 
 export const assignUsersToPipeline = async (
   pipelineId: string,
   userIds: string[]
 ): Promise<void> => {
-  return apiRequest.post(`/api/pipelines/${pipelineId}/users`, { userIds });
+  const response = await fetch(`/api/pipelines/${pipelineId}/users`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ userIds }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to assign users to pipeline");
+  }
 };
 
 export const removeUserFromPipeline = async (
   pipelineId: string,
   userId: string
 ): Promise<void> => {
-  return apiRequest.delete(`/api/pipelines/${pipelineId}/users/${userId}`);
+  const response = await fetch(`/api/pipelines/${pipelineId}/users/${userId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to remove user from pipeline");
+  }
 };
 
 export const removeUsersFromPipeline = async (
   pipelineId: string,
   userIds: string[]
 ): Promise<void> => {
-  return apiRequest.post(`/api/pipelines/${pipelineId}/users/remove`, {
-    userIds,
+  const response = await fetch(`/api/pipelines/${pipelineId}/users/remove`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ userIds }),
   });
+  if (!response.ok) {
+    throw new Error("Failed to remove users from pipeline");
+  }
 };
 
 export const assignGroupsToPipeline = async (
   pipelineId: string,
   groupIds: string[]
 ): Promise<void> => {
-  return apiRequest.post(`/api/pipelines/${pipelineId}/groups`, { groupIds });
+  const response = await fetch(`/api/pipelines/${pipelineId}/groups`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ groupIds }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to assign groups to pipeline");
+  }
 };
 
 export const removeGroupFromPipeline = async (
   pipelineId: string,
   groupId: string
 ): Promise<void> => {
-  return apiRequest.delete(`/api/pipelines/${pipelineId}/groups/${groupId}`);
+  const response = await fetch(`/api/pipelines/${pipelineId}/groups/${groupId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to remove group from pipeline");
+  }
 };
 
 export const removeGroupsFromPipeline = async (
   pipelineId: string,
   groupIds: string[]
 ): Promise<void> => {
-  return apiRequest.post(`/api/pipelines/${pipelineId}/groups/remove`, {
-    groupIds,
+  const response = await fetch(`/api/pipelines/${pipelineId}/groups/remove`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ groupIds }),
   });
+  if (!response.ok) {
+    throw new Error("Failed to remove groups from pipeline");
+  }
 };
 
 export const fetchUserPipelines = async (
   userId: string
 ): Promise<Pipeline[]> => {
-  return apiRequest.get(`/api/pipelines/user/${userId}`);
+  const response = await fetch(`/api/pipelines/user/${userId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch user pipelines");
+  }
+  return response.json();
 };
 
 // React Query Hooks
