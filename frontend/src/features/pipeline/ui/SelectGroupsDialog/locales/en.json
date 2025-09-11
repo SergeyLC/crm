@@ -1,0 +1,16 @@
+{
+  "selectGroupsToAdd": "Select groups to add",
+  "title": "Select groups to add",
+  "searchGroups": "Search groups",
+  "noGroupsFound": "No groups found",
+  "noAvailableGroups": "No available groups",
+  "cancel": "Cancel",
+  "add": "Add",
+  "search": "Search",
+  "name": "Name",
+  "description": "Description",
+  "groups": "Groups",
+  "addGroups": "Add Groups",
+  "actions": "Actions",
+  "noGroupsAssigned": "No groups assigned"
+}

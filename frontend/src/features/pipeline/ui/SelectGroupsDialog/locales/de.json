@@ -1,0 +1,16 @@
+{
+  "selectGroupsToAdd": "Gruppen zum Hinzufügen auswählen",
+  "title": "Gruppen zum Hinzufügen auswählen",
+  "searchGroups": "Gruppen suchen",
+  "noGroupsFound": "Keine Gruppen gefunden",
+  "noAvailableGroups": "Keine verfügbaren Gruppen",
+  "cancel": "Abbrechen",
+  "add": "Hinzufügen",
+  "search": "Suchen",
+  "name": "Name",
+  "description": "Beschreibung",
+  "groups": "Gruppen",
+  "addGroups": "Gruppen hinzufügen",
+  "actions": "Aktionen",
+  "noGroupsAssigned": "Keine Gruppen zugewiesen"
+}
