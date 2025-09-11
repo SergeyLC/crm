@@ -1,34 +1,43 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress,
+  Button,
+  TextField,
   Box,
+  CircularProgress,
+  Divider,
+  Alert,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { useForm, Controller } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 import {
   useCreatePipeline,
   useUpdatePipeline,
   usePipeline,
-  useAllUsers,
   useAllGroups,
-  useAssignUsersToPipeline,
   useAssignGroupsToPipeline,
-  useRemoveUserFromPipeline,
   useRemoveGroupFromPipeline,
-} from "@/entities/pipeline";
-import { PipelineInfo } from "../PipelineInfo/PipelineInfo";
-import { PipelineUsers } from "../PipelineUsers/PipelineUsers";
-import { PipelineGroups } from "../PipelineGroups/PipelineGroups";
-import {
-  PipelineGroup,
+  useAllUsers,
+  useAssignUsersToPipeline,
+  useRemoveUserFromPipeline,
   PipelineUser,
-} from "@/entities/pipeline/model/types";
+  PipelineGroup,
+} from "@/entities/pipeline";
+import { PipelineGroups } from "@/features/pipeline/ui/PipelineGroups";
+import { PipelineUsers } from "@/features/pipeline/ui/PipelineUsers";
+import { queryClient } from "@/shared/lib/query/client";
+
+interface FormValues {
+  name: string;
+  description: string;
+}
 
 interface PipelineFormDialogProps {
   open: boolean;
@@ -36,380 +45,489 @@ interface PipelineFormDialogProps {
   pipelineId?: string;
 }
 
-export const PipelineFormDialog: React.FC<PipelineFormDialogProps> = ({
+export const PipelineFormDialog = ({
   open,
   onClose,
   pipelineId,
-}) => {
-  const { t } = useTranslation("PipelineFormDialog");
-  const [pipelineData, setPipelineData] = useState({
-    name: "",
-    description: "",
-  });
+}: PipelineFormDialogProps) => {
+  const { t } = useTranslation(["PipelineFormDialog"]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  // Для режима создания - списки выбранных пользователей/групп
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
-  
-  // Для режима редактирования - дополнительные списки для отслеживания изменений
-  const [addedUserIds, setAddedUserIds] = useState<string[]>([]);
-  const [removedUserIds, setRemovedUserIds] = useState<string[]>([]);
-  const [addedGroupIds, setAddedGroupIds] = useState<string[]>([]);
-  const [removedGroupIds, setRemovedGroupIds] = useState<string[]>([]);
+  // Groups to remove (only stored locally until save)
+  const [groupsToRemove, setGroupsToRemove] = useState<string[]>([]);
 
-  // Загрузка данных
-  const { data: existingPipeline, isLoading: isLoadingPipeline } = usePipeline(
-    pipelineId || "", !!pipelineId && open,
+  // Users to add/remove (only stored locally until save)
+  const [usersToRemove, setUsersToRemove] = useState<string[]>([]);
+  const [usersToAdd, setUsersToAdd] = useState<string[]>([]);
+
+  // New state for tracking groups to add
+  const [groupsToAdd, setGroupsToAdd] = useState<string[]>([]);
+
+  // Flag to disable fetching during mutations
+  const [isPipelineUpdating, setIsPipelineUpdating] = useState(false);
+
+  // Schema validation for the form
+  const schema = yup.object({
+    name: yup.string().required(t("errors.nameRequired")),
+    description: yup.string().default(""),
+  });
+
+  // Query hooks - disable refetching during mutations
+  const { data: pipeline } = usePipeline(
+    pipelineId,
+    !!pipelineId && !isPipelineUpdating && !isSubmitting // Disable fetching during updates
   );
-  const { data: allUsers, isLoading: isLoadingUsers } = useAllUsers();
-  const { data: allGroups, isLoading: isLoadingGroups } = useAllGroups();
+  const { data: allGroups = [] } = useAllGroups();
+  const { data: allUsers = [] } = useAllUsers();
 
-  // Мутации
-  const { mutateAsync: createPipeline } = useCreatePipeline();
-  const { mutateAsync: updatePipeline } = useUpdatePipeline();
-  const { mutateAsync: assignUsers } = useAssignUsersToPipeline();
-  const { mutateAsync: assignGroups } = useAssignGroupsToPipeline();
-  const { mutateAsync: removeUser } = useRemoveUserFromPipeline();
-  const { mutateAsync: removeGroup } = useRemoveGroupFromPipeline();
+  // Mutation hooks
+  const createPipelineMutation = useCreatePipeline();
+  const updatePipelineMutation = useUpdatePipeline();
+  const assignGroupsMutation = useAssignGroupsToPipeline();
+  const removeGroupMutation = useRemoveGroupFromPipeline();
+  const assignUsersMutation = useAssignUsersToPipeline();
+  const removeUserMutation = useRemoveUserFromPipeline();
 
-  // Инициализация данных при открытии формы
+  // React Hook Form
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      name: "",
+      description: "",
+    },
+  });
+
+  // Reset form when dialog opens with pipeline data
   useEffect(() => {
-    if (existingPipeline && open) {
-      // Режим редактирования
-      setPipelineData({
-        name: existingPipeline.name,
-        description: existingPipeline.description || "",
+    if (open && pipeline) {
+      reset({
+        name: pipeline.name,
+        description: pipeline.description || "",
       });
-      
-      // Сбрасываем все списки изменений при открытии/переоткрытии
-      setAddedUserIds([]);
-      setRemovedUserIds([]);
-      setAddedGroupIds([]);
-      setRemovedGroupIds([]);
-    } else if (!pipelineId && open) {
-      // Режим создания
-      setPipelineData({
+      // Reset all local change trackers
+      setGroupsToRemove([]);
+      setUsersToRemove([]);
+      setUsersToAdd([]);
+      setGroupsToAdd([]);
+    } else if (open && !pipelineId) {
+      reset({
         name: "",
         description: "",
       });
-      setSelectedUserIds([]);
-      setSelectedGroupIds([]);
+      setGroupsToRemove([]);
+      setUsersToRemove([]);
+      setUsersToAdd([]);
+      setGroupsToAdd([]);
     }
-  }, [existingPipeline, pipelineId, open]);
 
-  // Обработчики для основной информации
-  const handleNameChange = (name: string) => {
-    setPipelineData((prev) => ({ ...prev, name }));
-  };
-
-  const handleDescriptionChange = (description: string) => {
-    setPipelineData((prev) => ({ ...prev, description }));
-  };
-
-  // Обработчики для пользователей
-  const handleAddUsers = async (userIds: string[]) => {
-    if (isEditMode) {
-      // В режиме редактирования добавляем в список для последующего сохранения
-      // Убираем пользователей, которые были ранее отмечены как удаленные
-      const newAddedIds = userIds.filter(id => !removedUserIds.includes(id));
-      setAddedUserIds(prev => [...prev, ...newAddedIds]);
-      
-      // Если какие-то из добавляемых пользователей были ранее отмечены как удаленные,
-      // убираем их из списка удаленных
-      setRemovedUserIds(prev => prev.filter(id => !userIds.includes(id)));
-    } else {
-      // В режиме создания добавляем в локальный список
-      setSelectedUserIds(prev => [...prev, ...userIds]);
+    // Reset state when dialog opens
+    if (open) {
+      setError(null);
+      setSuccess(null);
     }
-  };
-
-  const handleRemoveUser = async (userId: string) => {
-    if (isEditMode) {
-      const originalUserIds = existingPipeline?.users?.map(u => u.userId) || [];
-      
-      if (originalUserIds.includes(userId)) {
-        // Если пользователь был изначально назначен, добавляем в список для удаления
-        setRemovedUserIds(prev => [...prev, userId]);
-        // Если этот пользователь был в списке добавленных, удаляем оттуда
-        setAddedUserIds(prev => prev.filter(id => id !== userId));
-      } else if (addedUserIds.includes(userId)) {
-        // Если этот пользователь был только добавлен, просто удаляем из списка добавленных
-        setAddedUserIds(prev => prev.filter(id => id !== userId));
-      }
-    } else {
-      // В режиме создания просто удаляем из локального списка
-      setSelectedUserIds(prev => prev.filter(id => id !== userId));
+    if (!open) {
+      setIsSubmitting(false);
+      setIsPipelineUpdating(false);
     }
-  };
+  }, [open, pipeline, pipelineId, reset]);
 
-  // Обработчики для групп
-  const handleAddGroups = async (groupIds: string[]) => {
-    if (isEditMode) {
-      // В режиме редактирования добавляем в список для последующего сохранения
-      // Убираем группы, которые были ранее отмечены как удаленные
-      const newAddedIds = groupIds.filter(id => !removedGroupIds.includes(id));
-      setAddedGroupIds(prev => [...prev, ...newAddedIds]);
-      
-      // Если какие-то из добавляемых групп были ранее отмечены как удаленные,
-      // убираем их из списка удаленных
-      setRemovedGroupIds(prev => prev.filter(id => !groupIds.includes(id)));
-    } else {
-      // В режиме создания добавляем в локальный список
-      setSelectedGroupIds(prev => [...prev, ...groupIds]);
-    }
-  };
+  // Available groups for selection (exclude those already assigned but include those marked for removal)
+  const availableGroups = allGroups.filter((group) => {
+    const isNotAssigned = !pipeline?.groups?.some(
+      (pg) => pg.groupId === group.id
+    );
+    const isMarkedForRemoval = groupsToRemove.includes(group.id);
 
-  const handleRemoveGroup = async (groupId: string) => {
-    if (isEditMode) {
-      const originalGroupIds = existingPipeline?.groups?.map(g => g.groupId) || [];
-      
-      if (originalGroupIds.includes(groupId)) {
-        // Если группа была изначально назначена, добавляем в список для удаления
-        setRemovedGroupIds(prev => [...prev, groupId]);
-        // Если эта группа была в списке добавленных, удаляем оттуда
-        setAddedGroupIds(prev => prev.filter(id => id !== groupId));
-      } else if (addedGroupIds.includes(groupId)) {
-        // Если эта группа была только добавлена, просто удаляем из списка добавленных
-        setAddedGroupIds(prev => prev.filter(id => id !== groupId));
-      }
-    } else {
-      // В режиме создания просто удаляем из локального списка
-      setSelectedGroupIds(prev => prev.filter(id => id !== groupId));
-    }
-  };
+    // User is not in the pending add list
+    const isNotPendingAdd = !groupsToAdd.includes(group.id);
 
-  // Сохранение пайплайна
-  const handleSubmit = async () => {
+    return (isNotAssigned || isMarkedForRemoval) && isNotPendingAdd;
+
+    // !pipeline?.groups?.some((pg) => pg.groupId === group.id) ||
+    // groupsToRemove.includes(group.id)
+  });
+
+  // Available users for selection (exclude those already assigned or newly added, but include those marked for removal)
+  const availableUsers = allUsers.filter((user) => {
+    // User is not assigned to pipeline OR user is marked for removal
+    const isNotAssigned = !pipeline?.users?.some((pu) => pu.userId === user.id);
+    const isMarkedForRemoval = usersToRemove.includes(user.id);
+
+    // User is not in the pending add list
+    const isNotPendingAdd = !usersToAdd.includes(user.id);
+
+    return (isNotAssigned || isMarkedForRemoval) && isNotPendingAdd;
+  });
+
+  // Handle form submission (create or update)
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    setError(null);
+
     try {
-      setIsSubmitting(true);
+      // Suspend all data refetching during the update process
+      setIsPipelineUpdating(true);
+
+      // Optional: cancel any ongoing queries to prevent race conditions
+      // await queryClient.cancelQueries({ queryKey: [pipelineId] });
+
+      // Step 1: Create or update the pipeline
+      let savedPipelineId = pipelineId; // Store ID for later use
 
       if (pipelineId) {
-        // Обновление существующего пайплайна
-        await updatePipeline({
+        // Update existing pipeline
+        await updatePipelineMutation.mutateAsync({
           id: pipelineId,
-          data: pipelineData,
+          data,
         });
-        
-        // Применяем изменения пользователей
-        if (addedUserIds.length > 0) {
-          await assignUsers({
-            pipelineId,
-            userIds: addedUserIds,
-          });
-        }
-        
-        for (const userId of removedUserIds) {
-          await removeUser({ pipelineId, userId });
-        }
-        
-        // Применяем изменения групп
-        if (addedGroupIds.length > 0) {
-          await assignGroups({
-            pipelineId,
-            groupIds: addedGroupIds,
-          });
-        }
-        
-        for (const groupId of removedGroupIds) {
-          await removeGroup({ pipelineId, groupId });
-        }
       } else {
-        // Создание нового пайплайна
-        const newPipeline = await createPipeline(pipelineData);
+        // Create new pipeline
+        const savedPipeline = await createPipelineMutation.mutateAsync(data);
+        savedPipelineId = savedPipeline.id; // Get new pipeline ID for subsequent operations
+      }
 
-        // Добавление выбранных пользователей и групп к новому пайплайну
-        if (selectedUserIds.length > 0) {
-          await assignUsers({
-            pipelineId: newPipeline.id,
-            userIds: selectedUserIds,
-          });
-        }
+      // Now use savedPipelineId for all subsequent operations
 
-        if (selectedGroupIds.length > 0) {
-          await assignGroups({
-            pipelineId: newPipeline.id,
-            groupIds: selectedGroupIds,
+      // Step 2: Handle groups to add (if any)
+      if (savedPipelineId && groupsToAdd.length > 0) {
+        await assignGroupsMutation.mutateAsync({
+          pipelineId: savedPipelineId,
+          groupIds: groupsToAdd,
+        });
+      }
+
+      // Step 3: Handle users to add (if any)
+      if (savedPipelineId && usersToAdd.length > 0) {
+        await assignUsersMutation.mutateAsync({
+          pipelineId: savedPipelineId,
+          userIds: usersToAdd,
+        });
+      }
+
+      // Step 4: Handle users to remove (if any)
+      if (savedPipelineId && usersToRemove.length > 0) {
+        // Execute user removals sequentially to avoid race conditions
+        for (const userId of usersToRemove) {
+          await removeUserMutation.mutateAsync({
+            pipelineId: savedPipelineId,
+            userId,
           });
         }
       }
 
+      // Step 5: Handle groups to remove (if any)
+      if (savedPipelineId && groupsToRemove.length > 0) {
+        // Execute group removals sequentially to avoid race conditions
+        for (const groupId of groupsToRemove) {
+          await removeGroupMutation.mutateAsync({
+            pipelineId: savedPipelineId,
+            groupId,
+          });
+        }
+      }
+
+      setSuccess(pipelineId ? t("successUpdated") : t("successCreated"));
+
       onClose();
-    } catch (error) {
-      console.error("Error saving pipeline:", error);
+      setTimeout(() => {
+        if (savedPipelineId) {
+          queryClient.invalidateQueries({
+            queryKey: ["pipelines", "detail", savedPipelineId],
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: ["pipelines", "list"] });
+      }, 100);
+    } catch (err) {
+      console.error("Error saving pipeline:", err);
+      setError(t("errors.saveFailed"));
     } finally {
-      setIsSubmitting(false);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setIsPipelineUpdating(false);
+      }, 1000);
     }
   };
 
-  const isEditMode = !!pipelineId;
-  const dialogTitle = isEditMode ? t("editPipeline") : t("createNewPipeline");
-  const submitButtonText = isEditMode ? t("save") : t("create");
+  // Handle adding groups to pipeline
+  const handleAddGroups = useCallback(
+    async (groupIds: string[]) => {
+      // if (!pipelineId) return;
 
-  // Показываем индикатор загрузки
-  const isLoading =
-    isEditMode && (isLoadingPipeline || isLoadingUsers || isLoadingGroups);
+      // Get list of existing group IDs (not removed)
+      const existingGroupIds =
+        pipeline?.groups
+          ?.filter((pg) => !groupsToRemove.includes(pg.groupId))
+          .map((pg) => pg.groupId) || [];
 
-  // Вычисляем эффективные списки пользователей и групп с учетом локальных изменений
-  
-  // Для режима редактирования:
-  const effectiveUserIds = useMemo(() => {
-    if (!isEditMode) return selectedUserIds;
-    
-    const originalIds = existingPipeline?.users?.map(u => u.userId) || [];
-    // Добавляем новых и убираем удаленных
-    return [...originalIds.filter(id => !removedUserIds.includes(id)), ...addedUserIds];
-  }, [isEditMode, existingPipeline, selectedUserIds, addedUserIds, removedUserIds]);
-  
-  const effectiveGroupIds = useMemo(() => {
-    if (!isEditMode) return selectedGroupIds;
-    
-    const originalIds = existingPipeline?.groups?.map(g => g.groupId) || [];
-    // Добавляем новых и убираем удаленных
-    return [...originalIds.filter(id => !removedGroupIds.includes(id)), ...addedGroupIds];
-  }, [isEditMode, existingPipeline, selectedGroupIds, addedGroupIds, removedGroupIds]);
+      // Add groups to the local list for subsequent saving
+      // Only if they do not already exist in the pipeline
+      const newGroupIds = groupIds.filter(
+        (id) =>
+          // Not in the original list OR in the removed list
+          !existingGroupIds.includes(id) || groupsToRemove.includes(id)
+      );
 
-  // Доступные пользователи (не назначенные)
-  const availableUsers = useMemo(() => {
-    return allUsers?.filter(user => !effectiveUserIds.includes(user.id)) || [];
-  }, [allUsers, effectiveUserIds]);
-  
-  // Доступные группы (не назначенные)
-  const availableGroups = useMemo(() => {
-    return allGroups?.filter(group => !effectiveGroupIds.includes(group.id)) || [];
-  }, [allGroups, effectiveGroupIds]);
+      setGroupsToAdd((prev) => {
+        // Filter out duplicates
+        const filtered = newGroupIds.filter((id) => !prev.includes(id));
+        return [...prev, ...filtered];
+      });
 
-  // Создаем представление пользователей и групп для компонентов
-  const effectivePipelineUsers = useMemo(() => {
-    // Если редактирование, берем оригинальных пользователей, убираем удаленных и добавляем новых
-    if (isEditMode) {
-      const originalUsers = existingPipeline?.users || [];
-      const remainingUsers = originalUsers.filter(u => !removedUserIds.includes(u.userId));
-      
-      const addedUsers = addedUserIds.map(userId => {
-        const user = allUsers?.find(u => u.id === userId);
-        return user ? {
-          userId,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
+      // If any groups were in the removal list, remove them from there
+      setGroupsToRemove((prev) => prev.filter((id) => !groupIds.includes(id)));
+    },
+    [pipeline, groupsToRemove]
+  );
+
+  // Handle adding users to pipeline - Now just tracks additions locally
+  const handleAddUsers = useCallback(async (userIds: string[]) => {
+    // if (!pipelineId) return;
+
+    // Add users to the local list of users to add
+    setUsersToAdd((prev) => {
+      // Filter out any users already in the list
+      const newUserIds = userIds.filter((id) => !prev.includes(id));
+      return [...prev, ...newUserIds];
+    });
+
+    // If any of these users were in the "to remove" list, remove them from that list
+    setUsersToRemove((prev) => prev.filter((id) => !userIds.includes(id)));
+  }, []);
+
+  // Handle removing a group from pipeline
+  const handleRemoveGroup = useCallback(
+    async (groupId: string) => {
+      if (!pipeline) return;
+
+      // Add to groups to remove list instead of removing immediately
+      // setGroupsToRemove((prev) => [...prev, groupId]);
+
+      // First check if this group is in the "to add" list
+      if (groupsToAdd.includes(groupId)) {
+        // Simply remove from the "to add" list
+        setGroupsToAdd((prev) => prev.filter((id) => id !== groupId));
+      } else {
+        // Add to groups to remove list
+        setGroupsToRemove((prev) => {
+          if (!prev.includes(groupId)) {
+            return [...prev, groupId];
           }
-        } : null;
-      }).filter(Boolean) as PipelineUser[];
-      
-      return [...remainingUsers, ...addedUsers];
-    }
-    
-    // Если создание нового, создаем из выбранных IDs
-    return selectedUserIds.map(userId => {
-      const user = allUsers?.find(u => u.id === userId);
-      return user ? {
-        userId,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        }
-      } : null;
-    }).filter(Boolean) as PipelineUser[];
-  }, [
-    isEditMode, 
-    existingPipeline, 
-    selectedUserIds, 
-    allUsers, 
-    addedUserIds, 
-    removedUserIds
-  ]);
-  
-  // Аналогично для групп
-  const effectivePipelineGroups = useMemo(() => {
-    if (isEditMode) {
-      const originalGroups = existingPipeline?.groups || [];
-      const remainingGroups = originalGroups.filter(g => !removedGroupIds.includes(g.groupId));
-      
-      const addedGroups = addedGroupIds.map(groupId => {
-        const group = allGroups?.find(g => g.id === groupId);
-        return group ? {
+          return prev;
+        });
+      }
+    },
+    [pipeline, groupsToAdd]
+  );
+
+  // Handle removing a user from pipeline - Now just tracks removals locally
+  const handleRemoveUser = useCallback(
+    async (userId: string) => {
+      if (!pipeline) return;
+
+      // First check if this user is in the "to add" list
+      if (usersToAdd.includes(userId)) {
+        // Simply remove from the "to add" list
+        setUsersToAdd((prev) => prev.filter((id) => id !== userId));
+      } else {
+        // Add to users to remove list
+        setUsersToRemove((prev) => {
+          if (!prev.includes(userId)) {
+            return [...prev, userId];
+          }
+          return prev;
+        });
+      }
+    },
+    [pipeline, usersToAdd]
+  );
+
+  // Calculate current pipeline groups
+  const currentPipelineGroups = React.useMemo<PipelineGroup[]>(() => {
+    // Source original group IDs (excluding those marked for removal)
+    const originalGroupIds = (pipeline?.groups || [])
+      .filter((pg) => !groupsToRemove.includes(pg.groupId))
+      .map((pg) => pg.groupId);
+
+    // Source original groups (excluding those marked for removal)
+    const originalGroups = (pipeline?.groups || []).filter(
+      (pg) => !groupsToRemove.includes(pg.groupId)
+    );
+
+    // Add new groups only if they don't exist in the original list
+    const newGroups = groupsToAdd
+      .filter((groupId) => !originalGroupIds.includes(groupId)) // Only truly new
+      .map((groupId) => {
+        const group = allGroups.find((g) => g.id === groupId);
+        return {
           groupId,
-          group: {
-            id: group.id,
-            name: group.name,
-            description: group.description,
-          }
-        } : null;
-      }).filter(Boolean) as PipelineGroup[];
-      
-      return [...remainingGroups, ...addedGroups];
-    }
-    
-    return selectedGroupIds.map(groupId => {
-      const group = allGroups?.find(g => g.id === groupId);
-      return group ? {
-        groupId,
-        group: {
-          id: group.id,
-          name: group.name,
-          description: group.description,
-        }
-      } : null;
-    }).filter(Boolean) as PipelineGroup[];
-  }, [
-    isEditMode, 
-    existingPipeline, 
-    selectedGroupIds, 
-    allGroups, 
-    addedGroupIds, 
-    removedGroupIds
-  ]);
+          group: group || { id: groupId, name: "Unknown Group" },
+          isPending: true,
+        } as unknown as PipelineGroup;
+      });
 
+    return [...originalGroups, ...newGroups];
+  }, [pipeline, groupsToRemove, groupsToAdd, allGroups]);
+
+  // Calculate current pipeline users based on:
+  // 1. Original pipeline users (excluding those marked for removal)
+  // 2. New users to be added
+  const currentPipelineUsers = React.useMemo<PipelineUser[]>(() => {
+    // At first we create a set of all user IDs
+    const allUserIds = new Set<string>();
+
+    // Source original users (excluding those marked for removal)
+    const originalUsers = (pipeline?.users || []).filter(
+      (pu) => !usersToRemove.includes(pu.userId)
+    );
+
+    // Add their IDs to the set
+    originalUsers.forEach((pu) => allUserIds.add(pu.userId));
+
+    // Prepare new users (only those not in the original list)
+    const newUsers = usersToAdd
+      .filter((userId) => !allUserIds.has(userId)) // Only new IDs
+      .map((userId) => {
+        const user = allUsers.find((u) => u.id === userId);
+        return {
+          userId,
+          user: user || { id: userId, name: "Unknown User" },
+          isPending: true,
+        } as unknown as PipelineUser;
+      });
+
+    // return unique merged list without duplicates
+    return [...originalUsers, ...newUsers];
+  }, [pipeline?.users, usersToRemove, usersToAdd, allUsers]);
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{dialogTitle}</DialogTitle>
-      <DialogContent dividers>
-        {isLoading ? (
-          <CircularProgress sx={{ display: "block", m: "auto", my: 2 }} />
-        ) : (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {/* Основная информация */}
-            <PipelineInfo
-              name={pipelineData.name}
-              description={pipelineData.description}
-              onNameChange={handleNameChange}
-              onDescriptionChange={handleDescriptionChange}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <DialogTitle>
+          {pipelineId ? t("edit") : t("create")}
+        </DialogTitle>
+
+        <DialogContent dividers>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {success && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {success}
+            </Alert>
+          )}
+
+          {/* General information section */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 4 }}>
+            {/* <Typography variant="subtitle1" fontWeight="bold">
+              {t("general")}
+            </Typography> */}
+
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label={t("name")}
+                  fullWidth
+                  error={!!errors.name}
+                  helperText={errors.name?.message}
+                  disabled={isSubmitting}
+                />
+              )}
             />
 
-            {/* Группы */}
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label={t("description")}
+                  fullWidth
+                  multiline
+                  rows={4}
+                  error={!!errors.description}
+                  helperText={errors.description?.message}
+                  disabled={isSubmitting}
+                />
+              )}
+            />
+          </Box>
+
+          {/* Groups section */}
+          <Divider sx={{ my: 3 }} />
+          <Box sx={{ mb: 4 }}>
+            {/* <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  sx={{ mb: 2 }}
+                >
+                  {t("groups")}
+                </Typography> */}
             <PipelineGroups
               pipelineId={pipelineId}
-              pipelineGroups={effectivePipelineGroups}
+              pipelineGroups={currentPipelineGroups}
               availableGroups={availableGroups}
               onAddGroups={handleAddGroups}
               onRemoveGroup={handleRemoveGroup}
             />
+          </Box>
 
-            {/* Пользователи */}
+          {/* Users section */}
+          <Divider sx={{ my: 3 }} />
+          <Box>
+            {/* <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  sx={{ mb: 2 }}
+                >
+                  {t("users")}
+                  {(usersToAdd.length > 0 || usersToRemove.length > 0) && (
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      color="primary"
+                      sx={{ ml: 2 }}
+                    >
+                      ({t("pendingChanges")})
+                    </Typography>
+                  )}
+                </Typography> */}
             <PipelineUsers
               pipelineId={pipelineId}
-              pipelineUsers={effectivePipelineUsers}
+              pipelineUsers={currentPipelineUsers}
               availableUsers={availableUsers}
               onAddUsers={handleAddUsers}
               onRemoveUser={handleRemoveUser}
             />
           </Box>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>{t("cancel")}</Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          color="primary"
-          disabled={isSubmitting || isLoading || !pipelineData.name.trim()}
-        >
-          {isSubmitting ? <CircularProgress size={24} /> : submitButtonText}
-        </Button>
-      </DialogActions>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={onClose} disabled={isSubmitting}>
+            {t("cancel")}
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={isSubmitting}
+            startIcon={isSubmitting && <CircularProgress size={20} />}
+          >
+            {isSubmitting ? t("saving") : t("save")}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 };

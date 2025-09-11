@@ -12,5 +12,7 @@
   "deleteConfirmationMessage": "Sind Sie sicher, dass Sie diese Pipeline löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
   "cancel": "Abbrechen",
   "confirm": "Löschen",
-  "noPipelines": "Keine Pipelines gefunden"
+  "noPipelines": "Keine Pipelines gefunden",
+  "successDeleted": "Pipeline erfolgreich gelöscht",
+  "errorDeleting": "Pipeline konnte nicht gelöscht werden"
 }

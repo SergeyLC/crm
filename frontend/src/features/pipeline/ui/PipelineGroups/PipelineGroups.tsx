@@ -29,7 +29,7 @@ interface PipelineGroupsProps {
 }
 
 export const PipelineGroups: React.FC<PipelineGroupsProps> = ({
-  pipelineGroups,
+  pipelineGroups = [],
   availableGroups,
   onAddGroups,
   onRemoveGroup

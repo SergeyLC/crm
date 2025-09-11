@@ -18,58 +18,77 @@ import AddIcon from "@mui/icons-material/Add";
 import { useAllPipelines, useDeletePipeline } from "@/entities/pipeline";
 import { useTranslation } from "react-i18next";
 import { PipelineFormDialog } from "@/features/pipeline";
-import { ConfirmDeleteDialog } from "@/shared/";
+import { ConfirmDeleteDialog, queryClient } from "@/shared/";
+import { useToast } from "@/shared/lib/hooks";
 
 export const PipelineManagement = () => {
   const { t } = useTranslation("PipelineManagement");
+  const toast = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPipelineId, setSelectedPipelineId] = useState<
     string | undefined
   >(undefined);
-  // Состояние для диалога подтверждения удаления
+  // State for delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pipelineToDelete, setPipelineToDelete] = useState<string | null>(null);
-
   const { data: pipelines, isLoading, isError } = useAllPipelines();
   const { mutateAsync: deletePipeline } = useDeletePipeline();
 
-  // Открытие диалога создания новой pipeline
+  // Open dialog for creating new pipeline
   const handleCreateClick = () => {
-    setSelectedPipelineId(undefined); // Сбрасываем ID для создания новой
+    setSelectedPipelineId(undefined); // Reset ID for new creation
     setDialogOpen(true);
   };
 
-  // Открытие диалога редактирования
+  // Open dialog for editing existing pipeline
   const handleEditClick = (id: string) => {
     setSelectedPipelineId(id);
     setDialogOpen(true);
   };
 
-  // Закрытие диалога
+  // Close dialog
   const handleCloseDialog = () => {
     setDialogOpen(false);
   };
 
-  // Открытие диалога подтверждения удаления
+  // Open delete confirmation dialog
   const handleDeleteClick = (id: string) => {
     setPipelineToDelete(id);
     setDeleteDialogOpen(true);
   };
 
-  // Закрытие диалога подтверждения удаления
+  // Close delete confirmation dialog
   const handleCloseDeleteDialog = () => {
     setDeleteDialogOpen(false);
     setPipelineToDelete(null);
   };
 
-  // Подтверждение удаления pipeline
+  // Confirm deletion of pipeline
   const handleConfirmDelete = async () => {
     if (pipelineToDelete) {
       try {
+
+        // Cancel all queries for the details of this pipeline before deletion
+      queryClient.cancelQueries({
+        queryKey: ["pipelines", "detail", pipelineToDelete]
+      });
+
         await deletePipeline(pipelineToDelete);
+
+        // Remove from cache immediately after deletion
+        queryClient.removeQueries({
+          queryKey: ["pipelines", "detail", pipelineToDelete],
+        });
+
+        // Update the list of pipelines
+      queryClient.invalidateQueries({ queryKey: ["pipelines", "list"] });
+      toast.success(t("successDeleted"));
+
         handleCloseDeleteDialog();
       } catch (error) {
         console.error("Error deleting pipeline:", error);
+        toast.error(t("errorDeleting"));
+
       }
     }
   };
@@ -140,14 +159,14 @@ export const PipelineManagement = () => {
         </Table>
       </TableContainer>
 
-      {/* Диалог формы создания/редактирования pipeline */}
+      {/* Dialog for creating/editing pipeline */}
       <PipelineFormDialog
         open={dialogOpen}
         onClose={handleCloseDialog}
         pipelineId={selectedPipelineId}
       />
 
-      {/* Используем переиспользуемый компонент диалога подтверждения удаления */}
+      {/* Reusable confirmation dialog component */}
       <ConfirmDeleteDialog
         open={deleteDialogOpen}
         title={t("deleteConfirmationTitle")}

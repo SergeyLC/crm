@@ -108,8 +108,8 @@ export const useDeletePipeline = () => {
   return useMutation({
     mutationFn: deletePipeline,
     onSuccess: (_, id) => {
+      queryClient.removeQueries({ queryKey: pipelineKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: pipelineKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: pipelineKeys.detail(id) });
     },
   });
 };
@@ -255,6 +255,7 @@ export const useRemoveGroupFromPipeline = () => {
       queryClient.invalidateQueries({
         queryKey: pipelineKeys.detail(variables.pipelineId),
       });
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all });
     },
   });
 };

@@ -167,12 +167,14 @@ export function SelectItemsDialog<T extends BaseItem>({
             placeholder={searchPlaceholder || t("search")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
+            slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+              },
             }}
             variant="outlined"
             size="small"
@@ -181,26 +183,38 @@ export function SelectItemsDialog<T extends BaseItem>({
 
         <List sx={{ pt: 0, maxHeight: 400, overflow: "auto" }}>
           {filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
-              <ListItem
-                key={item.id}
-                dense
-                onClick={() => handleToggleItem(item.id)}
-              >
-                <ListItemIcon>
-                  <Checkbox
-                    edge="start"
-                    checked={selectedItemIds.includes(item.id)}
-                    tabIndex={-1}
-                    disableRipple
+            filteredItems.map((item) => {
+              const isSelected = selectedItemIds.includes(item.id);
+              return (
+                <ListItem
+                  key={item.id}
+                  dense
+                  onClick={() => handleToggleItem(item.id)}
+                  sx={{
+                    borderRadius: 1,
+                    mb: 1,
+                    cursor: "pointer",
+                    bgcolor: isSelected ? "action.selected" : "inherit",
+                    "&:hover": {
+                      bgcolor: isSelected ? "action.selected" : "action.hover",
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <Checkbox
+                      edge="start"
+                      checked={selectedItemIds.includes(item.id)}
+                      tabIndex={-1}
+                      disableRipple
+                    />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={renderPrimary(item)}
+                    secondary={renderSecondary(item)}
                   />
-                </ListItemIcon>
-                <ListItemText
-                  primary={renderPrimary(item)}
-                  secondary={renderSecondary(item)}
-                />
-              </ListItem>
-            ))
+                </ListItem>
+              );
+            })
           ) : (
             <ListItem>
               <ListItemText
@@ -216,9 +230,7 @@ export function SelectItemsDialog<T extends BaseItem>({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>
-          {cancelLabel || t("cancel")}
-        </Button>
+        <Button onClick={onClose}>{cancelLabel || t("cancel")}</Button>
         <Button
           variant="contained"
           onClick={handleSubmit}

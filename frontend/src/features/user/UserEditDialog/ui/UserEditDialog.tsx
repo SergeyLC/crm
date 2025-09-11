@@ -36,16 +36,20 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
   const isEditing = !!id;
   const [error, setError] = useState<string | undefined>();
   const { t } = useTranslation("user");
-  
+
   const { enqueueSnackbar } = useSnackbar();
 
   // API requests
-  const { data: user, isLoading: isLoadingUser } = useGetUserByIdQuery(id || "", !(!id || !open));
-  
+  const { data: user, isLoading: isLoadingUser } = useGetUserByIdQuery(
+    id || "",
+    !(!id || !open)
+  );
+
   const createUser = useCreateUserMutation();
   const updateUser = useUpdateUserMutation();
-  
-  const isLoading = isLoadingUser || createUser.isPending || updateUser.isPending;
+
+  const isLoading =
+    isLoadingUser || createUser.isPending || updateUser.isPending;
 
   useEffect(() => {
     // Reset error on dialog open/close
@@ -64,24 +68,24 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
         if (sanitizedData.password === "") {
           delete sanitizedData.password;
         }
-        
+
         await updateUser.mutateAsync({
           id,
           body: sanitizedData,
         });
-        
-  enqueueSnackbar(t("form.notify.updated"), { variant: "success" });
+
+        enqueueSnackbar(t("form.notify.updated"), { variant: "success" });
       } else {
         // User creation
         await createUser.mutateAsync(formData as CreateUserDTO);
-  enqueueSnackbar(t("form.notify.created"), { variant: "success" });
+        enqueueSnackbar(t("form.notify.created"), { variant: "success" });
       }
-      
+
       onClose();
     } catch (err: unknown) {
       const error = err as { data?: { message?: string } };
-  setError(error.data?.message || t("form.error.generic"));
-  enqueueSnackbar(t("form.notify.failed"), { variant: "error" });
+      setError(error.data?.message || t("form.error.generic"));
+      enqueueSnackbar(t("form.notify.failed"), { variant: "error" });
     }
   };
 
@@ -109,7 +113,7 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
           </IconButton>
         </Box>
       </DialogTitle>
-      
+
       <DialogContent>
         {isLoadingUser && id ? (
           <Box display="flex" justifyContent="center" my={4}>

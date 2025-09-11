@@ -98,21 +98,27 @@ export const PipelineUsers: React.FC<PipelineUsersProps> = ({
             </TableHead>
             <TableBody>
               {pipelineUsers?.length ? (
-                pipelineUsers.map((pu) => (
-                  <TableRow key={pu.userId}>
-                    <TableCell>{pu.user.name}</TableCell>
-                    <TableCell>{pu.user.email}</TableCell>
-                    <TableCell align="right">
-                      <IconButton 
-                        size="small" 
-                        color="error"
-                        onClick={() => onRemoveUser(pu.userId)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
+                // Фильтруем дубликаты перед рендерингом
+                pipelineUsers
+                  // Убираем дубликаты по userId
+                  .filter((pu, index, self) => 
+                    index === self.findIndex((p) => p.userId === pu.userId)
+                  )
+                  .map((pu) => (
+                    <TableRow key={pu.userId}>
+                      <TableCell>{pu.user.name}</TableCell>
+                      <TableCell>{pu.user.email}</TableCell>
+                      <TableCell align="right">
+                        <IconButton 
+                          size="small" 
+                          color="error"
+                          onClick={() => onRemoveUser(pu.userId)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
               ) : (
                 <TableRow>
                   <TableCell colSpan={3} align="center">
