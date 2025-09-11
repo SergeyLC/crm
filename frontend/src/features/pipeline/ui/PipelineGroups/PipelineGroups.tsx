@@ -12,19 +12,13 @@ import {
   TableHead, 
   TableRow, 
   Paper, 
-  IconButton,
-  Modal,
-  Checkbox,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider
+  IconButton
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslation } from "react-i18next";
 import { Group, PipelineGroup } from "@/entities/pipeline/model/types";
+import { SelectGroupsDialog } from "../SelectGroupsDialog/SelectGroupsDialog";
 
 interface PipelineGroupsProps {
   pipelineId?: string;
@@ -34,21 +28,6 @@ interface PipelineGroupsProps {
   onRemoveGroup: (groupId: string) => Promise<void>;
 }
 
-// Stile für Modales Fenster
-const modalStyle = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 500,
-  bgcolor: 'background.paper',
-  boxShadow: 24,
-  p: 4,
-  borderRadius: 1,
-  maxHeight: '80vh',
-  overflow: 'auto'
-};
-
 export const PipelineGroups: React.FC<PipelineGroupsProps> = ({
   pipelineGroups,
   availableGroups,
@@ -56,34 +35,13 @@ export const PipelineGroups: React.FC<PipelineGroupsProps> = ({
   onRemoveGroup
 }) => {
   const { t } = useTranslation("PipelineGroups");
-  const [groupModalOpen, setGroupModalOpen] = useState(false);
-  const [selectedGroupsToAdd, setSelectedGroupsToAdd] = useState<string[]>([]);
+  const [selectGroupsDialogOpen, setSelectGroupsDialogOpen] = useState(false);
   
-  // Öffnen/Schließen des Modals
-  const handleOpenGroupModal = () => setGroupModalOpen(true);
-  const handleCloseGroupModal = () => {
-    setGroupModalOpen(false);
-    setSelectedGroupsToAdd([]);
-  };
-  
-  // Gruppenauswahl umschalten
-  const handleToggleGroup = (groupId: string) => {
-    setSelectedGroupsToAdd(prev => {
-      if (prev.includes(groupId)) {
-        return prev.filter(id => id !== groupId);
-      } else {
-        return [...prev, groupId];
-      }
-    });
-  };
-  
-  // Ausgewählte Gruppen hinzufügen
-  const handleAddSelectedGroups = async () => {
-    if (!selectedGroupsToAdd.length) return;
+  const handleAddGroups = async (groupIds: string[]) => {
+    if (!groupIds.length) return;
     
     try {
-      await onAddGroups(selectedGroupsToAdd);
-      handleCloseGroupModal();
+      await onAddGroups(groupIds);
     } catch (error) {
       console.error("Error adding groups:", error);
     }
@@ -97,8 +55,8 @@ export const PipelineGroups: React.FC<PipelineGroupsProps> = ({
           <Button 
             variant="outlined" 
             startIcon={<AddIcon />} 
-            onClick={handleOpenGroupModal}
-            disabled={ availableGroups.length === 0}
+            onClick={() => setSelectGroupsDialogOpen(true)}
+            disabled={availableGroups.length === 0}
           >
             {t("addGroups")}
           </Button>
@@ -142,60 +100,12 @@ export const PipelineGroups: React.FC<PipelineGroupsProps> = ({
         </TableContainer>
       </Box>
       
-      {/* Modal zum Hinzufügen von Gruppen */}
-      <Modal
-        open={groupModalOpen}
-        onClose={handleCloseGroupModal}
-        aria-labelledby="add-groups-modal-title"
-      >
-        <Box sx={modalStyle}>
-          <Typography id="add-groups-modal-title" variant="h6" component="h2" gutterBottom>
-            {t("selectGroupsToAdd")}
-          </Typography>
-          
-          <List sx={{ maxHeight: 400, overflow: 'auto', mb: 2 }}>
-            {availableGroups.map((group) => (
-              <ListItem 
-                key={group.id} 
-                dense 
-                component="button"
-                onClick={() => handleToggleGroup(group.id)}
-              >
-                <ListItemIcon>
-                  <Checkbox
-                    edge="start"
-                    checked={selectedGroupsToAdd.includes(group.id)}
-                    tabIndex={-1}
-                    disableRipple
-                  />
-                </ListItemIcon>
-                <ListItemText 
-                  primary={group.name} 
-                  secondary={group.description} 
-                />
-              </ListItem>
-            ))}
-            {availableGroups.length === 0 && (
-              <ListItem>
-                <ListItemText primary={t("noAvailableGroups")} />
-              </ListItem>
-            )}
-          </List>
-          
-          <Divider sx={{ my: 2 }} />
-          
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-            <Button onClick={handleCloseGroupModal}>{t("cancel")}</Button>
-            <Button 
-              variant="contained" 
-              onClick={handleAddSelectedGroups}
-              disabled={selectedGroupsToAdd.length === 0}
-            >
-              {t("add")}
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
+      <SelectGroupsDialog
+        open={selectGroupsDialogOpen}
+        onClose={() => setSelectGroupsDialogOpen(false)}
+        onSubmit={handleAddGroups}
+        availableGroups={availableGroups}
+      />
     </>
   );
 };

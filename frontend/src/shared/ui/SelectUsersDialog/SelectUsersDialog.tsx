@@ -9,6 +9,7 @@
  * - Checkbox selection of multiple users
  * - Visual feedback for selected users
  * - Avatar display for each user
+ * - Search and filter functionality
  * - Loading states for API operations
  * - Responsive design with Material UI components
  * 
@@ -26,10 +27,13 @@
  * - isSaving: Loading state for save operation
  * - emptyListMessage: Message to display when no users are available
  * - emptyListSubMessage: Optional secondary message for empty list
+ * - searchPlaceholder: Placeholder text for the search field
+ * - noSearchResultsMessage: Message to display when search returns no results
+ * - filterUsers: Custom function to filter users based on search term
  */
 
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -47,8 +51,12 @@ import {
   Checkbox,
   Typography,
   IconButton,
+  TextField,
+  Box,
+  InputAdornment,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
 import { User } from '@/shared/types';
 
 interface SelectUsersDialogProps {
@@ -65,6 +73,9 @@ interface SelectUsersDialogProps {
   isSaving?: boolean;
   emptyListMessage: string;
   emptyListSubMessage?: string;
+  searchPlaceholder?: string;
+  noSearchResultsMessage?: string;
+  filterUsers?: (users: User[], searchTerm: string) => User[];
 }
 
 export function SelectUsersDialog({
@@ -81,8 +92,32 @@ export function SelectUsersDialog({
   isSaving = false,
   emptyListMessage,
   emptyListSubMessage,
+  searchPlaceholder,
+  noSearchResultsMessage,
+  filterUsers,
 }: SelectUsersDialogProps) {
   const { t } = useTranslation('common');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Reset search when dialog opens or closes
+  useEffect(() => {
+    if (open) {
+      setSearchTerm('');
+    }
+  }, [open]);
+
+  // Filter users based on search term
+  const filteredUsers = searchTerm.trim() === '' 
+    ? availableUsers
+    : filterUsers
+      ? filterUsers(availableUsers, searchTerm)
+      : availableUsers.filter(user => 
+          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+
+  // Determine if we're showing "no results" because of search filtering
+  const isFilteredEmpty = searchTerm.trim() !== '' && filteredUsers.length === 0;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -107,8 +142,29 @@ export function SelectUsersDialog({
       </DialogTitle>
 
       <DialogContent>
-        <List dense sx={{ width: '100%' }}>
-          {availableUsers.map((user) => {
+        {/* Search field */}
+        <Box sx={{ mb: 2 }}>
+          <TextField
+            fullWidth
+            placeholder={searchPlaceholder || t('search')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+            variant="outlined"
+            size="small"
+            disabled={isPending || availableUsers.length === 0}
+          />
+        </Box>
+
+        {/* Users list */}
+        <List dense sx={{ width: '100%', maxHeight: 400, overflow: 'auto' }}>
+          {filteredUsers.map((user) => {
             const isSelected = selectedUserIds.includes(user.id);
             return (
               <ListItem
@@ -135,6 +191,15 @@ export function SelectUsersDialog({
               </ListItem>
             );
           })}
+
+          {/* Empty states */}
+          {isFilteredEmpty && (
+            <ListItem>
+              <ListItemText 
+                primary={noSearchResultsMessage || t('noSearchResults')} 
+              />
+            </ListItem>
+          )}
 
           {availableUsers.length === 0 && (
             <ListItem>

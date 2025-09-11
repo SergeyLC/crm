@@ -12,7 +12,6 @@ interface Params {
 export async function DELETE(request: NextRequest, { params }: Params) {
   const { id, groupId } = await params;
   try {
-
     const response = await fetch(
       `${NEXT_PUBLIC_BACKEND_API_URL}/pipelines/${id}/groups/${groupId}`,
       {
@@ -28,10 +27,12 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(`Error deleting group ${groupId} from pipeline ${id}:`, error);
+    console.error(
+      `Error deleting group ${groupId} from pipeline ${id}:`,
+      error
+    );
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

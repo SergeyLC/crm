@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config";
 
 interface Params {
-  params: {
+  params: Promise<{
     id: string;
     userId: string;
-  };
+  }>;
 }
 
 // DELETE /api/pipelines/[id]/users/[userId] - Einzelnen Benutzer von Pipeline entfernen
 export async function DELETE(request: NextRequest, { params }: Params) {
-  const { id, userId } = params;
+  const { id, userId } = await params;
   try {
     const response = await fetch(
       `${NEXT_PUBLIC_BACKEND_API_URL}/pipelines/${id}/users/${userId}`,

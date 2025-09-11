@@ -3,3 +3,4 @@ export * from "./SimpleViewSwitcher";
 export * from "./UrlViewSwitcher";
 export * from "./ConfirmDeleteDialog";
 export { SelectUsersDialog } from './SelectUsersDialog';
+export * from "./SelectItemsDialog/SelectItemsDialog";

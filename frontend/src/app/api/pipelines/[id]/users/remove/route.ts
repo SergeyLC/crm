@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config";
 
 interface Params {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // POST /api/pipelines/[id]/users/remove - Mehrere Benutzer von der Pipeline entfernen
 export async function POST(request: NextRequest, { params }: Params) {
-  const { id } = params;
+  const { id } = await  params;
   try {
     const body = await request.json();
 
