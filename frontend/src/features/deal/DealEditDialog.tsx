@@ -37,7 +37,6 @@ export function DealEditDialog({
   invalidateKeys?: QueryKeyType[];
 }) {
   const { t } = useTranslation("deal");
-  console.log("DealEditDialog id:", id);
   const { data, isLoading } = useGetDealByIdQuery(id || "");
   const updateDeal = useUpdateDealMutation();
   const createDeal = useCreateDealMutation();
