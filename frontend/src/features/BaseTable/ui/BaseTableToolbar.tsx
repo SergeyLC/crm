@@ -9,8 +9,8 @@ import Box from "@mui/material/Box";
 export type ToolbarMenuItem = {
   title?: string | React.ReactNode;
   ariaLabel?: string;
-  onClick?: (e: React.MouseEvent, id?: string) => Promise<void>;
-  onClickMultiple?: (e: React.MouseEvent, ids?: readonly string[]) => Promise<void>;
+  onClick?: (e?: React.MouseEvent, id?: string) => Promise<void>;
+  onClickMultiple?: (e?: React.MouseEvent, ids?: readonly string[]) => Promise<void>;
   icon?: React.ReactNode;
   isGroupAction?: boolean;
 };

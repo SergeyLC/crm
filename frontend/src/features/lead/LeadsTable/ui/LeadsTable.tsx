@@ -27,21 +27,24 @@ import {
 } from "@/entities/lead";
 import { ActionMenuItemProps } from "@/features/BaseTable";
 
-import { useEntityDialog } from "@/shared/lib/hooks";
-
+import { useEntityDialog } from "@/shared/";
+import { LeadArchivedQueryKey, LeadActiveQueryKey } from "@/entities/lead";
 import {
   buildLeadTableColumns,
   LeadTableRowData,
   mapLeadsToLeadRows,
 } from "../model";
-import { useLeadOperations } from "../lib";
+import {
+  useLeadConvertOperations,
+  useLeadArchiveOperations,
+  useLeadRestoreOperations,
+} from "../lib";
 import { useTranslation } from "react-i18next";
 import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { useQueryClient } from "@tanstack/react-query";
-import { leadKeys } from "@/entities/lead";
 import { TFunction } from "i18next/typescript/t";
-
+import { useInvalidateQueries, QueryKeyType } from "@/shared";
+import { DealActiveQueryKey } from "@/entities";
 const EditDialog = dynamic(
   () =>
     import("@/features/lead/ui/LeadEditDialog").then(
@@ -63,9 +66,15 @@ const makeLeadsTableHead = (t: TFunction) => {
   return Head;
 };
 
+const invalidateLeadQueryKeys = [
+  LeadActiveQueryKey as unknown as QueryKeyType,
+  LeadArchivedQueryKey as unknown as QueryKeyType,
+];
+
 export function LeadsTable<T extends LeadExt>({
-  order = "asc",
-  orderBy = "createdAt" as SortableFields<LeadTableRowData>,
+  initialData,
+  order = "desc",
+  orderBy = "Potential" as SortableFields<LeadTableRowData>,
   showArchived = false,
 }: BaseTableProps<T, LeadTableRowData> & { showArchived?: boolean }) {
   const {
@@ -76,35 +85,68 @@ export function LeadsTable<T extends LeadExt>({
     showDialog,
   } = useEntityDialog();
 
-  const {
-    handleConvert,
-    handleConverts,
-    handleArchive,
-    handleArchives,
-    handleRestore,
-    handleRestores,
-    handleRefreshData,
-  } = useLeadOperations();
+  // Use initialData only on first render, thereafter — undefined
+  const wasInitialDataUsed = React.useRef(false);
 
-  const { data: archivedLeads = [], isLoading: isLoadingArchived } = useGetArchivedLeadsQuery(showArchived);
-  const { data: activeLeads = [], isLoading: isLoadingActive } = useGetLeadsQuery(!showArchived);
+  const {
+    useQuery: { data: archivedLeads = [], isLoading: isLoadingArchived },
+    queryKey: queryKeyArchived,
+  } = useGetArchivedLeadsQuery({
+    enabled: showArchived,
+    initialData:
+      showArchived && !wasInitialDataUsed.current ? initialData : undefined,
+  });
+
+  const {
+    useQuery: { data: activeLeads = [], isLoading: isLoadingActive },
+    queryKey: queryKeyActive,
+  } = useGetLeadsQuery({
+    enabled: !showArchived,
+    initialData:
+      !showArchived && !wasInitialDataUsed.current ? initialData : undefined,
+  });
+
+  // After the first render, do not pass initialData anymore
+  React.useEffect(() => {
+    if (!wasInitialDataUsed.current && initialData) {
+      wasInitialDataUsed.current = true;
+    }
+  }, [initialData]);
 
   // Select the appropriate data based on showArchived prop
   const leads = showArchived ? archivedLeads : activeLeads;
   const isLoading = showArchived ? isLoadingArchived : isLoadingActive;
-
-  const queryClient = useQueryClient();
-
-  // Invalidate queries when showArchived changes to ensure fresh data
-  React.useEffect(() => {
-    if (showArchived) {
-      queryClient.invalidateQueries({ queryKey: leadKeys.archived() });
-    } else {
-      queryClient.invalidateQueries({ queryKey: leadKeys.lists() });
-    }
-  }, [showArchived, queryClient]);
-
+  const queryKey = showArchived ? queryKeyArchived : queryKeyActive;
   const { t } = useTranslation("lead");
+
+  const invalidateQueries = useInvalidateQueries();
+
+  const onSuccess = React.useCallback(() => {
+    console.log("Invalidating leads in LeadsTable with key:", [
+      LeadActiveQueryKey,
+      LeadArchivedQueryKey,
+    ]);
+    invalidateQueries(invalidateLeadQueryKeys);
+  }, [invalidateQueries]);
+
+  const { handleArchive, handleArchives } = useLeadArchiveOperations(onSuccess);
+  const { handleRestore, handleRestores } = useLeadRestoreOperations(onSuccess);
+
+  const onConvertSuccess = React.useCallback(() => {
+    console.log("Invalidating leads in LeadsTable with key:", [
+      queryKey,
+      DealActiveQueryKey,
+    ]);
+    // after converting a lead to a deal, invalidate both lead and deal queries
+    invalidateQueries([queryKey, DealActiveQueryKey] as QueryKeyType[]);
+  }, [invalidateQueries, queryKey]);
+
+  const { handleConvert, handleConverts } =
+    useLeadConvertOperations(onConvertSuccess);
+
+  const handleRefreshData = React.useCallback(async () => {
+    invalidateQueries([queryKey] as QueryKeyType[]);
+  }, [invalidateQueries, queryKey]);
 
   const rowActionMenuItems: ActionMenuItemProps<LeadTableRowData>[] =
     React.useMemo(() => {
@@ -218,9 +260,7 @@ export function LeadsTable<T extends LeadExt>({
     <BaseTableToolbar
       title={
         <LeadViewSwitcher
-          title={
-            showArchived ? t('table.archivedTitle') : t('table.title')
-          }
+          title={showArchived ? t("table.archivedTitle") : t("table.title")}
         />
       }
       selected={selected}
@@ -234,15 +274,17 @@ export function LeadsTable<T extends LeadExt>({
   // Show loading state if data is being fetched
   if (isLoading && leads.length === 0) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '400px',
-        fontSize: '16px',
-        color: '#666'
-      }}>
-        {showArchived ? t('list.loading') : t('list.loading')}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "400px",
+          fontSize: "16px",
+          color: "#666",
+        }}
+      >
+        {showArchived ? t("list.loading") : t("list.loading")}
       </div>
     );
   }
@@ -254,7 +296,7 @@ export function LeadsTable<T extends LeadExt>({
         order={order}
         orderBy={orderBy}
         TableToolbarComponent={ToolbarComponent}
-        toolbarTitle={t('table.title')}
+        toolbarTitle={t("table.title")}
         TableHeadComponent={LeadsTableHead}
         columnsConfig={columnsConfig}
         rowMapper={mapLeadsToLeadRows}
@@ -266,6 +308,11 @@ export function LeadsTable<T extends LeadExt>({
           id={clickedId || undefined}
           open={true}
           onClose={handleDialogClose}
+          // after converting a lead to a deal, invalidate both lead and deal queries
+          invalidateKeys={[
+            ...invalidateLeadQueryKeys,
+            DealActiveQueryKey as unknown as QueryKeyType[],
+          ]}
         />
       )}
     </>

@@ -15,10 +15,26 @@ import {
   useGetDealsQuery,
   useLazyGetDealByIdQuery,
   useUpdateDealMutation,
+  DealListQueryKey,
+  DealActiveQueryKey,
+  DealWonQueryKey,
+  DealLostQueryKey,
+  DealArchivedQueryKey,
 } from "@/entities/deal";
+
+import { QueryKeyType, useInvalidateQueries } from "@/shared";
+
 import { DealStage, DealStatus } from "@/shared/generated/prisma";
 import { prepareStacks, moveCardToStage, processKanbanChanges } from "../lib";
 import { useTranslation } from "react-i18next";
+
+const invalidateLeadQueryKeys = [
+  DealListQueryKey,
+  DealActiveQueryKey,
+  DealWonQueryKey,
+  DealLostQueryKey,
+  DealArchivedQueryKey,
+] as QueryKeyType[];
 
 export type KanbanBoardProps = {
   stacks?: KanbanStackData[];
@@ -54,16 +70,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   padding = 1,
 }) => {
   const { t } = useTranslation(["kanban", "KanbanBoard"]);
-  const needToFetchData = !incomingStacks || incomingStacks.length === 0;
+  // const needToFetchData = !incomingStacks || incomingStacks.length === 0;
 
   // load data only if needed
-  const { data: deals = [], refetch } = useGetDealsQuery(undefined, needToFetchData);
-
-  useEffect(() => {
-    if (needToFetchData) {
-      refetch();
-    }
-  }, [needToFetchData, refetch]);
+  const {
+    useQuery: { data: deals = [] },
+  } = useGetDealsQuery(undefined, {
+    queryKey: DealListQueryKey as QueryKeyType,
+  });
 
   // Memoize the calculation of stacks to avoid unnecessary recomputations
   const dealStacks = React.useMemo(() => {
@@ -79,8 +93,19 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const [stacksInfo, setStacksInfo] = React.useState<KanbanStackData[]>(
     () => []
   );
+
+  const invalidateDeals = useInvalidateQueries();
+
+  const onSuccess = React.useCallback(() => {
+    console.log(
+      invalidateLeadQueryKeys
+    );
+
+    invalidateDeals(invalidateLeadQueryKeys);
+  }, [invalidateDeals]);
+
   const triggerGetDealById = useLazyGetDealByIdQuery();
-  const updateDeal = useUpdateDealMutation();
+  const updateDeal = useUpdateDealMutation({ onSuccess });
 
   // Update state when data source changes
   useEffect(() => {

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import dynamic from "next/dynamic";
 
@@ -8,7 +8,18 @@ import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
 
-import { DealExt, DealViewSwitcher, useGetArchivedDealsQuery } from "@/entities/deal";
+import {
+  DealActiveQueryKey,
+  DealArchivedQueryKey,
+  DealExt,
+  DealLostQueryKey,
+  DealViewSwitcher,
+  DealWonQueryKey,
+  useGetArchivedDealsQuery,
+} from "@/entities/deal";
+
+import { queryClient, QueryKeyType, useInvalidateQueries } from "@/shared";
+
 import {
   BaseTable,
   BaseTableHeadProps,
@@ -26,7 +37,7 @@ import { useEntityDialog } from "@/shared/lib/hooks";
 
 import { DealTableRowData, buildDealTableColumns } from "../model";
 import { TFunction } from "i18next";
-import { mapDealsToDealRows, useTableActions, useDealOperations } from "../lib";
+import { mapDealsToDealRows, useDealRestoreOperations } from "../lib";
 
 const makeDealsTableHead = (t: TFunction) => {
   const Head = <TTableData extends BaseTableRowData>(
@@ -40,6 +51,13 @@ const makeDealsTableHead = (t: TFunction) => {
   // displayName optional
   return Head;
 };
+
+const invalidateDealsQueryKeys = [
+  DealActiveQueryKey,
+  DealArchivedQueryKey,
+  DealWonQueryKey,
+  DealLostQueryKey,
+];
 
 const EditDialog = dynamic(
   () =>
@@ -66,22 +84,35 @@ export function ArchivedDealsTable<T extends DealExt>({
     showDialog,
   } = useEntityDialog();
 
-  const { handleRestore, handleRestores, handleRefreshData } =
-    useDealOperations();
+  const wasInitialDataUsed = React.useRef(false);
+  const invalidateDeals = useInvalidateQueries();
 
-  const {} = useTableActions();
-
-  const needToFetchData = !initialData || initialData.length === 0;
-  // fetch deals
-  const { data: deals = initialData || [], refetch } = useGetArchivedDealsQuery(
-    undefined,
-    needToFetchData
-  );
-
-  // Refetch data when component mounts to ensure fresh data
   React.useEffect(() => {
-    if (needToFetchData) refetch();
-  }, [refetch, needToFetchData]);
+    if (!wasInitialDataUsed.current && initialData) {
+      wasInitialDataUsed.current = true;
+    }
+  }, [initialData]);
+
+
+  const { useQuery, queryKey } = useGetArchivedDealsQuery(undefined, {
+    placeholderData: wasInitialDataUsed.current ? undefined : initialData,
+  });
+
+  const { data: deals = [] } = useQuery;
+
+  const onSuccess = React.useCallback(() => {
+    // Invalidate all related deal queries for restore action
+    invalidateDeals([
+      queryKey as QueryKeyType,
+      DealActiveQueryKey as unknown as QueryKeyType,
+    ]);
+  }, [invalidateDeals, queryKey]);
+  const { handleRestore, handleRestores } = useDealRestoreOperations(onSuccess);
+
+  const handleRefreshData = useCallback(async () => {
+    invalidateDeals([queryKey as QueryKeyType]);
+    await queryClient.refetchQueries({ queryKey });
+  }, [invalidateDeals, queryKey]);
 
   const rowActionMenuItems: ActionMenuItemProps<DealTableRowData>[] =
     React.useMemo(
@@ -142,7 +173,7 @@ export function ArchivedDealsTable<T extends DealExt>({
   return (
     <>
       <BaseTable
-        initialData={deals ?? initialData}
+        initialData={deals || []}
         order={order}
         orderBy={orderBy}
         columnsConfig={buildDealTableColumns(t)}
@@ -157,6 +188,7 @@ export function ArchivedDealsTable<T extends DealExt>({
           id={clickedId || undefined}
           open={true}
           onClose={handleDialogClose}
+          invalidateKeys={invalidateDealsQueryKeys as unknown as QueryKeyType[]}
         />
       )}
     </>

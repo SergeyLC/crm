@@ -208,14 +208,7 @@ export const createDealBase = async (
     data: {
       ...dealData,
       stage,
-      creator: creator
-        ? {
-            connectOrCreate: {
-              where: { email: creatorEmail },
-              create: creator,
-            },
-          }
-        : { connect: { email: creatorEmail } },
+      creator: { connect: { email: creatorEmail } },
 
       contact: contact
         ? contact.id

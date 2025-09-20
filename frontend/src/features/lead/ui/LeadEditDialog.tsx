@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Dialog, DialogTitle, DialogContent } from "@mui/material";
 import { LeadUpsertForm } from "./LeadUpsertForm";
@@ -10,6 +11,7 @@ import {
   useCreateLeadMutation,
 } from "@/entities/lead";
 import type { CreateLeadDTO, UpdateLeadDTO } from "@/entities/lead/model/types";
+import { QueryKeyType } from "@/shared";
 
 export function LeadEditDialog({
   id,
@@ -17,22 +19,30 @@ export function LeadEditDialog({
   titleCreate,
   open,
   onClose,
+  invalidateKeys,
 }: {
   id?: string;
   titleEdit?: string;
   titleCreate?: string;
   open?: boolean;
   onClose?: () => void;
+  invalidateKeys?: QueryKeyType[];
 }) {
   const { t } = useTranslation("lead");
   const { data, isLoading } = useGetLeadByIdQuery(id || "", !!id);
   const updateLeadMutation = useUpdateLeadMutation();
   const createLeadMutation = useCreateLeadMutation();
+  const queryClient = useQueryClient();
 
   const handleSubmit = React.useCallback(
     async (values: CreateLeadDTO | UpdateLeadDTO, shouldCreate?: boolean) => {
       if (!id || shouldCreate) {
         await createLeadMutation.mutateAsync(values as CreateLeadDTO);
+        for (const key of invalidateKeys || []) {
+          console.log("Invalidating key:", key);
+          queryClient.invalidateQueries({ queryKey: key });
+        }
+
         onClose?.();
         return;
       }
@@ -51,10 +61,26 @@ export function LeadEditDialog({
         values.contactId = undefined;
       }
 
-      await updateLeadMutation.mutateAsync({ id: id, body: values as UpdateLeadDTO });
+      await updateLeadMutation.mutateAsync({
+        id: id,
+        body: values as UpdateLeadDTO,
+      });
+
+      for (const key of invalidateKeys || []) {
+        console.log("Invalidating key:", key);
+        queryClient.invalidateQueries({ queryKey: key });
+      }
+
       onClose?.();
     },
-    [id, updateLeadMutation, createLeadMutation, onClose]
+    [
+      id,
+      updateLeadMutation,
+      createLeadMutation,
+      queryClient,
+      invalidateKeys,
+      onClose,
+    ]
   );
 
   if (!open) return null;

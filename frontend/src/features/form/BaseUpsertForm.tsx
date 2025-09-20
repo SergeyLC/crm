@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import {
   TextField,
   Button,
@@ -50,20 +50,14 @@ export const BaseUpsertForm = <
   isDeal = false,
 }: BaseUpsertFormProps<TEntity, TState>) => {
   const isNew = !initialData;
-  const { t } = useTranslation('form');
+  const { t } = useTranslation("form");
 
   const [form, setForm] = useState<TState>(initialData as unknown as TState);
+  const [isLoading, setIsLoading] = useState(true);
   const [needSubmit, setNeedSubmit] = useState(false);
   const { user, isAuthenticated } = useAuth();
-  // If the user is not authenticated, we should not allow form interaction
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     // Handle unauthenticated state (e.g., show a message or redirect)
-  //   }
-  // }, [isAuthenticated]);
-
+  
   // if creating a new form, set the assignee to the current user
-
   const handleAssigneeChange = React.useCallback(
     (userId: string | null) => {
       setForm((prev) => ({
@@ -73,6 +67,12 @@ export const BaseUpsertForm = <
     },
     [setForm]
   );
+
+  // useEffect(() => {
+  //   if (initialData) {
+  //     setForm(initialData as unknown as TState);
+  //   }
+  // }, [initialData]);
 
   useEffect(() => {
     if (isNew && user && isAuthenticated) {
@@ -131,6 +131,20 @@ export const BaseUpsertForm = <
     [setForm]
   );
 
+  useEffect(() => {
+    if (initialData) {
+      setForm(initialData as unknown as TState);
+      setIsLoading(false);
+    } else if (isNew) {
+      setForm({} as TState);
+      setIsLoading(false);
+    }
+  }, [initialData, isNew]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   // Initialize form state with normalized data
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -147,37 +161,37 @@ export const BaseUpsertForm = <
                   variant="subtitle1"
                   sx={{ color: "primary.main", fontWeight: 600 }}
                 >
-                  {t('leadInfo')}
+                  {t("leadInfo")}
                 </Typography>
                 <Stack direction="row" spacing={1.5}>
                   <TextField
                     fullWidth
-                    label={t('product')}
+                    label={t("product")}
                     name="productInterest"
                     value={form?.productInterest || ""}
                     onChange={handleChange}
-                    placeholder={t('productInterest')}
+                    placeholder={t("productInterest")}
                     variant="outlined"
                     size="small"
                   />
                   <TextField
                     fullWidth
-                    label={t('potentialValue')}
+                    label={t("potentialValue")}
                     name="potentialValue"
                     type="number"
                     value={form?.potentialValue || ""}
                     onChange={handleChange}
-                    placeholder={t('potentialValue')}
+                    placeholder={t("potentialValue")}
                     variant="outlined"
                     size="small"
                   />
                 </Stack>
                 <TextField
-                  label={t('title')}
+                  label={t("title")}
                   name="title"
                   value={form?.title || ""}
                   onChange={handleChange}
-                  placeholder={t('title')}
+                  placeholder={t("title")}
                   size="small"
                   fullWidth
                 />
@@ -198,7 +212,7 @@ export const BaseUpsertForm = <
                   variant="subtitle1"
                   sx={{ color: "primary.main", fontWeight: 600 }}
                 >
-                  {t('contactInfo')}
+                  {t("contactInfo")}
                 </Typography>
                 <Box sx={{ "& .MuiTextField-root": { my: 0.5 } }}>
                   <ContactFormFields
@@ -216,12 +230,12 @@ export const BaseUpsertForm = <
                   variant="subtitle1"
                   sx={{ color: "primary.main", fontWeight: 600 }}
                 >
-                  {t('owner')}
+                  {t("owner")}
                 </Typography>
                 <Box sx={{ "& .MuiTextField-root": { my: 0.5 } }}>
                   <UserSelect
                     value={form?.assigneeId || null}
-                    label={t('assignee')}
+                    label={t("assignee")}
                     onChange={handleAssigneeChange}
                   />
                 </Box>
@@ -235,7 +249,7 @@ export const BaseUpsertForm = <
                   variant="subtitle1"
                   sx={{ color: "primary.main", fontWeight: 600 }}
                 >
-                  {t('appointments')}
+                  {t("appointments")}
                 </Typography>
                 <Box sx={{ "& .MuiTextField-root": { my: 0.5 } }}>
                   <AppointmentsFormFieldsSet
@@ -270,7 +284,9 @@ export const BaseUpsertForm = <
               fontWeight: 600,
             }}
           >
-            {isNew ? t('create', { defaultValue: titleCreate }) : t('update', { defaultValue: titleUpdate })}
+            {isNew
+              ? t("create", { defaultValue: titleCreate })
+              : t("update", { defaultValue: titleUpdate })}
           </Button>
         </Box>
       </form>

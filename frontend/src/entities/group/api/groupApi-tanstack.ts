@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseQueryOptions,
+} from "@tanstack/react-query";
 import {
   Group,
   GroupsResponse,
@@ -7,18 +12,18 @@ import {
   GroupMember,
   GroupRole,
 } from "../model/types";
-import { UsersResponse, UserExt } from '@/entities/user';
+import { UsersResponse, UserExt } from "@/entities/user";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
 
-const API_BASE_URL = NEXT_PUBLIC_BACKEND_API_URL || '/api';
+const API_BASE_URL = NEXT_PUBLIC_BACKEND_API_URL || "/api";
 
 // API functions
 const fetchGroups = async (): Promise<GroupsResponse> => {
   const response = await fetch(`${API_BASE_URL}/groups`, {
-    credentials: "include",    
+    credentials: "include",
   });
   if (!response.ok) {
-    throw new Error('Failed to fetch groups');
+    throw new Error("Failed to fetch groups");
   }
   return response.json();
 };
@@ -28,66 +33,78 @@ const fetchGroupById = async (id: string): Promise<Group> => {
     credentials: "include",
   });
   if (!response.ok) {
-    throw new Error('Failed to fetch group');
+    throw new Error("Failed to fetch group");
   }
   return response.json();
 };
 
 const createGroup = async (groupData: CreateGroupDTO): Promise<Group> => {
   const response = await fetch(`${API_BASE_URL}/groups`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     credentials: "include",
     body: JSON.stringify(groupData),
   });
   if (!response.ok) {
-    throw new Error('Failed to create group');
+    throw new Error("Failed to create group");
   }
   return response.json();
 };
 
-const updateGroup = async ({ id, body }: { id: string; body: UpdateGroupDTO }): Promise<Group> => {
+const updateGroup = async ({
+  id,
+  body,
+}: {
+  id: string;
+  body: UpdateGroupDTO;
+}): Promise<Group> => {
   const response = await fetch(`${API_BASE_URL}/groups/${id}`, {
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     credentials: "include",
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    throw new Error('Failed to update group');
+    throw new Error("Failed to update group");
   }
   return response.json();
 };
 
 const deleteGroup = async (id: string): Promise<unknown> => {
   const response = await fetch(`${API_BASE_URL}/groups/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
     credentials: "include",
   });
 
-  const contentType = response.headers.get('content-type') || '';
+  const contentType = response.headers.get("content-type") || "";
 
   if (!response.ok) {
     // Try to read a JSON error body, otherwise read text
-  let errorBody: unknown = null;
+    let errorBody: unknown = null;
     try {
-      if (contentType.includes('application/json')) {
-    errorBody = await response.json();
+      if (contentType.includes("application/json")) {
+        errorBody = await response.json();
       } else {
         const text = await response.text();
-    errorBody = { message: text };
+        errorBody = { message: text };
       }
-  } catch {
-    // ignore parse errors
+    } catch {
+      // ignore parse errors
     }
-    let message = 'Failed to delete group';
+    let message = "Failed to delete group";
     try {
-      if (errorBody && typeof errorBody === 'object' && 'message' in errorBody) {
-    message = String((errorBody as Record<string, unknown>).message as string);
+      if (
+        errorBody &&
+        typeof errorBody === "object" &&
+        "message" in errorBody
+      ) {
+        message = String(
+          (errorBody as Record<string, unknown>).message as string
+        );
       }
     } catch {
       // fallback
@@ -96,44 +113,60 @@ const deleteGroup = async (id: string): Promise<unknown> => {
   }
 
   // On success, return parsed JSON if present so callers can show backend messages
-  if (contentType.includes('application/json')) {
+  if (contentType.includes("application/json")) {
     return response.json();
   }
 
-  return { message: 'Group deleted' };
+  return { message: "Group deleted" };
 };
 
-const addGroupMember = async ({ groupId, userId }: { groupId: string; userId: string }): Promise<GroupMember> => {
+const addGroupMember = async ({
+  groupId,
+  userId,
+}: {
+  groupId: string;
+  userId: string;
+}): Promise<GroupMember> => {
   const response = await fetch(`${API_BASE_URL}/groups/${groupId}/members`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     credentials: "include",
     body: JSON.stringify({ userId }),
   });
   if (!response.ok) {
-    throw new Error('Failed to add group member');
+    throw new Error("Failed to add group member");
   }
   return response.json();
 };
 
-const removeGroupMember = async ({ groupId, userId }: { groupId: string; userId: string }): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/groups/${groupId}/members/${userId}`, {
-    method: 'DELETE',
-    credentials: "include",
-  });
+const removeGroupMember = async ({
+  groupId,
+  userId,
+}: {
+  groupId: string;
+  userId: string;
+}): Promise<void> => {
+  const response = await fetch(
+    `${API_BASE_URL}/groups/${groupId}/members/${userId}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
   if (!response.ok) {
-    throw new Error('Failed to remove group member');
+    throw new Error("Failed to remove group member");
   }
 };
 
 // Query keys
 export const groupKeys = {
-  all: ['groups'] as const,
-  lists: () => [...groupKeys.all, 'list'] as const,
-  list: (filters: Record<string, unknown>) => [...groupKeys.lists(), filters] as const,
-  details: () => [...groupKeys.all, 'detail'] as const,
+  all: ["groups"] as const,
+  lists: () => [...groupKeys.all, "list"] as const,
+  list: (filters: Record<string, unknown>) =>
+    [...groupKeys.lists(), filters] as const,
+  details: () => [...groupKeys.all, "detail"] as const,
   detail: (id: string) => [...groupKeys.details(), id] as const,
 };
 
@@ -153,7 +186,12 @@ export const useGetGroupByIdQuery = (id: string, enabled = true) => {
     enabled: !!id && enabled,
     // Keep previous data while refetching to avoid UI briefly falling back to parent props
     keepPreviousData: true,
-  } as UseQueryOptions<Group, Error, Group, ReturnType<typeof groupKeys.detail>>);
+  } as UseQueryOptions<
+    Group,
+    Error,
+    Group,
+    ReturnType<typeof groupKeys.detail>
+  >);
 };
 
 export const useCreateGroupMutation = () => {
@@ -162,7 +200,10 @@ export const useCreateGroupMutation = () => {
   return useMutation({
     mutationFn: createGroup,
     onSuccess: () => {
+      // Cache für Gruppenliste invalidieren
       queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
+      // Optional: Auch Pipeline-Daten aktualisieren, wenn Gruppen dort angezeigt werden
+      queryClient.invalidateQueries({ queryKey: ["pipelines"] });
     },
   });
 };
@@ -174,7 +215,9 @@ export const useUpdateGroupMutation = () => {
     mutationFn: updateGroup,
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: groupKeys.detail(variables.id),
+      });
     },
   });
 };
@@ -186,6 +229,8 @@ export const useDeleteGroupMutation = () => {
     mutationFn: deleteGroup,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
+      // Optional: Auch Pipeline-Daten aktualisieren, wenn Gruppen dort angezeigt werden
+      queryClient.invalidateQueries({ queryKey: ["pipelines"] });
     },
   });
 };
@@ -202,18 +247,30 @@ export const useAddGroupMemberMutation = () => {
       await queryClient.cancelQueries({ queryKey: groupKeys.detail(groupId) });
       await queryClient.cancelQueries({ queryKey: groupKeys.lists() });
 
-      const previousGroup = queryClient.getQueryData<Group>(groupKeys.detail(groupId));
-      const previousList = queryClient.getQueryData<GroupsResponse>(groupKeys.lists());
+      const previousGroup = queryClient.getQueryData<Group>(
+        groupKeys.detail(groupId)
+      );
+      const previousList = queryClient.getQueryData<GroupsResponse>(
+        groupKeys.lists()
+      );
 
       // Try to get user info from users cache to build a GroupMember preview
-  const usersCache = queryClient.getQueryData<UsersResponse>(['users', 'list']);
-  const newUser: UserExt | { id: string; name: string; email: string } = usersCache?.find((u) => u.id === userId) || { id: userId, name: '…', email: '' };
+      const usersCache = queryClient.getQueryData<UsersResponse>([
+        "users",
+        "list",
+      ]);
+      const newUser: UserExt | { id: string; name: string; email: string } =
+        usersCache?.find((u) => u.id === userId) || {
+          id: userId,
+          name: "…",
+          email: "",
+        };
 
       const optimisticMember: Partial<GroupMember> = {
         id: `optimistic-${userId}`,
         groupId,
         userId,
-  user: newUser as UserExt,
+        user: newUser as UserExt,
         joinedAt: new Date().toISOString(),
         role: GroupRole.MEMBER,
       };
@@ -227,26 +284,46 @@ export const useAddGroupMemberMutation = () => {
 
       // Also optimistically update the groups list if present
       if (previousList) {
-        queryClient.setQueryData<GroupsResponse>(groupKeys.lists(),
+        queryClient.setQueryData<GroupsResponse>(
+          groupKeys.lists(),
           previousList.map((g) =>
-            g.id === groupId ? { ...g, members: [...g.members, optimisticMember as GroupMember] } : g
+            g.id === groupId
+              ? {
+                  ...g,
+                  members: [...g.members, optimisticMember as GroupMember],
+                }
+              : g
           )
         );
       }
 
       return { previousGroup, previousList };
     },
-    onError: (err, variables, context: { previousGroup?: Group; previousList?: GroupsResponse } | undefined) => {
+    onError: (
+      err,
+      variables,
+      context:
+        | { previousGroup?: Group; previousList?: GroupsResponse }
+        | undefined
+    ) => {
       const { groupId } = variables as { groupId: string; userId: string };
       if (context?.previousGroup) {
-        queryClient.setQueryData<Group>(groupKeys.detail(groupId), context.previousGroup);
+        queryClient.setQueryData<Group>(
+          groupKeys.detail(groupId),
+          context.previousGroup
+        );
       }
       if (context?.previousList) {
-        queryClient.setQueryData<GroupsResponse>(groupKeys.lists(), context.previousList);
+        queryClient.setQueryData<GroupsResponse>(
+          groupKeys.lists(),
+          context.previousList
+        );
       }
     },
     onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(variables.groupId) });
+      queryClient.invalidateQueries({
+        queryKey: groupKeys.detail(variables.groupId),
+      });
       queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
     },
   });
@@ -264,8 +341,12 @@ export const useRemoveGroupMemberMutation = () => {
       await queryClient.cancelQueries({ queryKey: groupKeys.detail(groupId) });
       await queryClient.cancelQueries({ queryKey: groupKeys.lists() });
 
-      const previousGroup = queryClient.getQueryData<Group>(groupKeys.detail(groupId));
-      const previousList = queryClient.getQueryData<GroupsResponse>(groupKeys.lists());
+      const previousGroup = queryClient.getQueryData<Group>(
+        groupKeys.detail(groupId)
+      );
+      const previousList = queryClient.getQueryData<GroupsResponse>(
+        groupKeys.lists()
+      );
 
       if (previousGroup) {
         queryClient.setQueryData<Group>(groupKeys.detail(groupId), {
@@ -275,26 +356,43 @@ export const useRemoveGroupMemberMutation = () => {
       }
 
       if (previousList) {
-        queryClient.setQueryData<GroupsResponse>(groupKeys.lists(),
+        queryClient.setQueryData<GroupsResponse>(
+          groupKeys.lists(),
           previousList.map((g) =>
-            g.id === groupId ? { ...g, members: g.members.filter((m) => m.userId !== userId) } : g
+            g.id === groupId
+              ? { ...g, members: g.members.filter((m) => m.userId !== userId) }
+              : g
           )
         );
       }
 
       return { previousGroup, previousList };
     },
-    onError: (err, variables, context: { previousGroup?: Group; previousList?: GroupsResponse } | undefined) => {
+    onError: (
+      err,
+      variables,
+      context:
+        | { previousGroup?: Group; previousList?: GroupsResponse }
+        | undefined
+    ) => {
       const { groupId } = variables as { groupId: string; userId: string };
       if (context?.previousGroup) {
-        queryClient.setQueryData<Group>(groupKeys.detail(groupId), context.previousGroup);
+        queryClient.setQueryData<Group>(
+          groupKeys.detail(groupId),
+          context.previousGroup
+        );
       }
       if (context?.previousList) {
-        queryClient.setQueryData<GroupsResponse>(groupKeys.lists(), context.previousList);
+        queryClient.setQueryData<GroupsResponse>(
+          groupKeys.lists(),
+          context.previousList
+        );
       }
     },
     onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(variables.groupId) });
+      queryClient.invalidateQueries({
+        queryKey: groupKeys.detail(variables.groupId),
+      });
       queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
     },
   });

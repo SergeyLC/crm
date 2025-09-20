@@ -1,8 +1,18 @@
 import { ArchivedDealsTable } from '@/features/deal';
 import { Suspense } from 'react';
+import { ssrFetch } from '@/shared/api';
+import { DealExt } from '@/entities/deal';
 
 // ISR configuration - will be ignored in development
 export const revalidate = 60;
+
+// Generating static pages only for en and de
+export async function generateStaticParams() {
+  return [
+    { locale: 'en' },
+    { locale: 'de' },
+  ];
+}
 
 // Loading component for archived deals
 function ArchivedDealsLoading() {
@@ -21,9 +31,11 @@ function ArchivedDealsLoading() {
 }
 
 export default async function ArchivedDealsPage() {
+  const deals = await ssrFetch<DealExt[]>("deals/archived");
+
   return (
     <Suspense fallback={<ArchivedDealsLoading />}>
-      <ArchivedDealsTable />
+      <ArchivedDealsTable initialData={deals || undefined} />
     </Suspense>
   );
 }

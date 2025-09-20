@@ -34,9 +34,10 @@ const nextConfig = () => {
     },
     // Compression
     compress: true,
-    // Disable CSS optimization to fix critters issue with Emotion
     experimental: {
+      // Disable CSS optimization to fix critters issue with Emotion
       optimizeCss: false, // Disable CSS optimization
+      esmExternals: true, // nur für neue Browser
     },
   };
 
@@ -67,7 +68,6 @@ const nextConfig = () => {
       },
     ];
   };
-
 
   return config;
 };

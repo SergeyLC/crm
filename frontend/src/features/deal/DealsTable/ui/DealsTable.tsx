@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import dynamic from "next/dynamic";
 
@@ -13,6 +13,15 @@ import {
   DealViewSwitcher,
   useGetActiveDealsQuery,
 } from "@/entities/deal";
+
+import { QueryKeyType, useInvalidateQueries } from "@/shared";
+import {
+  DealActiveQueryKey,
+  DealArchivedQueryKey,
+  DealLostQueryKey,
+  DealWonQueryKey,
+} from "@/entities/deal";
+
 import {
   BaseTable,
   BaseTableHeadProps,
@@ -30,7 +39,7 @@ import { useEntityDialog } from "@/shared/lib/hooks";
 
 import { DealTableRowData, buildDealTableColumns } from "../model";
 import { TFunction } from "i18next";
-import { mapDealsToDealRows, useTableActions, useDealOperations } from "../lib";
+import { mapDealsToDealRows, useDealArchiveOperations } from "../lib";
 
 // Will inject translated columns inside component (needs t), so export a factory.
 const makeDealsTableHead = (t: TFunction) => {
@@ -58,10 +67,17 @@ export type DealsTableProps<T extends DealExt> = BaseTableProps<
   ToolbarComponent?: React.FC<BaseTableToolbarProps>;
 };
 
+const invalidateDealsQueryKeys = [
+  DealActiveQueryKey,
+  DealArchivedQueryKey,
+  DealWonQueryKey,
+  DealLostQueryKey,
+] as unknown[] as QueryKeyType[];
+
 export function DealsTable<T extends DealExt>({
   initialData,
-  order,
-  orderBy = "stage" as SortableFields<DealTableRowData>,
+  order = "desc",
+  orderBy = "potentialValue" as SortableFields<DealTableRowData>,
   sx,
   toolbarTitle,
   ToolbarComponent,
@@ -77,19 +93,36 @@ export function DealsTable<T extends DealExt>({
     handleDialogClose,
     showDialog,
   } = useEntityDialog();
+  // Use initialData only on first render, thereafter — undefined
+  const wasInitialDataUsed = React.useRef(false);
 
-  const { handleArchive, handleArchives, handleRefreshData } =
-    useDealOperations();
+  // After the first render, do not pass initialData anymore
+  React.useEffect(() => {
+    if (!wasInitialDataUsed.current && initialData) {
+      wasInitialDataUsed.current = true;
+    }
+  }, [initialData]);
 
-  const {} = useTableActions();
+  const { useQuery, queryKey } = useGetActiveDealsQuery(undefined, {
+    placeholderData: wasInitialDataUsed.current ? undefined : initialData,
+  });
 
-  // fetch deals
-  const enabled = !Boolean(initialData && initialData.length > 0);
+  const { data: deals = [] } = useQuery;
 
-  // Always call both hooks but use only one based on condition
-  const activeDealsQuery = useGetActiveDealsQuery({}, enabled); // disabled by default
+  const invalidateDeals = useInvalidateQueries();
 
-  const { data: deals = initialData || [] } = activeDealsQuery;
+  const onSuccess = React.useCallback(() => {
+    // Invalidate all related deal queries
+    invalidateDeals([
+      queryKey as QueryKeyType,
+      DealArchivedQueryKey as unknown as QueryKeyType,
+    ]);
+  }, [invalidateDeals, queryKey]);
+  const { handleArchive, handleArchives } = useDealArchiveOperations(onSuccess);
+
+  const handleRefreshData = useCallback(async () => {
+    invalidateDeals([queryKey as QueryKeyType]);
+  }, [invalidateDeals, queryKey]);
 
   const rowActionMenuItems: ActionMenuItemProps<DealTableRowData>[] =
     React.useMemo(
@@ -159,7 +192,7 @@ export function DealsTable<T extends DealExt>({
   return (
     <>
       <BaseTable
-        initialData={deals?.length > 0 ? deals : initialData}
+        initialData={deals}
         order={order}
         orderBy={orderBy}
         columnsConfig={buildDealTableColumns(t)}
@@ -174,6 +207,8 @@ export function DealsTable<T extends DealExt>({
           id={clickedId || undefined}
           open={true}
           onClose={handleDialogClose}
+          // Invalidate all related deal queries
+          invalidateKeys={invalidateDealsQueryKeys}
         />
       )}
     </>

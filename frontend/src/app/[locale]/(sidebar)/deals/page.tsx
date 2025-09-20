@@ -1,10 +1,20 @@
+import { DealExt } from "@/entities";
 import { DealsTable } from "@/features";
+import { ssrFetch } from "@/shared/api";
 
 // ISR configuration - will be ignored in development
 export const revalidate = 60;
 
+// Generating static pages only for en and de
+export async function generateStaticParams() {
+  return [
+    { locale: 'en' },
+    { locale: 'de' },
+  ];
+}
+
 export default async function DealsPage() {
-  // Data fetching strategy: Using TanStack Query for client-side fetching
-  // const deals = undefined;
-  return <DealsTable />;
+  const deals = await ssrFetch<DealExt[]>("deals");
+
+  return <DealsTable initialData={deals || undefined} />;
 }

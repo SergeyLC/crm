@@ -3,7 +3,7 @@
 import { DealExt, CreateDealDTO, UpdateDealDTO } from "@/entities/deal";
 import { useGetDealByIdQuery } from "@/entities/deal";
 import { BaseUpsertForm, BaseUpsertFormProps } from "@/features/form";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 
 type DealFormProps = BaseUpsertFormProps<
   DealExt,
@@ -15,27 +15,25 @@ type DealFormProps = BaseUpsertFormProps<
 export const DealUpsertForm: React.FC<DealFormProps> = ({
   initialData,
   dealId,
-  // titleCreate = "Create Deal",
-  // titleUpdate = "Update Deal",
   onSubmit,
 }) => {
   const {
-    data: dealData = initialData,
+    data: dealData = dealId ? undefined : initialData,
     isLoading,
     isError,
   } = useGetDealByIdQuery(dealId || "");
 
-  const { t } = useTranslation('deal');
+  const { t } = useTranslation("deal");
 
-  if (isLoading) return <div>{t('dialog.loading')}</div>;
-  if (isError) return <div>{t('dialog.errorLoad')}</div>;
+  if (isLoading) return <div>{t("dialog.loading")}</div>;
+  if (isError) return <div>{t("dialog.errorLoad")}</div>;
 
   return (
     <BaseUpsertForm
       initialData={dealData}
       onSubmit={onSubmit}
-  titleCreate={t('dialog.create')}
-  titleUpdate={t('dialog.update')}
+      titleCreate={t("dialog.create")}
+      titleUpdate={t("dialog.update")}
       isDeal={true}
     />
   );

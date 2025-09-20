@@ -20,21 +20,24 @@ import {
   useGetDealByIdQuery,
   useUpdateDealMutation,
   useCreateDealMutation,
-  dealKeys,
 } from "@/entities";
 import type { CreateDealDTO, UpdateDealDTO } from "@/entities";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { QueryKeyType } from "@/shared";
 
 export function DealEditDialog({
   id,
   open,
   onClose,
+  invalidateKeys,
 }: {
   id?: string;
   open?: boolean;
   onClose?: () => void;
+  invalidateKeys?: QueryKeyType[];
 }) {
   const { t } = useTranslation("deal");
+  console.log("DealEditDialog id:", id);
   const { data, isLoading } = useGetDealByIdQuery(id || "");
   const updateDeal = useUpdateDealMutation();
   const createDeal = useCreateDealMutation();
@@ -42,13 +45,15 @@ export function DealEditDialog({
   const { user } = useAuth();
 
   const handleSubmit = React.useCallback(
-    async (values: CreateDealDTO | UpdateDealDTO, shouldCreate?: boolean) => {
-      if (!id || shouldCreate) {
+    async (values: CreateDealDTO | UpdateDealDTO) => {
+      if (!id) {
         await createDeal.mutateAsync({
           ...values,
-          creatorId: user?.id,
+          creator: user,
         } as CreateDealDTO);
-        queryClient.invalidateQueries({ queryKey: dealKeys.all });
+        for (const key of invalidateKeys || []) {
+          queryClient.invalidateQueries({ queryKey: key });
+        }
         onClose?.();
         return;
       }
@@ -69,11 +74,13 @@ export function DealEditDialog({
       }
 
       await updateDeal.mutateAsync({ id: id, body: values as UpdateDealDTO });
-      console.log("Deal updated with id:", id, "and values:", values);
-      queryClient.invalidateQueries({ queryKey: dealKeys.all });
+      for (const key of invalidateKeys || []) {
+        queryClient.invalidateQueries({ queryKey: key });
+      }
+
       onClose?.();
     },
-    [id, user, queryClient, updateDeal, createDeal, onClose]
+    [id, user, queryClient, updateDeal, createDeal, invalidateKeys, onClose]
   );
 
   if (!open) return null;
