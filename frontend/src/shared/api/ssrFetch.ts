@@ -18,7 +18,7 @@ export async function ssrFetch<T>(endpoint: string): Promise<T | null> {
       cache: "no-store",
     });
     if (!res.ok) return null;
-    console.warn(`[Server fetched for ${endpoint}]`);
+    // console.warn(`[Server fetched for ${endpoint}]`);
     return (await res.json()) as T;
   } catch (e) {
     console.warn(`[Server fetch failed for ${endpoint}]`, e);

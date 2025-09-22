@@ -71,7 +71,7 @@ export const moveCardToStage = (
     updateInfo = { status: stage };
   }
   
-  console.log(`Moving card ${id} to stage ${stage} with updateInfo=${JSON.stringify(updateInfo)}`);
+  // console.log(`Moving card ${id} to stage ${stage} with updateInfo=${JSON.stringify(updateInfo)}`);
   update(id, (deal) => ({
     ...deal,
     ...updateInfo,
