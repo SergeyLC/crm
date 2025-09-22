@@ -1,9 +1,23 @@
 import React from "react";
 import Container from "@mui/material/Container";
-import { KanbanBoard } from "@/features/kanban/ui/KanbanBoard";
 import Box from "@mui/material/Box";
-import { DealViewSwitcher } from "@/entities/deal/DealViewSwitcher";
+
 import i18n from '@/shared/lib/i18n/server';
+import { KanbanBoard } from "@/features/kanban";
+import { DealViewSwitcher } from "@/entities/deal";
+import { ssrFetch } from "@/shared/api";
+import { DealExt } from "@/entities/deal";
+
+// Generating static pages only for en and de
+export async function generateStaticParams() {
+  return [
+    { locale: 'en' },
+    { locale: 'de' },
+  ];
+}
+
+// ISR configuration - will be ignored in development
+export const revalidate = 60;
 
 export default async function KanbanDealsPage({
   params,
@@ -18,6 +32,7 @@ export default async function KanbanDealsPage({
   // New translations from locale files
   // These translations will be available in components via i18n
   // with the namespace "kanban"
+  const deals = await ssrFetch<DealExt[]>("deals");
 
   return (
     <Container
@@ -44,7 +59,7 @@ export default async function KanbanDealsPage({
           position: "relative",
         }}
       >
-        <KanbanBoard gap={3} padding={0} />
+        <KanbanBoard initialDeals={deals || undefined} gap={3} padding={0} />
       </Box>
     </Container>
   );

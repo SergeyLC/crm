@@ -12,10 +12,9 @@ import {
   DealExt,
   sanitizeDealData,
   UpdateDealDTO,
-  useGetDealsQuery,
+  useGetActiveDealsQuery,
   useLazyGetDealByIdQuery,
   useUpdateDealMutation,
-  DealListQueryKey,
   DealActiveQueryKey,
   DealWonQueryKey,
   DealLostQueryKey,
@@ -28,16 +27,9 @@ import { DealStage, DealStatus } from "@/shared/generated/prisma";
 import { prepareStacks, moveCardToStage, processKanbanChanges } from "../lib";
 import { useTranslation } from "react-i18next";
 
-const invalidateLeadQueryKeys = [
-  DealListQueryKey,
-  DealActiveQueryKey,
-  DealWonQueryKey,
-  DealLostQueryKey,
-  DealArchivedQueryKey,
-] as QueryKeyType[];
-
 export type KanbanBoardProps = {
-  stacks?: KanbanStackData[];
+  // stacks?: KanbanStackData[];
+  initialDeals?: DealExt[];
   className?: string;
   gap?: number;
   padding?: number;
@@ -56,7 +48,6 @@ export type KanbanBoardProps = {
  * with translation and mutation hooks.
  *
  * @param {KanbanBoardProps} props - The props for the KanbanBoard component.
- * @param {KanbanStackData[]} [props.stacks] - Optional precomputed stacks to display.
  * @param {string} [props.className] - Optional CSS class for styling.
  * @param {number} [props.gap=2] - Gap between stacks.
  * @param {number} [props.padding=1] - Padding inside stacks.
@@ -64,8 +55,9 @@ export type KanbanBoardProps = {
  * @returns {JSX.Element} The rendered Kanban board UI.
  */
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({
-  stacks: incomingStacks,
+  // stacks: incomingStacks,
   className,
+  initialDeals,
   gap = 2,
   padding = 1,
 }) => {
@@ -75,36 +67,41 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   // load data only if needed
   const {
     useQuery: { data: deals = [] },
-  } = useGetDealsQuery(undefined, {
-    queryKey: DealListQueryKey as QueryKeyType,
+  } = useGetActiveDealsQuery(undefined, {
+    placeholderData: initialDeals,
   });
 
   // Memoize the calculation of stacks to avoid unnecessary recomputations
   const dealStacks = React.useMemo(() => {
-    // If ready-made stacks are provided, use them
-    if (incomingStacks?.length) {
-      return incomingStacks;
-    }
     // Otherwise, create from deals
     return prepareStacks(deals || [], t);
-  }, [incomingStacks, deals, t]);
+  }, [deals, t]);
 
   // Local state for working with data
   const [stacksInfo, setStacksInfo] = React.useState<KanbanStackData[]>(
-    () => []
+    () => dealStacks
   );
 
   const invalidateDeals = useInvalidateQueries();
 
-  const onSuccess = React.useCallback(() => {
-    console.log(
-      invalidateLeadQueryKeys
-    );
+  const onSuccess = React.useCallback((data: unknown) => {
+    const { status, stage } = data as DealExt;
 
-    invalidateDeals(invalidateLeadQueryKeys);
+    // Determine which queries to invalidate based on the updated deal's status and stage
+
+    const invalidateKeys = [DealActiveQueryKey as unknown as  QueryKeyType];
+    if (status === "ARCHIVED") {
+      invalidateKeys.push(DealArchivedQueryKey as unknown as QueryKeyType);
+    } else if (stage === "WON") {
+      invalidateKeys.push(DealWonQueryKey as unknown as QueryKeyType);
+    } else if (stage === "LOST") {
+      invalidateKeys.push(DealLostQueryKey as unknown as QueryKeyType);
+    }
+    // invalidate only relevant queries
+    invalidateDeals(invalidateKeys);
   }, [invalidateDeals]);
 
-  const triggerGetDealById = useLazyGetDealByIdQuery();
+  const getDealById = useLazyGetDealByIdQuery();
   const updateDeal = useUpdateDealMutation({ onSuccess });
 
   // Update state when data source changes
@@ -122,7 +119,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   const update = useCallback(
     async (id: string, updateData: (deal: DealExt) => UpdateDealDTO) => {
-      const deal = await triggerGetDealById(id);
+      const deal = await getDealById(id);
       if (!deal) {
         console.error("Deal not found for id", id);
         return;
@@ -130,14 +127,12 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
       const updatedData = updateData(deal);
       const preparedUpdate = sanitizeDealData(updatedData);
-      // console.log("Updating deal", id, preparedUpdate);
-
       const body: UpdateDealDTO = {
         ...preparedUpdate,
       };
       await updateDeal.mutateAsync({ id, body });
     },
-    [triggerGetDealById, updateDeal]
+    [getDealById, updateDeal]
   );
 
   const moveCardToRestStage = useCallback(

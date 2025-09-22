@@ -1,6 +1,6 @@
-// shared/auth/api.ts
+// features/auth/api.ts
 import { User, LoginCredentials } from "../model";
-import { NEXT_PUBLIC_API_URL } from "@/shared";
+import { NEXT_PUBLIC_API_URL } from "@/shared/config";
 
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<{user: User, token: string}> => {
