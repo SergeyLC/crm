@@ -1,0 +1,22 @@
+{
+  "id": "lead-1",
+  "title": "Test Lead",
+  "productInterest": "Product A",
+  "potentialValue": 1000,
+  "assigneeId": "user-1",
+  "stage": "LEAD",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-01T00:00:00Z",
+  "contact": {
+    "id": "contact-1",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "+1234567890"
+  },
+  "assignee": {
+    "id": "user-1",
+    "name": "Test User",
+    "email": "test@example.com"
+  },
+  "appointments": []
+}

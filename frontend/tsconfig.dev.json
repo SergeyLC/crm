@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["node", "jest", "@testing-library/jest-dom"],
+    "typeRoots": ["node_modules/@types"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx", 
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "src/test-utils.tsx",
+    "src/setupTests.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "cypress/**/*",
+    "node_modules/cypress/**/*"
+  ]
+}

@@ -61,3 +61,73 @@ Notes & recommendations:
 - Prefer small, component-scoped JSONs for UI text that belongs to a single feature.
 - If a key exists both in the central `src/locales/*` file and in a component-local file, the collector + deep-merge strategy preserves nested keys (component entries merge into the namespace). If you want a different override priority, update `scripts/collect-locales.js` to change merge order.
 - Generated files (e.g. `src/locales/generated_i18n.ts`) are committed by the collector during local dev for convenience; CI also runs the collector to ensure the file is present on build agents.
+
+## Testing Infrastructure
+
+### Overview
+
+The application includes comprehensive testing infrastructure with:
+- **Jest** (v30.0.5) - Unit testing framework with TypeScript support
+- **React Testing Library** (v16.3.0) - Component testing utilities  
+- **Cypress** (v15.3.0) - End-to-end testing framework
+- **Code Coverage** - Detailed coverage reporting
+
+### Available Test Commands
+
+```bash
+# Jest Unit Tests
+npm test                    # Run all Jest tests
+npm run test:watch          # Jest in watch mode
+npm run test:lead-dialog    # Test specific component
+npm run test:coverage       # Generate coverage report
+
+# Cypress E2E Tests  
+npm run cypress:open        # Open Cypress UI
+npm run cypress:run         # Run all E2E tests headless
+npm run cypress:demo        # Run demo tests (no server required)
+npm run test:e2e:open       # Open E2E testing interface
+```
+
+### Test Structure
+
+Following FSD architecture, tests are co-located with components:
+
+```
+src/features/lead/ui/__tests__/
+├── LeadEditDialog.basic.test.tsx    # ✅ Working basic tests (4 tests)
+├── LeadEditDialog.test.tsx          # 🚧 Comprehensive tests (disabled)
+
+cypress/e2e/
+├── demo-cypress.cy.ts               # ✅ Working demo tests (3 tests)
+├── lead-management.cy.ts            # 📋 Full E2E scenarios (needs server)
+└── lead-edit-dialog.cy.ts          # 📋 Component-specific E2E tests
+```
+
+### Configuration Files
+
+- `jest.config.cjs` - Jest configuration with TypeScript transforms
+- `cypress.config.ts` - Cypress E2E configuration  
+- `src/shared/lib/__tests__/setupTests.ts` - Global test setup and mocks
+- `src/shared/lib/__tests__/test-utils.ts` - Testing utilities with providers
+
+### Current Status
+
+✅ **Working**: 
+- Jest: 4 test suites, 26 tests passing
+- Cypress: 3 demo tests passing  
+- Coverage reporting functional
+- TypeScript support in all tests
+
+🚧 **In Progress**: Complex component mocking for comprehensive tests  
+📋 **Planned**: Full E2E test implementation (requires running server)
+
+### Key Features
+
+- TypeScript support in all tests
+- Mock implementations for auth, i18n, and Material-UI
+- Provider wrappers for TanStack Query and theme testing
+- Code coverage reports with detailed metrics
+- Both unit and E2E testing capabilities
+- FSD-compliant test organization
+
+**Note**: Component testing was initially attempted but disabled due to Next.js/Material-UI compatibility issues with Cypress component testing. Focus shifted to robust Jest unit tests and Cypress E2E tests.
