@@ -1,4 +1,4 @@
-import { BaseTableRowData } from "@/features/BaseTable";
+import { BaseTableRowData } from "@/features/base-table";
 
 export interface DealTableRowData extends BaseTableRowData {
   id: string;

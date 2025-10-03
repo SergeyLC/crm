@@ -34,7 +34,7 @@ import {
   BaseTableToolbar,
   ToolbarMenuItem,
   BaseTableToolbarProps,
-} from "@/features/BaseTable";
+} from "@/features/base-table";
 import { useEntityDialog } from "@/shared/lib/hooks";
 
 import { DealTableRowData, buildDealTableColumns } from "../model";

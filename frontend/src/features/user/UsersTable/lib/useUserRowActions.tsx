@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import EditIcon from "@mui/icons-material/Edit";
 import BlockIcon from "@mui/icons-material/Block";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
-import { ActionMenuItemProps } from "@/features/BaseTable/";
+import { ActionMenuItemProps } from "@/features/base-table";
 import { UserTableRowData } from "../model/types";
 
 export interface UseUserRowActionsConfig {

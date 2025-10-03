@@ -30,7 +30,7 @@ import {
 import { BaseTablePagination } from "./BaseTablePagination";
 import TableRow from "@mui/material/TableRow";
 import { TConvertSrcDataToDataRows } from "../lib/formatters";
-import { useSelection } from "../hooks/useSelection";
+import { useSelection } from "../../../shared/lib/hooks/useSelection";
 import { ActionCell } from "./ActionCell";
 import { ActionMenu, ActionMenuItemProps, ActionMenuProps } from "./ActionMenu";
 

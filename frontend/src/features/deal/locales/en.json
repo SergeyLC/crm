@@ -23,6 +23,7 @@
     "edit": "Edit Deal",
     "create": "Create Deal",
     "update": "Update Deal",
+    "cancel": "Cancel",
     "loading": "Loading...",
     "errorLoad": "Error loading deal data"
   },

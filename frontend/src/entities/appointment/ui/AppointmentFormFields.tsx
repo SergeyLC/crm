@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useTranslation } from 'react-i18next';
 import {
   TextField,
@@ -18,8 +18,7 @@ import {
   Appointment,
   AppointmentType,
   appointmentTypes,
-} from "@/entities/appointment/types";
-import { useGetAppointmentByIdQuery } from "@/entities/appointment";
+} from "@/entities/appointment";
 
 type AppointmentFormFieldsProps = {
   initialData?: Appointment;
@@ -32,22 +31,8 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
   appointmentId,
   onChange,
 }) => {
-  // Skip the initial fetch if we already have data from SSR
-  const skipFetch = !!initialData || (!appointmentId && !initialData);
 
-  const { data: appointmentData = initialData || undefined } =
-    useGetAppointmentByIdQuery((appointmentId as string) || "", !skipFetch);
-
-  // Initialize form state with normalized data
-  const [form, setForm] = useState<Appointment>(appointmentData as Appointment);
-
-  useEffect(() => {
-    setForm(appointmentData as Appointment);
-  }, [appointmentData]);
-
-  useEffect(() => {
-    onChange?.(appointmentId, form);
-  }, [form, onChange, appointmentId]);
+  const form = useMemo(() => initialData || {} as Appointment, [initialData]);
 
   const handleChange = useCallback(
     (
@@ -55,29 +40,29 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
         HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
       >
     ) => {
-      setForm((prev) => ({
-        ...prev,
+      onChange?.(appointmentId, {
+        ...form,
         [e.target.name]: e.target.value,
-      }));
+      })
     },
-    [setForm]
+    [onChange, form, appointmentId]
   );
 
   const handleTypeChange = useCallback((e: SelectChangeEvent) => {
-    setForm((prev) => ({
-      ...prev,
+    onChange?.(appointmentId, {
+      ...form,
       type: e.target.value as AppointmentType,
-    }));
-  }, []);
+    });
+  }, [onChange, form, appointmentId]);
 
   const handleDateChange = useCallback(
     (value: dayjs.Dayjs | null) => {
-      setForm((prev) => ({
-        ...prev,
-        datetime: value ? value.toDate() : prev.datetime,
-      }));
+      onChange?.(appointmentId, {
+        ...form,
+        datetime: value ? value.toDate() : form.datetime,
+      });
     },
-    [setForm]
+    [onChange, form, appointmentId]
   );
 
   const { t } = useTranslation('appointment');

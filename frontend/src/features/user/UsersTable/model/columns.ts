@@ -1,4 +1,4 @@
-import { Column } from "@/features/BaseTable";
+import { Column } from "@/features/base-table";
 import { UserTableRowData } from "./types";
 
 export const userTableColumns: Column<UserTableRowData>[] = [

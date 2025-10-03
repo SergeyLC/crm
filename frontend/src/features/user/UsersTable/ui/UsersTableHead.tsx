@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { BaseTableHeadProps, BaseTableHead } from "@/features/BaseTable";
+import { BaseTableHeadProps, BaseTableHead } from "@/features/base-table";
 import { userTableColumns } from "../model/columns";
 import { UserTableRowData } from "../model/types";
 import { useTranslation } from "react-i18next";

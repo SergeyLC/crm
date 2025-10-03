@@ -23,6 +23,7 @@
     "edit": "Deal bearbeiten",
     "create": "Deal erstellen",
     "update": "Deal aktualisieren",
+    "cancel": "Abbrechen",
     "loading": "Laden...",
     "errorLoad": "Fehler beim Laden der Deal-Daten"
   },

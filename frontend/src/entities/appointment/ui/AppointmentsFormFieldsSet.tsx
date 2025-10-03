@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useTranslation } from 'react-i18next';
+import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Stack, IconButton, Box, Divider } from "@mui/material";
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { AppointmentFormFields } from "./AppointmentFormFields";
@@ -13,103 +13,102 @@ import {
 } from "../types";
 
 type AppointmentsFormFieldsSetProps = {
-  initialAppointments?: Appointment[];
+  appointmentsData?: (
+    | Appointment
+    | CreateAppointmentDTO
+    | UpdateAppointmentDTO
+  )[];
   onChange?: (
     appointments: (Appointment | CreateAppointmentDTO | UpdateAppointmentDTO)[]
   ) => void;
 };
 
+const canShowAppointment = (
+  appointment: Appointment | CreateAppointmentDTO | UpdateAppointmentDTO
+) => {
+  return appointment.dealId !== "REMOVED";
+};
+
 export const AppointmentsFormFieldsSet: React.FC<
   AppointmentsFormFieldsSetProps
-> = ({ initialAppointments = [], onChange }) => {
-  const { t } = useTranslation('appointment');
-  const [appointments, setAppointments] =
-    useState<
-      (CreateAppointmentDTO | UpdateAppointmentDTO | DeleteAppointmentDTO)[]
-    >(initialAppointments);
-  const [removedAppointments, setRemovedAppointments] = useState<
-    DeleteAppointmentDTO[]
-  >([]);
+> = ({ appointmentsData, onChange }) => {
+  const { t } = useTranslation("appointment");
 
-  useEffect(() => {
-    onChange?.([
-      // create or update only appointmens with date
-      ...appointments.filter((app) => app.datetime),
-      // add information about appointmens that should be deleted
-      ...(removedAppointments.length > 0 ? removedAppointments : []),
-    ]);
-  }, [appointments, onChange, removedAppointments]);
+  const appointments = useMemo(
+    () => (appointmentsData ? [...appointmentsData] : []),
+    [appointmentsData]
+  );
 
   const handleAdd = useCallback(() => {
-    setAppointments((prev) => [
-      ...prev,
-      {
-        type: null,
-        note: null,
-      },
-    ]);
-  }, [setAppointments]);
+    appointments.push({
+      type: null,
+      note: null,
+    } as CreateAppointmentDTO);
+    onChange?.(appointments);
+  }, [appointments, onChange]);
 
   const handleRemove = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (!appointments) return;
       const idx = Number(e.currentTarget.id);
       const removedAppointment = appointments[idx] as DeleteAppointmentDTO;
+      if (!removedAppointment) return;
+
       // save information about appointments should be deleted
       if (removedAppointment.id && removedAppointment.dealId) {
-        setRemovedAppointments((prev) => [
-          ...prev,
-          // if appoinment has id and daealId then it exists in the DB and should be deleted
-          {
-            id: removedAppointment.id,
-            dealId: removedAppointment.dealId,
-          },
-        ]);
+        appointments[idx] = {
+          id: removedAppointment.id,
+          dealId: "REMOVED",
+        };
+      } else {
+        appointments.splice(idx, 1);
       }
-      setAppointments((prev) => prev.filter((_, i) => i !== idx));
+      onChange?.(appointments);
     },
-    [appointments, setRemovedAppointments, setAppointments]
+    [appointments, onChange]
   );
 
   const handleChange = useCallback(
     (idx: number | string, value: Appointment) => {
-      setAppointments((prev) =>
-        prev.map((item, i) => (i === idx ? value : item))
-      );
+      appointments[Number(idx)] = value;
+      onChange?.(appointments);
     },
-    [setAppointments]
+    [appointments, onChange]
   );
 
-  
   return (
     <Stack spacing={1.5}>
-      {appointments.map((appointment, idx) => (
-        <React.Fragment key={idx}>
-          {idx > 0 && <Divider sx={{ my: 2 }} />}
-          <Stack
-            direction="row"
-            alignItems="flex-start"
-            spacing={1}
-            sx={{ "& .MuiTextField-root": { my: 0.5 } }}
-          >
-            <Box sx={{ flexGrow: 1 }}>
-              <AppointmentFormFields
-                initialData={(appointment as Appointment) || undefined}
-                appointmentId={idx}
-                onChange={handleChange}
-              />
-            </Box>
-            <IconButton
-              aria-label="Delete appointment"
-              color="error"
-              id={idx.toString()}
-              onClick={handleRemove}
-              sx={{ mt: 1 }}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Stack>
-        </React.Fragment>
-      ))}
+      {appointments?.map(
+        (appointment, idx) =>
+          canShowAppointment(appointment) && (
+            <React.Fragment key={idx}>
+              {idx > 0 && <Divider sx={{ my: 2 }} />}
+              <Stack
+                direction="row"
+                alignItems="flex-start"
+                spacing={1}
+                sx={{ "& .MuiTextField-root": { my: 0.5 } }}
+              >
+                <Box sx={{ flexGrow: 1 }}>
+                  <AppointmentFormFields
+                    initialData={(appointment as Appointment) || undefined}
+                    appointmentId={idx}
+                    onChange={handleChange}
+                  />
+                </Box>
+                <IconButton
+                  aria-label="Delete appointment"
+                  color="error"
+                  id={idx.toString()}
+                  onClick={handleRemove}
+                  sx={{ mt: 1 }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Stack>
+            </React.Fragment>
+          )
+      )}
       <Button
         variant="outlined"
         size="small"
@@ -117,7 +116,7 @@ export const AppointmentsFormFieldsSet: React.FC<
         onClick={handleAdd}
         sx={{ alignSelf: "flex-start", mt: 1 }}
       >
-        {t('action.add')}
+        {t("action.add")}
       </Button>
     </Stack>
   );

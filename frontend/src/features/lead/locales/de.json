@@ -11,7 +11,13 @@
   },
   "dialog": {
     "editTitle": "Lead bearbeiten",
-    "createTitle": "Lead erstellen"
+    "createTitle": "Lead erstellen",
+    "edit": "Lead bearbeiten",
+    "create": "Lead erstellen",
+    "update": "Lead aktualisieren",
+    "cancel": "Abbrechen",
+    "loading": "Laden...",
+    "errorLoad": "Fehler beim Laden der Lead-Daten"
   },
   "list": {
     "id": "ID",

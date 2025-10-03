@@ -1,57 +1,37 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback } from "react";
 import { TextField, Box } from "@mui/material";
 import {
   CreateContactDTO,
   UpdateContactDTO,
 } from "@/entities/contact/types";
-import { useGetContactByIdQuery } from "@/entities/contact";
-
 
 type ContactFormFieldsProps = {
-  initialData?: CreateContactDTO | UpdateContactDTO;
-  contactId?: string;
+  contactData?: CreateContactDTO | UpdateContactDTO;
   onChange?: (form: CreateContactDTO | UpdateContactDTO) => void;
 };
 
 export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
-  initialData,
-  contactId,
-  onChange,
+  contactData,
+  onChange
 }) => {
-  // Skip the initial fetch if we already have data from SSR
-  const skipFetch = !!initialData || !initialData && !contactId;
-
-  const {
-    data: contactData = initialData,
-  } = useGetContactByIdQuery(contactId || "", !skipFetch);
-
-  // Initialize form state with normalized data
-  const [form, setForm] = useState<CreateContactDTO | UpdateContactDTO>(
-    contactData as (CreateContactDTO | UpdateContactDTO)
-  );
-
-  useEffect(() => {
-    onChange?.(form);    
-  }, [form, onChange]);
-
   const handleChange = useCallback(
     (e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >) => {
-      setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  }, []);
+        onChange?.({
+          ...contactData,
+          [e.target.name]: e.target.value,
+        });
+  }, [contactData, onChange]);
 
   return (
     <Box sx={{ "& > *:not(:last-child)": { mb: 3 } }}>
       <TextField
         label="Client Name"
         name="name"
-        value={form?.name || ""}
+        value={contactData?.name || ""}
         onChange={handleChange}
         placeholder="Client Name"
         required
@@ -61,7 +41,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
       <TextField
         label="Organization"
         name="organization"
-        value={form?.organization || ""}
+        value={contactData?.organization || ""}
         onChange={handleChange}
         placeholder="Organization"
         size="small"
@@ -70,7 +50,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
       <TextField
         label="Email"
         name="email"
-        value={form?.email || ""}
+        value={contactData?.email || ""}
         onChange={handleChange}
         placeholder="Email"
         type="email"
@@ -80,7 +60,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
       <TextField
         label="Phone"
         name="phone"
-        value={form?.phone || ""}
+        value={contactData?.phone || ""}
         onChange={handleChange}
         placeholder="Phone"
         type="tel"

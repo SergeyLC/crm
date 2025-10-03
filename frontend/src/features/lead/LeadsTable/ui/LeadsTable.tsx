@@ -18,14 +18,14 @@ import {
   BaseTableToolbarProps,
   ToolbarMenuItem,
   BaseTableRowData,
-} from "@/features/BaseTable";
+} from "@/features/base-table";
 import {
   useGetLeadsQuery,
   useGetArchivedLeadsQuery,
   LeadExt,
   LeadViewSwitcher,
 } from "@/entities/lead";
-import { ActionMenuItemProps } from "@/features/BaseTable";
+import { ActionMenuItemProps } from "@/features/base-table";
 
 import { useEntityDialog } from "@/shared/";
 import { LeadArchivedQueryKey, LeadActiveQueryKey } from "@/entities/lead";

@@ -8,7 +8,7 @@ import {
   BaseTableToolbarProps,
   SortableFields,
   ToolbarMenuItem,
-} from "@/features/BaseTable";
+} from "@/features/base-table";
 import {
   UserExt,
   UserStatus,

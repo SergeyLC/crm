@@ -281,7 +281,7 @@ export const updateDeal = async (req: Request, res: Response) => {
   const appointmentsToDelete = appointments
     .filter(
       (app: Appointment) =>
-        app.id && app.dealId && !app.datetime && !app.note && !app.type
+        app.id && /*app.dealId && */ !app.datetime && !app.note && !app.type
     )
     .map((app: Appointment) => ({
       ...app,

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -12,18 +12,23 @@ import {
   Typography,
   IconButton,
   CircularProgress,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-import { DealUpsertForm } from "./DealUpsertForm";
 import {
   useGetDealByIdQuery,
   useUpdateDealMutation,
   useCreateDealMutation,
-} from "@/entities";
-import type { CreateDealDTO, UpdateDealDTO } from "@/entities";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+  CreateDealDTO,
+  DealExt,
+  UpdateDealDTO,
+} from "@/entities/deal";
+import { Appointment, sanitizeAppointments } from "@/entities/appointment";
+import { useAuth } from "@/features/auth/";
 import { QueryKeyType } from "@/shared";
+import { BaseUpsertFields } from "@/features/form";
 
 export function DealEditDialog({
   id,
@@ -41,10 +46,19 @@ export function DealEditDialog({
   const updateDeal = useUpdateDealMutation();
   const createDeal = useCreateDealMutation();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
+  if (!id && isAuthenticated) {
+    // If there's no ID and the user is authenticated, we can create a new deal
+  }
   const handleSubmit = React.useCallback(
     async (values: CreateDealDTO | UpdateDealDTO) => {
+      if (values?.appointments && values?.appointments?.length > 0) {
+        values.appointments = sanitizeAppointments(
+          values?.appointments
+        ) as Appointment[];
+      }
+
       if (!id) {
         await createDeal.mutateAsync({
           ...values,
@@ -82,40 +96,141 @@ export function DealEditDialog({
     [id, user, queryClient, updateDeal, createDeal, invalidateKeys, onClose]
   );
 
-  if (!open) return null;
+  const [dealData, setDealData] = useState<CreateDealDTO | UpdateDealDTO>(
+    data || (!id && isAuthenticated ? { assigneeId: user?.id || "" } : {})
+  );
+
+  const onChange = useCallback(
+    (data: CreateDealDTO | UpdateDealDTO) => {
+      setDealData(data);
+    },
+    [setDealData]
+  );
+
+  const onSubmitHandler = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      // console.log("Submitting deal data:", dealData);
+      handleSubmit(dealData);
+    },
+    [handleSubmit, dealData]
+  );
+
+  useEffect(() => {
+    if (data) {
+      setDealData(data);
+    } else if (!id && isAuthenticated && user) {
+      setDealData({ assigneeId: user.id });
+    }
+  }, [data, id, isAuthenticated, user]);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6">
-            {id ? t("dialog.edit") : t("dialog.create")}
-          </Typography>
-          <IconButton
-            edge="end"
-            color="inherit"
-            onClick={onClose}
-            disabled={isLoading}
-            aria-label="close"
+    <Dialog
+      open={open || false}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      sx={{
+        "& .MuiDialog-paper": {
+          height: "80vh", // Фиксированная высота диалога
+          overflow: "auto", // Включает прокрутку, если контент превышает высоту
+          display: "flex",
+          flexDirection: "column",
+        },
+      }}
+    >
+      <form
+        id="deal-upsert-form"
+        onSubmit={onSubmitHandler}
+        style={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* Фиксированный заголовок */}
+        <DialogTitle
+          sx={{
+            flexShrink: 0, // Не сжимается
+            borderBottom: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
           >
-            <CloseIcon />
-          </IconButton>
-        </Box>
-      </DialogTitle>
-
-      <DialogContent>
-        {isLoading && id ? (
-          <Box display="flex" justifyContent="center" my={4}>
-            <CircularProgress />
+            <Typography variant="h6">
+              {id ? t("dialog.edit") : t("dialog.create")}
+            </Typography>
+            <IconButton
+              edge="end"
+              color="inherit"
+              onClick={onClose}
+              disabled={isLoading}
+              aria-label="close"
+            >
+              <CloseIcon />
+            </IconButton>
           </Box>
-        ) : (
-          <DealUpsertForm
-            initialData={data}
-            dealId={id}
-            onSubmit={handleSubmit}
-          />
-        )}
-      </DialogContent>
+        </DialogTitle>
+
+        {/* Прокручиваемый контент */}
+        <DialogContent
+          sx={{
+            flex: 1, // Занимает все доступное пространство
+            overflow: "auto", // Включает прокрутку
+            p: 2,
+          }}
+        >
+          {isLoading && id ? (
+            <Box display="flex" justifyContent="center" my={4}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <BaseUpsertFields
+              initialData={dealData as DealExt}
+              onChange={onChange}
+            />
+          )}
+        </DialogContent>
+
+        {/* Фиксированный футер */}
+        <DialogActions
+          sx={{
+            flexShrink: 0, // Не сжимается
+            borderTop: "1px solid",
+            borderColor: "divider",
+            p: 2,
+            gap: 1,
+          }}
+        >
+          <Button
+            onClick={onClose}
+            color="inherit"
+            sx={{ textTransform: "none" }}
+          >
+            {t("dialog.cancel")}
+          </Button>
+          <Button
+            type="submit"
+            form="deal-upsert-form"
+            color="primary"
+            variant="contained"
+            disabled={isLoading || updateDeal.isPending || updateDeal.isPending}
+            sx={{ textTransform: "none" }}
+          >
+            {updateDeal.isPending || updateDeal.isPending ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : id ? (
+              t("dialog.update")
+            ) : (
+              t("dialog.create")
+            )}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 }

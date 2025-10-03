@@ -11,7 +11,13 @@
   },
   "dialog": {
     "editTitle": "Edit Lead",
-    "createTitle": "Create Lead"
+    "createTitle": "Create Lead",
+    "edit": "Edit Lead",
+    "create": "Create Lead",
+    "update": "Update Lead",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "errorLoad": "Error loading lead data"
   },
   "list": {
     "id": "ID",

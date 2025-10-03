@@ -1,4 +1,4 @@
-import { BaseTableRowData } from "@/features/BaseTable";
+import { BaseTableRowData } from "@/features/base-table";
 import { UserRole, UserStatus } from "@/entities/user";
 
 export interface UserTableRowData extends BaseTableRowData {

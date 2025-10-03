@@ -1,5 +1,5 @@
 import { LeadTableRowData } from "./types";
-import { Column, currencyFormatter, TGetColumns } from "@/features/BaseTable";
+import { Column, currencyFormatter, TGetColumns } from "@/features/base-table";
 import { TFunction } from 'i18next';
 
 // Columns definition for the Leads table.

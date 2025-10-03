@@ -26,7 +26,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import { LogoutButton } from "@/features/sideMenu/ui/LogoutButton";
+import { LogoutButton } from "@/features/side-menu/ui/LogoutButton";
 import { useAuth } from "@/features/auth/hooks";
 import { useUserPermissions, userHasPermission } from "@/entities/user";
 import { useTranslation } from "react-i18next";
