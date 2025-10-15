@@ -20,16 +20,47 @@ declare global {
 }
 
 Cypress.Commands.add('login', () => {
-  cy.request({
-    method: 'POST',
-    url: '/api/auth/login',
+  const mockUser = {
+    id: "63b0819c-08ea-4a66-9166-769760db12c1",
+    email: "test.client@example.com",
+    firstName: "Test",
+    lastName: "User",
+    role: "ADMIN",
+  };
+
+  cy.intercept('POST', '**/auth/login', {
+    statusCode: 200,
     body: {
-      email: 'test@example.com',
-      password: 'password123',
+      success: true,
+      token: 'test-token',
+      user: mockUser,
     },
-  }).then((response) => {
-    window.localStorage.setItem('authToken', response.body.token);
-  });
+  }).as('loginRequest');
+
+  cy.intercept('GET', '**/auth/me', {
+    statusCode: 200,
+    body: {
+      success: true,
+      user: mockUser,
+    },
+  }).as('getCurrentUser');
+
+  cy.session(
+    'test-user-session',
+    () => {
+      cy.window().then((win) => {
+        win.localStorage.setItem('token', 'test-token');
+      });
+    },
+    {
+      validate: () => {
+        cy.window().then((win) => {
+          cy.wrap(win.localStorage.getItem('token')).should('equal', 'test-token');
+        });
+      },
+      cacheAcrossSpecs: true,
+    }
+  );
 });
 
 Cypress.Commands.add('createTestLead', (leadData: LeadData) => {
@@ -37,7 +68,7 @@ Cypress.Commands.add('createTestLead', (leadData: LeadData) => {
     method: 'POST',
     url: '/api/leads',
     headers: {
-      Authorization: `Bearer ${window.localStorage.getItem('authToken')}`,
+      Authorization: `Bearer ${window.localStorage.getItem('token')}`,
     },
     body: leadData,
   }).then((response) => response.body as LeadData);

@@ -9,5 +9,8 @@
   "title": "Titel",
   "assignee": "Zuständig",
   "create": "Erstellen",
-  "update": "Aktualisieren"
+  "update": "Aktualisieren",
+  "clientNameLabel": "Kundenname",
+  "clientNamePlaceholder": "Kundenname",
+  "clientNameRequired": "Bitte geben Sie den Kundennamen ein."
 }

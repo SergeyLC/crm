@@ -9,5 +9,8 @@
   "title": "Title",
   "assignee": "Assignee",
   "create": "Create",
-  "update": "Update"
+  "update": "Update",
+  "clientNameLabel": "Client Name",
+  "clientNamePlaceholder": "Client Name",
+  "clientNameRequired": "Please enter the client's name."
 }

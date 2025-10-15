@@ -44,7 +44,7 @@ export const createLead = async (body: CreateLeadDTO): Promise<Lead> => {
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    throw new Error("Failed to create lead");
+    throw new Error("Failed to create lead", { cause: await response.json() });
   }
   return response.json();
 };

@@ -74,7 +74,7 @@ const invalidateLeadQueryKeys = [
 export function LeadsTable<T extends LeadExt>({
   initialData,
   order = "desc",
-  orderBy = "Potential" as SortableFields<LeadTableRowData>,
+  orderBy = "potentialValue" as SortableFields<LeadTableRowData>,
   showArchived = false,
 }: BaseTableProps<T, LeadTableRowData> & { showArchived?: boolean }) {
   const {
@@ -153,6 +153,7 @@ export function LeadsTable<T extends LeadExt>({
       const baseItems = [
         {
           title: t("lead:table.action.edit"),
+          id: "edit",
           icon: <EditIcon fontSize="small" />,
           onClick: handleEditClick,
         },
@@ -225,6 +226,7 @@ export function LeadsTable<T extends LeadExt>({
         tooltip: t("lead:table.tooltip.create"),
         icon: <AddIcon fontSize="small" />,
         onClick: handleCreateClick,
+        testId: "create-lead-button",
       },
       {
         title: t("lead:table.action.convert"),

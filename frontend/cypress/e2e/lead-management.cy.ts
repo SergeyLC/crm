@@ -1,12 +1,9 @@
 describe('Lead Management E2E Tests', () => {
   beforeEach(() => {
-    // Visit the leads page
-    cy.visit('/leads');
-    
-    // Mock auth by setting localStorage
-    cy.window().then((win) => {
-      win.localStorage.setItem('authToken', 'test-token');
-    });
+    cy.login();
+
+    // Visit the leads page (default locale de)
+    cy.visit('/de/leads');
   });
 
   it('should display leads page', () => {

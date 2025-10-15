@@ -12,17 +12,27 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
 	}, [error]);
 
 	return (
-		<html lang="de">
-			<body style={{fontFamily:'sans-serif',margin:0,padding:32}}>
-				<h1 style={{marginTop:0}}>{t('applicationError')}</h1>
-				<p>{t('somethingWentWrong')}</p>
-				{error?.digest && (
-					<p style={{fontSize:12,opacity:0.7}}>
-						{t('digest')}: <code>{error.digest}</code>
-					</p>
-				)}
-				<button onClick={reset} style={{padding:'6px 14px',cursor:'pointer'}}>{t('tryAgain')}</button>
-			</body>
-		</html>
+		<div
+			lang="de"
+			style={{
+				fontFamily: 'sans-serif',
+				margin: 0,
+				padding: 32,
+				minHeight: '100vh',
+				backgroundColor: '#fff',
+				color: '#000',
+			}}
+		>
+			<h1 style={{ marginTop: 0 }}>{t('applicationError')}</h1>
+			<p>{t('somethingWentWrong')}</p>
+			{error?.digest && (
+				<p style={{ fontSize: 12, opacity: 0.7 }}>
+					{t('digest')}: <code>{error.digest}</code>
+				</p>
+			)}
+			<button onClick={reset} style={{ padding: '6px 14px', cursor: 'pointer' }}>
+				{t('tryAgain')}
+			</button>
+		</div>
 	);
 }

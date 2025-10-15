@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { TextField, Box } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import {
   CreateContactDTO,
   UpdateContactDTO,
@@ -16,28 +17,80 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
   contactData,
   onChange
 }) => {
+  const { t } = useTranslation("form");
+  const requiredMessage = t("clientNameRequired");
+  const [nameError, setNameError] = useState<string>("");
+
+  const isValidityTarget = useCallback(
+    (value: unknown): value is HTMLInputElement =>
+      typeof value === "object" &&
+      value !== null &&
+      "setCustomValidity" in value &&
+      typeof (value as HTMLInputElement).setCustomValidity === "function",
+    []
+  );
+
   const handleChange = useCallback(
     (e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >) => {
+        setNameError("");
         onChange?.({
           ...contactData,
           [e.target.name]: e.target.value,
         });
   }, [contactData, onChange]);
 
+  const handleNameInvalid = useCallback<
+    React.FormEventHandler<HTMLInputElement>
+  >(
+    (event) => {
+      event.preventDefault();
+      const target = event.target;
+      if (isValidityTarget(target)) {
+        target.setCustomValidity(requiredMessage);
+      }
+      setNameError(requiredMessage);
+    },
+    [isValidityTarget, requiredMessage]
+  );
+
+  const handleNameInput = useCallback<
+    React.FormEventHandler<HTMLInputElement>
+  >((event) => {
+    const target = event.target;
+    if (isValidityTarget(target)) {
+      target.setCustomValidity("");
+    }
+    setNameError("");
+  }, [isValidityTarget]);
+
   return (
     <Box sx={{ "& > *:not(:last-child)": { mb: 3 } }}>
       <TextField
-        label="Client Name"
+        label={t("clientNameLabel")}
         name="name"
         value={contactData?.name || ""}
         onChange={handleChange}
-        placeholder="Client Name"
+        placeholder={t("clientNamePlaceholder")}
         required
         size="small"
         fullWidth
+        slotProps={{
+          input: {
+            onInvalid: handleNameInvalid,
+            onInput: handleNameInput,
+          },
+          htmlInput: {
+            "data-testid": "name-input"
+          }
+        }}
+        error={Boolean(nameError)}
+        helperText={nameError || undefined}
       />
+      {/* <FormHelperText id="username-helper">
+        must be more than 5 characters
+      </FormHelperText> */}
       <TextField
         label="Organization"
         name="organization"
@@ -46,6 +99,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
         placeholder="Organization"
         size="small"
         fullWidth
+        data-testid="organization-input"
       />
       <TextField
         label="Email"
@@ -56,6 +110,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
         type="email"
         size="small"
         fullWidth
+        data-testid="email-input"
       />
       <TextField
         label="Phone"
@@ -66,6 +121,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
         type="tel"
         size="small"
         fullWidth
+        data-testid="phone-input"
       />
     </Box>
   );

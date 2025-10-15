@@ -203,6 +203,8 @@ export const createDealBase = async (
   const { creator, contact, notes, appointments, assigneeId, ...dealData } =
     req.body;
 
+  console.log("Creating deal with data:", req.body, " stage:", stage);
+
   const creatorEmail = creator?.email || "hans.schmidt@example.com";
   const deal = await prisma.deal.create({
     data: {

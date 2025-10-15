@@ -72,7 +72,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
       <Stack direction="row" flexWrap="wrap" sx={{ gap: 2 }}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DateTimePicker
-            label={t('field.dateTime')}
+            label={t("field.dateTime")}
             value={form?.datetime ? dayjs(form?.datetime) : null}
             onChange={handleDateChange}
             views={["year", "month", "day", "hours", "minutes"]}
@@ -82,24 +82,31 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
               textField: {
                 size: "small",
               },
+              field: { "data-testid": `appointment-datetime-input-${appointmentId}` } as Record<string, unknown>
             }}
             sx={{ flex: 1, minWidth: 200, zIndex: 0 }}
+            data-testid={`appointment-datetime-${appointmentId}`}
           />
         </LocalizationProvider>
         <FormControl size="small" sx={{ flex: 1, minWidth: 200, zIndex: 0 }}>
-          <InputLabel id="type-label">{t('field.type')}</InputLabel>
+          <InputLabel id="type-label">{t("field.type")}</InputLabel>
           <Select
             labelId="type-label"
             name="type"
             value={form?.type || ""}
-            label={t('field.type')}
+            label={t("field.type")}
             onChange={handleTypeChange}
+            data-testid={`appointment-type-select-${appointmentId}`}
           >
             <MenuItem value="">
-              <em>{t('none')}</em>
+              <em>{t("none")}</em>
             </MenuItem>
             {appointmentTypes.map((type) => (
-              <MenuItem key={type} value={type}>
+              <MenuItem
+                key={type}
+                value={type}
+                data-testid={`appointment-type-${type}`}
+              >
                 {t(`type.${type}`)}
               </MenuItem>
             ))}
@@ -107,17 +114,25 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
         </FormControl>
       </Stack>
       <TextField
-        label={t('field.note')}
+        label={t("field.note")}
         name="note"
         value={form?.note || ""}
         onChange={handleChange}
-        placeholder={t('field.note')}
+        placeholder={t("field.note")}
         size="small"
-        fullWidth
+        fullWidth={true}
         multiline
         maxRows={6}
         minRows={1}
         sx={{ zIndex: 0 }}
+        slotProps={{
+          htmlInput(ownerState) {
+            return {
+              ...ownerState,
+              "data-testid": `appointment-note-${appointmentId}`,
+            };
+          },
+        }}
       />
     </Box>
   );

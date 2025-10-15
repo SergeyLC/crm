@@ -19,6 +19,10 @@ import './commands';
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 
+beforeEach(() => {
+  cy.login();
+});
+
 // Hide fetch/XHR requests from command log
 const app = window.top;
 if (app && !app.document.head.querySelector('[data-hide-command-log-request]')) {

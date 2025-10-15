@@ -17,6 +17,7 @@ export async function GET() {
     }
 
     const data = await res.json();
+    // console.log("Fetched leads:", data);
     return NextResponse.json(data);
   } catch (error) {
     // console.error("Url=", `${BACKEND_API_URL}/leads/`);

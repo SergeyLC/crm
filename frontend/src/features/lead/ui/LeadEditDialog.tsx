@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSnackbar } from "notistack";
 import {
   Dialog,
   DialogTitle,
@@ -24,7 +25,7 @@ import type { CreateLeadDTO, LeadExt, UpdateLeadDTO } from "@/entities/lead";
 import { QueryKeyType } from "@/shared";
 import { useAuth } from "@/features/auth/";
 import { BaseUpsertFields } from "@/features/form";
-import { sanitizeAppointments } from "@/entities/appointment/lib/sanitizers";
+import { sanitizeAppointments } from "@/entities/appointment";
 import { Appointment } from "@/entities/appointment";
 
 export function LeadEditDialog({
@@ -39,6 +40,7 @@ export function LeadEditDialog({
   invalidateKeys?: QueryKeyType[];
 }) {
   const { t } = useTranslation("lead");
+  const { enqueueSnackbar } = useSnackbar();
   const { data, isLoading } = useGetLeadByIdQuery(id || "");
   const updateLead = useUpdateLeadMutation();
   const createLead = useCreateLeadMutation();
@@ -46,7 +48,13 @@ export function LeadEditDialog({
   const { user, isAuthenticated } = useAuth();
 
   if (!id && isAuthenticated) {
+    // console.log("Creating new lead, user:", user);
     // If there's no ID and the user is authenticated, we can create a new lead
+  }
+  if (!isAuthenticated) {
+    console.warn(
+      "User is not authenticated. Lead creation/editing is disabled."
+    );
   }
 
   const handleSubmit = React.useCallback(
@@ -57,16 +65,62 @@ export function LeadEditDialog({
         ) as Appointment[];
       }
       if (!id) {
-        // Create new lead
-        await createLead.mutateAsync({
-          ...values,
-          creator: user,
-        } as CreateLeadDTO);
-        for (const key of invalidateKeys || []) {
-          queryClient.invalidateQueries({ queryKey: key });
+        try {
+          // Create new lead
+          await createLead.mutateAsync({
+            ...values,
+            creator: user,
+          } as CreateLeadDTO);
+          for (const key of invalidateKeys || []) {
+            queryClient.invalidateQueries({ queryKey: key });
+          }
+          enqueueSnackbar(t("dialog.createSuccess"), {
+            variant: "success",
+            SnackbarProps: { "data-testid": "success-notification" } as Record<
+              string,
+              unknown
+            >,
+          });
+
+          onClose?.();
+          return;
+        } catch (error) {
+          console.error("Error creating lead:", error);
+          enqueueSnackbar(t("dialog.createError"), {
+            variant: "error",
+            SnackbarProps: { "data-testid": "error-notification" } as Record<
+              string,
+              unknown
+            >,
+          });
+
+          type Errors = {
+            [key: string]: string[];
+          };
+
+          console.log("Create lead error details:", error);
+
+          const err = error as { cause: { errors?: Errors } };
+          if (!err?.cause?.errors) {
+            return;
+          }
+          // Display each validation error
+          for (const [key, messages] of Object.entries(
+            err.cause.errors || {}
+          )) {
+            messages.forEach((message) => {
+              console.error(`[${key}]:`, message);
+
+              enqueueSnackbar(message, {
+                variant: "error",
+                SnackbarProps: {
+                  "data-testid": "error-notification",
+                } as Record<string, unknown>,
+              });
+            });
+          }
+          return;
         }
-        onClose?.();
-        return;
       }
 
       if (!values) {
@@ -84,13 +138,34 @@ export function LeadEditDialog({
         values.contactId = undefined;
       }
 
-      await updateLead.mutateAsync({ id: id, body: values as UpdateLeadDTO });
-      for (const key of invalidateKeys || []) {
-        queryClient.invalidateQueries({ queryKey: key });
+      try {
+        await updateLead.mutateAsync({ id: id, body: values as UpdateLeadDTO });
+        for (const key of invalidateKeys || []) {
+          queryClient.invalidateQueries({ queryKey: key });
+        }
+        onClose?.();
+      } catch (error) {
+        console.error("Error updating lead:", error);
+        enqueueSnackbar(t("dialog.updateError"), {
+          variant: "error",
+          SnackbarProps: { "data-testid": "error-notification" } as Record<
+            string,
+            unknown
+          >,
+        });
       }
-      onClose?.();
     },
-    [id, user, queryClient, updateLead, createLead, invalidateKeys, onClose]
+    [
+      id,
+      user,
+      queryClient,
+      updateLead,
+      createLead,
+      invalidateKeys,
+      onClose,
+      enqueueSnackbar,
+      t,
+    ]
   );
 
   const [leadData, setLeadData] = useState<CreateLeadDTO | UpdateLeadDTO>(
@@ -184,7 +259,7 @@ export function LeadEditDialog({
         >
           {isLoading && id ? (
             <Box display="flex" justifyContent="center" my={4}>
-              <CircularProgress />
+              <CircularProgress data-testid="lead-loading-spinner" />
             </Box>
           ) : (
             <BaseUpsertFields<LeadExt, CreateLeadDTO | UpdateLeadDTO>
@@ -208,6 +283,7 @@ export function LeadEditDialog({
             onClick={onClose}
             color="inherit"
             sx={{ textTransform: "none" }}
+            data-testid="cancel-button"
           >
             {t("dialog.cancel")}
           </Button>
@@ -218,9 +294,14 @@ export function LeadEditDialog({
             variant="contained"
             disabled={isLoading || updateLead.isPending || createLead.isPending}
             sx={{ textTransform: "none" }}
+            data-testid="submit-button"
           >
             {updateLead.isPending || createLead.isPending ? (
-              <CircularProgress size={20} color="inherit" />
+              <CircularProgress
+                data-testid="loading-spinner"
+                size={20}
+                color="inherit"
+              />
             ) : id ? (
               t("dialog.update")
             ) : (

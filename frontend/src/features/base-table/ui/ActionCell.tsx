@@ -18,7 +18,6 @@ type Props<T extends BaseTableRowData> = {
 export const ActionCell = <T extends BaseTableRowData>(props: Props<T>) => {
   const {
     id,
-    // onEdit,
     className,
     MenuComponent = ActionMenu,
     menuItems,
@@ -38,14 +37,6 @@ export const ActionCell = <T extends BaseTableRowData>(props: Props<T>) => {
   const handleCloseMenu = React.useCallback(() => {
     setAnchorEl(null);
   }, []);
-
-  // const handleEdit = React.useCallback(
-  //   (e: React.MouseEvent) => {
-  //     onEdit(e, id);
-  //     handleCloseMenu();
-  //   },
-  //   [onEdit, id, handleCloseMenu]
-  // );
 
   return (
     <TableCell className={className} sx={{ ...cellSx }}>
@@ -69,6 +60,7 @@ export const ActionCell = <T extends BaseTableRowData>(props: Props<T>) => {
           aria-haspopup="true"
           aria-expanded={open ? "true" : undefined}
           sx={{ height: 28, width: 28, margin: "auto" }}
+          data-testid={`action-cell-button-${id}`}
         >
           <MoreVertIcon fontSize="small" sx={{ fontSize: 18 }} />
         </IconButton>

@@ -35,6 +35,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
         size="small"
         sx={{ height: 40, padding: "0 8px" }}
         disabled={isLoading || isError}
+        data-testid="user-select"
       >
         {isLoading ? (
           <MenuItem value="">
@@ -46,7 +47,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
           </MenuItem>
         ) : (
           userList.map((user) => (
-            <MenuItem key={user.id} value={user.id}>
+            <MenuItem key={user.id} value={user.id} data-testid={`user-option-${user.id}`}>
               {user.name}
             </MenuItem>
           ))

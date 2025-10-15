@@ -17,7 +17,10 @@
     "update": "Update Lead",
     "cancel": "Cancel",
     "loading": "Loading...",
-    "errorLoad": "Error loading lead data"
+    "errorLoad": "Error loading lead data",
+    "updateError": "Failed to update lead",
+    "createError": "Failed to create lead",
+    "createSuccess": "Lead created successfully"
   },
   "list": {
     "id": "ID",
@@ -39,7 +42,7 @@
     "column": {
       "title": "Title",
       "assignee": "Assignee",
-      "potential": "Potencial",
+      "potential": "Potential",
       "client": "Client"
     },
     "action": {

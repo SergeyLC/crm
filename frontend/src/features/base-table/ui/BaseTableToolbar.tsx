@@ -10,8 +10,12 @@ export type ToolbarMenuItem = {
   title?: string | React.ReactNode;
   ariaLabel?: string;
   onClick?: (e?: React.MouseEvent, id?: string) => Promise<void>;
-  onClickMultiple?: (e?: React.MouseEvent, ids?: readonly string[]) => Promise<void>;
+  onClickMultiple?: (
+    e?: React.MouseEvent,
+    ids?: readonly string[]
+  ) => Promise<void>;
   icon?: React.ReactNode;
+  testId?: string;
   isGroupAction?: boolean;
 };
 
@@ -98,7 +102,7 @@ export function BaseTableToolbar(props: BaseTableToolbarProps) {
                   aria-label={item.ariaLabel}
                   key={index}
                 >
-                  <IconButton onClick={(e) => item.onClick?.(e)}>
+                  <IconButton onClick={(e) => item.onClick?.(e)} data-testid={item.testId}>
                     {item.icon}
                   </IconButton>
                 </Tooltip>

@@ -52,8 +52,12 @@ export const BaseUpsertFields = <
   // if creating a new form, set the assignee to the current user
   const handleAssigneeChange = React.useCallback(
     (userId: string | null) => {
-      form.assigneeId = userId;
-      setForm(form);
+      console.log("Assignee changed:", userId);
+      setForm({
+        ...form,
+        assigneeId: userId,
+      });
+
     },
     [form, setForm]
   );
@@ -120,6 +124,9 @@ export const BaseUpsertFields = <
               placeholder={t("productInterest")}
               variant="outlined"
               size="small"
+              slotProps={{
+                htmlInput: { "data-testid": "product-input" },
+              }}
             />
             <TextField
               fullWidth
@@ -131,6 +138,9 @@ export const BaseUpsertFields = <
               placeholder={t("potentialValue")}
               variant="outlined"
               size="small"
+              slotProps={{
+                htmlInput: { "data-testid": "potential-value-input" },
+              }}
             />
           </Stack>
           <TextField
@@ -141,6 +151,9 @@ export const BaseUpsertFields = <
             placeholder={t("title")}
             size="small"
             fullWidth
+            slotProps={{
+              htmlInput: { "data-testid": "title-input" },
+            }}
           />
         </Stack>
       </Paper>

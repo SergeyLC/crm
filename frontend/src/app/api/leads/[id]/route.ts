@@ -53,6 +53,11 @@ export async function PUT(
       );
     }
 
+    // return NextResponse.json(
+    //   { error: "Failed to update lead" },
+    //   { status: 500  }
+    // );
+
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {

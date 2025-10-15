@@ -102,6 +102,7 @@ export const AppointmentsFormFieldsSet: React.FC<
                   id={idx.toString()}
                   onClick={handleRemove}
                   sx={{ mt: 1 }}
+                  data-testid={`remove-appointment-${idx}`}
                 >
                   <DeleteIcon />
                 </IconButton>
@@ -115,6 +116,7 @@ export const AppointmentsFormFieldsSet: React.FC<
         startIcon={<AddIcon />}
         onClick={handleAdd}
         sx={{ alignSelf: "flex-start", mt: 1 }}
+        data-testid="add-appointment-button"
       >
         {t("action.add")}
       </Button>

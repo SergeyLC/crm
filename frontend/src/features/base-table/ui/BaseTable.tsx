@@ -255,6 +255,7 @@ export function BaseTable<T, TTableData extends BaseTableRowData>({
                     tabIndex={-1}
                     key={row.id}
                     selected={isItemSelected}
+                    data-testid={`table-row-${row.id}`}
                     onDoubleClick={(event) =>
                       handleRowDoubleClick(event, row.id)
                     }
