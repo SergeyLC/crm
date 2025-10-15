@@ -25,7 +25,11 @@
     "update": "Deal aktualisieren",
     "cancel": "Abbrechen",
     "loading": "Laden...",
-    "errorLoad": "Fehler beim Laden der Deal-Daten"
+    "errorLoad": "Fehler beim Laden der Deal-Daten",
+    "createError": "Fehler beim Erstellen des Deals",
+    "createSuccess": "Deal erfolgreich erstellt",
+    "updateError": "Fehler beim Aktualisieren des Deals",
+    "updateSuccess": "Deal erfolgreich aktualisiert"
   },
   "viewSwitcher": {
     "deals": "Deals",

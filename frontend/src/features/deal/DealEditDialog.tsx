@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSnackbar } from "notistack";
 
 import {
   Dialog,
@@ -42,6 +43,7 @@ export function DealEditDialog({
   invalidateKeys?: QueryKeyType[];
 }) {
   const { t } = useTranslation("deal");
+  const { enqueueSnackbar } = useSnackbar();
   const { data, isLoading } = useGetDealByIdQuery(id || "");
   const updateDeal = useUpdateDealMutation();
   const createDeal = useCreateDealMutation();
@@ -60,15 +62,58 @@ export function DealEditDialog({
       }
 
       if (!id) {
-        await createDeal.mutateAsync({
-          ...values,
-          creator: user,
-        } as CreateDealDTO);
-        for (const key of invalidateKeys || []) {
-          queryClient.invalidateQueries({ queryKey: key });
+        try {
+          await createDeal.mutateAsync({
+            ...values,
+            creator: user,
+          } as CreateDealDTO);
+          for (const key of invalidateKeys || []) {
+            queryClient.invalidateQueries({ queryKey: key });
+          }
+          enqueueSnackbar(t("dialog.createSuccess"), {
+            variant: "success",
+            SnackbarProps: { "data-testid": "success-notification" } as Record<
+              string,
+              unknown
+            >,
+          });
+          onClose?.();
+          return;
+        } catch (error) {
+          console.error("Error creating deal:", error);
+          enqueueSnackbar(t("dialog.createError"), {
+            variant: "error",
+            SnackbarProps: { "data-testid": "error-notification" } as Record<
+              string,
+              unknown
+            >,
+          });
+
+          type Errors = {
+            [key: string]: string[];
+          };
+
+          const err = error as { cause: { errors?: Errors } };
+          if (err?.cause?.errors) {
+            // Display each validation error
+            for (const [key, messages] of Object.entries(
+              err.cause.errors || {}
+            )) {
+              messages.forEach((message) => {
+                console.error(`[${key}]:`, message);
+
+                enqueueSnackbar(message, {
+                  variant: "error",
+                  SnackbarProps: {
+                    "data-testid": "error-notification",
+                  } as Record<string, unknown>,
+                });
+              });
+            }
+          }
+
+          throw error; // Re-throw to let the test catch it
         }
-        onClose?.();
-        return;
       }
       if (!values) {
         console.error("No deal data found for update");
@@ -86,14 +131,56 @@ export function DealEditDialog({
         values.contactId = undefined;
       }
 
-      await updateDeal.mutateAsync({ id: id, body: values as UpdateDealDTO });
-      for (const key of invalidateKeys || []) {
-        queryClient.invalidateQueries({ queryKey: key });
-      }
+      try {
+        await updateDeal.mutateAsync({ id: id, body: values as UpdateDealDTO });
+        for (const key of invalidateKeys || []) {
+          queryClient.invalidateQueries({ queryKey: key });
+        }
+        enqueueSnackbar(t("dialog.updateSuccess"), {
+          variant: "success",
+          SnackbarProps: { "data-testid": "success-notification" } as Record<
+            string,
+            unknown
+          >,
+        });
+        onClose?.();
+      } catch (error) {
+        console.error("Error updating deal:", error);
+        enqueueSnackbar(t("dialog.updateError"), {
+          variant: "error",
+          SnackbarProps: { "data-testid": "error-notification" } as Record<
+            string,
+            unknown
+          >,
+        });
 
-      onClose?.();
+        type Errors = {
+          [key: string]: string[];
+        };
+
+        const err = error as { cause: { errors?: Errors } };
+        if (err?.cause?.errors) {
+          // Display each validation error
+          for (const [key, messages] of Object.entries(
+            err.cause.errors || {}
+          )) {
+            messages.forEach((message) => {
+              console.error(`[${key}]:`, message);
+
+              enqueueSnackbar(message, {
+                variant: "error",
+                SnackbarProps: {
+                  "data-testid": "error-notification",
+                } as Record<string, unknown>,
+              });
+            });
+          }
+        }
+
+        throw error; // Re-throw to let the test catch it
+      }
     },
-    [id, user, queryClient, updateDeal, createDeal, invalidateKeys, onClose]
+    [id, user, queryClient, updateDeal, createDeal, invalidateKeys, onClose, enqueueSnackbar, t]
   );
 
   const [dealData, setDealData] = useState<CreateDealDTO | UpdateDealDTO>(
@@ -186,7 +273,7 @@ export function DealEditDialog({
         >
           {isLoading && id ? (
             <Box display="flex" justifyContent="center" my={4}>
-              <CircularProgress />
+              <CircularProgress data-testid="deal-loading-spinner" />
             </Box>
           ) : (
             <BaseUpsertFields
@@ -210,6 +297,7 @@ export function DealEditDialog({
             onClick={onClose}
             color="inherit"
             sx={{ textTransform: "none" }}
+            data-testid="cancel-button"
           >
             {t("dialog.cancel")}
           </Button>
@@ -218,10 +306,11 @@ export function DealEditDialog({
             form="deal-upsert-form"
             color="primary"
             variant="contained"
-            disabled={isLoading || updateDeal.isPending || updateDeal.isPending}
+            disabled={isLoading || updateDeal.isPending || createDeal.isPending}
             sx={{ textTransform: "none" }}
+            data-testid="submit-button"
           >
-            {updateDeal.isPending || updateDeal.isPending ? (
+            {updateDeal.isPending || createDeal.isPending ? (
               <CircularProgress size={20} color="inherit" />
             ) : id ? (
               t("dialog.update")

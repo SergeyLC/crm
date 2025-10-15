@@ -23,6 +23,8 @@
     "cypress:run": "cypress run",
     "cypress:demo": "cypress run --spec cypress/e2e/demo-cypress.cy.ts",
     "test:e2e": "cypress run --spec cypress/e2e/lead-edit-dialog.cy.ts",
+    "test:e2e:deal": "cypress run --spec cypress/e2e/deal-edit-dialog.cy.ts",
+    "test:e2e:lead": "cypress run --spec cypress/e2e/lead-edit-dialog.cy.ts",
     "test:e2e:open": "cypress open --e2e",
     "clean": "rm -rf .next out node_modules/.cache",
     "collect-locales": "node scripts/collect-locales.js",

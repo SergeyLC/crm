@@ -107,7 +107,9 @@ export const createDeal = async (data: CreateDealDTO): Promise<Deal> => {
     credentials: "include",
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error("Failed to create deal");
+  if (!response.ok) {
+    throw new Error("Failed to create deal", { cause: await response.json() });
+  }
   return response.json();
 };
 
@@ -124,7 +126,9 @@ export const updateDeal = async ({
     credentials: "include",
     body: JSON.stringify(body),
   });
-  if (!response.ok) throw new Error("Failed to update deal");
+  if (!response.ok) {
+    throw new Error("Failed to update deal", { cause: await response.json() });
+  }
   return response.json();
 };
 

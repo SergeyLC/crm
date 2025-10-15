@@ -25,7 +25,11 @@
     "update": "Update Deal",
     "cancel": "Cancel",
     "loading": "Loading...",
-    "errorLoad": "Error loading deal data"
+    "errorLoad": "Error loading deal data",
+    "createError": "Failed to create deal",
+    "createSuccess": "Deal created successfully",
+    "updateError": "Failed to update deal",
+    "updateSuccess": "Deal updated successfully"
   },
   "viewSwitcher": {
     "deals": "Deals",

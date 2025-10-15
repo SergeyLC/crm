@@ -128,12 +128,14 @@ export function DealsTable<T extends DealExt>({
     React.useMemo(
       () => [
         {
+          id: "edit",
           title: t("action.edit"),
           icon: <EditIcon fontSize="small" />,
           tooltip: t("tooltip.editDeal"),
           onClick: handleEditClick,
         },
         {
+          id: "archive",
           title: t("action.archive"),
           icon: <ArchiveIcon fontSize="small" />,
           tooltip: t("tooltip.archiveDeal"),
@@ -158,6 +160,7 @@ export function DealsTable<T extends DealExt>({
         title: t("toolbar.create"),
         icon: <AddIcon fontSize="small" />,
         onClick: handleCreateClick,
+        testId: "create-deal-button",
       },
       {
         title: t("toolbar.archiveSelected"),

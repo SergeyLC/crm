@@ -32,3 +32,16 @@ if (app && !app.document.head.querySelector('[data-hide-command-log-request]')) 
   style.setAttribute('data-hide-command-log-request', '');
   app.document.head.appendChild(style);
 }
+
+// Handle uncaught exceptions in tests that expect errors
+Cypress.on('uncaught:exception', (err) => {
+  // Return false to prevent the error from failing the test
+  // This is useful for tests that intentionally trigger errors
+  if (err.message.includes('Failed to create deal') || 
+      err.message.includes('Failed to update deal') ||
+      err.message.includes('Failed to fetch')) {
+    return false;
+  }
+  // Let other errors fail the test
+  return true;
+});
