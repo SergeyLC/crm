@@ -10,11 +10,9 @@ export async function generateStaticParams() {
   return [{ locale: "en" }, { locale: "de" }];
 }
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 // Disable ISR in development/test to allow Cypress hooks to control data fetching
-export const revalidate = isDevelopment ? 0 : 60;
-export const dynamic = isDevelopment ? 'force-dynamic' : 'auto';
+export const revalidate = 60;
+export const dynamic = 'auto';
 
 type LeadsPageProps = {
   params: { locale: string };
