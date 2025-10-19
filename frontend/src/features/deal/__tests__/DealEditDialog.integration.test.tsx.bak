@@ -1,0 +1,211 @@
+// import React from 'react';
+// import { screen, fireEvent, waitFor } from '@testing-library/react';
+// import { render } from '@/test-utils';
+
+// /* eslint-disable @typescript-eslint/no-explicit-any */
+
+// // Mock all external dependencies
+// jest.mock('@/entities/deal', () => ({
+//   useGetDealByIdQuery: jest.fn(),
+//   useUpdateDealMutation: jest.fn(),
+//   useCreateDealMutation: jest.fn(),
+// }));
+
+// jest.mock('@/features/auth/', () => ({
+//   useAuth: jest.fn(),
+// }));
+
+// jest.mock('@/features/form', () => ({
+//   BaseUpsertFields: ({ onChange }: { onChange: (data: any) => void }) => {
+//     React.useEffect(() => {
+//       // Симулируем изменение данных формы
+//       onChange({ 
+//         title: 'Test Deal',
+//         description: 'Test Description',
+//         potentialValue: 5000,
+//         stage: 'qualified'
+//       });
+//     }, [onChange]);
+    
+//     return React.createElement('div', { 'data-testid': 'base-upsert-fields' },
+//       React.createElement('button', { 
+//         onClick: () => {
+//           // Симулируем submit формы через событие
+//           const form = document.getElementById('deal-upsert-form');
+//           if (form) {
+//             const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+//             form.dispatchEvent(submitEvent);
+//           }
+//         },
+//         'data-testid': 'mock-submit'
+//       }, 'Submit')
+//     );
+//   },
+// }));
+
+// jest.mock('@/entities/appointment/lib/sanitizers', () => ({
+//   sanitizeAppointments: jest.fn((appointments) => appointments),
+// }));
+
+// // Import the actual component after mocking dependencies
+// import { DealEditDialog } from '../DealEditDialog';
+// import { useAuth } from '@/features/auth/';
+// import { 
+//   useGetDealByIdQuery,
+//   useUpdateDealMutation,
+//   useCreateDealMutation 
+// } from '@/entities/deal';
+
+// const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+// const mockUseGetDealByIdQuery = useGetDealByIdQuery as jest.MockedFunction<typeof useGetDealByIdQuery>;
+// const mockUseUpdateDealMutation = useUpdateDealMutation as jest.MockedFunction<typeof useUpdateDealMutation>;
+// const mockUseCreateDealMutation = useCreateDealMutation as jest.MockedFunction<typeof useCreateDealMutation>;
+
+// describe('DealEditDialog Integration Tests', () => {
+//   const mockUser = {
+//     id: 'user-1',
+//     name: 'Test User',
+//     email: 'test@example.com',
+//   };
+
+//   beforeEach(() => {
+//     jest.clearAllMocks();
+    
+//     mockUseAuth.mockReturnValue({
+//       user: mockUser,
+//       login: jest.fn(),
+//       logout: jest.fn(),
+//     } as any);
+    
+//     mockUseGetDealByIdQuery.mockReturnValue({
+//       data: undefined,
+//       error: null,
+//       isLoading: false,
+//       refetch: jest.fn(),
+//     } as any);
+
+//     mockUseUpdateDealMutation.mockReturnValue({
+//       mutateAsync: jest.fn(),
+//       data: undefined,
+//       error: null,
+//       isLoading: false,
+//       isError: false,
+//       isSuccess: false,
+//     } as any);
+
+//     mockUseCreateDealMutation.mockReturnValue({
+//       mutateAsync: jest.fn(),
+//       data: undefined,
+//       error: null,
+//       isLoading: false,
+//       isError: false,
+//       isSuccess: false,
+//     } as any);
+//   });
+
+//   it('renders the dialog when open', () => {
+//     render(
+//       React.createElement(DealEditDialog, { 
+//         open: true, 
+//         onClose: jest.fn() 
+//       })
+//     );
+
+//     expect(screen.getByTestId('base-upsert-fields')).toBeInTheDocument();
+//   });
+
+//   it('does not render when closed', () => {
+//     const { container } = render(
+//       React.createElement(DealEditDialog, { 
+//         open: false, 
+//         onClose: jest.fn() 
+//       })
+//     );
+
+//     expect(container.firstChild).toBeNull();
+//   });
+
+//   it('calls onClose when form is submitted successfully', async () => {
+//     const mockOnClose = jest.fn();
+//     const mockCreateDeal = jest.fn().mockResolvedValue({ id: 'new-deal' });
+    
+//     mockUseCreateDealMutation.mockReturnValue({
+//       mutateAsync: mockCreateDeal,
+//       data: undefined,
+//       error: null,
+//       isLoading: false,
+//       isError: false,
+//       isSuccess: false,
+//     } as any);
+
+//     render(
+//       React.createElement(DealEditDialog, { 
+//         open: true, 
+//         onClose: mockOnClose 
+//       })
+//     );
+
+//     const submitButton = screen.getByTestId('mock-submit');
+//     fireEvent.click(submitButton);
+
+//     await waitFor(() => {
+//       expect(mockCreateDeal).toHaveBeenCalledWith({
+//         title: 'Test Deal',
+//         description: 'Test Description',
+//         potentialValue: 5000,
+//         stage: 'qualified',
+//         creator: mockUser,
+//       });
+//     });
+
+//     await waitFor(() => {
+//       expect(mockOnClose).toHaveBeenCalled();
+//     });
+//   });
+
+//   it('loads existing deal data when id is provided', () => {
+//     const mockDeal = {
+//       id: '1',
+//       title: 'Existing Deal',
+//       description: 'Existing Description',
+//       potentialValue: 3000,
+//       stage: 'proposal',
+//     };
+
+//     mockUseGetDealByIdQuery.mockReturnValue({
+//       data: mockDeal,
+//       error: null,
+//       isLoading: false,
+//       refetch: jest.fn(),
+//     } as any);
+
+//     render(
+//       React.createElement(DealEditDialog, { 
+//         open: true, 
+//         onClose: jest.fn(), 
+//         id: '1'
+//       })
+//     );
+
+//     expect(mockUseGetDealByIdQuery).toHaveBeenCalledWith('1');
+//   });
+
+//   it('handles API errors gracefully', () => {
+//     mockUseGetDealByIdQuery.mockReturnValue({
+//       data: undefined,
+//       error: new Error('Failed to fetch deal'),
+//       isLoading: false,
+//       refetch: jest.fn(),
+//     } as any);
+
+//     render(
+//       React.createElement(DealEditDialog, { 
+//         open: true, 
+//         onClose: jest.fn(), 
+//         id: '1'
+//       })
+//     );
+
+//     expect(screen.getByTestId('base-upsert-fields')).toBeInTheDocument();
+//   });
+// });

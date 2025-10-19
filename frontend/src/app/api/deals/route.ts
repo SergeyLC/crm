@@ -29,7 +29,6 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/deals/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -38,8 +37,9 @@ export async function POST(request: NextRequest) {
     });
 
     if (!res.ok) {
+      const responseData = await res.json();
       return NextResponse.json(
-        { error: "Failed to create deal" },
+        { error: "Failed to create deal", ...responseData },
         { status: res.status }
       );
     }

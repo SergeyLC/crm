@@ -26,6 +26,7 @@ import { CreateLeadDTO, UpdateLeadDTO, LeadExt } from "@/entities/lead";
 export type BaseUpsertFormProps<TEntity, TState> = {
   initialData?: TEntity;
   onChange?: (data: TState) => void;
+  formErrors?: { [key: string]: string[] };
   isDeal?: boolean;
 };
 
@@ -34,6 +35,7 @@ export const BaseUpsertFields = <
   TState extends CreateDealDTO | UpdateDealDTO | CreateLeadDTO | UpdateLeadDTO,
 >({
   initialData,
+  formErrors,
   onChange,
   isDeal = false,
 }: BaseUpsertFormProps<TEntity, TState>) => {
@@ -127,6 +129,12 @@ export const BaseUpsertFields = <
               slotProps={{
                 htmlInput: { "data-testid": "product-input" },
               }}
+              error={!!formErrors?.productInterest}
+              helperText={
+                formErrors?.productInterest
+                  ? formErrors.productInterest.join(" ")
+                  : ""
+              }
             />
             <TextField
               fullWidth
@@ -141,6 +149,12 @@ export const BaseUpsertFields = <
               slotProps={{
                 htmlInput: { "data-testid": "potential-value-input" },
               }}
+              error={!!formErrors?.potentialValue}
+              helperText={
+                formErrors?.potentialValue
+                  ? formErrors.potentialValue.join(" ")
+                  : ""
+              }
             />
           </Stack>
           <TextField
@@ -154,6 +168,10 @@ export const BaseUpsertFields = <
             slotProps={{
               htmlInput: { "data-testid": "title-input" },
             }}
+            error={!!formErrors?.title}
+            helperText={
+              formErrors?.title ? formErrors.title.join(" ") : ""
+            }
           />
         </Stack>
       </Paper>

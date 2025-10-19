@@ -31,6 +31,10 @@ import { useAuth } from "@/features/auth/";
 import { QueryKeyType } from "@/shared";
 import { BaseUpsertFields } from "@/features/form";
 
+type Errors = {
+  [key: string]: string[];
+};
+
 export function DealEditDialog({
   id,
   open,
@@ -49,12 +53,16 @@ export function DealEditDialog({
   const createDeal = useCreateDealMutation();
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
+  const [formErrors, setFormErrors] = useState<Errors>({});
 
   if (!id && isAuthenticated) {
     // If there's no ID and the user is authenticated, we can create a new deal
   }
+
   const handleSubmit = React.useCallback(
     async (values: CreateDealDTO | UpdateDealDTO) => {
+      setFormErrors({});
+
       if (values?.appointments && values?.appointments?.length > 0) {
         values.appointments = sanitizeAppointments(
           values?.appointments
@@ -89,25 +97,15 @@ export function DealEditDialog({
             >,
           });
 
-          type Errors = {
-            [key: string]: string[];
-          };
-
           const err = error as { cause: { errors?: Errors } };
           if (err?.cause?.errors) {
+            setFormErrors(err.cause.errors);
             // Display each validation error
             for (const [key, messages] of Object.entries(
               err.cause.errors || {}
             )) {
               messages.forEach((message) => {
                 console.error(`[${key}]:`, message);
-
-                enqueueSnackbar(message, {
-                  variant: "error",
-                  SnackbarProps: {
-                    "data-testid": "error-notification",
-                  } as Record<string, unknown>,
-                });
               });
             }
           }
@@ -160,19 +158,14 @@ export function DealEditDialog({
 
         const err = error as { cause: { errors?: Errors } };
         if (err?.cause?.errors) {
+          setFormErrors(err.cause.errors);
+
           // Display each validation error
           for (const [key, messages] of Object.entries(
             err.cause.errors || {}
           )) {
             messages.forEach((message) => {
               console.error(`[${key}]:`, message);
-
-              enqueueSnackbar(message, {
-                variant: "error",
-                SnackbarProps: {
-                  "data-testid": "error-notification",
-                } as Record<string, unknown>,
-              });
             });
           }
         }
@@ -190,8 +183,16 @@ export function DealEditDialog({
   const onChange = useCallback(
     (data: CreateDealDTO | UpdateDealDTO) => {
       setDealData(data);
+      for (const [key] of Object.entries(formErrors)) {
+        const k = key as keyof (CreateDealDTO | UpdateDealDTO);
+        if (data[k] !== dealData[k]) {
+          const updatedErrors = { ...formErrors };
+          delete updatedErrors[key];
+          setFormErrors(updatedErrors);
+        }
+      }
     },
-    [setDealData]
+    [setDealData, formErrors, dealData]
   );
 
   const onSubmitHandler = useCallback(
@@ -278,6 +279,7 @@ export function DealEditDialog({
           ) : (
             <BaseUpsertFields
               initialData={dealData as DealExt}
+              formErrors={formErrors}
               onChange={onChange}
             />
           )}

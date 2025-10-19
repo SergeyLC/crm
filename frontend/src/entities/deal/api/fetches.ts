@@ -108,7 +108,9 @@ export const createDeal = async (data: CreateDealDTO): Promise<Deal> => {
     body: JSON.stringify(data),
   });
   if (!response.ok) {
-    throw new Error("Failed to create deal", { cause: await response.json() });
+    const responseData = await response.json();
+    console.log("Failed to create deal body", { cause: responseData.body });
+    throw new Error("Failed to create deal", { cause: responseData });
   }
   return response.json();
 };

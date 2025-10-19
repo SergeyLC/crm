@@ -19,6 +19,7 @@
     "loading": "Laden...",
     "errorLoad": "Fehler beim Laden der Lead-Daten",
     "updateError": "Fehler beim Aktualisieren des Leads",
+    "updateSuccess": "Lead erfolgreich aktualisiert",
     "createError": "Fehler beim Erstellen des Leads",
     "createSuccess": "Lead erfolgreich erstellt"
   },

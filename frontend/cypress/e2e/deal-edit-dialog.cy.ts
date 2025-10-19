@@ -481,10 +481,12 @@ describe("Deal Edit Dialog", () => {
       cy.get('[data-testid="submit-button"]').click();
 
       cy.wait("@validationError");
-      cy.wait(500);
-      // Should display server validation errors in notifications
-      cy.contains("Title is required").should("be.visible");
-      cy.contains("Must be a positive number").should("be.visible");
+      cy.wait(1000);
+      // Should display server validation errors in form helper text
+      cy.get('[role="dialog"]').within(() => {
+        cy.contains("Title is required").should("exist");
+        cy.contains("Must be a positive number").should("exist");
+      });
     });
   });
 

@@ -65,7 +65,7 @@ export const updateLead = async ({
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    throw new Error("Failed to update lead");
+    throw new Error("Failed to update lead", { cause: await response.json() });
   }
   return response.json();
 };

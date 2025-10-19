@@ -19,6 +19,7 @@
     "loading": "Loading...",
     "errorLoad": "Error loading lead data",
     "updateError": "Failed to update lead",
+    "updateSuccess": "Lead updated successfully",
     "createError": "Failed to create lead",
     "createSuccess": "Lead created successfully"
   },

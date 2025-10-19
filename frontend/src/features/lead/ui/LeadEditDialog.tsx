@@ -47,6 +47,12 @@ export function LeadEditDialog({
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
 
+  type Errors = {
+    [key: string]: string[];
+  };
+
+  const [formErrors, setFormErrors] = useState<Errors>({});
+
   if (!id && isAuthenticated) {
     // console.log("Creating new lead, user:", user);
     // If there's no ID and the user is authenticated, we can create a new lead
@@ -59,6 +65,8 @@ export function LeadEditDialog({
 
   const handleSubmit = React.useCallback(
     async (values: CreateLeadDTO | UpdateLeadDTO) => {
+      setFormErrors({});
+
       if (values?.appointments && values?.appointments?.length > 0) {
         values.appointments = sanitizeAppointments(
           values?.appointments
@@ -101,6 +109,9 @@ export function LeadEditDialog({
           console.log("Create lead error details:", error);
 
           const err = error as { cause: { errors?: Errors } };
+          if (err?.cause?.errors) {
+            setFormErrors(err.cause.errors);
+          }
           if (!err?.cause?.errors) {
             return;
           }
@@ -143,6 +154,13 @@ export function LeadEditDialog({
         for (const key of invalidateKeys || []) {
           queryClient.invalidateQueries({ queryKey: key });
         }
+        enqueueSnackbar(t("dialog.updateSuccess"), {
+          variant: "success",
+          SnackbarProps: { "data-testid": "success-notification" } as Record<
+            string,
+            unknown
+          >,
+        });
         onClose?.();
       } catch (error) {
         console.error("Error updating lead:", error);
@@ -153,6 +171,26 @@ export function LeadEditDialog({
             unknown
           >,
         });
+
+        const err = error as { cause: { errors?: Errors } };
+        if (err?.cause?.errors) {
+          setFormErrors(err.cause.errors);
+          // Display each validation error
+          for (const [key, messages] of Object.entries(
+            err.cause.errors || {}
+          )) {
+            messages.forEach((message) => {
+              console.error(`[${key}]:`, message);
+
+              enqueueSnackbar(message, {
+                variant: "error",
+                SnackbarProps: {
+                  "data-testid": "error-notification",
+                } as Record<string, unknown>,
+              });
+            });
+          }
+        }
       }
     },
     [
@@ -175,8 +213,17 @@ export function LeadEditDialog({
   const onChange = useCallback(
     (data: CreateLeadDTO | UpdateLeadDTO) => {
       setLeadData(data);
+      // Clear errors for fields that have been changed
+      for (const [key] of Object.entries(formErrors)) {
+        const k = key as keyof (CreateLeadDTO | UpdateLeadDTO);
+        if (data[k] !== leadData[k]) {
+          const updatedErrors = { ...formErrors };
+          delete updatedErrors[key];
+          setFormErrors(updatedErrors);
+        }
+      }
     },
-    [setLeadData]
+    [setLeadData, formErrors, leadData]
   );
 
   const onSubmitHandler = useCallback(
@@ -264,6 +311,7 @@ export function LeadEditDialog({
           ) : (
             <BaseUpsertFields<LeadExt, CreateLeadDTO | UpdateLeadDTO>
               initialData={leadData as LeadExt}
+              formErrors={formErrors}
               onChange={onChange}
             />
           )}

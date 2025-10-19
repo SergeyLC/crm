@@ -38,12 +38,13 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(body),
     });
 
-    if (!res.ok) {
+if (!res.ok) {
+      const responseData = await res.json();
       return NextResponse.json(
-        { error: "Failed to create lead" },
+        { error: "Failed to create lead", ...responseData },
         { status: res.status }
       );
-    }
+    }    
 
     const data = await res.json();
     return NextResponse.json(data);
