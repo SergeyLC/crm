@@ -1,0 +1,16 @@
+[
+  {
+    "id": "user-1",
+    "name": "Test Client",
+    "email": "test.client@example.com",
+    "role": "ADMIN",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "user-2",
+    "name": "Support User",
+    "email": "support@example.com",
+    "role": "MANAGER",
+    "status": "ACTIVE"
+  }
+]

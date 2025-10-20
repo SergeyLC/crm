@@ -105,7 +105,7 @@ function run() {
   // Output namespace to path mapping
   console.log('\nNamespace to path mapping:');
   for (const ns of Object.keys(nsPathMap).sort()) {
-    console.log(`\nNamespace: "${ns}"`);
+    // console.log(`\nNamespace: "${ns}"`);
     for (const file of nsPathMap[ns]) {
       // Show relative path for better readability
       const relativePath = path.relative(root, file);

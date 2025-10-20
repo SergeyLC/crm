@@ -1,0 +1,56 @@
+[
+  {
+    "id": "deal-to-update",
+    "title": "Deal to Update",
+    "productInterest": "Original Product",
+    "potentialValue": 5000,
+    "stage": "QUALIFIED",
+    "assigneeId": "user-1",
+    "assignee": {
+      "id": "user-1",
+      "name": "Test Client",
+      "email": "test.client@example.com"
+    },
+    "creator": {
+      "id": "user-1",
+      "name": "Test Client",
+      "email": "test.client@example.com"
+    },
+    "contact": {
+      "id": "contact-1",
+      "name": "Test Client",
+      "email": "test.client@example.com",
+      "phone": "+1234567890"
+    },
+    "createdAt": "2025-09-05T20:11:51.057Z",
+    "updatedAt": "2025-09-05T20:11:51.057Z",
+    "appointments": []
+  },
+  {
+    "id": "deal-secondary",
+    "title": "Secondary Deal",
+    "productInterest": "Secondary Product",
+    "potentialValue": 7500,
+    "stage": "QUALIFIED",
+    "assigneeId": "user-2",
+    "assignee": {
+      "id": "user-2",
+      "name": "Support User",
+      "email": "support@example.com"
+    },
+    "creator": {
+      "id": "user-2",
+      "name": "Support User",
+      "email": "support@example.com"
+    },
+    "contact": {
+      "id": "contact-2",
+      "name": "Alex Example",
+      "email": "alex@example.com",
+      "phone": "+1987654321"
+    },
+    "createdAt": "2025-09-05T20:11:51.057Z",
+    "updatedAt": "2025-09-05T20:11:51.057Z",
+    "appointments": []
+  }
+]
