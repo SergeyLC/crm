@@ -87,6 +87,22 @@ jobs:
           cd frontend && npm test --silent && cd ..
           cd backend && npm test --silent && cd ..
 
+      - name: Install Playwright browsers
+        run: |
+          cd frontend && npx playwright install --with-deps && cd ..
+
+      - name: Run Playwright E2E tests
+        run: |
+          cd frontend && npm run playwright && cd ..
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
       - name: Build check
         run: |
           cd frontend && npm run build && cd ..
