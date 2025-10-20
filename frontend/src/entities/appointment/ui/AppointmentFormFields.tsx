@@ -120,17 +120,14 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
         onChange={handleChange}
         placeholder={t("field.note")}
         size="small"
-        fullWidth={true}
+        fullWidth
         multiline
         maxRows={6}
         minRows={1}
         sx={{ zIndex: 0 }}
         slotProps={{
-          htmlInput(ownerState) {
-            return {
-              ...ownerState,
-              "data-testid": `appointment-note-${appointmentId}`,
-            };
+          htmlInput: {
+            "data-testid": `appointment-note-${appointmentId}`,
           },
         }}
       />

@@ -44,6 +44,8 @@ ecosystem.config.js
 **/*storybook.log
 **/storybook-static
 
+**/cypress/screenshots
+
 **/.nvmrc
 
 db/temp/
