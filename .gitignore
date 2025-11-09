@@ -30,9 +30,17 @@ ecosystem.config.js
 **/test-results
 **/playwright-report
 
-# local env files
+# local env files - ignore local overrides and base .env
 **/.env.local
+**/.env.*.local
 **/.env
+
+# but allow environment-specific configs to be committed
+!**/.env.development
+!**/.env.production
+!**/.env.test
+!**/.env.example
+!**/.env.*.example
 
 # vercel
 **/.vercel

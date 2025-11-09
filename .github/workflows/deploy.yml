@@ -95,8 +95,45 @@ jobs:
               echo "backend/node_modules not found — skipping backend prune"
             fi
 
-            echo "⚙️ Copying PM2 configuration..."
-            cp .github/ecosystem.config.template.js ecosystem.config.js
+            echo "⚙️ Checking PM2 configuration..."
+            # Only copy template if ecosystem.config.js doesn't exist
+            if [ ! -f ecosystem.config.js ]; then
+              echo "Creating ecosystem.config.js from template..."
+              cp .github/ecosystem.config.template.js ecosystem.config.js
+            else
+              echo "ecosystem.config.js already exists, keeping existing configuration"
+            fi
+
+
+            echo "🔐 Creating environment files from GitHub Secrets..."
+            
+            # Create backend .env.production.local
+            cat > backend/.env.production.local << 'EOF'
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+            PRISMA_LOG_LEVEL=warn
+            LOG_LEVEL=info
+            EOF
+            
+            # Create frontend .env.production.local
+            cat > frontend/.env.production.local << 'EOF'
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_BACKEND_API_URL=${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}
+            EOF
+            
+            # Create db .env.production.local
+            cat > db/.env.production.local << 'EOF'
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            PRISMA_LOG_LEVEL=warn
+            EOF
+            
+            # Secure the files
+            chmod 600 backend/.env.production.local
+            chmod 600 frontend/.env.production.local
+            chmod 600 db/.env.production.local
+            
+            echo "✅ Environment files created and secured"
 
             echo "🔄 Restarting services..."
             pm2 stop ecosystem.config.js || true
