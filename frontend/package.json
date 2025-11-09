@@ -1,6 +1,6 @@
 {
   "name": "loya-crm-frontend",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "private": true,
   "scripts": {
     "dev": "NODE_ENV=development && next dev",
@@ -13,7 +13,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "type-check": "tsc --noEmit && tsc --noEmit --project tsconfig.test.json",
     "type-check:watch": "tsc --noEmit --watch",
-    "pretype-check": "npm run collect-locales",
+    "pretype-check": "pnpm run collect-locales",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -36,8 +36,8 @@
     "playwright:report": "playwright show-report",
     "clean": "rm -rf .next out node_modules/.cache",
     "collect-locales": "node scripts/collect-locales.js",
-    "predev": "npm run clean && npm run collect-locales && node scripts/ensure-no-legacy-pages.js",
-    "prebuild": "npm run clean && npm run collect-locales && node scripts/ensure-no-legacy-pages.js",
+    "predev": "pnpm run clean && pnpm run collect-locales && node scripts/ensure-no-legacy-pages.js",
+    "prebuild": "pnpm run clean && pnpm run collect-locales && node scripts/ensure-no-legacy-pages.js",
     "analyze": "ANALYZE=true next build",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"

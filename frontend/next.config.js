@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = () => {
   const isProduction = process.env.NODE_ENV === "production";
   const isDevelopment = process.env.NODE_ENV === "development";
@@ -6,6 +8,8 @@ const nextConfig = () => {
   // Base configuration
   const baseConfig = {
     reactStrictMode: true,
+    // Set the workspace root for proper file tracing in monorepo
+    outputFileTracingRoot: path.join(__dirname, '..'),
   };
 
   // Development configuration

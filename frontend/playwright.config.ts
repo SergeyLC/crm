@@ -15,8 +15,8 @@ export default defineConfig({
   },
   webServer: {
     // Start the dev server before running tests. If you use a custom script, set
-    // PLAYWRIGHT_DEV_COMMAND env var. Defaults to `npm run dev`.
-    command: process.env.PLAYWRIGHT_DEV_COMMAND || 'npm run dev',
+    // PLAYWRIGHT_DEV_COMMAND env var. Defaults to `pnpm run dev`.
+    command: process.env.PLAYWRIGHT_DEV_COMMAND || 'pnpm run dev',
     url: process.env.PW_BASE_URL || 'http://localhost:3000',
     reuseExistingServer: true,
     timeout: 120_000,

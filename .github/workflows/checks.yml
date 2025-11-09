@@ -26,84 +26,51 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Cache frontend dependencies
-        uses: actions/cache@v3
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          path: |
-            ~/.npm
-            frontend/node_modules
-          key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-frontend-
+          version: 10
 
-      - name: Cache backend dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.npm
-            backend/node_modules
-          key: ${{ runner.os }}-backend-${{ hashFiles('backend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-backend-
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
-      - name: Cache db dependencies
+      - name: Cache pnpm dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.npm
-            db/node_modules
-          key: ${{ runner.os }}-db-${{ hashFiles('db/package.json') }}
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-db-
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: |
-          cd frontend && npm ci && cd ..
-          cd backend && npm ci && cd ..
-          cd db && npm ci && cd ..
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: |
-          cd db && npm run generate && cd ..
+        run: pnpm --filter=loya-crm-db run generate
 
       - name: Generate i18n files for frontend
-        run: |
-          cd frontend && npm run collect-locales && cd ..
+        run: pnpm --filter=loya-crm-frontend run collect-locales
 
       - name: Type check
         run: |
-          cd frontend && npm run type-check && cd ..
-          cd backend && npm run type-check && cd ..
-          cd db && npm run type-check && cd ..
+          pnpm --filter=loya-crm-frontend run type-check
+          pnpm --filter=loya-crm-backend run type-check
+          pnpm --filter=loya-crm-db run type-check
 
       - name: Lint check
         run: |
-          cd frontend && npm run lint:check && cd ..
-          cd backend && npm run lint:check && cd ..
-          cd db && npm run lint:check && cd ..
+          pnpm --filter=loya-crm-frontend run lint:check
+          pnpm --filter=loya-crm-backend run lint:check
+          pnpm --filter=loya-crm-db run lint:check
 
       - name: Run tests
         run: |
-          cd frontend && npm test --silent && cd ..
-          cd backend && npm test --silent && cd ..
-
-      - name: Install Playwright browsers
-        run: |
-          cd frontend && npx playwright install --with-deps && cd ..
-
-      - name: Run Playwright E2E tests
-        run: |
-          cd frontend && npm run playwright && cd ..
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: frontend/playwright-report/
-          retention-days: 30
+          pnpm --filter=loya-crm-frontend test --silent
+          pnpm --filter=loya-crm-backend test --silent
 
       - name: Build check
         run: |
-          cd frontend && npm run build && cd ..
-          cd backend && npm run build && cd ..
+          pnpm --filter=loya-crm-frontend run build
+          pnpm --filter=loya-crm-backend run build

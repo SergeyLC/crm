@@ -4,6 +4,7 @@ module.exports = {
       name: "loyacrm-frontend",
       script: "npm run start",
       cwd: "/var/www/loyacrm/frontend",
+      env_file: "./.env.production.local", // Load secrets from .env.production.local
       env: {
         NODE_ENV: "production",
         PORT: 3000
@@ -20,6 +21,7 @@ module.exports = {
       name: "loyacrm-backend",
       script: "npm run start:prod",
       cwd: "/var/www/loyacrm/backend",
+      env_file: "./.env.production.local", // Load secrets from .env.production.local
       env: {
         NODE_ENV: "production",
         PORT: 4000

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
+import { safeJsonParse } from "@/shared/lib/safeJsonParse";
 
 export async function GET() {
   try {
@@ -16,7 +17,7 @@ export async function GET() {
       );
     }
 
-    const data = await res.json();
+    const data = await safeJsonParse(res);
     // console.log("Fetched leads:", data);
     return NextResponse.json(data);
   } catch (error) {
@@ -39,14 +40,14 @@ export async function POST(request: NextRequest) {
     });
 
 if (!res.ok) {
-      const responseData = await res.json();
+      const responseData = await safeJsonParse<Record<string, unknown>>(res);
       return NextResponse.json(
         { error: "Failed to create lead", ...responseData },
         { status: res.status }
       );
     }    
 
-    const data = await res.json();
+    const data = await safeJsonParse(res);
     return NextResponse.json(data);
   } catch (error) {
     console.error("Url=", `${NEXT_PUBLIC_BACKEND_API_URL}/leads/`);
