@@ -158,10 +158,6 @@ jobs:
             export PNPM_STORE_DIR=/var/cache/pnpm
             mkdir -p $PNPM_STORE_DIR
 
-            # Clean node_modules to avoid ENOTEMPTY errors
-            echo "Cleaning old node_modules..."
-            rm -rf node_modules frontend/node_modules backend/node_modules db/node_modules
-
             # Generate Prisma client first so both frontend and backend can use it
             echo "Installing db dependencies and generating Prisma client..."
             cd db
