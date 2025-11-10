@@ -713,6 +713,95 @@ You can trigger deployment manually:
 3. Select `Deploy to Server` workflow
 4. Click `Run workflow`
 
+### Automated Deployment via Script
+
+The project includes a convenient deployment script that automates version bumping and tag creation:
+
+```bash
+# From project root - simple deployment (includes commit history by default)
+./deploy.sh
+
+# With additional commit message
+./deploy.sh -m "fix critical auth bug"
+
+# Without commit history
+./deploy.sh --clear
+
+# With custom message, no commit history
+./deploy.sh -m "hotfix authentication" --clear
+
+# Or from frontend directory
+cd frontend
+pnpm run deploy
+
+# With custom message
+pnpm run deploy -- -m "add new customer dashboard feature"
+
+# Without commit history
+pnpm run deploy -- --clear
+```
+
+**What the script does:**
+1. ✅ Reads current version from `frontend/package.json` (e.g., `0.1.11`)
+2. ✅ Increments patch version (`0.1.11` → `0.1.12`)
+3. ✅ Updates `frontend/package.json` with new version
+4. ✅ Builds commit message with version and optional custom message
+5. ✅ **By default**: Includes list of all unpushed commits
+6. ✅ Stages all changes: `git add -A`
+7. ✅ Creates commit with generated message
+8. ✅ Pushes commit: `git push`
+9. ✅ Creates annotated tag: `git tag -a v0.1.12`
+10. ✅ Pushes tag: `git push origin v0.1.12`
+11. ✅ GitHub Actions automatically starts deployment
+
+**Command Options:**
+- `-m "message"` - Optional: Add custom description to commit message
+- `--clear` - Optional: Don't include list of unpushed commits (by default they are included)
+
+**Commit Message Formats:**
+
+*Default (with commit history):*
+```
+Provide Release Tag 0.1.12
+
+* fix: handle empty JSON responses safely
+* refactor: migrate to pnpm for better performance
+* feat: add GitHub Secrets integration
+```
+
+*With custom message:*
+```
+Provide Release Tag 0.1.12 - optimize database queries
+
+* fix: handle empty JSON responses safely
+* refactor: optimize lead filtering query
+* perf: add database indexes
+```
+
+*Without commit history (--clear flag):*
+```
+Provide Release Tag 0.1.12
+```
+
+**Examples:**
+```bash
+# Standard release with all commits
+./deploy.sh
+# → "Provide Release Tag 0.1.12" + list of commits
+
+# Release with description
+./deploy.sh -m "production ready with performance improvements"
+# → "Provide Release Tag 0.1.12 - production ready with performance improvements" + list of commits
+
+# Clean release without commit details
+./deploy.sh --clear
+# → "Provide Release Tag 0.1.12" (no commit list)
+
+# Hotfix without commit details
+./deploy.sh -m "critical security patch" --clear
+# → "Provide Release Tag 0.1.12 - critical security patch" (no commit list)
+```
+
 ### Monitoring and Logs
 
 #### Check Deployment Status:

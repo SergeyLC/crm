@@ -7,6 +7,41 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Parse command line arguments
+ADDITIONAL_MESSAGE=""
+INCLUDE_COMMITS=true  # Enabled by default
+while getopts "m:f-:" opt; do
+  case $opt in
+    m)
+      ADDITIONAL_MESSAGE="$OPTARG"
+      ;;
+    f)
+      INCLUDE_COMMITS=true
+      ;;
+    -)
+      case "${OPTARG}" in
+        clear)
+          INCLUDE_COMMITS=false
+          ;;
+        *)
+          echo "Invalid option: --${OPTARG}" >&2
+          echo "Usage: $0 [-m \"additional commit message\"] [--clear]"
+          echo "  -m: Add custom message to commit"
+          echo "  --clear: Don't include list of commits (by default commits are included)"
+          exit 1
+          ;;
+      esac
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      echo "Usage: $0 [-m \"additional commit message\"] [--clear]"
+      echo "  -m: Add custom message to commit"
+      echo "  --clear: Don't include list of commits (by default commits are included)"
+      exit 1
+      ;;
+  esac
+done
+
 # Path to frontend/package.json
 PACKAGE_JSON="frontend/package.json"
 
@@ -33,8 +68,31 @@ fs.writeFileSync('$PACKAGE_JSON', JSON.stringify(pkg, null, 2) + '\n');
 "
 echo -e "${GREEN}✅ Updated $PACKAGE_JSON${NC}"
 
-# Git operations
-COMMIT_MESSAGE="Provide Release Tag $NEW_VERSION"
+# Build commit message
+if [ -n "$ADDITIONAL_MESSAGE" ]; then
+  COMMIT_MESSAGE="Provide Release Tag $NEW_VERSION - $ADDITIONAL_MESSAGE"
+else
+  COMMIT_MESSAGE="Provide Release Tag $NEW_VERSION"
+fi
+
+# Add commit history by default (unless --clear is specified)
+if [ "$INCLUDE_COMMITS" = true ]; then
+  # Get commits that haven't been pushed yet
+  UNPUSHED_COMMITS=$(git log origin/main..HEAD --pretty=format:"* %s" 2>/dev/null || echo "")
+  
+  if [ -n "$UNPUSHED_COMMITS" ]; then
+    COMMIT_MESSAGE="$COMMIT_MESSAGE
+
+$UNPUSHED_COMMITS"
+    echo -e "${BLUE}📋 Including unpushed commits in message:${NC}"
+    echo "$UNPUSHED_COMMITS"
+  else
+    echo -e "${YELLOW}ℹ️  No unpushed commits found${NC}"
+  fi
+else
+  echo -e "${YELLOW}ℹ️  Skipping commit history (--clear flag used)${NC}"
+fi
+
 TAG_NAME="v$NEW_VERSION"
 
 echo -e "\n${BLUE}📝 Staging changes...${NC}"
