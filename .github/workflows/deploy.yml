@@ -166,25 +166,22 @@ jobs:
             echo "Installing db dependencies and generating Prisma client..."
             cd db
             # Install all dependencies (including dev) for build process
-            pnpm install --frozen-lockfile --prefer-offline --force
+            pnpm install --frozen-lockfile --prefer-offline
             pnpm run generate
             cd ..
 
-            # Install frontend and backend deps in parallel to save time
-            echo "Installing frontend and backend dependencies in parallel..."
-            (cd frontend && pnpm install --frozen-lockfile --prefer-offline --force) &
-            FRONTEND_PID=$!
-            (cd backend && pnpm install --frozen-lockfile --prefer-offline --force) &
-            BACKEND_PID=$!
-            
-            # Wait for both to complete
-            echo "Waiting for frontend dependencies installation..."
-            wait $FRONTEND_PID
+            # Install frontend and backend deps sequentially to avoid ENOTEMPTY errors
+            echo "Installing frontend dependencies..."
+            cd frontend
+            pnpm install --frozen-lockfile --prefer-offline
             echo "✅ Frontend dependencies installed"
+            cd ..
             
-            echo "Waiting for backend dependencies installation..."
-            wait $BACKEND_PID
+            echo "Installing backend dependencies..."
+            cd backend
+            pnpm install --frozen-lockfile --prefer-offline
             echo "✅ Backend dependencies installed"
+            cd ..
 
             echo "🌐 Generating i18n files for frontend..."
             cd frontend
