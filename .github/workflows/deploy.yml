@@ -98,6 +98,7 @@ jobs:
             
             # Set CI environment for pnpm
             export CI=true
+            export PRISMA_SKIP_POSTINSTALL_GENERATE=false
 
             echo "🚀 Starting deployment..."
 
@@ -151,6 +152,7 @@ jobs:
             pnpm config set fetch-timeout 300000
             pnpm config set fetch-retry-mintimeout 20000
             pnpm config set fetch-retry-maxtimeout 120000
+            pnpm config set enable-pre-post-scripts true
             
             # Setup pnpm store directory
             export PNPM_STORE_DIR=/var/cache/pnpm
