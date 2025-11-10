@@ -1,6 +1,6 @@
 {
   "name": "loya-crm-db",
-  "version": "0.1.11",
+  "version": "0.1.02",
   "private": true,
   "scripts": {
     "generate": "prisma generate && mkdir -p ../frontend/src/shared/generated/prisma/ && cp -R ./generated/prisma-client/* ../frontend/src/shared/generated/prisma/ && mkdir -p ../backend/generated/prisma/ && cp -R ./generated/prisma-client/* ../backend/generated/prisma/",

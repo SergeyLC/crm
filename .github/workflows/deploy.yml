@@ -166,20 +166,21 @@ jobs:
             echo "Installing db dependencies and generating Prisma client..."
             cd db
             # Install all dependencies (including dev) for build process
-            pnpm install --frozen-lockfile --prefer-offline
+            # --ignore-scripts flag will skip build scripts, we'll run them manually if needed
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
             pnpm run generate
             cd ..
 
             # Install frontend and backend deps sequentially to avoid ENOTEMPTY errors
             echo "Installing frontend dependencies..."
             cd frontend
-            pnpm install --frozen-lockfile --prefer-offline
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
             echo "✅ Frontend dependencies installed"
             cd ..
             
             echo "Installing backend dependencies..."
             cd backend
-            pnpm install --frozen-lockfile --prefer-offline
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
             echo "✅ Backend dependencies installed"
             cd ..
 
