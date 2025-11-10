@@ -124,6 +124,7 @@ jobs:
             cat > frontend/.env.production.local << 'EOF'
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_BACKEND_API_URL=${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}
+            NEXT_TELEMETRY_DISABLED=1
             EOF
             
             # Create db .env.production.local
@@ -187,7 +188,9 @@ jobs:
 
             echo "🔨 Building frontend..."
             cd frontend
-            pnpm run clean
+            # Don't run clean - preserve Next.js cache for faster builds
+            # Disable Next.js telemetry
+            export NEXT_TELEMETRY_DISABLED=1
             pnpm run build
             cd ..
 
