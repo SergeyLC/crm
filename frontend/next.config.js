@@ -30,18 +30,31 @@ const nextConfig = () => {
     // Optimizations for production
     compiler: {
       // Remove console.log but keep console.error
-      // removeConsole: isProduction
-      //   ? {
-      //       exclude: ["error"],
-      //     }
-      //   : false,
+      removeConsole: isProduction
+        ? {
+            exclude: ["error", "warn"],
+          }
+        : false,
     },
     // Compression
     compress: true,
+    // Production optimizations
+    productionBrowserSourceMaps: false, // Disable source maps for faster build
     experimental: {
       // Disable CSS optimization to fix critters issue with Emotion
-      optimizeCss: false, // Disable CSS optimization
-      esmExternals: true, // nur für neue Browser
+      optimizeCss: false,
+      esmExternals: true,
+      // Enable faster compilation
+      optimizePackageImports: ['@mui/material', '@mui/icons-material'],
+    },
+    // Reduce build output
+    typescript: {
+      // Don't type check during build (already done in CI)
+      ignoreBuildErrors: false,
+    },
+    eslint: {
+      // Don't lint during build (already done in CI)
+      ignoreDuringBuilds: true,
     },
   };
 

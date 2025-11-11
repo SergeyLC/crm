@@ -191,6 +191,11 @@ jobs:
             # Don't run clean - preserve Next.js cache for faster builds
             # Disable Next.js telemetry
             export NEXT_TELEMETRY_DISABLED=1
+            # Skip type checking and linting (already done in CI checks)
+            export SKIP_TYPE_CHECK=true
+            export SKIP_LINT=true
+            # Optimize build performance
+            export NODE_OPTIONS="--max-old-space-size=4096"
             pnpm run build
             cd ..
 
