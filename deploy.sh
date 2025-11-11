@@ -119,7 +119,7 @@ if [ "$CREATE_TAG" = true ]; then
     TAG_MESSAGE="Provide Release Tag $NEW_VERSION"
   fi
   
-  echo -e "${BLUE}🏷️  Creating tag: $TAG_NAME...${NC}"
+  echo -e "${BLUE}🏷️  Creating tag: $TAG_NAME... with message: $TAG_MESSAGE${NC}"
   git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
   
   echo -e "${BLUE}🚀 Pushing tag: $TAG_NAME...${NC}"
