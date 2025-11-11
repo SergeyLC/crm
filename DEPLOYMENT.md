@@ -24,7 +24,7 @@ sudo apt-get install -y nodejs
 
 # Verify installation
 node --version  # Should show v24.x.x
-npm --version   # Should show latest npm
+pnpm --version  # Should show latest pnpm
 
 # Optional: Install nvm for version management
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
@@ -42,7 +42,7 @@ nvm alias default 24
 
 ### 5. PM2 Process Manager
 ```bash
-sudo npm install -g pm2
+sudo pnpm add -g pm2
 ```
 
 ## 🗄️ PostgreSQL Installation and Setup
@@ -91,7 +91,7 @@ local   loyacrm         loyacrm                                 md5
 sudo systemctl restart postgresql
 ```
 
-## 🟢 Node.js and npm Installation
+## 🟢 Node.js and pnpm Installation
 
 ### 1. Install Node.js 24+ via NodeSource
 ```bash
@@ -99,15 +99,20 @@ curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-### 2. Verify Installation
+### 2. Install pnpm
 ```bash
-node --version
-npm --version
+sudo npm install -g pnpm
 ```
 
-### 3. Install PM2 for Process Management
+### 3. Verify Installation
 ```bash
-sudo npm install -g pm2
+node --version
+pnpm --version
+```
+
+### 4. Install PM2 for Process Management
+```bash
+sudo pnpm add -g pm2
 ```
 
 ## 🌐 Nginx Installation and Setup
@@ -173,24 +178,24 @@ NEXT_PUBLIC_API_URL=http://your-server-ip:4000
 #### Database:
 ```bash
 cd /var/www/loyacrm/db
-npm install
-npx prisma migrate deploy
-npx prisma generate
-npm run generate
+pnpm install
+pnpm exec prisma migrate deploy
+pnpm exec prisma generate
+pnpm run generate
 ```
 
 #### Backend:
 ```bash
 cd ../backend
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 
 #### Frontend:
 ```bash
 cd ../frontend
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 
 ## 🚀 Launch Services with PM2
@@ -339,12 +344,12 @@ npm run generate
 
 echo "Building backend..."
 cd ../backend
-npm install --production
+pnpm install --prod
 npm run build
 
 echo "Building frontend..."
 cd ../frontend
-npm install --production
+pnpm install --prod
 npm run build
 
 echo "Restarting services..."
@@ -573,11 +578,12 @@ sudo tail -f /var/log/nginx/error.log
 - [ ] PostgreSQL installed and configured
 - [ ] Database and user created
 - [ ] Node.js 24+ installed
+- [ ] pnpm installed
 - [ ] PM2 installed
 - [ ] Nginx installed and configured
 - [ ] Repository cloned
 - [ ] Environment variables configured
-- [ ] npm dependencies installed
+- [ ] pnpm dependencies installed
 - [ ] Database migrations executed
 - [ ] Production builds created
 - [ ] PM2 ecosystem configured
@@ -635,7 +641,7 @@ curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # Install PM2
-sudo npm install -g pm2
+sudo pnpm add -g pm2
 
 # Create log directory
 sudo mkdir -p /var/log/pm2

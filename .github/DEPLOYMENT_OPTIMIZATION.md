@@ -5,12 +5,12 @@
 ### 1. Increased Command Timeout
 - **Before:** 10 minutes (default)
 - **After:** 30 minutes
-- **Reason:** `npm ci` для frontend занимает много времени из-за большого количества зависимостей
+- **Reason:** `npm ci` for frontend takes a long time due to large number of dependencies
 
 ### 2. Parallel Dependencies Installation
-- **Before:** Последовательная установка (frontend → backend)
-- **After:** Параллельная установка обоих одновременно
-- **Time saved:** ~40-50% времени установки зависимостей
+- **Before:** Sequential installation (frontend → backend)
+- **After:** Parallel installation of both at the same time
+- **Time saved:** ~40-50% of dependency installation time
 
 ### 3. Use Offline Cache and Omit Dev Dependencies
 - Added `--prefer-offline` flag to npm ci

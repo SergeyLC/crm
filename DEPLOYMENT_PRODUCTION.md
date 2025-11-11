@@ -95,68 +95,68 @@ module.exports = {
 
 #### Set Environment Variables on Server
 
-**Важно:** PM2 использует `process.env`, поэтому переменные должны быть доступны в окружении, где запускается PM2. Есть несколько способов:
+**Important:** PM2 uses `process.env`, so variables must be available in the environment where PM2 is running. There are several approaches:
 
-##### Способ A: Переменные окружения пользователя (проще для тестирования)
+##### Method A: User Environment Variables (easier for testing)
 
 ```bash
-# Добавить в ~/.bashrc или ~/.zshrc (для текущего пользователя)
-nano ~/.bashrc  # или ~/.zshrc для zsh
+# Add to ~/.bashrc or ~/.zshrc (for current user)
+nano ~/.bashrc  # or ~/.zshrc for zsh
 
-# Добавьте в конец файла:
+# Add at the end of file:
 export DATABASE_URL="postgresql://user:pass@host:5432/db"
 export JWT_SECRET="your-secret-key-min-32-chars"
 export CORS_ORIGIN="https://your-domain.com"
 export NEXT_PUBLIC_API_URL="https://your-domain.com"
 export NEXT_PUBLIC_BACKEND_API_URL="https://api.your-domain.com/api"
 
-# Применить изменения
+# Apply changes
 source ~/.bashrc
 
-# Проверить, что переменные установлены
+# Verify variables are set
 echo $DATABASE_URL
 echo $JWT_SECRET
 ```
 
-**Минусы этого способа:**
-- Работает только для текущего пользователя
-- Если PM2 запускается через sudo или systemd, переменные могут быть недоступны
-- Секреты видны в истории команд
+**Disadvantages:**
+- Works only for the current user
+- If PM2 is started via sudo or systemd, variables may be unavailable
+- Secrets visible in command history
 
-##### Способ B: Системные переменные (рекомендуется для production)
+##### Method B: System Variables (recommended for production)
 
 ```bash
-# Создать файл с переменными окружения
+# Create environment variables file
 sudo nano /etc/environment
 
-# Добавить (БЕЗ слова export):
+# Add (WITHOUT the word export):
 DATABASE_URL="postgresql://user:pass@host:5432/db"
 JWT_SECRET="your-secret-key-min-32-chars"
 CORS_ORIGIN="https://your-domain.com"
 NEXT_PUBLIC_API_URL="https://your-domain.com"
 NEXT_PUBLIC_BACKEND_API_URL="https://api.your-domain.com/api"
 
-# Перезагрузить сессию или перелогиниться
-# Или перезагрузить систему
+# Reload session or re-login
+# Or reboot the system
 sudo reboot
 
-# Проверить
+# Verify
 echo $DATABASE_URL
 ```
 
-**Плюсы:**
-- Доступны всем пользователям и сервисам
-- Работают с systemd и sudo
+**Advantages:**
+- Available to all users and services
+- Works with systemd and sudo
 
-##### Способ C: Файл .env для PM2 (удобнее и безопаснее)
+##### Method C: .env file for PM2 (more convenient and secure)
 
-PM2 может загружать переменные из файла, но **только если использовать опцию `--env-file`**:
+PM2 can load variables from a file, but **only if you use the `--env-file` option**:
 
 ```bash
-# 1. Создать файл с секретами (НЕ коммитить в git!)
+# 1. Create secrets file (DO NOT commit to git!)
 cp .env.production.local.example .env.production.local
 
-# 2. Заполнить реальными значениями
+# 2. Fill with real values
 nano .env.production.local
 
 DATABASE_URL="postgresql://user:pass@host:5432/db"
@@ -165,24 +165,24 @@ CORS_ORIGIN="https://your-domain.com"
 NEXT_PUBLIC_API_URL="https://your-domain.com"
 NEXT_PUBLIC_BACKEND_API_URL="https://api.your-domain.com/api"
 
-# 3. Защитить файл
+# 3. Protect the file
 chmod 600 .env.production.local
 
-# 4. Запустить PM2 с указанием файла
+# 4. Start PM2 with the file
 pm2 start ecosystem.config.js --env production --env-file .env.production.local
 ```
 
-**Плюсы:**
-- Секреты в отдельном файле, не в shell истории
-- Легко управлять и обновлять
-- Можно иметь разные файлы для разных окружений
+**Advantages:**
+- Secrets in a separate file, not in shell history
+- Easy to manage and update
+- Can have different files for different environments
 
-**Минусы:**
-- Нужно помнить указывать `--env-file` при каждом перезапуске
+**Disadvantages:**
+- Need to remember to specify `--env-file` on every restart
 
-##### Способ D: PM2 ecosystem.config.js с env_file (самый удобный)
+##### Method D: PM2 ecosystem.config.js with env_file (most convenient)
 
-Обновленная конфигурация `ecosystem.config.js`:
+Updated `ecosystem.config.js` configuration:
 
 ```javascript
 module.exports = {
@@ -192,13 +192,13 @@ module.exports = {
       script: './backend/dist/server.js',
       instances: 2,
       exec_mode: 'cluster',
-      // Указываем файл с переменными окружения
+      // Specify environment variables file
       env_file: './.env.production.local',
-      // Дополнительные переменные (перезаписывают env_file)
+      // Additional variables (override env_file)
       env_production: {
         NODE_ENV: 'production',
         PORT: 4000,
-        // Эти значения возьмутся из .env.production.local
+        // These values will be taken from .env.production.local
       },
       error_file: './logs/backend-error.log',
       out_file: './logs/backend-out.log',
@@ -223,82 +223,82 @@ module.exports = {
 };
 ```
 
-Теперь просто:
+Now simply:
 ```bash
 pm2 start ecosystem.config.js --env production
 ```
 
-**Рекомендация:** Используйте **Способ D** (env_file в ecosystem.config.js) или **Способ B** (системные переменные) для production.
+**Recommendation:** Use **Method D** (env_file in ecosystem.config.js) or **Method B** (system variables) for production.
 
 #### Start with PM2
 
 ```bash
-# Вариант 1: Если используете env_file в ecosystem.config.js
+# Option 1: If using env_file in ecosystem.config.js
 pm2 start ecosystem.config.js --env production
 
-# Вариант 2: Если используете отдельный .env файл
+# Option 2: If using separate .env file
 pm2 start ecosystem.config.js --env production --env-file .env.production.local
 
-# Вариант 3: Если переменные уже в системном окружении
+# Option 3: If variables are already in system environment
 pm2 start ecosystem.config.js --env production
 
-# Сохранить конфигурацию PM2 (для автозапуска)
+# Save PM2 configuration (for auto-start)
 pm2 save
 
-# Настроить автозапуск PM2 при загрузке сервера
+# Configure PM2 auto-start on server boot
 pm2 startup
-# !!! ВАЖНО: Скопируйте и выполните команду, которую выведет pm2 startup
+# !!! IMPORTANT: Copy and execute the command that pm2 startup outputs
 
-# Пример вывода pm2 startup:
+# Example pm2 startup output:
 # [PM2] You have to run this command as root. Execute the following command:
 # sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u your_user --hp /home/your_user
 
-# Проверить статус приложений
+# Check application status
 pm2 status
 
-# Посмотреть логи
+# View logs
 pm2 logs
 
-# Интерактивный мониторинг
+# Interactive monitoring
 pm2 monit
 
-# Проверить, какие переменные окружения видит приложение
-pm2 env 0  # 0 - это ID приложения из pm2 status
+# Check which environment variables the application sees
+pm2 env 0  # 0 is the application ID from pm2 status
 ```
 
-**Проверка переменных окружения:**
+**Verifying Environment Variables:**
 
 ```bash
-# Посмотреть все переменные для конкретного процесса
+# View all variables for a specific process
 pm2 env loyacare-backend
 
-# Или по ID
+# Or by ID
 pm2 env 0
 
-# Убедиться, что DATABASE_URL и JWT_SECRET присутствуют
+# Ensure DATABASE_URL and JWT_SECRET are present
 pm2 env 0 | grep DATABASE_URL
 pm2 env 0 | grep JWT_SECRET
 ```
 
-**Если переменные не видны в PM2:**
+**If variables are not visible in PM2:**
 
 ```bash
-# 1. Остановить все процессы
+# 1. Stop all processes
 pm2 delete all
 
-# 2. Убедиться, что переменные доступны в текущей сессии
+# 2. Ensure variables are available in the current session
 echo $DATABASE_URL
 echo $JWT_SECRET
 
-# 3. Если переменных нет - перелогиниться или source
+# 3. If variables are missing - re-login or source
 source ~/.bashrc
-# или
-exit  # и войти снова
+# or
+exit  # and log in again
 
-# 4. Запустить PM2 снова
+# 4. Start PM2 again
 pm2 start ecosystem.config.js --env production
 
-# 5. Проверить
+# 5. Verify
 pm2 env 0 | grep DATABASE_URL
 ```
 

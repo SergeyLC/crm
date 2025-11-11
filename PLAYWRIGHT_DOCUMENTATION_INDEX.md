@@ -33,19 +33,19 @@ This project provides comprehensive Playwright test documentation in English and
 
 ```bash
 # Install Playwright browsers (first time only)
-npx playwright install
+pnpm exec playwright install
 
 # Run all tests
-npm run playwright
+pnpm run playwright
 
 # Interactive UI mode
-npm run playwright:ui
+pnpm run playwright:ui
 
 # Run specific test suites
-npm run playwright:demo        # Demo tests
-npm run playwright:deal        # Deal dialog tests
-npm run playwright:lead        # Lead dialog tests
-npm run playwright:management  # Management tests
+pnpm run playwright:demo        # Demo tests
+pnpm run playwright:deal        # Deal dialog tests
+pnpm run playwright:lead        # Lead dialog tests
+pnpm run playwright:management  # Management tests
 ```
 
 ---
