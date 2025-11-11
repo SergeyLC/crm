@@ -8,7 +8,63 @@ on:
 
 jobs:
   check:
-    uses: ./.github/workflows/checks.yml
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter=loya-crm-db run generate
+
+      - name: Generate i18n files for frontend
+        run: pnpm --filter=loya-crm-frontend run collect-locales
+
+      - name: Type check
+        run: |
+          pnpm --filter=loya-crm-frontend run type-check
+          pnpm --filter=loya-crm-backend run type-check
+          pnpm --filter=loya-crm-db run type-check
+
+      - name: Lint check
+        run: |
+          pnpm --filter=loya-crm-frontend run lint:check
+          pnpm --filter=loya-crm-backend run lint:check
+          pnpm --filter=loya-crm-db run lint:check
+
+      - name: Run unit tests
+        run: |
+          pnpm --filter=loya-crm-frontend test --silent
+          pnpm --filter=loya-crm-backend test --silent
+
+      # Note: Playwright E2E tests are skipped during deployment for speed
+      # They run in pre-push hooks and on PR/push to main/develop
 
   deploy:
     runs-on: ubuntu-latest
@@ -36,8 +92,13 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 60m
           script: |
             set -e  # Stop execution on error
+            
+            # Set CI environment for pnpm
+            export CI=true
+            export PRISMA_SKIP_POSTINSTALL_GENERATE=false
 
             echo "🚀 Starting deployment..."
 
@@ -48,64 +109,7 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            echo "📦 Preparing dependencies and generated client..."
-
-            # Generate Prisma client first so both frontend and backend can use it
-            echo "Installing db dependencies and generating Prisma client..."
-            cd db && npm ci && npm run generate && cd ..
-
-            # Install frontend deps (including dev deps needed by next build)
-            echo "Installing frontend dependencies..."
-            cd frontend && npm ci && cd ..
-
-            # Install backend deps (dev deps required for tsc build)
-            echo "Installing backend dependencies (including dev dependencies for build)..."
-            cd backend && npm ci && cd ..
-
-            echo "🔨 Building frontend..."
-            cd frontend
-            npm run clean
-            npm run build
-            cd ..
-
-            echo "🔨 Building backend..."
-            cd backend
-            npm run clean
-            npm run build
-            cd ..
-
-            echo "🗄️ Applying database migrations..."
-            cd db
-            npm run migrate:deploy
-            cd ..
-
-            echo "🧹 Pruning devDependencies for runtime (frontend/backend)..."
-            # Only reinstall without dev deps if node_modules exists (avoid unnecessary work)
-            if [ -d "frontend/node_modules" ]; then
-              echo "Pruning frontend devDependencies..."
-              cd frontend && npm prune --production && cd ..
-            else
-              echo "frontend/node_modules not found — skipping frontend prune"
-            fi
-
-            if [ -d "backend/node_modules" ]; then
-              echo "Pruning backend devDependencies..."
-              cd backend && npm prune --production && cd ..
-            else
-              echo "backend/node_modules not found — skipping backend prune"
-            fi
-
-            echo "⚙️ Checking PM2 configuration..."
-            # Only copy template if ecosystem.config.js doesn't exist
-            if [ ! -f ecosystem.config.js ]; then
-              echo "Creating ecosystem.config.js from template..."
-              cp .github/ecosystem.config.template.js ecosystem.config.js
-            else
-              echo "ecosystem.config.js already exists, keeping existing configuration"
-            fi
-
-
-            echo "🔐 Creating environment files from GitHub Secrets..."
+            echo "� Creating environment files from GitHub Secrets..."
             
             # Create backend .env.production.local
             cat > backend/.env.production.local << 'EOF'
@@ -120,6 +124,7 @@ jobs:
             cat > frontend/.env.production.local << 'EOF'
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_BACKEND_API_URL=${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}
+            NEXT_TELEMETRY_DISABLED=1
             EOF
             
             # Create db .env.production.local
@@ -135,7 +140,83 @@ jobs:
             
             echo "✅ Environment files created and secured"
 
+            echo "📦 Preparing dependencies and generated client..."
+
+            # Install pnpm if not already installed
+            if ! command -v pnpm &> /dev/null; then
+              echo "Installing pnpm..."
+              npm install -g pnpm@10
+            fi
+
+            # Configure pnpm for better performance
+            pnpm config set store-dir /var/cache/pnpm
+            pnpm config set fetch-timeout 300000
+            pnpm config set fetch-retry-mintimeout 20000
+            pnpm config set fetch-retry-maxtimeout 120000
+            pnpm config set enable-pre-post-scripts true
+            
+            # Setup pnpm store directory
+            export PNPM_STORE_DIR=/var/cache/pnpm
+            mkdir -p $PNPM_STORE_DIR
+
+            # Generate Prisma client first so both frontend and backend can use it
+            echo "Installing db dependencies and generating Prisma client..."
+            cd db
+            # Install all dependencies (including dev) for build process
+            # --ignore-scripts flag will skip build scripts, we'll run them manually if needed
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+            pnpm run generate
+            cd ..
+
+            # Install frontend and backend deps sequentially to avoid ENOTEMPTY errors
+            echo "Installing frontend dependencies..."
+            cd frontend
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+            echo "✅ Frontend dependencies installed"
+            cd ..
+            
+            echo "Installing backend dependencies..."
+            cd backend
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+            echo "✅ Backend dependencies installed"
+            cd ..
+
+            echo "🌐 Generating i18n files for frontend..."
+            cd frontend
+            pnpm run collect-locales
+            cd ..
+
+            echo "🔨 Building frontend..."
+            cd frontend
+            # Don't run clean - preserve Next.js cache for faster builds
+            # Disable Next.js telemetry
+            export NEXT_TELEMETRY_DISABLED=1
+            # Skip type checking and linting (already done in CI checks)
+            export SKIP_TYPE_CHECK=true
+            export SKIP_LINT=true
+            # Optimize build performance
+            export NODE_OPTIONS="--max-old-space-size=4096"
+            pnpm run build
+            cd ..
+
+            echo "🔨 Building backend..."
+            cd backend
+            pnpm run clean
+            pnpm run build
+            cd ..
+
+            echo "🗄️ Applying database migrations..."
+            cd db
+            pnpm run migrate:deploy
+            cd ..
+
             echo "🔄 Restarting services..."
+            # Check and setup PM2 configuration
+            if [ ! -f ecosystem.config.js ]; then
+              echo "Creating ecosystem.config.js from template..."
+              cp .github/ecosystem.config.template.js ecosystem.config.js
+            fi
+            
             pm2 stop ecosystem.config.js || true
             pm2 delete ecosystem.config.js || true
             pm2 start ecosystem.config.js

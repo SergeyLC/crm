@@ -16,9 +16,17 @@ export const initialState: AuthState = {
   error: null,
 };
 
-export const AuthContext = createContext<AuthContextType>({
+const defaultContextValue: AuthContextType = {
   ...initialState,
-  login: async () => {},
-  logout: async () => {},
-  checkAuth: async () => {},
-});
+  login: async () => {
+    throw new Error('AuthContext not initialized');
+  },
+  logout: async () => {
+    throw new Error('AuthContext not initialized');
+  },
+  checkAuth: async () => {
+    throw new Error('AuthContext not initialized');
+  },
+};
+
+export const AuthContext = createContext<AuthContextType>(defaultContextValue);

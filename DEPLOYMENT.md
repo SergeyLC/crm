@@ -713,6 +713,109 @@ You can trigger deployment manually:
 3. Select `Deploy to Server` workflow
 4. Click `Run workflow`
 
+### Automated Deployment via Script
+
+The project includes a convenient deployment script that automates version bumping and tag creation:
+
+```bash
+# From project root - simple deployment (includes commit history by default)
+./deploy.sh
+
+# With additional commit message
+./deploy.sh -m "fix critical auth bug"
+
+# Create release tag (triggers production deployment)
+./deploy.sh -t -m "new features release"
+
+# Without commit history
+./deploy.sh --clear
+
+# Release tag without commit history
+./deploy.sh -t --clear -m "production release"
+
+# Or from frontend directory
+cd frontend
+pnpm run deploy
+
+# With custom message and tag
+pnpm run deploy -- -t -m "add new customer dashboard feature"
+
+# Without commit history
+pnpm run deploy -- --clear
+```
+
+**What the script does:**
+1. ✅ Reads current version from `frontend/package.json` (e.g., `0.1.11`)
+2. ✅ Increments patch version (`0.1.11` → `0.1.12`)
+3. ✅ Updates `frontend/package.json` with new version
+4. ✅ Builds commit message with version and optional custom message
+5. ✅ **By default**: Includes list of all unpushed commits
+6. ✅ Stages all changes: `git add -A`
+7. ✅ Creates commit with generated message
+8. ✅ Pushes commit: `git push`
+9. ✅ **If `-t` flag used**: Creates annotated release tag: `git tag -a v0.1.12`
+10. ✅ **If `-t` flag used**: Pushes tag: `git push origin v0.1.12`
+11. ✅ **If tag pushed**: GitHub Actions automatically starts deployment
+
+**Command Options:**
+- `-m "message"` - Optional: Add custom description to commit message
+- `-t` - Optional: Create and push release tag (triggers production deployment)
+- `--clear` - Optional: Don't include list of unpushed commits (by default they are included)
+
+**Commit Message Formats:**
+
+*Default (with commit history):*
+```
+Provide Release 0.1.12
+
+* fix: handle empty JSON responses safely
+* refactor: migrate to pnpm for better performance
+* feat: add GitHub Secrets integration
+```
+
+*With custom message:*
+```
+Provide Release 0.1.12 - optimize database queries
+
+* fix: handle empty JSON responses safely
+* refactor: optimize lead filtering query
+* perf: add database indexes
+```
+
+*With release tag (-t flag):*
+```
+Commit: "Provide Release 0.1.12 - new features release"
+Tag: "Provide Release Tag 0.1.12 - new features release"
+```
+
+*Without commit history (--clear flag):*
+```
+Provide Release 0.1.12
+```
+
+**Examples:**
+```bash
+# Standard push without deployment
+./deploy.sh
+# → Pushes commits only (no tag, no production deployment)
+
+# Push with description
+./deploy.sh -m "fix authentication bug"
+# → "Provide Release 0.1.12 - fix authentication bug" + list of commits
+
+# Production release with tag
+./deploy.sh -t -m "production ready with performance improvements"
+# → Creates tag v0.1.12, triggers GitHub Actions deployment
+
+# Clean release without commit details
+./deploy.sh -t --clear -m "hotfix release"
+# → "Provide Release Tag 0.1.12 - hotfix release" (no commit list, with deployment)
+
+# Hotfix without deployment
+./deploy.sh -m "critical security patch" --clear
+# → Push only, no tag, no deployment
+```
+
 ### Monitoring and Logs
 
 #### Check Deployment Status:

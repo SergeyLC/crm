@@ -1,4 +1,5 @@
 import { NEXT_PUBLIC_API_URL } from '../config';
+import { safeJsonParse } from '../lib/safeJsonParse';
 
 export const apiRequest = {
   async get<T>(endpoint: string): Promise<T> {
@@ -61,6 +62,6 @@ export const apiRequest = {
       return {} as T;
     }
 
-    return (await response.json()) as T;
+    return safeJsonParse<T>(response);
   }
 };

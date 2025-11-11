@@ -1,5 +1,5 @@
 import { jest, beforeAll, afterAll } from '@jest/globals';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma';
 
 // Mock Prisma client
 jest.mock('@/prisma/client', () => ({
