@@ -93,9 +93,9 @@ sudo systemctl restart postgresql
 
 ## 🟢 Node.js and npm Installation
 
-### 1. Install Node.js 18+ via NodeSource
+### 1. Install Node.js 24+ via NodeSource
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
@@ -572,7 +572,7 @@ sudo tail -f /var/log/nginx/error.log
 - [ ] Ubuntu system updated
 - [ ] PostgreSQL installed and configured
 - [ ] Database and user created
-- [ ] Node.js 18+ installed
+- [ ] Node.js 24+ installed
 - [ ] PM2 installed
 - [ ] Nginx installed and configured
 - [ ] Repository cloned
@@ -630,8 +630,8 @@ In your repository settings (`Settings` → `Secrets and variables` → `Actions
 # Update system
 sudo apt update && sudo apt upgrade -y
 
-# Install Node.js 18+
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+# Install Node.js 24+
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # Install PM2

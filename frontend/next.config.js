@@ -16,10 +16,6 @@ const nextConfig = () => {
   const developmentConfig = {
     ...baseConfig,
     allowedDevOrigins: ["161.97.67.253", "localhost", "127.0.0.1"],
-    // Additional settings for development
-    eslint: {
-      ignoreDuringBuilds: true,
-    },
   };
 
   // Production configuration
@@ -51,10 +47,6 @@ const nextConfig = () => {
     typescript: {
       // Don't type check during build (already done in CI)
       ignoreBuildErrors: false,
-    },
-    eslint: {
-      // Don't lint during build (already done in CI)
-      ignoreDuringBuilds: true,
     },
   };
 

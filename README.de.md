@@ -11,17 +11,24 @@ LoyaCareCRM ist ein modernes Customer Relationship Management (CRM) System, das 
 Das Projekt besteht aus drei Hauptteilen:
 
 ```
-LoyaCRM/
-├── frontend/     # Next.js 15 + React 18 Anwendung
-├── backend/      # Express.js + TypeScript API
-└── db/           # Prisma ORM + PostgreSQL Schema
+LoyaCareCRM/
+├── frontend/     # Next.js 16 + React 19 Anwendung
+├── backend/      # Node.js + Express API Server
+├── db/           # Prisma ORM Datenbankschema und Migrationen
+└── scripts/      # Deployment- und Utility-Skripte
 ```
+
+## 🛠 Tech Stack
+
+### Frontend
+- **React 19** - Bibliothek für Benutzeroberflächen
+- **Next.js 16** - React-Framework für Produktion
 
 ## 🚀 Technologie-Stack
 
 ### Frontend
-- **React 18** - Bibliothek für Benutzeroberflächen
-- **Next.js 15** - React-Framework für Produktion
+- **React 19** - Bibliothek für Benutzeroberflächen
+- **Next.js 16** - React-Framework für Produktion
 - **TypeScript** - statische Typisierung
 - **Material-UI v7** - UI-Komponentenbibliothek
 - **Redux Toolkit + RTK Query** - Zustandsverwaltung und API
@@ -54,6 +61,8 @@ frontend/src/
 │   ├── lead/              # Leads  
 │   ├── contact/           # Kontakte
 │   ├── user/              # Benutzer
+│   ├── group/             # Gruppen
+│   ├── pipeline/          # Pipelines
 │   ├── kanban/            # Kanban-Komponenten
 │   ├── appointment/       # Termine
 │   └── note/              # Notizen
@@ -62,14 +71,24 @@ frontend/src/
 │   ├── deal/              # Deal-Verwaltung
 │   ├── lead/              # Lead-Verwaltung
 │   ├── user/              # Benutzerverwaltung
-│   ├── BaseTable/         # Universelle Tabellen
+│   ├── group/             # Gruppenverwaltung
+│   ├── pipeline/          # Pipeline-Verwaltung
+│   ├── base-table/        # Universelle Tabellen
 │   ├── kanban/            # Kanban-Funktionalität
-│   └── app/               # Gemeinsame App-Funktionen
+│   ├── form/              # Formular-Komponenten
+│   └── side-menu/         # Seitenmenü-Funktionalität
+├── widgets/               # Komplexe UI-Blöcke
+│   └── UserPipelinesDashboard/  # Benutzer-Pipelines-Dashboard
 ├── shared/                # Wiederverwendbare Ressourcen
 │   ├── ui/                # UI-Komponenten
 │   ├── lib/               # Hilfsprogramme und Hooks
+│   ├── api/               # API-Schicht
 │   ├── config/            # Konfiguration
-│   └── theme/             # Material-UI Theme
+│   ├── types/             # TypeScript-Typen
+│   ├── model/             # Datenmodelle
+│   └── generated/         # Generierte Dateien
+├── locales/               # Internationalisierung
+├── components/            # Legacy-Komponenten (werden migriert)
 └── stories/               # Storybook Stories
 ```
 
@@ -121,9 +140,9 @@ frontend/src/
 ## 🛠️ Installation und Setup
 
 ### Voraussetzungen
-- Node.js 18+
+- Node.js 24+
 - PostgreSQL
-- npm oder yarn
+- pnpm 10+
 
 ### 1. Repository klonen
 ```bash
@@ -136,19 +155,19 @@ cd LoyaCRM
 #### Datenbank
 ```bash
 cd db
-npm install
+pnpm install
 ```
 
 #### Backend
 ```bash
 cd backend
-npm install
+pnpm install
 ```
 
 #### Frontend
 ```bash
 cd frontend
-npm install
+pnpm install
 ```
 
 ### 3. Umgebungsvariablen einrichten
@@ -170,8 +189,8 @@ PORT=4000
 ### 4. Datenbank-Initialisierung
 ```bash
 cd db
-npx prisma migrate dev
-npx prisma db seed  # falls Seed-Skript vorhanden
+pnpm exec prisma migrate dev
+pnpm exec prisma db seed  # falls Seed-Skript vorhanden
 ```
 
 ### 5. Projekt ausführen
@@ -180,24 +199,24 @@ npx prisma db seed  # falls Seed-Skript vorhanden
 ```bash
 # Terminal 1: Backend
 cd backend
-npm run dev
+pnpm run dev
 
 # Terminal 2: Frontend  
 cd frontend
-npm run dev
+pnpm run dev
 ```
 
 #### Produktions-Build
 ```bash
 # Backend
 cd backend
-npm run build
-npm start
+pnpm run build
+pnpm start
 
 # Frontend
 cd frontend
-npm run build
-npm start
+pnpm run build
+pnpm start
 ```
 
 ## 📚 Zusätzliche Befehle
@@ -205,22 +224,22 @@ npm start
 ### Storybook (Frontend)
 ```bash
 cd frontend
-npm run storybook
+pnpm run storybook
 ```
 
 ### Datenbank
 ```bash
 cd db
-npx prisma studio          # Datenbank-GUI
-npx prisma generate         # Prisma Client generieren
-npx prisma migrate reset    # Migrationen zurücksetzen
+pnpm exec prisma studio          # Datenbank-GUI
+pnpm exec prisma generate         # Prisma Client generieren
+pnpm exec prisma migrate reset    # Migrationen zurücksetzen
 ```
 
 ### Linting und Formatierung
 ```bash
 cd frontend
-npm run lint
-npm run lint:fix
+pnpm run lint
+pnpm run lint:fix
 ```
 
 ### Qualitätsprüfungen
@@ -229,21 +248,21 @@ npm run lint:fix
 ./test-pre-push.sh
 
 # Einzelne Prüfungen ausführen
-cd frontend && npm run type-check && npm run lint:check && npm run build
-cd backend && npm run type-check && npm run lint:check && npm run build
+cd frontend && pnpm run type-check && pnpm run lint:check && pnpm run build
+cd backend && pnpm run type-check && pnpm run lint:check && pnpm run build
 ```
 
 ## 🛡️ Pre-push Qualitätsprüfungen
 
 Das Projekt enthält automatische Qualitätsprüfungen, die vor jedem `git push` ausgeführt werden:
 
-### Was wird geprüft:
-- **Frontend TypeScript-Kompilierung** (`npm run type-check`)
-- **Frontend ESLint-Validierung** (`npm run lint:check`)
-- **Frontend Build-Integrität** (`npm run build`)
-- **Backend TypeScript-Kompilierung** (`npm run type-check`)
-- **Backend ESLint-Validierung** (`npm run lint:check`)
-- **Backend Build-Integrität** (`npm run build`)
+### Was wird überprüft:
+- **Frontend TypeScript-Kompilierung** (`pnpm run type-check`)
+- **Frontend ESLint-Validierung** (`pnpm run lint:check`)
+- **Frontend Build-Integrität** (`pnpm run build`)
+- **Backend TypeScript-Kompilierung** (`pnpm run type-check`)
+- **Backend ESLint-Validierung** (`pnpm run lint:check`)
+- **Backend Build-Integrität** (`pnpm run build`)
 - **Backend API-Funktionalität** (Server-Start + Ping-Endpunkt)
 
 ### Wie es funktioniert:
@@ -307,8 +326,8 @@ export const lightThemeOptions: ThemeOptions = {
 
 ```bash
 cd frontend
-npm run test
-npm run test:coverage
+pnpm run test
+pnpm run test:coverage
 ```
 
 ## 📦 Deployment

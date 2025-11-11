@@ -12,15 +12,11 @@ This guide covers deploying the LoyaCare CRM to production with proper security 
 - [Database Setup](#database-setup)
 - [Post-Deployment](#post-deployment)
 
-## Prerequisites
+## Prerequisites on Production Server
 
-Before deploying to production:
-
-1. **Server Requirements**
-   - Node.js 18+ installed
-   - PostgreSQL 14+ database
-   - Nginx or similar reverse proxy (recommended)
-   - SSL certificate for HTTPS
+   - Ubuntu/Debian server with root access
+   - Node.js 24+ installed
+   - PostgreSQL 14+ installed
 
 2. **Prepare Secrets**
    ```bash

@@ -5,14 +5,15 @@ import { LeadExt } from "@/entities/lead";
 
 type LeadsPageSearchParams = Record<string, string | string[] | undefined>;
 
+// Pages with searchParams are always dynamic in Next.js
+export const revalidate = 60;
+
 // Generating static pages only for en and de
 export async function generateStaticParams() {
   return [{ locale: "en" }, { locale: "de" }];
 }
 
 // Disable ISR in development/test to allow Cypress hooks to control data fetching
-export const revalidate = 60;
-export const dynamic = 'auto';
 
 type LeadsPageProps = {
   params: { locale: string };

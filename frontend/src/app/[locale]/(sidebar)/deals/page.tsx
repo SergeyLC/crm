@@ -2,9 +2,9 @@ import { DealExt } from "@/entities";
 import { DealsTable } from "@/features";
 import { ssrFetch } from "@/shared/api";
 
-// ISR configuration - will be ignored in development
+// Pages with searchParams are always dynamic in Next.js
+// This is expected behavior
 export const revalidate = 60;
-export const dynamic = 'auto';
 
 // Generating static pages only for en and de
 export async function generateStaticParams() {

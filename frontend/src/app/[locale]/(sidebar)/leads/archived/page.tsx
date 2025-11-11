@@ -3,7 +3,6 @@ import { LeadsTable } from '@/features';
 import { ssrFetch } from '@/shared/api';
 import { LeadExt } from '@/entities/lead';
 
-// ISR configuration - will be ignored in development
 export const revalidate = 60;
 
 export async function generateStaticParams() {

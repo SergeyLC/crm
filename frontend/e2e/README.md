@@ -6,8 +6,9 @@ This directory contains Playwright end-to-end tests for the LoyaCareCRM applicat
 
 ## Prerequisites
 
-- Node.js 18+ 
-- A running development server on `http://localhost:3000`
+- Node.js 24+ 
+- pnpm package manager
+- Project dependencies installed
 
 ## Running Tests
 

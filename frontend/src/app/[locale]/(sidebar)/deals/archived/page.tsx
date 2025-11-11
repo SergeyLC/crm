@@ -3,7 +3,6 @@ import { Suspense } from 'react';
 import { ssrFetch } from '@/shared/api';
 import { DealExt } from '@/entities/deal';
 
-// ISR configuration - will be ignored in development
 export const revalidate = 60;
 
 // Generating static pages only for en and de

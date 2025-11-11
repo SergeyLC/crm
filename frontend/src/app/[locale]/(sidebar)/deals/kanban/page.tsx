@@ -8,6 +8,8 @@ import { DealViewSwitcher } from "@/entities/deal";
 import { ssrFetch } from "@/shared/api";
 import { DealExt } from "@/entities/deal";
 
+export const revalidate = 60;
+
 // Generating static pages only for en and de
 export async function generateStaticParams() {
   return [
@@ -17,7 +19,6 @@ export async function generateStaticParams() {
 }
 
 // ISR configuration - will be ignored in development
-export const revalidate = 60;
 
 export default async function KanbanDealsPage({
   params,

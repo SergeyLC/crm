@@ -5,7 +5,7 @@ This guide covers the initial setup required on the production server **before**
 ## Prerequisites
 
 - Ubuntu/Debian server with root access
-- Node.js 18+ installed
+- Node.js 24+ installed
 - PostgreSQL 14+ installed
 - PM2 installed globally
 - Git installed

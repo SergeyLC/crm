@@ -11,17 +11,24 @@ LoyaCareCRM is a modern Customer Relationship Management (CRM) system built with
 The project consists of three main parts:
 
 ```
-LoyaCRM/
-├── frontend/     # Next.js 15 + React 18 application
-├── backend/      # Express.js + TypeScript API
-└── db/           # Prisma ORM + PostgreSQL schema
+LoyaCareCRM/
+├── frontend/     # Next.js 16 + React 19 application
+├── backend/      # Node.js + Express API server
+├── db/           # Prisma ORM database schema and migrations
+└── scripts/      # Deployment and utility scripts
 ```
+
+## 🛠 Tech Stack
+
+### Frontend
+- **React 19** - library for building user interfaces
+- **Next.js 16** - React framework for production
 
 ## 🚀 Technology Stack
 
 ### Frontend
-- **React 18** - library for building user interfaces
-- **Next.js 15** - React framework for production
+- **React 19** - library for building user interfaces
+- **Next.js 16** - React framework for production
 - **TypeScript** - static typing
 - **Material-UI v7** - UI component library
 - **Redux Toolkit + RTK Query** - state management and API
@@ -54,6 +61,8 @@ frontend/src/
 │   ├── lead/              # Leads  
 │   ├── contact/           # Contacts
 │   ├── user/              # Users
+│   ├── group/             # Groups
+│   ├── pipeline/          # Pipelines
 │   ├── kanban/            # Kanban components
 │   ├── appointment/       # Appointments
 │   └── note/              # Notes
@@ -62,14 +71,24 @@ frontend/src/
 │   ├── deal/              # Deal management
 │   ├── lead/              # Lead management
 │   ├── user/              # User management
-│   ├── BaseTable/         # Universal tables
+│   ├── group/             # Group management
+│   ├── pipeline/          # Pipeline management
+│   ├── base-table/        # Universal tables
 │   ├── kanban/            # Kanban functionality
-│   └── app/               # Common app functions
+│   ├── form/              # Form components
+│   └── side-menu/         # Side menu functionality
+├── widgets/               # Complex UI blocks
+│   └── UserPipelinesDashboard/  # User pipelines dashboard
 ├── shared/                # Reusable resources
 │   ├── ui/                # UI components
 │   ├── lib/               # Utilities and hooks
+│   ├── api/               # API layer
 │   ├── config/            # Configuration
-│   └── theme/             # Material-UI theme
+│   ├── types/             # TypeScript types
+│   ├── model/             # Data models
+│   └── generated/         # Generated files
+├── locales/               # Internationalization
+├── components/            # Legacy components (being migrated)
 └── stories/               # Storybook stories
 ```
 
@@ -121,9 +140,9 @@ frontend/src/
 ## 🛠️ Installation and Setup
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 24+
 - PostgreSQL
-- npm or yarn
+- pnpm 10+
 
 ### 1. Clone Repository
 ```bash
@@ -136,19 +155,19 @@ cd LoyaCRM
 #### Database
 ```bash
 cd db
-npm install
+pnpm install
 ```
 
 #### Backend
 ```bash
 cd backend
-npm install
+pnpm install
 ```
 
 #### Frontend
 ```bash
 cd frontend
-npm install
+pnpm install
 ```
 
 ### 3. Environment Variables Setup
@@ -170,8 +189,8 @@ PORT=4000
 ### 4. Database Initialization
 ```bash
 cd db
-npx prisma migrate dev
-npx prisma db seed  # if seed script exists
+pnpm exec prisma migrate dev
+pnpm exec prisma db seed  # if seed script exists
 ```
 
 ### 5. Run Project
@@ -180,24 +199,24 @@ npx prisma db seed  # if seed script exists
 ```bash
 # Terminal 1: Backend
 cd backend
-npm run dev
+pnpm run dev
 
 # Terminal 2: Frontend  
 cd frontend
-npm run dev
+pnpm run dev
 ```
 
 #### Production Build
 ```bash
 # Backend
 cd backend
-npm run build
-npm start
+pnpm run build
+pnpm start
 
 # Frontend
 cd frontend
-npm run build
-npm start
+pnpm run build
+pnpm start
 ```
 
 ## 📚 Additional Commands
@@ -205,22 +224,22 @@ npm start
 ### Storybook (Frontend)
 ```bash
 cd frontend
-npm run storybook
+pnpm run storybook
 ```
 
 ### Database
 ```bash
 cd db
-npx prisma studio          # Database GUI
-npx prisma generate         # Generate Prisma Client
-npx prisma migrate reset    # Reset migrations
+pnpm exec prisma studio          # Database GUI
+pnpm exec prisma generate         # Generate Prisma Client
+pnpm exec prisma migrate reset    # Reset migrations
 ```
 
 ### Linting and Formatting
 ```bash
 cd frontend
-npm run lint
-npm run lint:fix
+pnpm run lint
+pnpm run lint:fix
 ```
 
 ### Quality Checks
@@ -229,8 +248,8 @@ npm run lint:fix
 ./test-pre-push.sh
 
 # Run individual checks
-cd frontend && npm run type-check && npm run lint:check && npm run build
-cd backend && npm run type-check && npm run lint:check && npm run build
+cd frontend && pnpm run type-check && pnpm run lint:check && pnpm run build
+cd backend && pnpm run type-check && pnpm run lint:check && pnpm run build
 ```
 
 ## 🛡️ Pre-push Quality Checks
@@ -238,12 +257,12 @@ cd backend && npm run type-check && npm run lint:check && npm run build
 The project includes automatic quality checks that run before each `git push`:
 
 ### What gets checked:
-- **Frontend TypeScript compilation** (`npm run type-check`)
-- **Frontend ESLint validation** (`npm run lint:check`)
-- **Frontend build integrity** (`npm run build`)
-- **Backend TypeScript compilation** (`npm run type-check`)
-- **Backend ESLint validation** (`npm run lint:check`)
-- **Backend build integrity** (`npm run build`)
+- **Frontend TypeScript compilation** (`pnpm run type-check`)
+- **Frontend ESLint validation** (`pnpm run lint:check`)
+- **Frontend build integrity** (`pnpm run build`)
+- **Backend TypeScript compilation** (`pnpm run type-check`)
+- **Backend ESLint validation** (`pnpm run lint:check`)
+- **Backend build integrity** (`pnpm run build`)
 - **Backend API functionality** (server startup + ping endpoint)
 
 ### How it works:
@@ -307,8 +326,8 @@ export const lightThemeOptions: ThemeOptions = {
 
 ```bash
 cd frontend
-npm run test
-npm run test:coverage
+pnpm run test
+pnpm run test:coverage
 ```
 
 ## 📦 Deployment
