@@ -70,9 +70,9 @@ echo -e "${GREEN}✅ Updated $PACKAGE_JSON${NC}"
 
 # Build commit message
 if [ -n "$ADDITIONAL_MESSAGE" ]; then
-  COMMIT_MESSAGE="Provide Release Tag $NEW_VERSION - $ADDITIONAL_MESSAGE"
+  COMMIT_MESSAGE="Provide Release $NEW_VERSION - $ADDITIONAL_MESSAGE"
 else
-  COMMIT_MESSAGE="Provide Release Tag $NEW_VERSION"
+  COMMIT_MESSAGE="Provide Release $NEW_VERSION"
 fi
 
 # Add commit history by default (unless --clear is specified)
