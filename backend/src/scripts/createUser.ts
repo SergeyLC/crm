@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt";
-import dotenv from "dotenv";
+import { loadEnv } from "../config/env";
 import prisma from "../prisma/client";
 import { UserRole } from "@/generated/prisma";
 
-dotenv.config();
+loadEnv();
 
 export async function createUser(name = "User", email = "user@example.com", password = "user", role: UserRole = "ADMIN") {
   console.log(`Creating user: ${name}, email: ${email}, role: ${role}`);
