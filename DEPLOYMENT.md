@@ -724,18 +724,21 @@ The project includes a convenient deployment script that automates version bumpi
 # With additional commit message
 ./deploy.sh -m "fix critical auth bug"
 
+# Create release tag (triggers production deployment)
+./deploy.sh -t -m "new features release"
+
 # Without commit history
 ./deploy.sh --clear
 
-# With custom message, no commit history
-./deploy.sh -m "hotfix authentication" --clear
+# Release tag without commit history
+./deploy.sh -t --clear -m "production release"
 
 # Or from frontend directory
 cd frontend
 pnpm run deploy
 
-# With custom message
-pnpm run deploy -- -m "add new customer dashboard feature"
+# With custom message and tag
+pnpm run deploy -- -t -m "add new customer dashboard feature"
 
 # Without commit history
 pnpm run deploy -- --clear
@@ -750,19 +753,20 @@ pnpm run deploy -- --clear
 6. ✅ Stages all changes: `git add -A`
 7. ✅ Creates commit with generated message
 8. ✅ Pushes commit: `git push`
-9. ✅ Creates annotated tag: `git tag -a v0.1.12`
-10. ✅ Pushes tag: `git push origin v0.1.12`
-11. ✅ GitHub Actions automatically starts deployment
+9. ✅ **If `-t` flag used**: Creates annotated release tag: `git tag -a v0.1.12`
+10. ✅ **If `-t` flag used**: Pushes tag: `git push origin v0.1.12`
+11. ✅ **If tag pushed**: GitHub Actions automatically starts deployment
 
 **Command Options:**
 - `-m "message"` - Optional: Add custom description to commit message
+- `-t` - Optional: Create and push release tag (triggers production deployment)
 - `--clear` - Optional: Don't include list of unpushed commits (by default they are included)
 
 **Commit Message Formats:**
 
 *Default (with commit history):*
 ```
-Provide Release Tag 0.1.12
+Provide Release 0.1.12
 
 * fix: handle empty JSON responses safely
 * refactor: migrate to pnpm for better performance
@@ -771,35 +775,45 @@ Provide Release Tag 0.1.12
 
 *With custom message:*
 ```
-Provide Release Tag 0.1.12 - optimize database queries
+Provide Release 0.1.12 - optimize database queries
 
 * fix: handle empty JSON responses safely
 * refactor: optimize lead filtering query
 * perf: add database indexes
 ```
 
+*With release tag (-t flag):*
+```
+Commit: "Provide Release 0.1.12 - new features release"
+Tag: "Provide Release Tag 0.1.12 - new features release"
+```
+
 *Without commit history (--clear flag):*
 ```
-Provide Release Tag 0.1.12
+Provide Release 0.1.12
 ```
 
 **Examples:**
 ```bash
-# Standard release with all commits
+# Standard push without deployment
 ./deploy.sh
-# → "Provide Release Tag 0.1.12" + list of commits
+# → Pushes commits only (no tag, no production deployment)
 
-# Release with description
-./deploy.sh -m "production ready with performance improvements"
-# → "Provide Release Tag 0.1.12 - production ready with performance improvements" + list of commits
+# Push with description
+./deploy.sh -m "fix authentication bug"
+# → "Provide Release 0.1.12 - fix authentication bug" + list of commits
+
+# Production release with tag
+./deploy.sh -t -m "production ready with performance improvements"
+# → Creates tag v0.1.12, triggers GitHub Actions deployment
 
 # Clean release without commit details
-./deploy.sh --clear
-# → "Provide Release Tag 0.1.12" (no commit list)
+./deploy.sh -t --clear -m "hotfix release"
+# → "Provide Release Tag 0.1.12 - hotfix release" (no commit list, with deployment)
 
-# Hotfix without commit details
+# Hotfix without deployment
 ./deploy.sh -m "critical security patch" --clear
-# → "Provide Release Tag 0.1.12 - critical security patch" (no commit list)
+# → Push only, no tag, no deployment
 ```
 
 ### Monitoring and Logs

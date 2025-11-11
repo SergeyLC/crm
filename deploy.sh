@@ -10,13 +10,17 @@ NC='\033[0m' # No Color
 # Parse command line arguments
 ADDITIONAL_MESSAGE=""
 INCLUDE_COMMITS=true  # Enabled by default
-while getopts "m:f-:" opt; do
+CREATE_TAG=false  # Create release tag
+while getopts "m:ft-:" opt; do
   case $opt in
     m)
       ADDITIONAL_MESSAGE="$OPTARG"
       ;;
     f)
       INCLUDE_COMMITS=true
+      ;;
+    t)
+      CREATE_TAG=true
       ;;
     -)
       case "${OPTARG}" in
@@ -25,8 +29,9 @@ while getopts "m:f-:" opt; do
           ;;
         *)
           echo "Invalid option: --${OPTARG}" >&2
-          echo "Usage: $0 [-m \"additional commit message\"] [--clear]"
+          echo "Usage: $0 [-m \"additional commit message\"] [-t] [--clear]"
           echo "  -m: Add custom message to commit"
+          echo "  -t: Create and push release tag"
           echo "  --clear: Don't include list of commits (by default commits are included)"
           exit 1
           ;;
@@ -34,8 +39,9 @@ while getopts "m:f-:" opt; do
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
-      echo "Usage: $0 [-m \"additional commit message\"] [--clear]"
+      echo "Usage: $0 [-m \"additional commit message\"] [-t] [--clear]"
       echo "  -m: Add custom message to commit"
+      echo "  -t: Create and push release tag"
       echo "  --clear: Don't include list of commits (by default commits are included)"
       exit 1
       ;;
@@ -93,8 +99,6 @@ else
   echo -e "${YELLOW}ℹ️  Skipping commit history (--clear flag used)${NC}"
 fi
 
-TAG_NAME="v$NEW_VERSION"
-
 echo -e "\n${BLUE}📝 Staging changes...${NC}"
 git add -A
 
@@ -104,13 +108,29 @@ git commit -m "$COMMIT_MESSAGE"
 echo -e "${BLUE}🚀 Pushing to remote...${NC}"
 git push
 
-echo -e "${BLUE}🏷️  Creating tag: $TAG_NAME...${NC}"
-git tag -a "$TAG_NAME" -m "$COMMIT_MESSAGE"
-
-echo -e "${BLUE}🚀 Pushing tag: $TAG_NAME...${NC}"
-git push origin "$TAG_NAME"
-
-echo -e "\n${GREEN}✅ Deployment successful!${NC}"
-echo -e "${GREEN}📦 Version: $NEW_VERSION${NC}"
-echo -e "${GREEN}🏷️  Tag: $TAG_NAME${NC}"
-echo -e "\n${YELLOW}🚀 GitHub Actions will now deploy to production server...${NC}"
+# Create and push release tag if -t flag is set
+if [ "$CREATE_TAG" = true ]; then
+  TAG_NAME="v$NEW_VERSION"
+  
+  # Build tag message
+  if [ -n "$ADDITIONAL_MESSAGE" ]; then
+    TAG_MESSAGE="Provide Release Tag $NEW_VERSION - $ADDITIONAL_MESSAGE"
+  else
+    TAG_MESSAGE="Provide Release Tag $NEW_VERSION"
+  fi
+  
+  echo -e "${BLUE}🏷️  Creating tag: $TAG_NAME...${NC}"
+  git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
+  
+  echo -e "${BLUE}🚀 Pushing tag: $TAG_NAME...${NC}"
+  git push origin "$TAG_NAME"
+  
+  echo -e "\n${GREEN}✅ Deployment successful!${NC}"
+  echo -e "${GREEN}📦 Version: $NEW_VERSION${NC}"
+  echo -e "${GREEN}🏷️  Tag: $TAG_NAME${NC}"
+  echo -e "\n${YELLOW}🚀 GitHub Actions will now deploy to production server...${NC}"
+else
+  echo -e "\n${GREEN}✅ Changes pushed successfully!${NC}"
+  echo -e "${GREEN}📦 Version: $NEW_VERSION${NC}"
+  echo -e "${YELLOW}ℹ️  No release tag created (use -t flag to create tag)${NC}"
+fi
