@@ -121,8 +121,8 @@ jobs:
             LOG_LEVEL=info
             EOF
             
-            # Create frontend .env.staging.local with build version
-            cat > frontend/.env.staging.local << 'EOF'
+            # Create frontend .env.production.local (Next.js reads this during production build)
+            cat > frontend/.env.production.local << 'EOF'
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_BACKEND_API_URL=${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}
             NEXT_PUBLIC_APP_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
@@ -137,7 +137,7 @@ jobs:
             
             # Secure the files
             chmod 600 backend/.env.staging.local
-            chmod 600 frontend/.env.staging.local
+            chmod 600 frontend/.env.production.local
             chmod 600 db/.env.staging.local
             
             echo "✅ Environment files created with build version: ${{ steps.version.outputs.BUILD_VERSION }}"
