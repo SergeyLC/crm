@@ -256,17 +256,29 @@ cd backend && pnpm run type-check && pnpm run lint:check && pnpm run build
 
 The project includes automatic quality checks that run before each `git push`:
 
+### Installation
+
+```bash
+# Install git hooks (run once after cloning)
+./scripts/install-hooks.sh
+```
+
 ### What gets checked:
 - **Frontend TypeScript compilation** (`pnpm run type-check`)
 - **Frontend ESLint validation** (`pnpm run lint:check`)
+- **Frontend tests** (`pnpm test`)
+- **Frontend E2E tests** (`pnpm run playwright`)
 - **Frontend build integrity** (`pnpm run build`)
 - **Backend TypeScript compilation** (`pnpm run type-check`)
 - **Backend ESLint validation** (`pnpm run lint:check`)
+- **Backend tests** (`pnpm test`)
 - **Backend build integrity** (`pnpm run build`)
-- **Backend API functionality** (server startup + ping endpoint)
+- **DB TypeScript compilation** (`pnpm run type-check`)
+- **DB ESLint validation** (`pnpm run lint:check`)
 
 ### How it works:
-- Pre-push hook automatically runs when you execute `git push`
+- Pre-push hook automatically runs when you execute `git push` to a branch
+- **Tag pushes are skipped** (commit already tested before tagging)
 - If any check fails, the push is blocked
 - Colored output shows the status of each check
 - All checks must pass for the push to proceed

@@ -256,17 +256,29 @@ cd backend && pnpm run type-check && pnpm run lint:check && pnpm run build
 
 Das Projekt enthält automatische Qualitätsprüfungen, die vor jedem `git push` ausgeführt werden:
 
+### Installation
+
+```bash
+# Git Hooks installieren (einmal nach dem Klonen ausführen)
+./scripts/install-hooks.sh
+```
+
 ### Was wird überprüft:
 - **Frontend TypeScript-Kompilierung** (`pnpm run type-check`)
 - **Frontend ESLint-Validierung** (`pnpm run lint:check`)
+- **Frontend Tests** (`pnpm test`)
+- **Frontend E2E Tests** (`pnpm run playwright`)
 - **Frontend Build-Integrität** (`pnpm run build`)
 - **Backend TypeScript-Kompilierung** (`pnpm run type-check`)
 - **Backend ESLint-Validierung** (`pnpm run lint:check`)
+- **Backend Tests** (`pnpm test`)
 - **Backend Build-Integrität** (`pnpm run build`)
-- **Backend API-Funktionalität** (Server-Start + Ping-Endpunkt)
+- **DB TypeScript-Kompilierung** (`pnpm run type-check`)
+- **DB ESLint-Validierung** (`pnpm run lint:check`)
 
 ### Wie es funktioniert:
-- Pre-push Hook läuft automatisch bei jedem `git push`
+- Pre-push Hook läuft automatisch bei jedem `git push` zu einem Branch
+- **Tag-Pushes werden übersprungen** (Commit bereits vor dem Tagging getestet)
 - Bei fehlgeschlagenen Prüfungen wird der Push blockiert
 - Farbige Ausgabe zeigt den Status jeder Prüfung
 - Alle Prüfungen müssen bestehen, damit der Push fortgesetzt wird
