@@ -312,6 +312,42 @@ export function SidebarDrawer() {
           <Divider sx={{ my: 1 }} />
         </>
       ) : null}
+
+      {/* Version and Environment Info */}
+      {!collapsed && (
+        <Box
+          sx={{
+            px: 2,
+            py: 1,
+            borderTop: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", fontSize: "0.7rem" }}
+          >
+            {t("version")}: {process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0"}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{
+              display: "block",
+              fontSize: "0.65rem",
+              color: process.env.NEXT_PUBLIC_APP_VERSION?.includes("+sha.")
+                ? "warning.main"
+                : "success.main",
+              fontWeight: 600,
+              textTransform: "uppercase",
+            }}
+          >
+            {process.env.NEXT_PUBLIC_APP_VERSION?.includes("+sha.")
+              ? t("staging")
+              : t("production")}
+          </Typography>
+        </Box>
+      )}
     </Drawer>
   );
 }

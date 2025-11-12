@@ -10,5 +10,8 @@
   "admin": "Administrator",
   "employee": "Mitarbeiter",
   "companyName": "Loya Care",
-  "pipelines": "Pipelines"
+  "pipelines": "Pipelines",
+  "version": "Version",
+  "production": "Produktion",
+  "staging": "Staging"
 }
