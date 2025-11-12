@@ -161,9 +161,6 @@ jobs:
             echo "🗄️ Applying database migrations..."
             cd db
             pnpm run migrate:deploy
-            
-            echo "🌱 Seeding database with initial data..."
-            pnpm run seed
             cd ..
 
             echo "🔄 Restarting services..."
