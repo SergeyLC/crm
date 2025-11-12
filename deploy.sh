@@ -14,7 +14,7 @@ INCLUDE_COMMITS=true  # Enabled by default
 VERSION=""  # Version for release tag
 AUTO_INCREMENT=false  # Auto-increment patch version
 
-while getopts "m:v:t:-:" opt; do
+while getopts "m:v:t-:" opt; do
   case $opt in
     m)
       ADDITIONAL_MESSAGE="$OPTARG"
@@ -23,16 +23,8 @@ while getopts "m:v:t:-:" opt; do
       VERSION="$OPTARG"
       ;;
     t)
-      # -t flag with optional argument
-      if [ -n "$OPTARG" ] && [[ ! "$OPTARG" =~ ^- ]]; then
-        VERSION="$OPTARG"
-      else
-        AUTO_INCREMENT=true
-        # If OPTARG starts with -, it's the next option, put it back
-        if [[ "$OPTARG" =~ ^- ]]; then
-          OPTIND=$((OPTIND-1))
-        fi
-      fi
+      # -t flag triggers auto-increment
+      AUTO_INCREMENT=true
       ;;
     -)
       case "${OPTARG}" in
@@ -41,10 +33,10 @@ while getopts "m:v:t:-:" opt; do
           ;;
         *)
           echo "Invalid option: --${OPTARG}" >&2
-          echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t [VERSION]] [--clear]"
+          echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t] [--clear]"
           echo "  -m: Add custom message to commit"
           echo "  -v: Create release tag with specified version (e.g., 1.4.2)"
-          echo "  -t: Create release tag (auto-increment patch if no version specified)"
+          echo "  -t: Create release tag with auto-incremented patch version"
           echo "  --clear: Don't include list of commits (by default commits are included)"
           exit 1
           ;;
@@ -52,10 +44,10 @@ while getopts "m:v:t:-:" opt; do
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
-      echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t [VERSION]] [--clear]"
+      echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t] [--clear]"
       echo "  -m: Add custom message to commit"
       echo "  -v: Create release tag with specified version (e.g., 1.4.2)"
-      echo "  -t: Create release tag (auto-increment patch if no version specified)"
+      echo "  -t: Create release tag with auto-incremented patch version"
       echo "  --clear: Don't include list of commits (by default commits are included)"
       exit 1
       ;;
