@@ -45,8 +45,14 @@ const nextConfig = () => {
     },
     // Reduce build output
     typescript: {
-      // Don't type check during build (already done in CI)
-      ignoreBuildErrors: false,
+      // Skip type checking during production build on server (already validated in CI/CD)
+      // Set SKIP_TYPE_CHECK=true to skip type checking during build
+      ignoreBuildErrors: process.env.SKIP_TYPE_CHECK === 'true',
+    },
+    eslint: {
+      // Skip ESLint during production build on server (already validated in CI/CD)
+      // Set SKIP_LINT=true to skip linting during build
+      ignoreDuringBuilds: process.env.SKIP_LINT === 'true',
     },
   };
 
