@@ -35,6 +35,7 @@ import Avatar from "@mui/material/Avatar";
 import Collapse from "@mui/material/Collapse";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { UserPermission } from "@/entities/user";
+
 const drawerWidth = 220;
 const collapsedWidth = 60;
 
