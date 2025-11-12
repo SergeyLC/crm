@@ -5,22 +5,34 @@ set -e
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Parse command line arguments
 ADDITIONAL_MESSAGE=""
 INCLUDE_COMMITS=true  # Enabled by default
-CREATE_TAG=false  # Create release tag
-while getopts "m:ft-:" opt; do
+VERSION=""  # Version for release tag
+AUTO_INCREMENT=false  # Auto-increment patch version
+
+while getopts "m:v:t:-:" opt; do
   case $opt in
     m)
       ADDITIONAL_MESSAGE="$OPTARG"
       ;;
-    f)
-      INCLUDE_COMMITS=true
+    v)
+      VERSION="$OPTARG"
       ;;
     t)
-      CREATE_TAG=true
+      # -t flag with optional argument
+      if [ -n "$OPTARG" ] && [[ ! "$OPTARG" =~ ^- ]]; then
+        VERSION="$OPTARG"
+      else
+        AUTO_INCREMENT=true
+        # If OPTARG starts with -, it's the next option, put it back
+        if [[ "$OPTARG" =~ ^- ]]; then
+          OPTIND=$((OPTIND-1))
+        fi
+      fi
       ;;
     -)
       case "${OPTARG}" in
@@ -29,9 +41,10 @@ while getopts "m:ft-:" opt; do
           ;;
         *)
           echo "Invalid option: --${OPTARG}" >&2
-          echo "Usage: $0 [-m \"additional commit message\"] [-t] [--clear]"
+          echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t [VERSION]] [--clear]"
           echo "  -m: Add custom message to commit"
-          echo "  -t: Create and push release tag"
+          echo "  -v: Create release tag with specified version (e.g., 1.4.2)"
+          echo "  -t: Create release tag (auto-increment patch if no version specified)"
           echo "  --clear: Don't include list of commits (by default commits are included)"
           exit 1
           ;;
@@ -39,9 +52,10 @@ while getopts "m:ft-:" opt; do
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
-      echo "Usage: $0 [-m \"additional commit message\"] [-t] [--clear]"
+      echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t [VERSION]] [--clear]"
       echo "  -m: Add custom message to commit"
-      echo "  -t: Create and push release tag"
+      echo "  -v: Create release tag with specified version (e.g., 1.4.2)"
+      echo "  -t: Create release tag (auto-increment patch if no version specified)"
       echo "  --clear: Don't include list of commits (by default commits are included)"
       exit 1
       ;;
@@ -51,34 +65,34 @@ done
 # Path to frontend/package.json
 PACKAGE_JSON="frontend/package.json"
 
-# Read current version
+# Read current stable version
 CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
-echo -e "${BLUE}📦 Current version: $CURRENT_VERSION${NC}"
+echo -e "${BLUE}📦 Current stable version in package.json: $CURRENT_VERSION${NC}"
 
-# Increment patch version (0.1.11 -> 0.1.12)
-IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-MAJOR="${VERSION_PARTS[0]}"
-MINOR="${VERSION_PARTS[1]}"
-PATCH="${VERSION_PARTS[2]}"
-NEW_PATCH=$((PATCH + 1))
-NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-
-echo -e "${GREEN}✨ New version: $NEW_VERSION${NC}"
-
-# Update version in db/package.json
-node -e "
-const fs = require('fs');
-const pkg = require('./$PACKAGE_JSON');
-pkg.version = '$NEW_VERSION';
-fs.writeFileSync('$PACKAGE_JSON', JSON.stringify(pkg, null, 2) + '\n');
-"
-echo -e "${GREEN}✅ Updated $PACKAGE_JSON${NC}"
+# Auto-increment patch version if -t flag used without version
+if [ "$AUTO_INCREMENT" = true ] && [ -z "$VERSION" ]; then
+  # Parse version components
+  if [[ "$CURRENT_VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+    MAJOR="${BASH_REMATCH[1]}"
+    MINOR="${BASH_REMATCH[2]}"
+    PATCH="${BASH_REMATCH[3]}"
+    
+    # Increment patch
+    NEW_PATCH=$((PATCH + 1))
+    VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+    
+    echo -e "${GREEN}🔄 Auto-incrementing patch version: $CURRENT_VERSION → $VERSION${NC}"
+  else
+    echo -e "${RED}❌ Cannot parse current version: $CURRENT_VERSION${NC}"
+    exit 1
+  fi
+fi
 
 # Build commit message
 if [ -n "$ADDITIONAL_MESSAGE" ]; then
-  COMMIT_MESSAGE="Provide Release $NEW_VERSION - $ADDITIONAL_MESSAGE"
+  COMMIT_MESSAGE="$ADDITIONAL_MESSAGE"
 else
-  COMMIT_MESSAGE="Provide Release $NEW_VERSION"
+  COMMIT_MESSAGE="Update code"
 fi
 
 # Add commit history by default (unless --clear is specified)
@@ -102,35 +116,57 @@ fi
 echo -e "\n${BLUE}📝 Staging changes...${NC}"
 git add -A
 
-echo -e "${BLUE}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
-git commit -m "$COMMIT_MESSAGE"
+# Only commit if there are changes
+if git diff --staged --quiet; then
+  echo -e "${YELLOW}ℹ️  No changes to commit${NC}"
+else
+  echo -e "${BLUE}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
+  git commit -m "$COMMIT_MESSAGE"
+fi
 
 echo -e "${BLUE}🚀 Pushing to remote...${NC}"
 git push
 
-# Create and push release tag if -t flag is set
-if [ "$CREATE_TAG" = true ]; then
-  TAG_NAME="v$NEW_VERSION"
+# Create and push release tag if version is specified
+if [ -n "$VERSION" ]; then
+  # Validate version format (should be X.Y.Z)
+  if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo -e "${RED}❌ Invalid version format: $VERSION${NC}"
+    echo -e "${YELLOW}Version should be in format X.Y.Z (e.g., 1.4.2)${NC}"
+    exit 1
+  fi
+  
+  TAG_NAME="v$VERSION"
+  
+  # Check if tag already exists
+  if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+    echo -e "${RED}❌ Tag $TAG_NAME already exists${NC}"
+    exit 1
+  fi
   
   # Build tag message
   if [ -n "$ADDITIONAL_MESSAGE" ]; then
-    TAG_MESSAGE="Provide Release Tag $NEW_VERSION - $ADDITIONAL_MESSAGE"
+    TAG_MESSAGE="Release $VERSION - $ADDITIONAL_MESSAGE"
   else
-    TAG_MESSAGE="Provide Release Tag $NEW_VERSION"
+    TAG_MESSAGE="Release $VERSION"
   fi
   
-  echo -e "${BLUE}🏷️  Creating tag: $TAG_NAME... with message: $TAG_MESSAGE${NC}"
+  echo -e "${BLUE}🏷️  Creating release tag: $TAG_NAME${NC}"
   git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
   
   echo -e "${BLUE}🚀 Pushing tag: $TAG_NAME...${NC}"
   git push origin "$TAG_NAME"
   
-  echo -e "\n${GREEN}✅ Deployment successful!${NC}"
-  echo -e "${GREEN}📦 Version: $NEW_VERSION${NC}"
+  echo -e "\n${GREEN}✅ Release tag created successfully!${NC}"
   echo -e "${GREEN}🏷️  Tag: $TAG_NAME${NC}"
-  echo -e "\n${YELLOW}🚀 GitHub Actions will now deploy to production server...${NC}"
+  echo -e "${GREEN}📦 Version: $VERSION${NC}"
+  echo -e "\n${YELLOW}🚀 GitHub Actions will now:${NC}"
+  echo -e "${YELLOW}   1. Update package.json to version $VERSION${NC}"
+  echo -e "${YELLOW}   2. Create GitHub Release${NC}"
+  echo -e "${YELLOW}   3. Deploy to production server${NC}"
 else
-  echo -e "\n${GREEN}✅ Changes pushed successfully!${NC}"
-  echo -e "${GREEN}📦 Version: $NEW_VERSION${NC}"
-  echo -e "${YELLOW}ℹ️  No release tag created (use -t flag to create tag)${NC}"
+  echo -e "\n${GREEN}✅ Changes pushed to main successfully!${NC}"
+  echo -e "${YELLOW}ℹ️  No release tag created${NC}"
+  echo -e "${YELLOW}ℹ️  To create a release tag, use: $0 -v VERSION${NC}"
+  echo -e "${YELLOW}ℹ️  GitHub Actions will build and deploy to staging with build metadata${NC}"
 fi

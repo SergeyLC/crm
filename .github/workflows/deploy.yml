@@ -1,90 +1,96 @@
-name: Deploy to Server
+name: Production Release
 
 on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch: # Allows manual triggering
 
 jobs:
-  check:
+  release:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if tag is on main
+        run: |
+          # Check if the current commit (tag) is in main branch
+          if git merge-base --is-ancestor ${{ github.sha }} origin/main 2>/dev/null; then
+            echo "Tag is on main branch, proceeding with release"
+          else
+            echo "Tag not on main branch, skipping release"
+            exit 1
+          fi
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          # Remove 'v' prefix from tag (v1.4.2 -> 1.4.2)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "📦 Release version: ${VERSION}"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Update package.json version
+        run: |
+          # Update frontend/package.json version
+          node -e "
+          const fs = require('fs');
+          const pkg = require('./frontend/package.json');
+          pkg.version = '${{ steps.get_version.outputs.VERSION }}';
+          fs.writeFileSync('frontend/package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "✅ Updated frontend/package.json to version ${{ steps.get_version.outputs.VERSION }}"
+
+      - name: Commit version update
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add frontend/package.json
+          git commit -m "chore: bump version to ${{ steps.get_version.outputs.VERSION }}"
+          git push origin HEAD:main
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          version: 10
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Cache pnpm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma client
-        run: pnpm --filter=loya-crm-db run generate
-
-      - name: Generate i18n files for frontend
-        run: pnpm --filter=loya-crm-frontend run collect-locales
-
-      - name: Type check
-        run: |
-          pnpm --filter=loya-crm-frontend run type-check
-          pnpm --filter=loya-crm-backend run type-check
-          pnpm --filter=loya-crm-db run type-check
-
-      - name: Lint check
-        run: |
-          pnpm --filter=loya-crm-frontend run lint:check
-          pnpm --filter=loya-crm-backend run lint:check
-          pnpm --filter=loya-crm-db run lint:check
-
-      - name: Run unit tests
-        run: |
-          pnpm --filter=loya-crm-frontend test --silent
-          pnpm --filter=loya-crm-backend test --silent
-
-      # Note: Playwright E2E tests are skipped during deployment for speed
-      # They run in pre-push hooks and on PR/push to main/develop
+          tag_name: ${{ github.ref }}
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Release ${{ steps.get_version.outputs.VERSION }}
+            
+            This is a production release.
+            
+            ### Changes
+            See commit history for detailed changes.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
     runs-on: ubuntu-latest
-    needs: check
+    needs: release
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for git commands
+          fetch-depth: 0
 
-      - name: Check if tag is on main
+      - name: Extract version from tag
+        id: get_version
         run: |
-          # Check if the current commit (tag) is in main branch
-          if git merge-base --is-ancestor ${{ github.sha }} origin/main 2>/dev/null; then
-            echo "Tag is on main branch, proceeding with deploy"
-          else
-            echo "Tag not on main branch, skipping deploy"
-            exit 1
-          fi
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "📦 Production version: ${VERSION}"
 
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -100,7 +106,8 @@ jobs:
             export CI=true
             export PRISMA_SKIP_POSTINSTALL_GENERATE=false
 
-            echo "🚀 Starting deployment..."
+            echo "🚀 Starting production deployment..."
+            echo "📦 Release version: ${{ steps.get_version.outputs.VERSION }}"
 
             # Navigate to project directory
             cd /var/www/loyacrm
@@ -109,7 +116,7 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            echo "� Creating environment files from GitHub Secrets..."
+            echo "🔧 Creating environment files from GitHub Secrets..."
             
             # Create backend .env.production.local
             cat > backend/.env.production.local << 'EOF'
@@ -120,10 +127,11 @@ jobs:
             LOG_LEVEL=info
             EOF
             
-            # Create frontend .env.production.local
+            # Create frontend .env.production.local with release version
             cat > frontend/.env.production.local << 'EOF'
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_BACKEND_API_URL=${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}
+            NEXT_PUBLIC_APP_VERSION=${{ steps.get_version.outputs.VERSION }}
             NEXT_TELEMETRY_DISABLED=1
             EOF
             
@@ -138,7 +146,7 @@ jobs:
             chmod 600 frontend/.env.production.local
             chmod 600 db/.env.production.local
             
-            echo "✅ Environment files created and secured"
+            echo "✅ Environment files created with version: ${{ steps.get_version.outputs.VERSION }}"
 
             echo "📦 Preparing dependencies and generated client..."
 
@@ -222,5 +230,6 @@ jobs:
             pm2 start ecosystem.config.js
             pm2 save
 
-            echo "✅ Deployment completed successfully!"
+            echo "✅ Production deployment completed successfully!"
+            echo "📦 Release version: ${{ steps.get_version.outputs.VERSION }}"
             pm2 status

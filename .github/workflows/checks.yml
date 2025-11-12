@@ -1,20 +1,16 @@
-name: Checks
+name: Tests
 
 on:
   push:
     branches:
-      - main
-      - develop
+      - '**'  # Run on push to any branch
     tags-ignore:  # Exclude all tags
       - '**'
   pull_request:
-    branches:
-      - main
-      - develop
   workflow_call:
 
 jobs:
-  check:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -78,8 +74,3 @@ jobs:
         run: |
           pnpm --filter=loya-crm-frontend test --silent
           pnpm --filter=loya-crm-backend test --silent
-
-      - name: Build check
-        run: |
-          pnpm --filter=loya-crm-frontend run build
-          pnpm --filter=loya-crm-backend run build

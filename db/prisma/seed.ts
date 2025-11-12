@@ -1,6 +1,19 @@
 import { PrismaClient, AppointmentType, DealStage } from '../generated/prisma-client';
 import * as bcrypt from 'bcrypt';
 
+// DATABASE_URL is loaded via dotenv-cli in package.json seed script
+// Example: dotenv -e .env.staging.local -e .env.production.local -e .env.local -e .env -- node temp/seed.js
+
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL not found in environment variables');
+  console.error('Make sure one of these files exists in db/ directory:');
+  console.error('  - .env.staging.local');
+  console.error('  - .env.production.local');
+  console.error('  - .env.local');
+  console.error('  - .env');
+  process.exit(1);
+}
+
 console.log('Starting seed.ts...');
 
 const prisma = new PrismaClient();

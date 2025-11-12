@@ -1,0 +1,226 @@
+name: Build and Deploy Staging
+
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:  # Exclude all tags
+      - '**'
+
+jobs:
+  build-and-deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging  # Use staging environment secrets
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git commands
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter=loya-crm-db run generate
+
+      - name: Generate i18n files for frontend
+        run: pnpm --filter=loya-crm-frontend run collect-locales
+
+      - name: Type check
+        run: |
+          pnpm --filter=loya-crm-frontend run type-check
+          pnpm --filter=loya-crm-backend run type-check
+          pnpm --filter=loya-crm-db run type-check
+
+      - name: Lint check
+        run: |
+          pnpm --filter=loya-crm-frontend run lint:check
+          pnpm --filter=loya-crm-backend run lint:check
+          pnpm --filter=loya-crm-db run lint:check
+
+      - name: Run unit tests
+        run: |
+          pnpm --filter=loya-crm-frontend test --silent
+          pnpm --filter=loya-crm-backend test --silent
+
+      - name: Generate build version
+        id: version
+        run: |
+          # Get stable version from package.json
+          STABLE_VERSION=$(node -p "require('./frontend/package.json').version")
+          
+          # Get short commit hash
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          
+          # Generate build version with metadata
+          BUILD_VERSION="${STABLE_VERSION}+sha.${COMMIT_HASH}"
+          
+          echo "BUILD_VERSION=${BUILD_VERSION}" >> $GITHUB_OUTPUT
+          echo "STABLE_VERSION=${STABLE_VERSION}" >> $GITHUB_OUTPUT
+          echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_OUTPUT
+          
+          echo "📦 Stable version: ${STABLE_VERSION}"
+          echo "🔨 Build version: ${BUILD_VERSION}"
+
+      - name: Deploy to staging server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 60m
+          script: |
+            set -e  # Stop execution on error
+            
+            # Set CI environment for pnpm
+            export CI=true
+            export PRISMA_SKIP_POSTINSTALL_GENERATE=false
+
+            echo "🚀 Starting staging deployment..."
+            echo "📦 Build version: ${{ steps.version.outputs.BUILD_VERSION }}"
+
+            # Navigate to project directory
+            cd /var/www/loyacrm-staging
+
+            echo "📥 Updating code..."
+            git fetch origin
+            git reset --hard origin/main
+
+            echo "🔧 Creating environment files from GitHub Secrets..."
+            
+            # Create backend .env.staging.local
+            cat > backend/.env.staging.local << 'EOF'
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+            PRISMA_LOG_LEVEL=warn
+            LOG_LEVEL=info
+            EOF
+            
+            # Create frontend .env.staging.local with build version
+            cat > frontend/.env.staging.local << 'EOF'
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_BACKEND_API_URL=${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}
+            NEXT_PUBLIC_APP_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
+            NEXT_TELEMETRY_DISABLED=1
+            EOF
+            
+            # Create db .env.staging.local
+            cat > db/.env.staging.local << 'EOF'
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            PRISMA_LOG_LEVEL=warn
+            EOF
+            
+            # Secure the files
+            chmod 600 backend/.env.staging.local
+            chmod 600 frontend/.env.staging.local
+            chmod 600 db/.env.staging.local
+            
+            echo "✅ Environment files created with build version: ${{ steps.version.outputs.BUILD_VERSION }}"
+
+            echo "📦 Preparing dependencies and generated client..."
+
+            # Install pnpm if not already installed
+            if ! command -v pnpm &> /dev/null; then
+              echo "Installing pnpm..."
+              npm install -g pnpm@10
+            fi
+
+            # Configure pnpm for better performance
+            pnpm config set store-dir /var/cache/pnpm
+            pnpm config set fetch-timeout 300000
+            pnpm config set fetch-retry-mintimeout 20000
+            pnpm config set fetch-retry-maxtimeout 120000
+            pnpm config set enable-pre-post-scripts true
+            
+            # Setup pnpm store directory
+            export PNPM_STORE_DIR=/var/cache/pnpm
+            mkdir -p $PNPM_STORE_DIR
+
+            # Generate Prisma client first
+            echo "Installing db dependencies and generating Prisma client..."
+            cd db
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+            pnpm run generate
+            cd ..
+
+            # Install frontend and backend deps sequentially
+            echo "Installing frontend dependencies..."
+            cd frontend
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+            echo "✅ Frontend dependencies installed"
+            cd ..
+            
+            echo "Installing backend dependencies..."
+            cd backend
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+            echo "✅ Backend dependencies installed"
+            cd ..
+
+            echo "🌐 Generating i18n files for frontend..."
+            cd frontend
+            pnpm run collect-locales
+            cd ..
+
+            echo "🔨 Building frontend..."
+            cd frontend
+            export NEXT_TELEMETRY_DISABLED=1
+            export SKIP_TYPE_CHECK=true
+            export SKIP_LINT=true
+            export NODE_OPTIONS="--max-old-space-size=4096"
+            pnpm run build
+            cd ..
+
+            echo "🔨 Building backend..."
+            cd backend
+            pnpm run clean
+            pnpm run build
+            cd ..
+
+            echo "🗄️ Applying database migrations..."
+            cd db
+            pnpm run migrate:deploy
+            
+            echo "🌱 Seeding database with initial data..."
+            pnpm run seed
+            cd ..
+
+            echo "🔄 Restarting services..."
+            # Check and setup PM2 configuration
+            if [ ! -f ecosystem.staging.config.js ]; then
+              echo "Creating ecosystem.staging.config.js from template..."
+              cp .github/ecosystem.staging.config.template.js ecosystem.staging.config.js
+            fi
+            
+            pm2 stop ecosystem.staging.config.js || true
+            pm2 delete ecosystem.staging.config.js || true
+            pm2 start ecosystem.staging.config.js
+            pm2 save
+
+            echo "✅ Staging deployment completed successfully!"
+            echo "📦 Build version: ${{ steps.version.outputs.BUILD_VERSION }}"
+            pm2 status

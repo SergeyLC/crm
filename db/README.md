@@ -131,11 +131,26 @@ db/
 ## ⚙️ Configuration
 
 ### Environment Variables
-Create a `.env` file based on `.env.example`:
+Create a `.env.staging.local` or `.env.production.local` file in the `db/` directory:
 
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/loya_care_crm"
+# Staging
+DATABASE_URL="postgresql://loyacare_staging:password@localhost:5432/loya_care_crm_staging"
+PRISMA_LOG_LEVEL=warn
+
+# Production
+DATABASE_URL="postgresql://loyacare_prod:password@localhost:5432/loya_care_crm_prod"
+PRISMA_LOG_LEVEL=warn
 ```
+
+**Important:**
+- The `seed.ts` script automatically loads `.env` files in this priority:
+  1. `.env.staging.local`
+  2. `.env.production.local`
+  3. `.env.local`
+  4. `.env`
+- Make sure the `.env` file exists in the `db/` directory before running `seed` or `migrate` commands
+- See `DATABASE_ENV_CONFIG.md` in `.github/` for detailed configuration
 
 ### Schema Configuration
 The schema is configured in `prisma/schema.prisma` with:
