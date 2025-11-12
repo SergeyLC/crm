@@ -26,6 +26,7 @@
     "test:e2e:deal": "cypress run --spec cypress/e2e/deal-edit-dialog.cy.ts",
     "test:e2e:lead": "cypress run --spec cypress/e2e/lead-edit-dialog.cy.ts",
     "test:e2e:open": "cypress open --e2e",
+    "preplaywright": "pnpm run build",
     "playwright": "NODE_ENV=test playwright test",
     "playwright:ui": "NODE_ENV=test playwright test --ui",
     "playwright:headed": "NODE_ENV=test playwright test --headed",
