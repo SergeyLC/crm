@@ -54,37 +54,10 @@ while getopts "m:v:t-:" opt; do
   esac
 done
 
-# Sync with remote first to get latest package.json
-echo -e "${BLUE}🔄 Syncing with remote repository...${NC}"
-git pull --rebase
-
 # Path to frontend/package.json
 PACKAGE_JSON="frontend/package.json"
 
-# Read current stable version
-CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
-echo -e "${BLUE}📦 Current stable version in package.json: $CURRENT_VERSION${NC}"
-
-# Auto-increment patch version if -t flag used without version
-if [ "$AUTO_INCREMENT" = true ] && [ -z "$VERSION" ]; then
-  # Parse version components
-  if [[ "$CURRENT_VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-    MAJOR="${BASH_REMATCH[1]}"
-    MINOR="${BASH_REMATCH[2]}"
-    PATCH="${BASH_REMATCH[3]}"
-    
-    # Increment patch
-    NEW_PATCH=$((PATCH + 1))
-    VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-    
-    echo -e "${GREEN}🔄 Auto-incrementing patch version: $CURRENT_VERSION → $VERSION${NC}"
-  else
-    echo -e "${RED}❌ Cannot parse current version: $CURRENT_VERSION${NC}"
-    exit 1
-  fi
-fi
-
-# Build commit message
+# Build commit message first (before reading version)
 if [ -n "$ADDITIONAL_MESSAGE" ]; then
   COMMIT_MESSAGE="$ADDITIONAL_MESSAGE"
 else
@@ -118,6 +91,33 @@ if git diff --staged --quiet; then
 else
   echo -e "${BLUE}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
   git commit -m "$COMMIT_MESSAGE"
+fi
+
+# Sync with remote after committing local changes
+echo -e "${BLUE}🔄 Syncing with remote repository...${NC}"
+git pull --rebase
+
+# Read current stable version from latest package.json
+CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
+echo -e "${BLUE}📦 Current stable version in package.json: $CURRENT_VERSION${NC}"
+
+# Auto-increment patch version if -t flag used without version
+if [ "$AUTO_INCREMENT" = true ] && [ -z "$VERSION" ]; then
+  # Parse version components
+  if [[ "$CURRENT_VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+    MAJOR="${BASH_REMATCH[1]}"
+    MINOR="${BASH_REMATCH[2]}"
+    PATCH="${BASH_REMATCH[3]}"
+    
+    # Increment patch
+    NEW_PATCH=$((PATCH + 1))
+    VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+    
+    echo -e "${GREEN}🔄 Auto-incrementing patch version: $CURRENT_VERSION → $VERSION${NC}"
+  else
+    echo -e "${RED}❌ Cannot parse current version: $CURRENT_VERSION${NC}"
+    exit 1
+  fi
 fi
 
 echo -e "${BLUE}🚀 Pushing to remote...${NC}"
