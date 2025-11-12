@@ -10,6 +10,12 @@ const nextConfig = () => {
     reactStrictMode: true,
     // Set the workspace root for proper file tracing in monorepo
     outputFileTracingRoot: path.join(__dirname, '..'),
+    // TypeScript configuration (applies to all environments)
+    typescript: {
+      // Skip type checking during build on server (already validated in CI/CD)
+      // Set SKIP_TYPE_CHECK=true to skip type checking during build
+      ignoreBuildErrors: process.env.SKIP_TYPE_CHECK === 'true',
+    },
   };
 
   // Development configuration
@@ -48,11 +54,6 @@ const nextConfig = () => {
       // Skip type checking during production build on server (already validated in CI/CD)
       // Set SKIP_TYPE_CHECK=true to skip type checking during build
       ignoreBuildErrors: process.env.SKIP_TYPE_CHECK === 'true',
-    },
-    eslint: {
-      // Skip ESLint during production build on server (already validated in CI/CD)
-      // Set SKIP_LINT=true to skip linting during build
-      ignoreDuringBuilds: process.env.SKIP_LINT === 'true',
     },
   };
 
