@@ -8,40 +8,14 @@ on:
       - '**'
 
 jobs:
-  # Check if commit has a tag (skip staging if this is a release)
-  check-tag:
-    runs-on: ubuntu-latest
-    outputs:
-      has_tag: ${{ steps.check.outputs.has_tag }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Check if commit has tag
-        id: check
-        run: |
-          # Check if current commit has any tag
-          if git tag --points-at HEAD | grep -q '^v'; then
-            echo "has_tag=true" >> $GITHUB_OUTPUT
-            echo "⚠️ This commit has a release tag - skipping staging deployment"
-          else
-            echo "has_tag=false" >> $GITHUB_OUTPUT
-            echo "✅ No release tag - proceeding with staging deployment"
-          fi
-
   # Job 1: Run tests first (reusable workflow)
   tests:
-    needs: check-tag
-    if: needs.check-tag.outputs.has_tag != 'true'
     uses: ./.github/workflows/test.yml
 
   # Job 2: Deploy to staging (only if tests pass)
   deploy:
     runs-on: ubuntu-latest
-    needs: [check-tag, tests]  # Wait for check-tag and tests
-    if: needs.check-tag.outputs.has_tag != 'true'
+    needs: tests  # Wait for tests to pass
     environment: staging  # Use staging environment secrets
 
     steps:
