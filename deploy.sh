@@ -57,29 +57,14 @@ done
 # Path to frontend/package.json
 PACKAGE_JSON="frontend/package.json"
 
-# Build commit message first (before reading version)
+# Determine if we're creating a release (will be set after parsing version)
+CREATING_RELEASE=false
+
+# Build commit message first (will be updated if creating release)
 if [ -n "$ADDITIONAL_MESSAGE" ]; then
   COMMIT_MESSAGE="$ADDITIONAL_MESSAGE"
 else
   COMMIT_MESSAGE="Update code"
-fi
-
-# Add commit history by default (unless --clear is specified)
-if [ "$INCLUDE_COMMITS" = true ]; then
-  # Get commits that haven't been pushed yet
-  UNPUSHED_COMMITS=$(git log origin/main..HEAD --pretty=format:"* %s" 2>/dev/null || echo "")
-  
-  if [ -n "$UNPUSHED_COMMITS" ]; then
-    COMMIT_MESSAGE="$COMMIT_MESSAGE
-
-$UNPUSHED_COMMITS"
-    echo -e "${BLUE}📋 Including unpushed commits in message:${NC}"
-    echo "$UNPUSHED_COMMITS"
-  else
-    echo -e "${YELLOW}ℹ️  No unpushed commits found${NC}"
-  fi
-else
-  echo -e "${YELLOW}ℹ️  Skipping commit history (--clear flag used)${NC}"
 fi
 
 echo -e "\n${BLUE}📝 Staging changes...${NC}"
@@ -120,6 +105,43 @@ if [ "$AUTO_INCREMENT" = true ] && [ -z "$VERSION" ]; then
   fi
 fi
 
+# If creating a release, update commit message to match tag message
+if [ -n "$VERSION" ]; then
+  CREATING_RELEASE=true
+  
+  # Build release message
+  if [ -n "$ADDITIONAL_MESSAGE" ]; then
+    COMMIT_MESSAGE="Release $VERSION - $ADDITIONAL_MESSAGE"
+  else
+    COMMIT_MESSAGE="Release $VERSION"
+  fi
+  
+  echo -e "${BLUE}🏷️  Preparing release: $VERSION${NC}"
+  echo -e "${BLUE}📝 Commit and tag message: \"$COMMIT_MESSAGE\"${NC}"
+fi
+
+# Add commit history by default (unless --clear is specified or creating release)
+if [ "$INCLUDE_COMMITS" = true ] && [ "$CREATING_RELEASE" = false ]; then
+  # Get commits that haven't been pushed yet
+  UNPUSHED_COMMITS=$(git log origin/main..HEAD --pretty=format:"* %s" 2>/dev/null || echo "")
+  
+  if [ -n "$UNPUSHED_COMMITS" ]; then
+    COMMIT_MESSAGE="$COMMIT_MESSAGE
+
+$UNPUSHED_COMMITS"
+    echo -e "${BLUE}📋 Including unpushed commits in message:${NC}"
+    echo "$UNPUSHED_COMMITS"
+  else
+    echo -e "${YELLOW}ℹ️  No unpushed commits found${NC}"
+  fi
+else
+  if [ "$CREATING_RELEASE" = true ]; then
+    echo -e "${YELLOW}ℹ️  Release commit: using clean message without commit history${NC}"
+  else
+    echo -e "${YELLOW}ℹ️  Skipping commit history (--clear flag used)${NC}"
+  fi
+fi
+
 echo -e "${BLUE}🚀 Pushing to remote...${NC}"
 git push
 
@@ -140,12 +162,8 @@ if [ -n "$VERSION" ]; then
     exit 1
   fi
   
-  # Build tag message
-  if [ -n "$ADDITIONAL_MESSAGE" ]; then
-    TAG_MESSAGE="Release $VERSION - $ADDITIONAL_MESSAGE"
-  else
-    TAG_MESSAGE="Release $VERSION"
-  fi
+  # Use the same message for tag as for commit
+  TAG_MESSAGE="$COMMIT_MESSAGE"
   
   echo -e "${BLUE}🏷️  Creating release tag: $TAG_NAME${NC}"
   git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
