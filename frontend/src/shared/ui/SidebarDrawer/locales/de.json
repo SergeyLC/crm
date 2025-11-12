@@ -13,5 +13,6 @@
   "pipelines": "Pipelines",
   "version": "Version",
   "production": "Produktion",
-  "staging": "Staging"
+  "staging": "Staging",
+  "develop": "Entwicklung"
 }

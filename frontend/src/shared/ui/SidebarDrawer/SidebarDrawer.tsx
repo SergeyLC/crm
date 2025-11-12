@@ -335,16 +335,22 @@ export function SidebarDrawer() {
             sx={{
               display: "block",
               fontSize: "0.65rem",
-              color: process.env.NEXT_PUBLIC_APP_VERSION?.includes("+sha.")
-                ? "warning.main"
-                : "success.main",
+              color: (() => {
+                const version = process.env.NEXT_PUBLIC_APP_VERSION || "";
+                if (version.includes("+dev")) return "info.main";
+                if (version.includes("+sha.")) return "warning.main";
+                return "success.main";
+              })(),
               fontWeight: 600,
               textTransform: "uppercase",
             }}
           >
-            {process.env.NEXT_PUBLIC_APP_VERSION?.includes("+sha.")
-              ? t("staging")
-              : t("production")}
+            {(() => {
+              const version = process.env.NEXT_PUBLIC_APP_VERSION || "";
+              if (version.includes("+dev")) return t("develop");
+              if (version.includes("+sha.")) return t("staging");
+              return t("production");
+            })()}
           </Typography>
         </Box>
       )}
