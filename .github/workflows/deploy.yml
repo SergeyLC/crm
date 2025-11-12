@@ -6,8 +6,14 @@ on:
       - 'v*'
 
 jobs:
+  # Job 1: Run tests first (reusable workflow)
+  tests:
+    uses: ./.github/workflows/checks.yml
+
+  # Job 2: Create release (only if tests pass)
   release:
     runs-on: ubuntu-latest
+    needs: tests  # Wait for tests to pass
 
     steps:
       - name: Checkout code

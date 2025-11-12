@@ -7,7 +7,7 @@ on:
     tags-ignore:  # Exclude all tags
       - '**'
   pull_request:
-  workflow_call:
+  workflow_call:  # Allow this workflow to be called by other workflows
 
 jobs:
   test:
