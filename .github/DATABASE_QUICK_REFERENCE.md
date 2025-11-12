@@ -3,7 +3,7 @@
 ## Откуда Prisma берет DATABASE_URL?
 
 ### Короткий ответ
-Из файла `.env.staging.local` или `.env.production.local` в директории **`db/`**
+Из файла `.env.production.local` или `.env.production.local` в директории **`db/`**
 
 **Важно:** Скрипт `seed.ts` был обновлен для автоматической загрузки `.env` файлов.
 
@@ -11,7 +11,7 @@
 
 ```
 db/
-  ├── .env.staging.local     ← ОТСЮДА берется DATABASE_URL для staging
+  ├── .env.production.local     ← ОТСЮДА берется DATABASE_URL для staging
   ├── .env.production.local  ← ОТСЮДА берется DATABASE_URL для production
   └── prisma/
       └── schema.prisma      ← Определяет: url = env("DATABASE_URL")
@@ -26,7 +26,7 @@ db/
    ```
 
 2. Prisma CLI ищет `.env` файлы в **текущей директории** (`db/`):
-   - `.env.staging.local` (для staging)
+   - `.env.production.local` (для staging)
    - `.env.production.local` (для production)
    - `.env` (для development)
 
@@ -41,14 +41,14 @@ db/
 
 **Staging Workflow** создает файл из секретов:
 ```yaml
-cat > db/.env.staging.local << 'EOF'
+cat > db/.env.production.local << 'EOF'
 DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
 PRISMA_LOG_LEVEL=warn
 EOF
 
 cd db
-pnpm run migrate:deploy  # Использует DATABASE_URL из db/.env.staging.local
-pnpm run seed            # Использует DATABASE_URL из db/.env.staging.local
+pnpm run migrate:deploy  # Использует DATABASE_URL из db/.env.production.local
+pnpm run seed            # Использует DATABASE_URL из db/.env.production.local
 ```
 
 **Production Workflow** создает другой файл:
@@ -140,17 +140,17 @@ Push tag v1.5.0 → Release + Deploy Production
 ```bash
 # Проверить DATABASE_URL
 cd /var/www/loyacrm-staging/db
-cat .env.staging.local | grep DATABASE_URL
+cat .env.production.local | grep DATABASE_URL
 
 # Если файл не существует - создать его
 # (должен был быть создан при настройке, см. STAGING_SETUP.md)
-ls -la .env.staging.local
+ls -la .env.production.local
 
 # Применить миграции
 cd /var/www/loyacrm-staging/db
 pnpm run migrate:deploy
 
-# Заполнить тестовыми данными (seed автоматически загрузит .env.staging.local)
+# Заполнить тестовыми данными (seed автоматически загрузит .env.production.local)
 cd /var/www/loyacrm-staging/db
 pnpm run seed
 
@@ -184,7 +184,7 @@ pnpm run migrate:deploy
 ```bash
 # Staging
 cd /var/www/loyacrm-staging/db
-echo "DATABASE_URL=$(grep DATABASE_URL .env.staging.local | cut -d'=' -f2)"
+echo "DATABASE_URL=$(grep DATABASE_URL .env.production.local | cut -d'=' -f2)"
 
 # Production
 cd /var/www/loyacrm/db

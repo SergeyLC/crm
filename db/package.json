@@ -9,7 +9,7 @@
     "migrate:reset": "prisma migrate reset --force",
     "migrate:status": "prisma migrate status",
     "studio": "prisma studio",
-    "seed": "tsc && dotenv -e .env.staging.local -e .env.production.local -e .env.local -e .env -- node temp/seed.js",
+    "seed": "tsc && dotenv -e .env.production.local -e .env.local -e .env -- node temp/seed.js",
     "type-check": "tsc --noEmit",
     "lint": "echo 'No linting configured for db'",
     "lint:check": "echo 'No linting configured for db'"

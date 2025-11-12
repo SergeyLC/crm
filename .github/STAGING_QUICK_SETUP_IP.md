@@ -15,7 +15,7 @@ After setup, staging will be available at:
 ```bash
 # Backend
 cd /var/www/loyacrm-staging/backend
-cat > .env.staging.local << 'EOF'
+cat > .env.production.local << 'EOF'
 DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging"
 JWT_SECRET="staging-jwt-secret-generate-with-openssl-rand-hex-32"
 CORS_ORIGIN="http://161.97.67.253:8001"
@@ -24,26 +24,26 @@ LOG_LEVEL=info
 PORT=4001
 NODE_ENV=staging
 EOF
-chmod 600 .env.staging.local
+chmod 600 .env.production.local
 
 # Frontend
 cd /var/www/loyacrm-staging/frontend
-cat > .env.staging.local << 'EOF'
+cat > .env.production.local << 'EOF'
 NEXT_PUBLIC_API_URL="http://161.97.67.253:8002/api"
 NEXT_PUBLIC_BACKEND_API_URL="http://161.97.67.253:8002/api"
 NEXT_PUBLIC_APP_VERSION=0.0.0+dev
 NEXT_TELEMETRY_DISABLED=1
 PORT=3001
 EOF
-chmod 600 .env.staging.local
+chmod 600 .env.production.local
 
 # Database
 cd /var/www/loyacrm-staging/db
-cat > .env.staging.local << 'EOF'
+cat > .env.production.local << 'EOF'
 DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging"
 PRISMA_LOG_LEVEL=warn
 EOF
-chmod 600 .env.staging.local
+chmod 600 .env.production.local
 ```
 
 ### 2. Nginx Configuration
@@ -190,7 +190,7 @@ curl -I http://161.97.67.253:8001
 
 ### CORS
 
-Make sure backend `.env.staging.local` contains:
+Make sure backend `.env.production.local` contains:
 ```bash
 CORS_ORIGIN="http://161.97.67.253:8001"
 ```
@@ -240,7 +240,7 @@ pm2 restart all
 Check CORS_ORIGIN in backend:
 ```bash
 cd /var/www/loyacrm-staging/backend
-grep CORS_ORIGIN .env.staging.local
+grep CORS_ORIGIN .env.production.local
 # Should be: CORS_ORIGIN="http://161.97.67.253:8001"
 
 pm2 restart loyacrm-staging-backend

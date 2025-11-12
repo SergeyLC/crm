@@ -35,7 +35,7 @@
 **Генерация Build Version:**
 - Читается стабильная версия из `frontend/package.json` (например, `1.4.2`)
 - Добавляется build metadata с хешем коммита: `1.4.2+sha.a3f09e1`
-- Build версия записывается в `NEXT_PUBLIC_APP_VERSION` в `.env.staging.local`
+- Build версия записывается в `NEXT_PUBLIC_APP_VERSION` в `.env.production.local`
 
 **Шаги:**
 1. Запуск тестов и проверок

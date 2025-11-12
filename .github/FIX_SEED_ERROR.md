@@ -9,7 +9,7 @@ error: Environment variable not found: DATABASE_URL.
 
 ## Причина
 
-Скрипт `seed.ts` не может найти файл `.env.staging.local` в директории `db/`.
+Скрипт `seed.ts` не может найти файл `.env.production.local` в директории `db/`.
 
 ## Решение
 
@@ -17,16 +17,16 @@ error: Environment variable not found: DATABASE_URL.
 
 ```bash
 cd /var/www/loyacrm-staging/db
-ls -la .env.staging.local
+ls -la .env.production.local
 ```
 
 **Если файла нет:**
 
-### Шаг 2: Создать .env.staging.local
+### Шаг 2: Создать .env.production.local
 
 ```bash
 cd /var/www/loyacrm-staging/db
-nano .env.staging.local
+nano .env.production.local
 ```
 
 Добавить следующее содержимое (замените пароль на ваш):
@@ -41,7 +41,7 @@ PRISMA_LOG_LEVEL=warn
 ### Шаг 3: Защитить файл
 
 ```bash
-chmod 600 .env.staging.local
+chmod 600 .env.production.local
 ```
 
 ### Шаг 4: Проверить подключение к БД
@@ -78,7 +78,7 @@ pnpm run seed
 ## Ожидаемый успешный вывод
 
 ```
-✅ Loaded environment from: .env.staging.local
+✅ Loaded environment from: .env.production.local
 Starting seed.ts...
 PrismaClient created
 Entering main function...
@@ -132,7 +132,7 @@ STAGING_DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:54
 ```
 
 При следующем push в main, GitHub Actions автоматически:
-1. Создаст `.env.staging.local` из секретов
+1. Создаст `.env.production.local` из секретов
 2. Применит миграции
 3. Запустит seed
 

@@ -112,8 +112,8 @@ jobs:
 
             echo "🔧 Creating environment files from GitHub Secrets..."
             
-            # Create backend .env.staging.local
-            cat > backend/.env.staging.local << 'EOF'
+            # Create backend .env.production.local
+            cat > backend/.env.production.local << 'EOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
@@ -129,16 +129,16 @@ jobs:
             NEXT_TELEMETRY_DISABLED=1
             EOF
             
-            # Create db .env.staging.local
-            cat > db/.env.staging.local << 'EOF'
+            # Create db .env.production.local
+            cat > db/.env.production.local << 'EOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             PRISMA_LOG_LEVEL=warn
             EOF
             
             # Secure the files
-            chmod 600 backend/.env.staging.local
+            chmod 600 backend/.env.production.local
             chmod 600 frontend/.env.production.local
-            chmod 600 db/.env.staging.local
+            chmod 600 db/.env.production.local
             
             echo "✅ Environment files created with build version: ${{ steps.version.outputs.BUILD_VERSION }}"
 

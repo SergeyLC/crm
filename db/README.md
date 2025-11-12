@@ -131,7 +131,7 @@ db/
 ## ⚙️ Configuration
 
 ### Environment Variables
-Create a `.env.staging.local` or `.env.production.local` file in the `db/` directory:
+Create a `.env.production.local` or `.env.production.local` file in the `db/` directory:
 
 ```env
 # Staging
@@ -145,7 +145,7 @@ PRISMA_LOG_LEVEL=warn
 
 **Important:**
 - The `seed.ts` script automatically loads `.env` files in this priority:
-  1. `.env.staging.local`
+  1. `.env.production.local`
   2. `.env.production.local`
   3. `.env.local`
   4. `.env`

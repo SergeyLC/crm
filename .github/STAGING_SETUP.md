@@ -67,7 +67,7 @@ psql "postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_cr
 
 ```bash
 cd /var/www/loyacrm-staging/backend
-nano .env.staging.local
+nano .env.production.local
 ```
 
 Content:
@@ -83,14 +83,14 @@ NODE_ENV=staging
 
 Protect file:
 ```bash
-chmod 600 .env.staging.local
+chmod 600 .env.production.local
 ```
 
 ### Frontend staging environment
 
 ```bash
 cd /var/www/loyacrm-staging/frontend
-nano .env.staging.local
+nano .env.production.local
 ```
 
 Content:
@@ -104,14 +104,14 @@ PORT=3001
 
 Protect file:
 ```bash
-chmod 600 .env.staging.local
+chmod 600 .env.production.local
 ```
 
 ### Database staging environment
 
 ```bash
 cd /var/www/loyacrm-staging/db
-nano .env.staging.local
+nano .env.production.local
 ```
 
 Content:
@@ -120,11 +120,11 @@ DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/loya
 PRISMA_LOG_LEVEL=warn
 ```
 
-**Important:** Prisma commands (`migrate:deploy`, `migrate:reset`, `seed`) read `DATABASE_URL` from the `.env.staging.local` file in the `db/` directory. Make sure this file exists before running migrations.
+**Important:** Prisma commands (`migrate:deploy`, `migrate:reset`, `seed`) read `DATABASE_URL` from the `.env.production.local` file in the `db/` directory. Make sure this file exists before running migrations.
 
 Protect file:
 ```bash
-chmod 600 .env.staging.local
+chmod 600 .env.production.local
 ```
 
 ## Step 5: Install dependencies and build project
@@ -154,9 +154,9 @@ pnpm install --frozen-lockfile --prefer-offline
 pnpm run generate
 cd ..
 
-# IMPORTANT: Make sure .env.staging.local exists in db/
+# IMPORTANT: Make sure .env.production.local exists in db/
 # Check:
-ls -la db/.env.staging.local
+ls -la db/.env.production.local
 # If file doesn't exist, go back to Step 4 and create it!
 
 # 2. Install frontend dependencies
@@ -188,7 +188,7 @@ cd ..
 
 # 7. Apply database migrations
 cd db
-# Prisma reads DATABASE_URL from .env.staging.local in current directory (db/)
+# Prisma reads DATABASE_URL from .env.production.local in current directory (db/)
 pnpm run migrate:deploy
 
 # 8. Seed database with initial data
@@ -217,7 +217,7 @@ module.exports = {
         NODE_ENV: 'staging',
         PORT: 4001
       },
-      env_file: './.env.staging.local',
+      env_file: './.env.production.local',
       error_file: '/var/log/pm2/loyacrm-staging-backend-error.log',
       out_file: '/var/log/pm2/loyacrm-staging-backend-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
@@ -239,7 +239,7 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 3001
       },
-      env_file: './.env.staging.local',
+      env_file: './.env.production.local',
       error_file: '/var/log/pm2/loyacrm-staging-frontend-error.log',
       out_file: '/var/log/pm2/loyacrm-staging-frontend-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
@@ -438,7 +438,7 @@ After configuring Nginx, update URLs according to your configuration:
 
 ```bash
 cd /var/www/loyacrm-staging/frontend
-nano .env.staging.local
+nano .env.production.local
 ```
 
 Update:
@@ -452,7 +452,7 @@ PORT=3001
 
 ```bash
 cd /var/www/loyacrm-staging/backend
-nano .env.staging.local
+nano .env.production.local
 ```
 
 Update:
@@ -464,7 +464,7 @@ CORS_ORIGIN="https://staging.your-domain.com"
 
 ```bash
 cd /var/www/loyacrm-staging/frontend
-nano .env.staging.local
+nano .env.production.local
 ```
 
 Update:
@@ -478,7 +478,7 @@ PORT=3001
 
 ```bash
 cd /var/www/loyacrm-staging/backend
-nano .env.staging.local
+nano .env.production.local
 ```
 
 Update:
@@ -674,14 +674,14 @@ sudo kill -9 $(sudo lsof -t -i:4001)
 
 Check:
 ```bash
-ls -la /var/www/loyacrm-staging/backend/.env.staging.local
-ls -la /var/www/loyacrm-staging/frontend/.env.staging.local
+ls -la /var/www/loyacrm-staging/backend/.env.production.local
+ls -la /var/www/loyacrm-staging/frontend/.env.production.local
 ```
 
 Fix permissions:
 ```bash
-chmod 600 /var/www/loyacrm-staging/backend/.env.staging.local
-chmod 600 /var/www/loyacrm-staging/frontend/.env.staging.local
+chmod 600 /var/www/loyacrm-staging/backend/.env.production.local
+chmod 600 /var/www/loyacrm-staging/frontend/.env.production.local
 ```
 
 ### Backend cannot connect to database
@@ -689,7 +689,7 @@ chmod 600 /var/www/loyacrm-staging/frontend/.env.staging.local
 Check connection string:
 ```bash
 cd /var/www/loyacrm-staging/backend
-cat .env.staging.local | grep DATABASE_URL
+cat .env.production.local | grep DATABASE_URL
 ```
 
 Direct connection test:
@@ -702,7 +702,7 @@ psql "postgresql://loyacare_staging:password@localhost:5432/loya_care_crm_stagin
 Make sure `CORS_ORIGIN` in backend matches frontend URL:
 ```bash
 cd /var/www/loyacrm-staging/backend
-grep CORS_ORIGIN .env.staging.local
+grep CORS_ORIGIN .env.production.local
 ```
 
 ## Security

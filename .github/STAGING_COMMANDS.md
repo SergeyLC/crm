@@ -36,7 +36,7 @@ git checkout main
 echo -e "${BLUE}🔧 Creating environment files...${NC}"
 
 # Backend .env
-cat > backend/.env.staging.local << 'EOF'
+cat > backend/.env.production.local << 'EOF'
 DATABASE_URL="postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/loya_care_crm_staging"
 JWT_SECRET="staging-jwt-secret-32-chars-long-min"
 CORS_ORIGIN="http://161.97.67.253:8001"
@@ -45,24 +45,24 @@ LOG_LEVEL=info
 PORT=4001
 NODE_ENV=staging
 EOF
-chmod 600 backend/.env.staging.local
+chmod 600 backend/.env.production.local
 
 # Frontend .env
-cat > frontend/.env.staging.local << 'EOF'
+cat > frontend/.env.production.local << 'EOF'
 NEXT_PUBLIC_API_URL="http://161.97.67.253:8001"
 NEXT_PUBLIC_BACKEND_API_URL="http://161.97.67.253:8002/api"
 NEXT_PUBLIC_APP_VERSION=0.0.0+dev
 NEXT_TELEMETRY_DISABLED=1
 PORT=3001
 EOF
-chmod 600 frontend/.env.staging.local
+chmod 600 frontend/.env.production.local
 
 # Database .env
-cat > db/.env.staging.local << 'EOF'
+cat > db/.env.production.local << 'EOF'
 DATABASE_URL="postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/loya_care_crm_staging"
 PRISMA_LOG_LEVEL=warn
 EOF
-chmod 600 db/.env.staging.local
+chmod 600 db/.env.production.local
 
 # 4. Установить pnpm если не установлен
 if ! command -v pnpm &> /dev/null; then
@@ -120,7 +120,7 @@ module.exports = {
         NODE_ENV: 'staging',
         PORT: 4001
       },
-      env_file: './.env.staging.local',
+      env_file: './.env.production.local',
       error_file: '/var/log/pm2/loyacrm-staging-backend-error.log',
       out_file: '/var/log/pm2/loyacrm-staging-backend-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
@@ -142,7 +142,7 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 3001
       },
-      env_file: './.env.staging.local',
+      env_file: './.env.production.local',
       error_file: '/var/log/pm2/loyacrm-staging-frontend-error.log',
       out_file: '/var/log/pm2/loyacrm-staging-frontend-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
@@ -388,7 +388,7 @@ pm2 logs
 ### "CORS error"
 ```bash
 cd /var/www/loyacrm-staging/backend
-grep CORS_ORIGIN .env.staging.local
+grep CORS_ORIGIN .env.production.local
 # Должно быть: http://161.97.67.253:8001
 pm2 restart loyacrm-staging-backend
 ```

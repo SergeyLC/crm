@@ -8,7 +8,7 @@ Prisma CLI команды (`migrate:deploy`, `migrate:reset`, `seed`, `generate`
 
 ```
 db/
-  ├── .env.staging.local     ← Staging database URL
+  ├── .env.production.local     ← Staging database URL
   ├── .env.production.local  ← Production database URL
   ├── prisma/
   │   ├── schema.prisma      ← Определяет datasource db { url = env("DATABASE_URL") }
@@ -24,7 +24,7 @@ DATABASE_URL="postgresql://loyacare_prod:password@localhost:5432/loya_care_crm_p
 PRISMA_LOG_LEVEL=warn
 ```
 
-#### Staging: `db/.env.staging.local`
+#### Staging: `db/.env.production.local`
 ```bash
 DATABASE_URL="postgresql://loyacare_staging:password@localhost:5432/loya_care_crm_staging"
 PRISMA_LOG_LEVEL=warn
@@ -54,8 +54,8 @@ PRISMA_LOG_LEVEL=info
 3. **Команды запускаются из директории `db/`**:
    ```bash
    cd db
-   pnpm run migrate:deploy  # Использует DATABASE_URL из db/.env.staging.local
-   pnpm run seed            # Использует DATABASE_URL из db/.env.staging.local
+   pnpm run migrate:deploy  # Использует DATABASE_URL из db/.env.production.local
+   pnpm run seed            # Использует DATABASE_URL из db/.env.production.local
    ```
 
 ### В GitHub Actions
@@ -63,8 +63,8 @@ PRISMA_LOG_LEVEL=info
 #### Staging Workflow (`.github/workflows/build-staging.yml`)
 
 ```yaml
-# Создает .env.staging.local из GitHub Secrets
-cat > db/.env.staging.local << 'EOF'
+# Создает .env.production.local из GitHub Secrets
+cat > db/.env.production.local << 'EOF'
 DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
 PRISMA_LOG_LEVEL=warn
 EOF
@@ -103,7 +103,7 @@ Backend и Frontend также имеют свои `.env` файлы, но он�
 3. **Перезаписываются GitHub Actions** при каждом deploy
 4. **Права доступа 600** для безопасности:
    ```bash
-   chmod 600 db/.env.staging.local
+   chmod 600 db/.env.production.local
    chmod 600 db/.env.production.local
    ```
 
@@ -113,48 +113,48 @@ Backend и Frontend также имеют свои `.env` файлы, но он�
 
 ```bash
 cd /var/www/loyacrm-staging/db
-cat .env.staging.local | grep DATABASE_URL
+cat .env.production.local | grep DATABASE_URL
 ```
 
 Протестировать подключение:
 
 ```bash
 cd /var/www/loyacrm-staging/db
-psql "$(grep DATABASE_URL .env.staging.local | cut -d '=' -f2 | tr -d '"')"
+psql "$(grep DATABASE_URL .env.production.local | cut -d '=' -f2 | tr -d '"')"
 ```
 
 ### Troubleshooting
 
 #### Ошибка: "Environment variable not found: DATABASE_URL"
 
-**Причина:** Файл `.env.staging.local` не существует в директории `db/`
+**Причина:** Файл `.env.production.local` не существует в директории `db/`
 
 **Решение:**
 ```bash
 cd /var/www/loyacrm-staging/db
-ls -la .env.staging.local  # Проверить существование
-cat .env.staging.local     # Проверить содержимое
+ls -la .env.production.local  # Проверить существование
+cat .env.production.local     # Проверить содержимое
 ```
 
 #### Ошибка: "Environment variable not found: DATABASE_URL"
 
-**Причина:** Файл `.env.staging.local` не существует в директории `db/` или `seed.ts` не может его загрузить
+**Причина:** Файл `.env.production.local` не существует в директории `db/` или `seed.ts` не может его загрузить
 
 **Решение:**
 ```bash
 cd /var/www/loyacrm-staging/db
 
 # Проверить существование файла
-ls -la .env.staging.local
+ls -la .env.production.local
 
 # Если файла нет - создать его
-nano .env.staging.local
+nano .env.production.local
 # Добавить:
 # DATABASE_URL="postgresql://loyacare_staging:password@localhost:5432/loya_care_crm_staging"
 # PRISMA_LOG_LEVEL=warn
 
 # Проверить права доступа
-chmod 600 .env.staging.local
+chmod 600 .env.production.local
 
 # Попробовать снова
 pnpm run seed
@@ -171,7 +171,7 @@ sudo systemctl status postgresql
 
 # Проверить строку подключения
 cd /var/www/loyacrm-staging/db
-cat .env.staging.local | grep DATABASE_URL
+cat .env.production.local | grep DATABASE_URL
 
 # Тест подключения напрямую
 psql "postgresql://loyacare_staging:password@localhost:5432/loya_care_crm_staging"
@@ -189,7 +189,7 @@ cd /var/www/loyacrm-staging/db
 ls -la .env*
 
 # Проверить содержимое
-cat .env.staging.local
+cat .env.production.local
 ```
 
 ### Scripts в package.json
@@ -209,7 +209,7 @@ cat .env.staging.local
 ```
 
 **Важно:** Скрипт `seed.ts` автоматически загружает `.env` файлы в следующем порядке приоритета:
-1. `.env.staging.local`
+1. `.env.production.local`
 2. `.env.production.local`
 3. `.env.local`
 4. `.env`
