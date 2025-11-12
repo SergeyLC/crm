@@ -8,6 +8,10 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# Sync with remote first
+echo -e "${BLUE}🔄 Syncing with remote repository...${NC}"
+git pull --rebase
+
 # Parse command line arguments
 ADDITIONAL_MESSAGE=""
 INCLUDE_COMMITS=true  # Enabled by default
