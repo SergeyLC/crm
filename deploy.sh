@@ -54,37 +54,19 @@ while getopts "m:v:t-:" opt; do
   esac
 done
 
-# Path to frontend/package.json
-PACKAGE_JSON="frontend/package.json"
-
-# Determine if we're creating a release (will be set after parsing version)
-CREATING_RELEASE=false
-
-# Build commit message first (will be updated if creating release)
-if [ -n "$ADDITIONAL_MESSAGE" ]; then
-  COMMIT_MESSAGE="$ADDITIONAL_MESSAGE"
-else
-  COMMIT_MESSAGE="Update code"
-fi
-
 echo -e "\n${BLUE}📝 Staging changes...${NC}"
 git add -A
-
-# Only commit if there are changes
-if git diff --staged --quiet; then
-  echo -e "${YELLOW}ℹ️  No changes to commit${NC}"
-else
-  echo -e "${BLUE}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
-  git commit -m "$COMMIT_MESSAGE"
-fi
 
 # Sync with remote after committing local changes
 echo -e "${BLUE}🔄 Syncing with remote repository...${NC}"
 git pull --rebase
 
-# Read current stable version from latest package.json
+# Path to frontend/package.json
+PACKAGE_JSON="frontend/package.json"
+
+# Read current stable version from package.json FIRST (before committing)
 CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
-echo -e "${BLUE}📦 Current stable version in package.json: $CURRENT_VERSION${NC}"
+echo -e "${BLUE}📦 Current version in package.json: $CURRENT_VERSION${NC}"
 
 # Auto-increment patch version if -t flag used without version
 if [ "$AUTO_INCREMENT" = true ] && [ -z "$VERSION" ]; then
@@ -105,11 +87,15 @@ if [ "$AUTO_INCREMENT" = true ] && [ -z "$VERSION" ]; then
   fi
 fi
 
-# If creating a release, update commit message to match tag message
+# Determine if we're creating a release
+CREATING_RELEASE=false
 if [ -n "$VERSION" ]; then
   CREATING_RELEASE=true
-  
-  # Build release message
+fi
+
+# Build commit message BEFORE committing
+if [ "$CREATING_RELEASE" = true ]; then
+  # Release message
   if [ -n "$ADDITIONAL_MESSAGE" ]; then
     COMMIT_MESSAGE="Release $VERSION - $ADDITIONAL_MESSAGE"
   else
@@ -118,9 +104,16 @@ if [ -n "$VERSION" ]; then
   
   echo -e "${BLUE}🏷️  Preparing release: $VERSION${NC}"
   echo -e "${BLUE}📝 Commit and tag message: \"$COMMIT_MESSAGE\"${NC}"
+else
+  # Regular commit message
+  if [ -n "$ADDITIONAL_MESSAGE" ]; then
+    COMMIT_MESSAGE="$ADDITIONAL_MESSAGE"
+  else
+    COMMIT_MESSAGE="Update code"
+  fi
 fi
 
-# Add commit history by default (unless --clear is specified or creating release)
+# Add commit history for regular commits (not for releases)
 if [ "$INCLUDE_COMMITS" = true ] && [ "$CREATING_RELEASE" = false ]; then
   # Get commits that haven't been pushed yet
   UNPUSHED_COMMITS=$(git log origin/main..HEAD --pretty=format:"* %s" 2>/dev/null || echo "")
@@ -141,6 +134,15 @@ else
     echo -e "${YELLOW}ℹ️  Skipping commit history (--clear flag used)${NC}"
   fi
 fi
+
+# Only commit if there are changes
+if git diff --staged --quiet; then
+  echo -e "${YELLOW}ℹ️  No changes to commit${NC}"
+else
+  echo -e "${BLUE}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
+  git commit -m "$COMMIT_MESSAGE"
+fi
+
 
 echo -e "${BLUE}🚀 Pushing to remote...${NC}"
 git push
