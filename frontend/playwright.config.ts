@@ -14,11 +14,11 @@ export default defineConfig({
     navigationTimeout: 30_000,
   },
   webServer: {
-    // Start the dev server before running tests without cleaning cache
-    // Use dev:test which doesn't run predev hook
-    command: process.env.PLAYWRIGHT_DEV_COMMAND || 'PORT=3001 pnpm run dev:test',
+    // Use production server for tests to avoid lock conflicts with dev server
+    // Assumes app is already built (run 'pnpm run build' first)
+    command: 'pnpm run test:start',
     url: process.env.PW_BASE_URL || 'http://localhost:3001',
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI, // In CI always start fresh, locally reuse
     timeout: 120_000,
   },
   projects: [

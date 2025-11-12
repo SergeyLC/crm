@@ -59,23 +59,23 @@ run_checks() {
         exit 1
     fi
 
-    # Run Playwright E2E tests
-    echo "🎭 Running Playwright E2E tests..."
-    # Tests run on ports 3001/4001 via NODE_ENV=test and .env.test.local
-    if pnpm run playwright; then
-        print_status "Playwright E2E tests passed"
-    else
-        print_error "Playwright E2E tests failed"
-        cd ..
-        exit 1
-    fi
-
-    # Run build
+    # Run build (needed for Playwright tests)
     echo "🔨 Running build..."
     if pnpm run build; then
         print_status "Frontend build passed"
     else
         print_error "Frontend build failed"
+        cd ..
+        exit 1
+    fi
+
+    # Run Playwright E2E tests (requires built app)
+    echo "🎭 Running Playwright E2E tests..."
+    # Tests run on port 3001 using production build to avoid conflicts with dev server
+    if pnpm run playwright; then
+        print_status "Playwright E2E tests passed"
+    else
+        print_error "Playwright E2E tests failed"
         cd ..
         exit 1
     fi
