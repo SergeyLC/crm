@@ -60,7 +60,7 @@ PRISMA_LOG_LEVEL=info
 
 ### В GitHub Actions
 
-#### Staging Workflow (`.github/workflows/build-staging.yml`)
+#### Staging Workflow (`.github/workflows/deploy-staging.yml`)
 
 ```yaml
 # Создает .env.production.local из GitHub Secrets
@@ -75,7 +75,7 @@ pnpm run migrate:deploy
 pnpm run seed
 ```
 
-#### Production Workflow (`.github/workflows/deploy.yml`)
+#### Production Workflow (`.github/workflows/deploy-production.yml`)
 
 ```yaml
 # Создает .env.production.local из GitHub Secrets

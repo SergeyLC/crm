@@ -68,7 +68,7 @@ pnpm-lock.yaml
 
 ### 7. Update CI/CD workflows
 
-Updated `.github/workflows/deploy.yml` and `.github/workflows/checks.yml` to use pnpm:
+Updated `.github/workflows/deploy-production.yml` and `.github/workflows/test.yml` to use pnpm:
 
 **Before (npm):**
 ```yaml
@@ -214,7 +214,7 @@ wait
 - [x] Remove old `package-lock.json` files
 - [x] Run `pnpm install` locally
 - [x] Update `.gitignore`
-- [x] Update GitHub Actions workflows (deploy.yml, checks.yml)
+- [x] Update GitHub Actions workflows (deploy-production.yml, test.yml)
 - [x] Update deployment script for server
 - [ ] Test local development with pnpm
 - [ ] Test CI/CD pipeline

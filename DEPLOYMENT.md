@@ -687,7 +687,7 @@ NEXT_PUBLIC_BACKEND_API_URL="https://your-domain.com/api"
 
 ### GitHub Actions Workflow
 
-The workflow file `.github/workflows/deploy.yml` is already configured and will:
+The workflow file `.github/workflows/deploy-production.yml` is already configured and will:
 
 1. **Code Validation** - Run linting and type checking
 2. **Application Build** - Build frontend and backend

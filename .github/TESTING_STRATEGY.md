@@ -108,7 +108,7 @@ Total: ~12-17 minutes
 ### Pull Request Checks
 
 ```yaml
-.github/workflows/checks.yml
+.github/workflows/test.yml
 
 Checks (same as pre-push):
 1. TypeScript type check                          ~2 min
@@ -124,7 +124,7 @@ Total: ~6-8 minutes
 ### Push to main/develop
 
 ```yaml
-.github/workflows/checks.yml
+.github/workflows/test.yml
 
 Checks (same as PR - fast only):
 1. TypeScript type check                          ~2 min
@@ -140,7 +140,7 @@ Total: ~6-8 minutes
 ### Deployment (production)
 
 ```yaml
-.github/workflows/deploy.yml
+.github/workflows/deploy-production.yml
 
 Checks (fast only):
 1. TypeScript type check                          ~2 min
@@ -330,7 +330,7 @@ cd backend && npm test
 ## References
 
 - Pre-push hook: `.git/hooks/pre-push`
-- PR/Push checks: `.github/workflows/checks.yml`
-- Deployment: `.github/workflows/deploy.yml`
+- PR/Push checks: `.github/workflows/test.yml`
+- Deployment: `.github/workflows/deploy-production.yml`
 - E2E tests: `frontend/e2e/`
 - Test config: `frontend/playwright.config.ts`

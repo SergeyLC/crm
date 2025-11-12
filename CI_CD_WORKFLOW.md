@@ -12,7 +12,7 @@
 
 **Триггер:** Push в любую ветку (исключая теги)
 
-**Файл:** `.github/workflows/checks.yml`
+**Файл:** `.github/workflows/test.yml`
 
 **Шаги:**
 - Установка зависимостей
@@ -30,7 +30,7 @@
 
 **Триггер:** Push в ветку `main` (исключая теги)
 
-**Файл:** `.github/workflows/build-staging.yml`
+**Файл:** `.github/workflows/deploy-staging.yml`
 
 **Генерация Build Version:**
 - Читается стабильная версия из `frontend/package.json` (например, `1.4.2`)
@@ -68,7 +68,7 @@
 
 **Триггер:** Push тега с префиксом `v*` (например, `v1.4.2`)
 
-**Файл:** `.github/workflows/deploy.yml`
+**Файл:** `.github/workflows/deploy-production.yml`
 
 **Release Job:**
 1. Проверка, что тег на ветке `main`
@@ -172,19 +172,19 @@
 ```
 ┌─────────────────┐
 │  Push to any    │
-│     branch      │──────► Tests (checks.yml)
+│     branch      │──────► Tests (test.yml)
 └─────────────────┘
 
 ┌─────────────────┐
 │  Push to main   │
 │  (no tag)       │──────► Tests + Build Staging
-└─────────────────┘        (build-staging.yml)
+└─────────────────┘        (deploy-staging.yml)
                            Version: 1.4.2+sha.abc123
 
 ┌─────────────────┐
 │  Push tag v*    │
 │  (on main)      │──────► Release + Deploy Production
-└─────────────────┘        (deploy.yml)
+└─────────────────┘        (deploy-production.yml)
                            1. Update package.json → 1.4.2
                            2. Create GitHub Release
                            3. Deploy to production

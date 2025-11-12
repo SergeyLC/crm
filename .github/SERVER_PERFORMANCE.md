@@ -331,7 +331,7 @@ After optimization, deployment timeline:
 
 ## References
 
-- Deploy workflow: `.github/workflows/deploy.yml`
+- Deploy workflow: `.github/workflows/deploy-production.yml`
 - NPM performance tips: https://docs.npmjs.com/cli/v9/using-npm/config
 - pnpm benchmarks: https://pnpm.io/benchmarks
 - Verdaccio setup: https://verdaccio.org/docs/installation

@@ -69,7 +69,7 @@ Playwright E2E tests are executed in:
    - Runs locally before pushing code
    - Catches issues before they reach CI/CD
 
-2. **Pull Request checks** (`.github/workflows/checks.yml`)
+2. **Pull Request checks** (`.github/workflows/test.yml`)
    - Full checks including E2E tests
    - Validates changes before merge
 
@@ -85,7 +85,7 @@ Playwright E2E tests are executed in:
 # On server, create npm cache directory
 mkdir -p /var/www/loyacrm/.npm-cache
 
-# In deploy.yml, add:
+# In deploy-production.yml, add:
 export npm_config_cache=/var/www/loyacrm/.npm-cache
 ```
 

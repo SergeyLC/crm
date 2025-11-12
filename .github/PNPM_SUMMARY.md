@@ -19,13 +19,13 @@
 
 ### 3. CI/CD Workflows
 
-- ✅ Updated `.github/workflows/deploy.yml`:
+- ✅ Updated `.github/workflows/deploy-production.yml`:
   - Added pnpm installation step
   - Updated cache strategy for pnpm store
   - Updated all commands to use `pnpm --filter=<package-name>`
   - Server deployment script updated to use pnpm
 
-- ✅ Updated `.github/workflows/checks.yml`:
+- ✅ Updated `.github/workflows/test.yml`:
   - Added pnpm installation step
   - Updated cache strategy for pnpm store
   - Updated all commands to use pnpm
@@ -86,7 +86,7 @@ git commit -m "feat: migrate from npm to pnpm for faster builds
 - Add pnpm-workspace.yaml and .npmrc configuration
 - Add name field to all package.json files
 - Generate pnpm-lock.yaml (484 KB)
-- Update GitHub Actions workflows (deploy.yml, checks.yml)
+- Update GitHub Actions workflows (deploy-production.yml, test.yml)
 - Update server deployment script to use pnpm
 - Add pnpm migration documentation
 
@@ -135,7 +135,7 @@ If something goes wrong, you can rollback:
 ```bash
 # Remove pnpm files
 rm pnpm-lock.yaml pnpm-workspace.yaml .npmrc
-git checkout .github/workflows/deploy.yml .github/workflows/checks.yml
+git checkout .github/workflows/deploy-production.yml .github/workflows/test.yml
 
 # Remove name from db and backend package.json
 # Reinstall with npm

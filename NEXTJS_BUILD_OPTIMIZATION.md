@@ -174,7 +174,7 @@ pnpm run analyze
 }
 ```
 
-### deploy.yml
+### deploy-production.yml / deploy-staging.yml
 ```bash
 export NEXT_TELEMETRY_DISABLED=1
 export NODE_OPTIONS="--max-old-space-size=4096"
