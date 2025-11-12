@@ -8,7 +8,7 @@ on:
 jobs:
   # Job 1: Run tests first (reusable workflow)
   tests:
-    uses: ./.github/workflows/checks.yml
+    uses: ./.github/workflows/test.yml
 
   # Job 2: Create release (only if tests pass)
   release:
