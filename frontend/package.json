@@ -34,7 +34,7 @@
     "playwright:lead": "NODE_ENV=test playwright test e2e/lead-edit-dialog.spec.ts",
     "playwright:management": "NODE_ENV=test playwright test e2e/lead-management.spec.ts",
     "playwright:report": "playwright show-report",
-    "dev:test": "next dev",
+    "dev:test": "PORT=3001 next dev",
     "clean": "rm -rf .next out node_modules/.cache",
     "clean:cache": "rm -rf .next/cache",
     "collect-locales": "node scripts/collect-locales.js",
