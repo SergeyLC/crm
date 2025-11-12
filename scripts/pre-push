@@ -1,0 +1,188 @@
+#!/bin/bash
+
+# Pre-push hook to run checks before pushing to any branch or tag
+# Only skips checks for delete operations and tag pushes
+
+run_checks() {
+    # Colors for output
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    NC='\033[0m' # No Color
+
+    # Function to print colored output
+    print_status() {
+        echo -e "${GREEN}✅ $1${NC}"
+    }
+
+    print_error() {
+        echo -e "${RED}❌ $1${NC}"
+    }
+
+    # Check if we're in the project root
+    if [ ! -f "frontend/package.json" ] || [ ! -f "backend/package.json" ] || [ ! -f "db/package.json" ]; then
+        print_error "Not in project root or missing package.json files"
+        exit 1
+    fi
+
+    # Frontend checks
+    echo "📦 Checking frontend..."
+    cd frontend
+
+    # Run type checking
+    echo "🔍 Running TypeScript type check..."
+    if pnpm run type-check; then
+        print_status "Frontend type check passed"
+    else
+        print_error "Frontend type check failed"
+        cd ..
+        exit 1
+    fi
+
+    # Run linting
+    echo "🔍 Running ESLint check..."
+    if pnpm run lint:check; then
+        print_status "Frontend lint check passed"
+    else
+        print_error "Frontend lint check failed"
+        cd ..
+        exit 1
+    fi
+
+    # Run tests
+    echo "🧪 Running tests..."
+    if pnpm test --silent; then
+        print_status "Frontend tests passed"
+    else
+        print_error "Frontend tests failed"
+        cd ..
+        exit 1
+    fi
+
+    # Run Playwright E2E tests
+    echo "🎭 Running Playwright E2E tests..."
+    # Tests run on ports 3001/4001 via NODE_ENV=test and .env.test.local
+    if pnpm run playwright; then
+        print_status "Playwright E2E tests passed"
+    else
+        print_error "Playwright E2E tests failed"
+        cd ..
+        exit 1
+    fi
+
+    # Run build
+    echo "🔨 Running build..."
+    if pnpm run build; then
+        print_status "Frontend build passed"
+    else
+        print_error "Frontend build failed"
+        cd ..
+        exit 1
+    fi
+
+    cd ..
+
+    # Backend checks
+    echo "📦 Checking backend..."
+    cd backend
+
+    # Run type checking
+    echo "🔍 Running TypeScript type check..."
+    if pnpm run type-check; then
+        print_status "Backend type check passed"
+    else
+        print_error "Backend type check failed"
+        cd ..
+        exit 1
+    fi
+
+    # Run linting
+    echo "🔍 Running ESLint check..."
+    if pnpm run lint:check; then
+        print_status "Backend lint check passed"
+    else
+        print_error "Backend lint check failed"
+        cd ..
+        exit 1
+    fi
+
+    # Run tests
+    echo "🧪 Running tests..."
+    if pnpm test --silent; then
+        print_status "Backend tests passed"
+    else
+        print_error "Backend tests failed"
+        cd ..
+        exit 1
+    fi
+
+    # Run build
+    echo "🔨 Running build..."
+    if pnpm run build; then
+        print_status "Backend build passed"
+    else
+        print_error "Backend build failed"
+        cd ..
+        exit 1
+    fi
+
+    cd ..
+
+    # DB checks
+    echo "📦 Checking db..."
+    cd db
+
+    # Run type checking
+    echo "🔍 Running TypeScript type check..."
+    if pnpm run type-check; then
+        print_status "DB type check passed"
+    else
+        print_error "DB type check failed"
+        cd ..
+        exit 1
+    fi
+
+    # Run linting
+    echo "🔍 Running ESLint check..."
+    if pnpm run lint:check; then
+        print_status "DB lint check passed"
+    else
+        print_error "DB lint check failed"
+        cd ..
+        exit 1
+    fi
+
+    cd ..
+
+    print_status "All checks passed! Ready to push 🚀"
+    print_status "✅ Code quality: TypeScript + ESLint"
+    print_status "✅ Test coverage: Frontend + Backend + E2E tests"
+    print_status "✅ Build verification: Frontend + Backend builds"
+    print_status "✅ Type safety: Frontend + Backend + DB"
+}
+
+# Get push details from arguments
+while read local_ref local_sha remote_ref remote_sha; do
+    # Skip if this is a delete operation (local_sha is all zeros)
+    if [[ $local_sha == "0000000000000000000000000000000000000000" ]]; then
+        echo "ℹ️  Skipping checks for delete operation: $remote_ref"
+        continue
+    fi
+
+    # Skip checks for tags (tag always points to already tested commit)
+    if [[ $remote_ref == refs/tags/* ]]; then
+        tag_name=${remote_ref#refs/tags/}
+        echo "ℹ️  Skipping checks for tag: $tag_name (commit already tested)"
+        continue
+    fi
+
+    # Run full checks only for branch pushes
+    if [[ $remote_ref == refs/heads/* ]]; then
+        # Push to branch
+        current_branch=${remote_ref#refs/heads/}
+        echo "🚀 Running pre-push checks for branch: $current_branch"
+        run_checks
+    fi
+done
+
+exit 0
