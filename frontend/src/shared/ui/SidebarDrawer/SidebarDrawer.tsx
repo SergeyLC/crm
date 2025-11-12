@@ -338,11 +338,9 @@ export function SidebarDrawer() {
               fontSize: "0.65rem",
               color: (() => {
                 const version = process.env.NEXT_PUBLIC_APP_VERSION || "";
-                // If no version set, we're in local development
-                if (!version) return "info.main";
-                if (version.includes("+dev")) return "info.main";
                 if (version.includes("+sha.")) return "warning.main";
-                return "success.main";
+                if (version.includes("+dev")) return "info.main";
+                return "success.main"; // Production (clean version)
               })(),
               fontWeight: 600,
               textTransform: "uppercase",
@@ -350,11 +348,9 @@ export function SidebarDrawer() {
           >
             {(() => {
               const version = process.env.NEXT_PUBLIC_APP_VERSION || "";
-              // If no version set, we're in local development
-              if (!version) return t("develop");
-              if (version.includes("+dev")) return t("develop");
               if (version.includes("+sha.")) return t("staging");
-              return t("production");
+              if (version.includes("+dev")) return t("develop");
+              return t("production"); // Clean version = production
             })()}
           </Typography>
         </Box>

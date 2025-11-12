@@ -187,8 +187,8 @@ function run() {
   console.log(`\nWrote ${path.relative(root, generatedFile)}`);
 
   // Output summary information about the generated namespaces
-  console.log('\nGenerated namespaces:');
-  console.log(finalNs.map(ns => `  - ${ns}`).join('\n'));
+  console.log(`\nGenerated ${finalNs.length} namespaces`);
+  // console.log(finalNs.map(ns => `  - ${ns}`).join('\n'));
 }
 
 run();
