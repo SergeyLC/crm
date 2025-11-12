@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '**'  # Run on push to any branch
+      - '!main'  # Exclude main (tests run via deploy-staging.yml)
     tags-ignore:  # Exclude all tags
       - '**'
   pull_request:
