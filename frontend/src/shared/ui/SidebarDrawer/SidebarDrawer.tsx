@@ -328,7 +328,7 @@ export function SidebarDrawer() {
             color="text.secondary"
             sx={{ display: "block", fontSize: "0.7rem" }}
           >
-            {t("version")}: {process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0"}
+            {t("version")}: {process.env.NEXT_PUBLIC_APP_VERSION || "dev"}
           </Typography>
           <Typography
             variant="caption"
@@ -337,6 +337,8 @@ export function SidebarDrawer() {
               fontSize: "0.65rem",
               color: (() => {
                 const version = process.env.NEXT_PUBLIC_APP_VERSION || "";
+                // If no version set, we're in local development
+                if (!version) return "info.main";
                 if (version.includes("+dev")) return "info.main";
                 if (version.includes("+sha.")) return "warning.main";
                 return "success.main";
@@ -347,6 +349,8 @@ export function SidebarDrawer() {
           >
             {(() => {
               const version = process.env.NEXT_PUBLIC_APP_VERSION || "";
+              // If no version set, we're in local development
+              if (!version) return t("develop");
               if (version.includes("+dev")) return t("develop");
               if (version.includes("+sha.")) return t("staging");
               return t("production");
