@@ -156,16 +156,10 @@ if [ -n "$VERSION" ]; then
   echo -e "${YELLOW}   1. Update package.json to version $VERSION${NC}"
   echo -e "${YELLOW}   2. Create GitHub Release${NC}"
   echo -e "${YELLOW}   3. Deploy to production server${NC}"
-  echo -e "\n${BLUE}⏳ Waiting for GitHub Actions to update package.json...${NC}"
-  echo -e "${YELLOW}ℹ️  This usually takes 10-30 seconds${NC}"
-  
-  # Wait a bit for GitHub Actions to process and commit
-  sleep 15
-  
-  echo -e "${BLUE}🔄 Pulling updated package.json from remote...${NC}"
-  git pull --rebase
-  
-  echo -e "${GREEN}✅ Local repository is now in sync with remote${NC}"
+  echo -e "\n${BLUE}📝 Important:${NC}"
+  echo -e "${YELLOW}After GitHub Actions completes, run:${NC}"
+  echo -e "${GREEN}   git pull --rebase${NC}"
+  echo -e "${YELLOW}to sync the updated package.json to your local repository${NC}"
 else
   echo -e "\n${GREEN}✅ Changes pushed to main successfully!${NC}"
   echo -e "${YELLOW}ℹ️  No release tag created${NC}"
