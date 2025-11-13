@@ -27,14 +27,14 @@ jobs:
       - name: Check if this is a release commit
         id: check_release
         run: |
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          echo "Commit message: $COMMIT_MSG"
+          # Get first line of commit message
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          echo "Commit message (first line): $COMMIT_MSG"
           
           # Check if commit message indicates a release:
-          # - "Release v0.1.32" or "Release 0.1.32"
-          # - "Release tag v0.1.32"
-          # - "chore: bump version to 0.1.32"
-          if echo "$COMMIT_MSG" | grep -qE '^(Release (tag )?v?[0-9]+\.[0-9]+\.[0-9]+|chore: bump version to [0-9]+\.[0-9]+\.[0-9]+)'; then
+          # - Starts with "chore(release): v0.1.32" (from deploy.sh)
+          # - Starts with "chore: bump version to 0.1.32" (from GitHub Actions)
+          if echo "$COMMIT_MSG" | grep -qE '^chore\((release|version)\): |^chore: bump version to '; then
             echo "This is a release-related commit, skipping staging deployment"
             echo "skip=true" >> $GITHUB_OUTPUT
           else

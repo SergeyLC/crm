@@ -137,9 +137,9 @@ if [ "$CREATING_RELEASE" = true ]; then
   # Build commit message BEFORE committing
   # Release message
   if [ -n "$ADDITIONAL_MESSAGE" ]; then
-    COMMIT_MESSAGE="Release v$VERSION : $ADDITIONAL_MESSAGE"
+    COMMIT_MESSAGE="chore(release): v$VERSION - $ADDITIONAL_MESSAGE"
   else
-    COMMIT_MESSAGE="Release v$VERSION"
+    COMMIT_MESSAGE="chore(release): v$VERSION"
   fi
   
   echo -e "${CYAN}🏷️  Preparing release: $VERSION${NC}"
