@@ -135,35 +135,54 @@
 ### Простой push в main (staging)
 
 ```bash
-./deploy.sh -m "Add new feature"
+./deploy.sh -m "fix: add new feature"
 ```
 
 **Результат:**
-- Commit с сообщением "Add new feature"
+- Commit с сообщением "fix: add new feature" + список непушнутых коммитов
 - Push в main
-- GitHub Actions запустит tests и staging deploy
-- Staging получит версию типа `1.4.2+sha.a3f09e1`
+- GitHub Actions проверит, не релизный ли это коммит
+- Если нет - запустит tests и staging deploy
+- Staging получит версию типа `0.1.33+sha.a3f09e1`
+
+### Множественные коммиты (auto staging deploy)
+
+Если у вас несколько непушнутых коммитов и вы запускаете:
+
+```bash
+./deploy.sh -m "deploy multiple changes"
+```
+
+**Результат:**
+- Создаётся summary commit: `chore(staging): v0.1.33 - deploy multiple changes`
+- В теле коммита список всех непушнутых коммитов
+- Push в main → staging deployment
 
 ### Создание release (production)
 
 ```bash
-./deploy.sh -v 1.5.0 -m "Major release with new features"
+./deploy.sh -t -m "performance improvements and bug fixes"
 ```
 
 **Результат:**
-- Commit с изменениями
-- Push в main
-- Создание тега `v1.5.0`
+- Автоинкремент версии: `0.1.33` → `0.1.34`
+- Commit: `chore(release): v0.1.34 - performance improvements and bug fixes`
+- Push в main (staging пропустит релизный коммит)
+- Создание тега `v0.1.34`
+- Push тега
 - GitHub Actions:
-  - Обновит `package.json` до версии `1.5.0`
+  - Запустит production deploy
+  - Обновит `package.json` до версии `0.1.34`
   - Создаст GitHub Release
-  - Задеплоит на production
+  - Создаст коммит `chore: bump version to 0.1.34`
 
 ### Параметры deploy.sh
 
-- `-m "message"` - сообщение для commit
-- `-v VERSION` - создать release tag (например, `-v 1.5.0`)
-- `--clear` - не включать список коммитов в сообщение
+- `-m "message"` - **Обязательно**: сообщение для commit/release
+- `-t` - Создать release tag (автоинкремент patch версии)
+- `-v VERSION` - Указать конкретную версию (например, `-v 1.5.0`)
+
+**Важно:** Unpushed commits всегда включаются в сообщение коммита для полной истории изменений.
 
 ---
 

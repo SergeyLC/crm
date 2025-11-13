@@ -10,12 +10,11 @@ NC='\033[0m' # No Color
 
 # Parse command line arguments
 ADDITIONAL_MESSAGE=""
-INCLUDE_COMMITS=true  # Enabled by default
 VERSION=""  # Version for release tag
 AUTO_INCREMENT=false  # Auto-increment patch version
 UNSTAGED_CHANGES_COMMITTED=false
 
-while getopts "m:v:t-:" opt; do
+while getopts "m:v:t" opt; do
   case $opt in
     m)
       ADDITIONAL_MESSAGE="$OPTARG"
@@ -27,29 +26,12 @@ while getopts "m:v:t-:" opt; do
       # -t flag triggers auto-increment
       AUTO_INCREMENT=true
       ;;
-    -)
-      case "${OPTARG}" in
-        clear)
-          INCLUDE_COMMITS=false
-          ;;
-        *)
-          echo "Invalid option: --${OPTARG}" >&2
-          echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t] [--clear]"
-          echo "  -m: Add custom message to commit"
-          echo "  -v: Create release tag with specified version (e.g., 1.4.2)"
-          echo "  -t: Create release tag with auto-incremented patch version"
-          echo "  --clear: Don't include list of commits (by default commits are included)"
-          exit 1
-          ;;
-      esac
-      ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
-      echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t] [--clear]"
+      echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t]"
       echo "  -m: Add custom message to commit"
       echo "  -v: Create release tag with specified version (e.g., 1.4.2)"
       echo "  -t: Create release tag with auto-incremented patch version"
-      echo "  --clear: Don't include list of commits (by default commits are included)"
       exit 1
       ;;
   esac
@@ -66,7 +48,7 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   # Check if commit message is provided
   if [ -z "$ADDITIONAL_MESSAGE" ]; then
     echo -e "\n${RED}❌ Error: Commit message is required${NC}"
-    echo -e "${YELLOW}Usage: $0 -m \"your commit message\" [-v VERSION | -t] [--clear]${NC}"
+    echo -e "${YELLOW}Usage: $0 -m \"your commit message\" [-v VERSION | -t]${NC}"
     echo -e "${YELLOW}Example: $0 -m \"fix: update deployment script\"${NC}"
     exit 1
   fi
@@ -153,31 +135,21 @@ else
   fi
 fi
 
-# Add commit history for regular commits (not for releases)
-if [ "$INCLUDE_COMMITS" = true ] ; then
-  # Get commits that haven't been pushed yet
-  UNPUSHED_COMMITS=$(git log origin/main..HEAD --pretty=format:"* %s" 2>/dev/null || echo "")
-  
-  if [ -n "$UNPUSHED_COMMITS" ]; then
-    COMMIT_MESSAGE="$COMMIT_MESSAGE
-
-$UNPUSHED_COMMITS"
-    echo -e "${CYAN}📋 Including unpushed commits in message:${NC}"
-    echo "$UNPUSHED_COMMITS"
-  else
-    echo -e "${YELLOW}ℹ️  No unpushed commits found${NC}"
-  fi
-else
-  # if [ "$CREATING_RELEASE" = true ]; then
-  #   echo -e "${YELLOW}ℹ️  Release commit: using clean message without commit history${NC}"
-  # else
-    echo -e "${YELLOW}ℹ️  Skipping commit history (--clear flag used)${NC}"
-  # fi
-fi
+# Add commit history (always include unpushed commits)
+UNPUSHED_COMMITS=$(git log origin/main..HEAD --pretty=format:"* %s" 2>/dev/null || echo "")
+UNPUSHED_COUNT=$(git log origin/main..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ')
 
 # Commit logic
 if [ "$CREATING_RELEASE" = true ]; then
   # For releases, always create a commit (even if empty) to ensure proper workflow detection
+  if [ -n "$UNPUSHED_COMMITS" ]; then
+    COMMIT_MESSAGE="$COMMIT_MESSAGE
+
+$UNPUSHED_COMMITS"
+    echo -e "${CYAN}📋 Including unpushed commits in release message:${NC}"
+    echo "$UNPUSHED_COMMITS"
+  fi
+  
   if [ "$UNSTAGED_CHANGES_COMMITTED" = true ]; then
     echo -e "${CYAN}📝 Amending commit with release message: \"$COMMIT_MESSAGE\"...${NC}"
     git commit --amend -m "$COMMIT_MESSAGE"
@@ -186,10 +158,37 @@ if [ "$CREATING_RELEASE" = true ]; then
     git commit --allow-empty -m "$COMMIT_MESSAGE"
   fi
 else
-  # For regular commits, only commit if there were changes
+  # For regular commits
   if [ "$UNSTAGED_CHANGES_COMMITTED" = true ]; then
-    echo -e "${CYAN}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
+    # Single commit with changes - amend with history
+    if [ -n "$UNPUSHED_COMMITS" ]; then
+      COMMIT_MESSAGE="$COMMIT_MESSAGE
+
+$UNPUSHED_COMMITS"
+      echo -e "${CYAN}📋 Including unpushed commits in message:${NC}"
+      echo "$UNPUSHED_COMMITS"
+    fi
+    echo -e "${CYAN}📝 Amending commit with full message: \"$COMMIT_MESSAGE\"...${NC}"
     git commit --amend -m "$COMMIT_MESSAGE"
+  elif [ "$UNPUSHED_COUNT" -gt 1 ]; then
+    # Multiple unpushed commits - create staging deploy commit
+    PACKAGE_JSON="frontend/package.json"
+    CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
+    
+    if [ -n "$ADDITIONAL_MESSAGE" ]; then
+      STAGING_COMMIT_MESSAGE="chore(staging): v$CURRENT_VERSION - $ADDITIONAL_MESSAGE
+
+$UNPUSHED_COMMITS"
+    else
+      STAGING_COMMIT_MESSAGE="chore(staging): deploy v$CURRENT_VERSION
+
+$UNPUSHED_COMMITS"
+    fi
+    
+    echo -e "${CYAN}📋 Including $UNPUSHED_COUNT unpushed commits:${NC}"
+    echo "$UNPUSHED_COMMITS"
+    echo -e "${CYAN}📝 Creating staging deploy commit: \"chore(staging): v$CURRENT_VERSION...\"${NC}"
+    git commit --allow-empty -m "$STAGING_COMMIT_MESSAGE"
   fi
 fi
 

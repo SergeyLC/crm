@@ -724,102 +724,81 @@ You can trigger deployment manually:
 The project includes a convenient deployment script that automates version bumping and tag creation:
 
 ```bash
-# From project root - simple deployment (includes commit history by default)
-./deploy.sh
-
-# With additional commit message
+# Standard staging deployment
 ./deploy.sh -m "fix critical auth bug"
 
 # Create release tag (triggers production deployment)
 ./deploy.sh -t -m "new features release"
 
-# Without commit history
-./deploy.sh --clear
-
-# Release tag without commit history
-./deploy.sh -t --clear -m "production release"
-
 # Or from frontend directory
 cd frontend
-pnpm run deploy
-
-# With custom message and tag
 pnpm run deploy -- -t -m "add new customer dashboard feature"
-
-# Without commit history
-pnpm run deploy -- --clear
 ```
 
 **What the script does:**
-1. ✅ Reads current version from `frontend/package.json` (e.g., `0.1.11`)
-2. ✅ Increments patch version (`0.1.11` → `0.1.12`)
-3. ✅ Updates `frontend/package.json` with new version
-4. ✅ Builds commit message with version and optional custom message
-5. ✅ **By default**: Includes list of all unpushed commits
-6. ✅ Stages all changes: `git add -A`
-7. ✅ Creates commit with generated message
-8. ✅ Pushes commit: `git push`
-9. ✅ **If `-t` flag used**: Creates annotated release tag: `git tag -a v0.1.12`
-10. ✅ **If `-t` flag used**: Pushes tag: `git push origin v0.1.12`
-11. ✅ **If tag pushed**: GitHub Actions automatically starts deployment
+
+**For Regular Commits (Staging):**
+1. ✅ Commits unstaged changes with provided message
+2. ✅ Syncs with remote (`git pull --rebase`)
+3. ✅ Includes list of all unpushed commits in message
+4. ✅ If multiple unpushed commits exist: creates summary commit with `chore(staging): v{VERSION}`
+5. ✅ Pushes to main → triggers staging deployment
+
+**For Releases (Production with `-t` flag):**
+1. ✅ Reads current version from `frontend/package.json` and git tags
+2. ✅ Auto-increments patch version (e.g., `0.1.33` → `0.1.34`)
+3. ✅ Creates commit with `chore(release): v{VERSION}` message
+4. ✅ Includes list of all unpushed commits in commit message
+5. ✅ Pushes commit to main
+6. ✅ Creates and pushes annotated release tag: `v0.1.34`
+7. ✅ GitHub Actions automatically deploys to production and updates package.json
 
 **Command Options:**
-- `-m "message"` - Optional: Add custom description to commit message
-- `-t` - Optional: Create and push release tag (triggers production deployment)
-- `--clear` - Optional: Don't include list of unpushed commits (by default they are included)
+- `-m "message"` - **Required**: Custom description for commit/release
+- `-t` - Create and push release tag (triggers production deployment)
+- `-v VERSION` - Specify exact version (e.g., `-v 1.5.0`), otherwise auto-increments
 
 **Commit Message Formats:**
 
-*Default (with commit history):*
+*Regular staging commit:*
 ```
-Provide Release 0.1.12
+fix: critical auth bug
 
-* fix: handle empty JSON responses safely
-* refactor: migrate to pnpm for better performance
-* feat: add GitHub Secrets integration
-```
-
-*With custom message:*
-```
-Provide Release 0.1.12 - optimize database queries
-
-* fix: handle empty JSON responses safely
-* refactor: optimize lead filtering query
-* perf: add database indexes
+* feat: add new dashboard
+* perf: optimize queries
 ```
 
-*With release tag (-t flag):*
+*Multiple unpushed commits (auto-generated staging deploy):*
 ```
-Commit: "Provide Release 0.1.12 - new features release"
-Tag: "Provide Release Tag 0.1.12 - new features release"
+chore(staging): v0.1.33 - deploying multiple changes
+
+* feat: add new dashboard
+* perf: optimize queries  
+* fix: critical auth bug
 ```
 
-*Without commit history (--clear flag):*
+*Release commit:*
 ```
-Provide Release 0.1.12
+chore(release): v0.1.34 - new features release
+
+* feat: add customer dashboard
+* perf: improve database performance
+* fix: authentication bug
 ```
 
 **Examples:**
 ```bash
-# Standard push without deployment
-./deploy.sh
-# → Pushes commits only (no tag, no production deployment)
+# Standard staging push
+./deploy.sh -m "fix: authentication bug"
+# → Pushes to staging with version 0.1.33+sha.abc123
 
-# Push with description
-./deploy.sh -m "fix authentication bug"
-# → "Provide Release 0.1.12 - fix authentication bug" + list of commits
+# Production release
+./deploy.sh -t -m "performance improvements and bug fixes"
+# → Creates tag v0.1.34, deploys to production
 
-# Production release with tag
-./deploy.sh -t -m "production ready with performance improvements"
-# → Creates tag v0.1.12, triggers GitHub Actions deployment
-
-# Clean release without commit details
-./deploy.sh -t --clear -m "hotfix release"
-# → "Provide Release Tag 0.1.12 - hotfix release" (no commit list, with deployment)
-
-# Hotfix without deployment
-./deploy.sh -m "critical security patch" --clear
-# → Push only, no tag, no deployment
+# Release with specific version
+./deploy.sh -v 1.5.0 -m "major release"
+# → Creates tag v1.5.0, deploys to production
 ```
 
 ### Monitoring and Logs
