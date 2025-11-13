@@ -17,10 +17,10 @@ The database layer is built with **Prisma ORM** and uses **PostgreSQL** as the d
 ### 1. Database Setup
 ```bash
 # Reset database and apply all migrations
-npm run migrate:reset
+pnpm run migrate:reset
 
 # Or run migrations in development mode
-npm run migrate
+pnpm run migrate
 ```
 
 **💡 Note:** This project is already initialized. **DO NOT run `npx prisma init`** as it will overwrite existing configuration.
@@ -28,13 +28,13 @@ npm run migrate
 ### 2. Seed Database (Optional)
 ```bash
 # Populate database with test data
-npm run seed
+pnpm run seed
 ```
 
 ### 3. Generate Prisma Client
 ```bash
 # Generate client and copy to frontend/backend
-npm run generate
+pnpm run generate
 ```
 
 ## � Database Schema
@@ -65,54 +65,54 @@ npx prisma init
 ### Database Management
 ```bash
 # Development migration (creates new migration if schema changed)
-npm run migrate
+pnpm run migrate
 
 # Deploy migrations to production
-npm run migrate:deploy
+pnpm run migrate:deploy
 
 # Reset database and reapply all migrations (⚠️ DELETES ALL DATA)
-npm run migrate:reset
+pnpm run migrate:reset
 
 # Check migration status
-npm run migrate:status
+pnpm run migrate:status
 ```
 
 ### Development Tools
 ```bash
 # Generate Prisma client and copy to projects
-npm run generate
+pnpm run generate
 
 # Open Prisma Studio (database GUI)
-npm run studio
+pnpm run studio
 
 # Run database seeding
-npm run seed
+pnpm run seed
 ```
 
 ### Code Quality
 ```bash
 # TypeScript type checking
-npm run type-check
+pnpm run type-check
 
 # Linting (not configured)
-npm run lint
+pnpm run lint
 
 # Lint checking (not configured)
-npm run lint:check
+pnpm run lint:check
 ```
 
 ## 🔄 Development Workflow
 
 ### Making Schema Changes
 1. Update `prisma/schema.prisma`
-2. Run `npm run migrate` to create and apply migration
-3. Run `npm run generate` to update the client
+2. Run `pnpm run migrate` to create and apply migration
+3. Run `pnpm run generate` to update the client
 4. Restart your development servers
 
 ### Database Reset (Development)
 ```bash
 # Complete reset with fresh data
-npm run migrate:reset && npm run seed && npm run generate
+pnpm run migrate:reset && pnpm run seed && pnpm run generate
 ```
 
 ## 📁 Project Structure

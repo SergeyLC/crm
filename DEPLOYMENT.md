@@ -340,17 +340,17 @@ git pull origin main
 
 echo "Updating database..."
 cd db
-npm run generate
+pnpm run generate
 
 echo "Building backend..."
 cd ../backend
 pnpm install --prod
-npm run build
+pnpm run build
 
 echo "Building frontend..."
 cd ../frontend
 pnpm install --prod
-npm run build
+pnpm run build
 
 echo "Restarting services..."
 pm2 restart all

@@ -31,11 +31,11 @@ This guide covers deploying the LoyaCare CRM to production with proper security 
    ```bash
    # Backend
    cd backend
-   npm run build
+   pnpm run build
    
    # Frontend
    cd ../frontend
-   npm run build
+   pnpm run build
    ```
 
 ## Deployment Methods
@@ -46,7 +46,7 @@ PM2 is a production process manager for Node.js applications.
 
 #### Install PM2
 ```bash
-npm install -g pm2
+pnpm install -g pm2
 ```
 
 #### Configure PM2
@@ -336,22 +336,28 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-COPY tsconfig.json ./
+COPY package.json pnpm-lock.yaml ./
+
+# Install pnpm
+RUN npm install -g pnpm
 
 # Install dependencies
-RUN npm ci --only=production
+RUN pnpm install --frozen-lockfile --prod
 
 # Copy source
+COPY tsconfig.json ./
 COPY src ./src
 
 # Build
-RUN npm run build
+RUN pnpm run build
 
 # Production stage
 FROM node:18-alpine
 
 WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
 
 # Copy built files and dependencies
 COPY --from=builder /app/dist ./dist
@@ -379,12 +385,15 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 COPY next.config.js ./
 COPY tsconfig.json ./
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Install dependencies
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Copy source
 COPY src ./src
@@ -396,12 +405,15 @@ ARG NEXT_PUBLIC_BACKEND_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_BACKEND_API_URL=$NEXT_PUBLIC_BACKEND_API_URL
 
-RUN npm run build
+RUN pnpm run build
 
 # Production stage
 FROM node:18-alpine
 
 WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
 
 # Copy built files
 COPY --from=builder /app/.next ./.next
@@ -418,7 +430,7 @@ USER nodejs
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["pnpm", "start"]
 ```
 
 #### Docker Compose for Production
@@ -538,7 +550,7 @@ NEXT_PUBLIC_BACKEND_API_URL=https://api.your-domain.com/api
 docker-compose -f docker-compose.prod.yml --env-file .env.docker.prod up -d
 
 # Run migrations
-docker-compose -f docker-compose.prod.yml exec backend npm run db:migrate:deploy
+docker-compose -f docker-compose.prod.yml exec backend pnpm run db:migrate:deploy
 
 # View logs
 docker-compose -f docker-compose.prod.yml logs -f
@@ -563,21 +575,21 @@ cd LoyaCareCRM
 
 ```bash
 # Root
-npm install
+pnpm install
 
 # Backend
 cd backend
-npm install
+pnpm install
 cd ..
 
 # Frontend
 cd frontend
-npm install
+pnpm install
 cd ..
 
 # Database
 cd db
-npm install
+pnpm install
 cd ..
 ```
 
@@ -608,18 +620,18 @@ chmod 600 db/.env.production.local
 ```bash
 # Backend
 cd backend
-npm run build
+pnpm run build
 
 # Frontend
 cd ../frontend
-npm run build
+pnpm run build
 ```
 
 #### 5. Run Database Migrations
 
 ```bash
 cd ../db
-npm run migrate:deploy
+pnpm run migrate:deploy
 ```
 
 #### 6. Start Applications
@@ -701,13 +713,13 @@ GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_prod TO loyacare_prod;
 
 ```bash
 cd db
-npm run migrate:deploy
+pnpm run migrate:deploy
 ```
 
 ### 3. (Optional) Seed Initial Data
 
 ```bash
-npm run seed
+pnpm run seed
 ```
 
 ---
@@ -788,9 +800,11 @@ curl http://api.your-domain.com/health
 # Check frontend
 curl http://your-domain.com
 
+```bash
 # Check database connection
 cd db
-npm run migrate:status
+pnpm run migrate:status
+```
 ```
 
 ---
@@ -831,7 +845,7 @@ pm2 env 0
 
 # Test build
 cd backend
-npm run build
+pnpm run build
 ```
 
 ### Frontend Build Errors
@@ -839,7 +853,7 @@ npm run build
 # Clear cache and rebuild
 cd frontend
 rm -rf .next
-npm run build
+pnpm run build
 ```
 
 ---

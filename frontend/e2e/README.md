@@ -17,22 +17,22 @@ This directory contains Playwright end-to-end tests for the LoyaCareCRM applicat
 npx playwright install
 
 # Run all tests
-npm run playwright
+pnpm run playwright
 
 # Run tests in UI mode (interactive)
-npm run playwright:ui
+pnpm run playwright:ui
 
 # Run tests in headed mode (see browser)
-npm run playwright:headed
+pnpm run playwright:headed
 
 # Run specific test file
-npm run playwright:demo
-npm run playwright:deal
-npm run playwright:lead
-npm run playwright:management
+pnpm run playwright:demo
+pnpm run playwright:deal
+pnpm run playwright:lead
+pnpm run playwright:management
 
 # View test report
-npm run playwright:report
+pnpm run playwright:report
 ```
 
 ## Test Structure
@@ -108,8 +108,8 @@ test.describe('My Feature', () => {
 
 ## Debugging
 
-- Use `npm run playwright:ui` to run tests in interactive mode with time travel debugging
-- Use `npm run playwright:headed` to see the browser while tests run
+- Use `pnpm run playwright:ui` to run tests in interactive mode with time travel debugging
+- Use `pnpm run playwright:headed` to see the browser while tests run
 - Add `await page.pause()` in your test to pause execution
 - Use VS Code Playwright extension for debugging
 - Check the `playwright-report/` directory for HTML reports after test runs

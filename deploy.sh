@@ -13,6 +13,7 @@ ADDITIONAL_MESSAGE=""
 INCLUDE_COMMITS=true  # Enabled by default
 VERSION=""  # Version for release tag
 AUTO_INCREMENT=false  # Auto-increment patch version
+UNSTAGED_CHANGES_COMMITTED=false
 
 while getopts "m:v:t-:" opt; do
   case $opt in
@@ -54,52 +55,91 @@ while getopts "m:v:t-:" opt; do
   esac
 done
 
-echo -e "\n${BLUE}📝 Staging changes...${NC}"
-git add -A
+# Determine if we're creating a release
+CREATING_RELEASE=false
+if [ -n "$VERSION" ] || [ "$AUTO_INCREMENT" = true ]; then
+  CREATING_RELEASE=true
+fi
+
+# Check if there are unstaged changes
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  # Check if commit message is provided
+  if [ -z "$ADDITIONAL_MESSAGE" ]; then
+    echo -e "\n${RED}❌ Error: Commit message is required${NC}"
+    echo -e "${YELLOW}Usage: $0 -m \"your commit message\" [-v VERSION | -t] [--clear]${NC}"
+    echo -e "${YELLOW}Example: $0 -m \"fix: update deployment script\"${NC}"
+    exit 1
+  fi
+  
+  echo -e "\n${BLUE}📝 Staging changes...${NC}"
+  git add -A
+  git commit -m "${ADDITIONAL_MESSAGE}"
+  UNSTAGED_CHANGES_COMMITTED=true
+else
+  echo -e "\n${YELLOW}ℹ️  No unstaged changes to commit${NC}"
+fi
 
 # Sync with remote after committing local changes
 echo -e "${BLUE}🔄 Syncing with remote repository...${NC}"
 git pull --rebase
 
-# Path to frontend/package.json
-PACKAGE_JSON="frontend/package.json"
-
-# Read current stable version from package.json FIRST (before committing)
-CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
-echo -e "${BLUE}📦 Current version in package.json: $CURRENT_VERSION${NC}"
-
-# Auto-increment patch version if -t flag used without version
-if [ "$AUTO_INCREMENT" = true ] && [ -z "$VERSION" ]; then
-  # Parse version components
-  if [[ "$CURRENT_VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-    MAJOR="${BASH_REMATCH[1]}"
-    MINOR="${BASH_REMATCH[2]}"
-    PATCH="${BASH_REMATCH[3]}"
-    
-    # Increment patch
-    NEW_PATCH=$((PATCH + 1))
-    VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-    
-    echo -e "${GREEN}🔄 Auto-incrementing patch version: $CURRENT_VERSION → $VERSION${NC}"
-  else
-    echo -e "${RED}❌ Cannot parse current version: $CURRENT_VERSION${NC}"
-    exit 1
-  fi
-fi
-
-# Determine if we're creating a release
-CREATING_RELEASE=false
-if [ -n "$VERSION" ]; then
-  CREATING_RELEASE=true
-fi
-
-# Build commit message BEFORE committing
 if [ "$CREATING_RELEASE" = true ]; then
+  # Path to frontend/package.json
+  PACKAGE_JSON="frontend/package.json"
+
+  # Read current version from package.json
+  PACKAGE_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
+  echo -e "${BLUE}📦 Version in package.json: $PACKAGE_VERSION${NC}"
+
+  # Get latest tag version from git
+  LATEST_TAG=$(git tag -l "v*" | sort -V | tail -n 1)
+  if [ -n "$LATEST_TAG" ]; then
+    TAG_VERSION="${LATEST_TAG#v}" # Remove 'v' prefix
+    echo -e "${BLUE}🏷️  Latest git tag: $LATEST_TAG ($TAG_VERSION)${NC}"
+  else
+    TAG_VERSION="0.0.0"
+    echo -e "${YELLOW}ℹ️  No git tags found, using 0.0.0${NC}"
+  fi
+
+  # Function to compare versions (returns 0 if v1 >= v2, 1 otherwise)
+  version_gte() {
+    [ "$1" = "$(echo -e "$1\n$2" | sort -V | tail -n 1)" ]
+  }
+
+  # Determine the maximum version
+  if version_gte "$PACKAGE_VERSION" "$TAG_VERSION"; then
+    CURRENT_VERSION="$PACKAGE_VERSION"
+    echo -e "${GREEN}📌 Using package.json version: $CURRENT_VERSION${NC}"
+  else
+    CURRENT_VERSION="$TAG_VERSION"
+    echo -e "${GREEN}📌 Using git tag version: $CURRENT_VERSION${NC}"
+  fi
+
+  # Auto-increment patch version if -t flag used without version
+  if [ "$AUTO_INCREMENT" = true ] && [ -z "$VERSION" ]; then
+    # Parse version components
+    if [[ "$CURRENT_VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+      MAJOR="${BASH_REMATCH[1]}"
+      MINOR="${BASH_REMATCH[2]}"
+      PATCH="${BASH_REMATCH[3]}"
+      
+      # Increment patch
+      NEW_PATCH=$((PATCH + 1))
+      VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+      
+      echo -e "${GREEN}🔄 Auto-incrementing patch version: $CURRENT_VERSION → $VERSION${NC}"
+    else
+      echo -e "${RED}❌ Cannot parse current version: $CURRENT_VERSION${NC}"
+      exit 1
+    fi
+  fi
+
+  # Build commit message BEFORE committing
   # Release message
   if [ -n "$ADDITIONAL_MESSAGE" ]; then
-    COMMIT_MESSAGE="Release $VERSION - $ADDITIONAL_MESSAGE"
+    COMMIT_MESSAGE="Release v$VERSION : $ADDITIONAL_MESSAGE"
   else
-    COMMIT_MESSAGE="Release $VERSION"
+    COMMIT_MESSAGE="Release v$VERSION"
   fi
   
   echo -e "${BLUE}🏷️  Preparing release: $VERSION${NC}"
@@ -114,7 +154,7 @@ else
 fi
 
 # Add commit history for regular commits (not for releases)
-if [ "$INCLUDE_COMMITS" = true ] && [ "$CREATING_RELEASE" = false ]; then
+if [ "$INCLUDE_COMMITS" = true ] ; then
   # Get commits that haven't been pushed yet
   UNPUSHED_COMMITS=$(git log origin/main..HEAD --pretty=format:"* %s" 2>/dev/null || echo "")
   
@@ -128,24 +168,22 @@ $UNPUSHED_COMMITS"
     echo -e "${YELLOW}ℹ️  No unpushed commits found${NC}"
   fi
 else
-  if [ "$CREATING_RELEASE" = true ]; then
-    echo -e "${YELLOW}ℹ️  Release commit: using clean message without commit history${NC}"
-  else
+  # if [ "$CREATING_RELEASE" = true ]; then
+  #   echo -e "${YELLOW}ℹ️  Release commit: using clean message without commit history${NC}"
+  # else
     echo -e "${YELLOW}ℹ️  Skipping commit history (--clear flag used)${NC}"
-  fi
+  # fi
 fi
 
 # Only commit if there are changes
-if git diff --staged --quiet; then
-  echo -e "${YELLOW}ℹ️  No changes to commit${NC}"
-else
+if [ "$UNSTAGED_CHANGES_COMMITTED" = true ]; then
   echo -e "${BLUE}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
-  git commit -m "$COMMIT_MESSAGE"
+  git commit --amend -m "$COMMIT_MESSAGE"
 fi
 
 
 echo -e "${BLUE}🚀 Pushing to remote...${NC}"
-git push
+# git push
 
 # Create and push release tag if version is specified
 if [ -n "$VERSION" ]; then
@@ -166,12 +204,12 @@ if [ -n "$VERSION" ]; then
   
   # Use the same message for tag as for commit
   TAG_MESSAGE="$COMMIT_MESSAGE"
-  
+  echo -e "${BLUE}🏷️  TAG_MESSAGE: $TAG_MESSAGE${NC}"
   echo -e "${BLUE}🏷️  Creating release tag: $TAG_NAME${NC}"
-  git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
+  # git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
   
   echo -e "${BLUE}🚀 Pushing tag: $TAG_NAME...${NC}"
-  git push origin "$TAG_NAME"
+  # git push origin "$TAG_NAME"
   
   echo -e "\n${GREEN}✅ Release tag created successfully!${NC}"
   echo -e "${GREEN}🏷️  Tag: $TAG_NAME${NC}"
