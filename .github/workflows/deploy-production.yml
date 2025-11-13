@@ -196,11 +196,6 @@ jobs:
             echo "✅ Backend dependencies installed"
             cd ..
 
-            echo "🌐 Generating i18n files for frontend..."
-            cd frontend
-            pnpm run collect-locales
-            cd ..
-
             echo "🔨 Building frontend..."
             cd frontend
             # Don't run clean - preserve Next.js cache for faster builds
