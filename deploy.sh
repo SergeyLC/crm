@@ -183,7 +183,7 @@ fi
 
 
 echo -e "${BLUE}🚀 Pushing to remote...${NC}"
-# git push
+git push
 
 # Create and push release tag if version is specified
 if [ -n "$VERSION" ]; then
@@ -206,10 +206,10 @@ if [ -n "$VERSION" ]; then
   TAG_MESSAGE="$COMMIT_MESSAGE"
   echo -e "${BLUE}🏷️  TAG_MESSAGE: $TAG_MESSAGE${NC}"
   echo -e "${BLUE}🏷️  Creating release tag: $TAG_NAME${NC}"
-  # git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
+  git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
   
   echo -e "${BLUE}🚀 Pushing tag: $TAG_NAME...${NC}"
-  # git push origin "$TAG_NAME"
+  git push origin "$TAG_NAME"
   
   echo -e "\n${GREEN}✅ Release tag created successfully!${NC}"
   echo -e "${GREEN}🏷️  Tag: $TAG_NAME${NC}"
