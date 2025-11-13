@@ -3,7 +3,7 @@ set -e
 
 # Colors for output
 GREEN='\033[0;32m'
-BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
@@ -71,7 +71,7 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
     exit 1
   fi
   
-  echo -e "\n${BLUE}📝 Staging changes...${NC}"
+  echo -e "\n${CYAN}📝 Staging changes...${NC}"
   git add -A
   git commit -m "${ADDITIONAL_MESSAGE}"
   UNSTAGED_CHANGES_COMMITTED=true
@@ -80,7 +80,7 @@ else
 fi
 
 # Sync with remote after committing local changes
-echo -e "${BLUE}🔄 Syncing with remote repository...${NC}"
+echo -e "${CYAN}🔄 Syncing with remote repository...${NC}"
 git pull --rebase
 
 if [ "$CREATING_RELEASE" = true ]; then
@@ -89,13 +89,13 @@ if [ "$CREATING_RELEASE" = true ]; then
 
   # Read current version from package.json
   PACKAGE_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
-  echo -e "${BLUE}📦 Version in package.json: $PACKAGE_VERSION${NC}"
+  echo -e "${CYAN}📦 Version in package.json: $PACKAGE_VERSION${NC}"
 
   # Get latest tag version from git
   LATEST_TAG=$(git tag -l "v*" | sort -V | tail -n 1)
   if [ -n "$LATEST_TAG" ]; then
     TAG_VERSION="${LATEST_TAG#v}" # Remove 'v' prefix
-    echo -e "${BLUE}🏷️  Latest git tag: $LATEST_TAG ($TAG_VERSION)${NC}"
+    echo -e "${CYAN}🏷️  Latest git tag: $LATEST_TAG ($TAG_VERSION)${NC}"
   else
     TAG_VERSION="0.0.0"
     echo -e "${YELLOW}ℹ️  No git tags found, using 0.0.0${NC}"
@@ -142,8 +142,8 @@ if [ "$CREATING_RELEASE" = true ]; then
     COMMIT_MESSAGE="Release v$VERSION"
   fi
   
-  echo -e "${BLUE}🏷️  Preparing release: $VERSION${NC}"
-  echo -e "${BLUE}📝 Commit and tag message: \"$COMMIT_MESSAGE\"${NC}"
+  echo -e "${CYAN}🏷️  Preparing release: $VERSION${NC}"
+  echo -e "${CYAN}📝 Commit and tag message: \"$COMMIT_MESSAGE\"${NC}"
 else
   # Regular commit message
   if [ -n "$ADDITIONAL_MESSAGE" ]; then
@@ -162,7 +162,7 @@ if [ "$INCLUDE_COMMITS" = true ] ; then
     COMMIT_MESSAGE="$COMMIT_MESSAGE
 
 $UNPUSHED_COMMITS"
-    echo -e "${BLUE}📋 Including unpushed commits in message:${NC}"
+    echo -e "${CYAN}📋 Including unpushed commits in message:${NC}"
     echo "$UNPUSHED_COMMITS"
   else
     echo -e "${YELLOW}ℹ️  No unpushed commits found${NC}"
@@ -177,12 +177,12 @@ fi
 
 # Only commit if there are changes
 if [ "$UNSTAGED_CHANGES_COMMITTED" = true ]; then
-  echo -e "${BLUE}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
+  echo -e "${CYAN}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
   git commit --amend -m "$COMMIT_MESSAGE"
 fi
 
 
-echo -e "${BLUE}🚀 Pushing to remote...${NC}"
+echo -e "${CYAN}🚀 Pushing to remote...${NC}"
 git push
 
 # Create and push release tag if version is specified
@@ -204,11 +204,11 @@ if [ -n "$VERSION" ]; then
   
   # Use the same message for tag as for commit
   TAG_MESSAGE="$COMMIT_MESSAGE"
-  echo -e "${BLUE}🏷️  TAG_MESSAGE: $TAG_MESSAGE${NC}"
-  echo -e "${BLUE}🏷️  Creating release tag: $TAG_NAME${NC}"
+  echo -e "${CYAN}🏷️  TAG_MESSAGE: $TAG_MESSAGE${NC}"
+  echo -e "${CYAN}🏷️  Creating release tag: $TAG_NAME${NC}"
   git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
   
-  echo -e "${BLUE}🚀 Pushing tag: $TAG_NAME...${NC}"
+  echo -e "${CYAN}🚀 Pushing tag: $TAG_NAME...${NC}"
   git push origin "$TAG_NAME"
   
   echo -e "\n${GREEN}✅ Release tag created successfully!${NC}"
@@ -218,13 +218,13 @@ if [ -n "$VERSION" ]; then
   echo -e "${YELLOW}   1. Update package.json to version $VERSION${NC}"
   echo -e "${YELLOW}   2. Create GitHub Release${NC}"
   echo -e "${YELLOW}   3. Deploy to production server${NC}"
-  echo -e "\n${BLUE}📝 Important:${NC}"
-  echo -e "${YELLOW}After GitHub Actions completes, run:${NC}"
+  echo -e "\n${RED}📝 IMPORTANT - Don't forget:${NC}"
+  echo -e "${YELLOW}After GitHub Actions completes (~5-10 min), run:${NC}"
   echo -e "${GREEN}   git pull --rebase${NC}"
-  echo -e "${YELLOW}to sync the updated package.json to your local repository${NC}"
+  echo -e "${YELLOW}to sync the updated package.json to your local repository!${NC}"
 else
   echo -e "\n${GREEN}✅ Changes pushed to main successfully!${NC}"
   echo -e "${YELLOW}ℹ️  No release tag created${NC}"
-  echo -e "${YELLOW}ℹ️  To create a release tag, use: $0 -v VERSION${NC}"
+  echo -e "${YELLOW}ℹ️  To create a release tag, use: $0 -t or $0 -v VERSION${NC}"
   echo -e "${YELLOW}ℹ️  GitHub Actions will build and deploy to staging with build metadata${NC}"
 fi
