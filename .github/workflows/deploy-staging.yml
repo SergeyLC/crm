@@ -24,7 +24,26 @@ jobs:
         with:
           fetch-depth: 0  # Full history for git commands
 
+      - name: Check if this is a release commit
+        id: check_release
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+          
+          # Check if commit message indicates a release:
+          # - "Release v0.1.32" or "Release 0.1.32"
+          # - "Release tag v0.1.32"
+          # - "chore: bump version to 0.1.32"
+          if echo "$COMMIT_MSG" | grep -qE '^(Release (tag )?v?[0-9]+\.[0-9]+\.[0-9]+|chore: bump version to [0-9]+\.[0-9]+\.[0-9]+)'; then
+            echo "This is a release-related commit, skipping staging deployment"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Not a release commit, proceeding with staging deployment"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Generate build version
+        if: steps.check_release.outputs.skip == 'false'
         id: version
         run: |
           # Get stable version from package.json
@@ -44,6 +63,7 @@ jobs:
           echo "🔨 Build version: ${BUILD_VERSION}"
 
       - name: Deploy to staging server via SSH
+        if: steps.check_release.outputs.skip == 'false'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
