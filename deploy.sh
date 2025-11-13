@@ -175,10 +175,22 @@ else
   # fi
 fi
 
-# Only commit if there are changes
-if [ "$UNSTAGED_CHANGES_COMMITTED" = true ]; then
-  echo -e "${CYAN}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
-  git commit --amend -m "$COMMIT_MESSAGE"
+# Commit logic
+if [ "$CREATING_RELEASE" = true ]; then
+  # For releases, always create a commit (even if empty) to ensure proper workflow detection
+  if [ "$UNSTAGED_CHANGES_COMMITTED" = true ]; then
+    echo -e "${CYAN}📝 Amending commit with release message: \"$COMMIT_MESSAGE\"...${NC}"
+    git commit --amend -m "$COMMIT_MESSAGE"
+  else
+    echo -e "${CYAN}📝 Creating empty release commit: \"$COMMIT_MESSAGE\"...${NC}"
+    git commit --allow-empty -m "$COMMIT_MESSAGE"
+  fi
+else
+  # For regular commits, only commit if there were changes
+  if [ "$UNSTAGED_CHANGES_COMMITTED" = true ]; then
+    echo -e "${CYAN}📝 Committing: \"$COMMIT_MESSAGE\"...${NC}"
+    git commit --amend -m "$COMMIT_MESSAGE"
+  fi
 fi
 
 
