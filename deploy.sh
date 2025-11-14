@@ -188,19 +188,22 @@ $UNPUSHED_COMMITS"
     # Multiple unpushed commits - create staging deploy commit
     PACKAGE_JSON="frontend/package.json"
     CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
-    
+    COMMIT_MESSAGE_STARTER="chore(staging)"
+    if [ -n "$COMMIT_MESSAGE_PREFIX" ]; then
+      COMMIT_MESSAGE_STARTER="${COMMIT_MESSAGE_PREFIX} update"
+    fi
     if [ -n "$ADDITIONAL_MESSAGE" ]; then
-      STAGING_COMMIT_MESSAGE="${COMMIT_MESSAGE_PREFIX}chore(staging): v$CURRENT_VERSION - $ADDITIONAL_MESSAGE
+      STAGING_COMMIT_MESSAGE="${COMMIT_MESSAGE_STARTER}: v$CURRENT_VERSION - $ADDITIONAL_MESSAGE
 
 $UNPUSHED_COMMITS"
     else
-      STAGING_COMMIT_MESSAGE="${COMMIT_MESSAGE_PREFIX}chore(staging): deploy v$CURRENT_VERSION
+      STAGING_COMMIT_MESSAGE="${COMMIT_MESSAGE_STARTER}: v$CURRENT_VERSION
 $UNPUSHED_COMMITS"
     fi
     
     echo -e "${CYAN}📋 Including $UNPUSHED_COUNT unpushed commits:${NC}"
     echo "$UNPUSHED_COMMITS"
-    echo -e "${CYAN}📝 Creating staging deploy commit: \"chore(staging): v$CURRENT_VERSION...\"${NC}"
+    echo -e "${CYAN}📝 Creating commit: \"$STAGING_COMMIT_MESSAGE\"${NC}"
     git commit --allow-empty -m "$STAGING_COMMIT_MESSAGE"
   fi
 fi
