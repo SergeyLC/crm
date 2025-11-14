@@ -10,6 +10,7 @@ NC='\033[0m' # No Color
 
 # Parse command line arguments
 ADDITIONAL_MESSAGE=""
+COMMIT_MESSAGE_PREFIX=""
 VERSION=""  # Version for release tag
 AUTO_INCREMENT=false  # Auto-increment patch version
 SKIP_DEPLOY=false  # Skip deployment (for docs-only changes)
@@ -142,7 +143,8 @@ else
   
   # Add [skip ci] prefix if deployment should be skipped
   if [ "$SKIP_DEPLOY" = true ]; then
-    COMMIT_MESSAGE="[skip ci] $COMMIT_MESSAGE"
+    COMMIT_MESSAGE_PREFIX="[skip ci] "
+    COMMIT_MESSAGE="${COMMIT_MESSAGE_PREFIX}$COMMIT_MESSAGE"
     echo -e "${YELLOW}⏭️  Deployment will be skipped (skip ci flag added)${NC}"
   fi
 fi
@@ -174,7 +176,7 @@ else
   if [ "$UNSTAGED_CHANGES_COMMITTED" = true ]; then
     # Single commit with changes - amend with history
     if [ -n "$UNPUSHED_COMMITS" ]; then
-      COMMIT_MESSAGE="$COMMIT_MESSAGE
+      COMMIT_MESSAGE="${COMMIT_MESSAGE_PREFIX}$COMMIT_MESSAGE
 
 $UNPUSHED_COMMITS"
       echo -e "${CYAN}📋 Including unpushed commits in message:${NC}"
@@ -188,12 +190,11 @@ $UNPUSHED_COMMITS"
     CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
     
     if [ -n "$ADDITIONAL_MESSAGE" ]; then
-      STAGING_COMMIT_MESSAGE="chore(staging): v$CURRENT_VERSION - $ADDITIONAL_MESSAGE
+      STAGING_COMMIT_MESSAGE="${COMMIT_MESSAGE_PREFIX}chore(staging): v$CURRENT_VERSION - $ADDITIONAL_MESSAGE
 
 $UNPUSHED_COMMITS"
     else
-      STAGING_COMMIT_MESSAGE="chore(staging): deploy v$CURRENT_VERSION
-
+      STAGING_COMMIT_MESSAGE="${COMMIT_MESSAGE_PREFIX}chore(staging): deploy v$CURRENT_VERSION
 $UNPUSHED_COMMITS"
     fi
     
