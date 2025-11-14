@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "loyacrm-frontend",
-      script: "npm run start",
+      script: "pnpm run start",
       cwd: "/var/www/loyacrm/frontend",
       env_file: "./.env.production.local", // Load secrets from .env.production.local
       env: {
@@ -19,7 +19,7 @@ module.exports = {
     },
     {
       name: "loyacrm-backend",
-      script: "npm run start:prod",
+      script: "pnpm run start:prod",
       cwd: "/var/www/loyacrm/backend",
       env_file: "./.env.production.local", // Load secrets from .env.production.local
       env: {
