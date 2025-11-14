@@ -83,17 +83,15 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           command_timeout: 60m
-          script: |
-            set -e  # Stop execution on error
+          script: |-
+            set -e
             
-            # Set CI environment for pnpm
             export CI=true
             export PRISMA_SKIP_POSTINSTALL_GENERATE=false
 
             echo "🚀 Starting staging deployment..."
             echo "📦 Build version: ${{ steps.version.outputs.BUILD_VERSION }}"
 
-            # Navigate to project directory
             cd /var/www/loyacrm-staging
 
             echo "📥 Updating code..."
@@ -102,28 +100,29 @@ jobs:
 
             echo "🔧 Creating environment files from GitHub Secrets..."
             
-            # Create backend .env.production.local
-            cat > backend/.env.production.local << 'EOF'
+            cat > backend/.env.production.local <<'ENVEOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
             PRISMA_LOG_LEVEL=warn
             LOG_LEVEL=info
-            EOF
+            ENVEOF
             
-            # Create frontend .env.production.local (Next.js reads this during production build)
-            cat > frontend/.env.production.local << 'EOF'
+            cat > frontend/.env.production.local <<'ENVEOF'
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_BACKEND_API_URL=${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}
             NEXT_PUBLIC_APP_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
             NEXT_TELEMETRY_DISABLED=1
-            EOF
+            ENVEOF
             
-            # Create db .env.production.local
-            cat > db/.env.production.local << 'EOF'
+            cat > db/.env.production.local <<'ENVEOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             PRISMA_LOG_LEVEL=warn
-            EOF
+            ENVEOF
+            
+            sed -i 's/^[[:space:]]*//' backend/.env.production.local
+            sed -i 's/^[[:space:]]*//' frontend/.env.production.local
+            sed -i 's/^[[:space:]]*//' db/.env.production.local
             
             # Secure the files
             chmod 600 backend/.env.production.local
@@ -192,11 +191,9 @@ jobs:
             cd ..
 
             echo "🔄 Restarting services..."
-            # Check and setup PM2 configuration
-            if [ ! -f ecosystem.staging.config.js ]; then
-              echo "Creating ecosystem.staging.config.js from template..."
-              cp .github/ecosystem.staging.config.template.js ecosystem.staging.config.js
-            fi
+            # Always update PM2 configuration from template to pick up changes
+            echo "Updating ecosystem.staging.config.js from template..."
+            cp .github/ecosystem.staging.config.template.js ecosystem.staging.config.js
             
             pm2 stop ecosystem.staging.config.js || true
             pm2 delete ecosystem.staging.config.js || true
