@@ -12,9 +12,10 @@ NC='\033[0m' # No Color
 ADDITIONAL_MESSAGE=""
 VERSION=""  # Version for release tag
 AUTO_INCREMENT=false  # Auto-increment patch version
+SKIP_DEPLOY=false  # Skip deployment (for docs-only changes)
 UNSTAGED_CHANGES_COMMITTED=false
 
-while getopts "m:v:t" opt; do
+while getopts "m:v:ts" opt; do
   case $opt in
     m)
       ADDITIONAL_MESSAGE="$OPTARG"
@@ -26,12 +27,17 @@ while getopts "m:v:t" opt; do
       # -t flag triggers auto-increment
       AUTO_INCREMENT=true
       ;;
+    s)
+      # -s flag skips deployment
+      SKIP_DEPLOY=true
+      ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
-      echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t]"
+      echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t] [-s]"
       echo "  -m: Add custom message to commit"
       echo "  -v: Create release tag with specified version (e.g., 1.4.2)"
       echo "  -t: Create release tag with auto-incremented patch version"
+      echo "  -s: Skip deployment (push to main without triggering deployment)"
       exit 1
       ;;
   esac
@@ -132,6 +138,12 @@ else
     COMMIT_MESSAGE="$ADDITIONAL_MESSAGE"
   else
     COMMIT_MESSAGE="Update code"
+  fi
+  
+  # Add [skip ci] prefix if deployment should be skipped
+  if [ "$SKIP_DEPLOY" = true ]; then
+    COMMIT_MESSAGE="[skip ci] $COMMIT_MESSAGE"
+    echo -e "${YELLOW}⏭️  Deployment will be skipped (skip ci flag added)${NC}"
   fi
 fi
 
@@ -235,7 +247,13 @@ if [ -n "$VERSION" ]; then
   echo -e "${YELLOW}to sync the updated package.json to your local repository!${NC}"
 else
   echo -e "\n${GREEN}✅ Changes pushed to main successfully!${NC}"
-  echo -e "${YELLOW}ℹ️  No release tag created${NC}"
-  echo -e "${YELLOW}ℹ️  To create a release tag, use: $0 -t or $0 -v VERSION${NC}"
-  echo -e "${YELLOW}ℹ️  GitHub Actions will build and deploy to staging with build metadata${NC}"
+  if [ "$SKIP_DEPLOY" = true ]; then
+    echo -e "${YELLOW}⏭️  Deployment skipped (skip ci flag used)${NC}"
+    echo -e "${YELLOW}ℹ️  Changes are in main branch but no deployment triggered${NC}"
+  else
+    echo -e "${YELLOW}ℹ️  No release tag created${NC}"
+    echo -e "${YELLOW}ℹ️  To create a release tag, use: $0 -t or $0 -v VERSION${NC}"
+    echo -e "${YELLOW}ℹ️  GitHub Actions will build and deploy to staging with build metadata${NC}"
+  fi
+  echo -e "${YELLOW}ℹ️  To push without deployment, use: $0 -m \"message\" -s${NC}"
 fi
