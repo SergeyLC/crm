@@ -33,7 +33,7 @@ RUN cd db && pnpm run generate
 RUN cd frontend && pnpm run build
 
 # Экспонируйте порт
-EXPOSE 3002
+EXPOSE 3002 3003 3004
 
 # Команда запуска (будет переопределена в docker-compose для dev режима)
-CMD ["sh", "-c", "cd frontend && pnpm run start"]
+CMD ["sh", "-c", "cd frontend && PORT=${PORT:-3002} pnpm run start"]

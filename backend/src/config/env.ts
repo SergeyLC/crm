@@ -13,25 +13,33 @@ export function loadEnv() {
   const nodeEnv = process.env.NODE_ENV || 'development';
   const rootDir = path.resolve(__dirname, '../..');
 
-  // Список файлов для загрузки (в порядке приоритета, от меньшего к большему)
-  const envFiles = [
-    '.env',
-    '.env.local',
-    `.env.${nodeEnv}`,
-    `.env.${nodeEnv}.local`,
-  ];
+  // Проверяем, установлены ли уже основные переменные (например, через Docker)
+  const hasDatabaseUrl = !!process.env.DATABASE_URL;
+  const hasJwtSecret = !!process.env.JWT_SECRET;
 
-  console.log(`📋 Loading environment variables for: ${nodeEnv}`);
+  if (hasDatabaseUrl && hasJwtSecret) {
+    console.log(`📋 Environment variables already loaded (likely from Docker env_file)`);
+  } else {
+    console.log(`📋 Loading environment variables for: ${nodeEnv}`);
 
-  // Загружаем файлы в обратном порядке, чтобы более специфичные файлы имели приоритет
-  envFiles.reverse().forEach((file) => {
-    const filePath = path.join(rootDir, file);
-    const result = dotenv.config({ path: filePath });
-    
-    if (!result.error) {
-      console.log(`✅ Loaded: ${file}`);
-    }
-  });
+    // Список файлов для загрузки (в порядке приоритета, от меньшего к большему)
+    const envFiles = [
+      '.env',
+      '.env.local',
+      `.env.${nodeEnv}`,
+      `.env.${nodeEnv}.local`,
+    ];
+
+    // Загружаем файлы в обратном порядке, чтобы более специфичные файлы имели приоритет
+    envFiles.reverse().forEach((file) => {
+      const filePath = path.join(rootDir, file);
+      const result = dotenv.config({ path: filePath });
+      
+      if (!result.error) {
+        console.log(`✅ Loaded: ${file}`);
+      }
+    });
+  }
 
   // Валидация обязательных переменных
   const required = ['DATABASE_URL', 'JWT_SECRET'];

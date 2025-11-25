@@ -32,7 +32,7 @@ RUN cd backend && prisma generate --schema ../db/prisma/schema.prisma
 RUN cd backend && pnpm run build
 
 # Экспонируйте порт
-EXPOSE 4002
+EXPOSE 4002 4003 4004
 
 # Команда запуска (будет переопределена в docker-compose для dev режима)
-CMD ["sh", "-c", "cd backend && pnpm run start:prod"]
+CMD ["sh", "-c", "cd backend && PORT=${PORT:-4002} pnpm run start:prod"]
