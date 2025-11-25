@@ -10,6 +10,7 @@ LoyaCareCRM supports multiple deployment methods:
 
 ### 🐳 **Docker Deployment (Recommended)**
 - **Development**: Local development with hot reload
+- **Stage**: Pre-production testing environment
 - **Production**: Containerized production deployment
 - **CI/CD**: Automated deployment via GitHub Actions
 
@@ -69,7 +70,27 @@ docker-compose -f docker-compose.dev.yml ps
 docker-compose -f docker-compose.dev.yml logs -f
 ```
 
-#### 3. Production Environment Setup
+#### 3. Stage Environment Setup
+```bash
+# Copy stage environment files
+cp .env.backend.stage.example .env.backend.stage
+cp .env.frontend.stage.example .env.frontend.stage
+
+# Edit environment variables for stage
+nano .env.backend.stage  # Configure database and secrets
+nano .env.frontend.stage # Configure API URLs
+
+# Start stage environment
+./docker-stage-start.sh
+
+# Check status
+docker-compose -f docker-compose.stage.yml ps
+
+# View logs
+./docker-stage-logs.sh
+```
+
+#### 4. Production Environment Setup
 ```bash
 # Copy production environment files
 cp .env.backend.example .env.backend
@@ -91,6 +112,7 @@ docker-compose ps
 | Environment | Frontend | Backend API | Database |
 |-------------|----------|-------------|----------|
 | **Development** | http://localhost:3003 | http://localhost:4003/api | localhost:5435 |
+| **Stage** | http://localhost:3004 | http://localhost:4004/api | localhost:5436 |
 | **Production** | http://localhost:3002 | http://localhost:4002/api | External PostgreSQL |
 
 ### 🔧 Docker Management Commands
@@ -111,6 +133,21 @@ docker-compose -f docker-compose.dev.yml logs -f [service-name]
 
 # Access container shell
 docker-compose -f docker-compose.dev.yml exec [service-name] sh
+```
+
+#### Stage Environment
+```bash
+# Start stage containers
+./docker-stage-start.sh
+
+# Stop stage containers
+./docker-stage-stop.sh
+
+# View logs
+./docker-stage-logs.sh [service-name]
+
+# Access container shell
+docker-compose -f docker-compose.stage.yml exec [service-name] sh
 ```
 
 #### Production Environment
@@ -151,12 +188,23 @@ docker inspect loyacrm-postgres-dev
 # Access PostgreSQL in development
 docker-compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
 
-# Run database migrations
+# Access PostgreSQL in stage
+docker-compose -f docker-compose.stage.yml exec postgres psql -U loyacrm -d loyacrm
+
+# Run database migrations in development
 docker-compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
+
+# Run database migrations in stage
+docker-compose -f docker-compose.stage.yml exec backend sh -c "cd db && pnpm run migrate:deploy"
 
 # Reset development database
 docker-compose -f docker-compose.dev.yml down -v  # Removes volumes
 docker-compose -f docker-compose.dev.yml up -d   # Recreates with fresh data
+
+# Reset stage database
+./docker-stage-stop.sh
+docker volume rm loyacarecrm_postgres_stage_data 2>/dev/null || true
+./docker-stage-start.sh
 ```
 
 #### Common Issues
@@ -243,6 +291,16 @@ docker-compose build --pull
 - [ ] Backend API responding at http://localhost:4003/api
 - [ ] Database accessible at localhost:5435
 - [ ] Hot reload working for code changes
+
+**Stage Setup:**
+- [ ] Docker and Docker Compose installed
+- [ ] Repository cloned
+- [ ] `.env.backend.stage` and `.env.frontend.stage` configured
+- [ ] Stage containers running
+- [ ] Frontend accessible at http://localhost:3004
+- [ ] Backend API responding at http://localhost:4004/api
+- [ ] Database accessible at localhost:5436
+- [ ] Database migrations applied
 
 **Production Setup:**
 - [ ] Production environment files configured
