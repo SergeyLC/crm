@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: loyacrm-postgres-docker
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - loyacrm-network
+
+  # Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    container_name: loyacrm-backend-docker
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "4002:4002"
+    depends_on:
+      - postgres
+    networks:
+      - loyacrm-network
+
+  # Frontend Service
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: loyacrm-frontend-docker
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "3002:3002"
+    depends_on:
+      - backend
+    networks:
+      - loyacrm-network
+
+volumes:
+  postgres_data:
+
+networks:
+  loyacrm-network:
+    driver: bridge

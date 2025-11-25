@@ -41,6 +41,7 @@ ecosystem.config.js
 !**/.env.test
 !**/.env.example
 !**/.env.*.example
+!**/.env.docker.example
 
 # vercel
 **/.vercel

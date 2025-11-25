@@ -106,6 +106,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           command_timeout: 60m
+          envs: DEPLOYMENT_TYPE=docker  # Set deployment type to docker
           script: |
             set -e  # Stop execution on error
             
@@ -115,6 +116,7 @@ jobs:
 
             echo "🚀 Starting production deployment..."
             echo "📦 Release version: ${{ steps.get_version.outputs.VERSION }}"
+            echo "🔧 Deployment type: $DEPLOYMENT_TYPE"
 
             # Navigate to project directory
             cd /var/www/loyacrm
@@ -123,9 +125,50 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            echo "🔧 Creating environment files from GitHub Secrets..."
-            
-            cat > backend/.env.production.local <<'ENVEOF'
+            if [ "$DEPLOYMENT_TYPE" = "docker" ]; then
+              echo "🐳 Docker deployment mode"
+              
+              # Extract password from DATABASE_URL for Docker
+              DB_PASSWORD=$(echo "${{ secrets.DATABASE_URL }}" | sed -n 's/.*:\/\/\([^:]*\):\([^@]*\)@.*/\2/p')
+              
+              echo "🔧 Creating .env.docker file from GitHub Secrets..."
+              printf '# Database\nPOSTGRES_DB=loyacrm\nPOSTGRES_USER=loyacrm\nPOSTGRES_PASSWORD=%s\n\n# Backend\nDATABASE_URL=%s\nJWT_SECRET=%s\nPORT=4002\nNODE_ENV=production\n\n# Frontend\nNEXT_PUBLIC_API_URL=%s\nNEXT_PUBLIC_APP_VERSION=%s\n' \
+                "$DB_PASSWORD" \
+                "${{ secrets.DATABASE_URL }}" \
+                "${{ secrets.JWT_SECRET }}" \
+                "${{ secrets.NEXT_PUBLIC_API_URL }}" \
+                "${{ steps.get_version.outputs.VERSION }}" > .env.docker
+              
+              chmod 600 .env.docker
+              
+              sed -i 's/^[[:space:]]*//' .env.docker
+              chmod 600 .env.docker
+              
+              echo "✅ .env.docker created with version: ${{ steps.get_version.outputs.VERSION }}"
+              
+              echo "🐳 Building and starting Docker services..."
+              docker-compose build --no-cache
+              docker-compose up -d
+              
+              echo "🗄️ Running database migrations in Docker..."
+              docker-compose exec -T postgres bash -c "
+                until pg_isready -h localhost -p 5432 -U loyacrm; do
+                  echo 'Waiting for PostgreSQL...'
+                  sleep 2
+                done
+              "
+              docker-compose run --rm backend pnpm run db:migrate:deploy
+              docker-compose run --rm backend pnpm run db:generate
+              
+              echo "✅ Docker deployment completed successfully!"
+              docker-compose ps
+              
+            else
+              echo "📦 PM2 deployment mode (legacy)"
+              
+              echo "🔧 Creating environment files from GitHub Secrets..."
+              
+              cat > backend/.env.production.local <<'ENVEOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
@@ -133,104 +176,100 @@ jobs:
             LOG_LEVEL=info
             ENVEOF
             
-            cat > frontend/.env.production.local <<'ENVEOF'
+              cat > frontend/.env.production.local <<'ENVEOF'
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_BACKEND_API_URL=${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}
             NEXT_PUBLIC_APP_VERSION=${{ steps.get_version.outputs.VERSION }}
             NEXT_TELEMETRY_DISABLED=1
             ENVEOF
             
-            cat > db/.env.production.local <<'ENVEOF'
+              cat > db/.env.production.local <<'ENVEOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             PRISMA_LOG_LEVEL=warn
             ENVEOF
-            
-            sed -i 's/^[[:space:]]*//' backend/.env.production.local
-            sed -i 's/^[[:space:]]*//' frontend/.env.production.local
-            sed -i 's/^[[:space:]]*//' db/.env.production.local
-            
-            # Secure the files
-            chmod 600 backend/.env.production.local
-            chmod 600 frontend/.env.production.local
-            chmod 600 db/.env.production.local
-            
-            echo "✅ Environment files created with version: ${{ steps.get_version.outputs.VERSION }}"
+              
+              sed -i 's/^[[:space:]]*//' backend/.env.production.local
+              sed -i 's/^[[:space:]]*//' frontend/.env.production.local
+              sed -i 's/^[[:space:]]*//' db/.env.production.local
+              
+              # Secure the files
+              chmod 600 backend/.env.production.local
+              chmod 600 frontend/.env.production.local
+              chmod 600 db/.env.production.local
+              
+              echo "✅ Environment files created with version: ${{ steps.get_version.outputs.VERSION }}"
 
-            echo "📦 Preparing dependencies and generated client..."
+              echo "📦 Preparing dependencies and generated client..."
 
-            # Install pnpm if not already installed
-            if ! command -v pnpm &> /dev/null; then
-              echo "Installing pnpm..."
-              npm install -g pnpm@10
+              # Install pnpm if not already installed
+              if ! command -v pnpm &> /dev/null; then
+                echo "Installing pnpm..."
+                npm install -g pnpm@10
+              fi
+
+              # Configure pnpm for better performance
+              pnpm config set store-dir /var/cache/pnpm
+              pnpm config set fetch-timeout 300000
+              pnpm config set fetch-retry-mintimeout 20000
+              pnpm config set fetch-retry-maxtimeout 120000
+              pnpm config set enable-pre-post-scripts true
+              
+              # Setup pnpm store directory
+              export PNPM_STORE_DIR=/var/cache/pnpm
+              mkdir -p $PNPM_STORE_DIR
+
+              # Generate Prisma client first so both frontend and backend can use it
+              echo "Installing db dependencies and generating Prisma client..."
+              cd db
+              pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+              pnpm run generate
+              cd ..
+
+              # Install frontend and backend deps sequentially to avoid ENOTEMPTY errors
+              echo "Installing frontend dependencies..."
+              cd frontend
+              pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+              echo "✅ Frontend dependencies installed"
+              cd ..
+              
+              echo "Installing backend dependencies..."
+              cd backend
+              pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+              echo "✅ Backend dependencies installed"
+              cd ..
+
+              echo "🔨 Building frontend..."
+              cd frontend
+              export NEXT_TELEMETRY_DISABLED=1
+              export SKIP_TYPE_CHECK=true
+              export SKIP_LINT=true
+              export NODE_OPTIONS="--max-old-space-size=4096"
+              pnpm run build
+              cd ..
+
+              echo "🔨 Building backend..."
+              cd backend
+              pnpm run clean
+              pnpm run build
+              cd ..
+
+              echo "🗄️ Applying database migrations..."
+              cd db
+              pnpm run migrate:deploy
+              cd ..
+
+              echo "🔄 Restarting services..."
+              # Always update PM2 configuration from template to pick up changes
+              echo "Updating ecosystem.config.js from template..."
+              cp .github/ecosystem.config.template.js ecosystem.config.js
+              
+              pm2 stop ecosystem.config.js || true
+              pm2 delete ecosystem.config.js || true
+              pm2 start ecosystem.config.js
+              pm2 save
+
+              echo "✅ PM2 deployment completed successfully!"
+              pm2 status
             fi
-
-            # Configure pnpm for better performance
-            pnpm config set store-dir /var/cache/pnpm
-            pnpm config set fetch-timeout 300000
-            pnpm config set fetch-retry-mintimeout 20000
-            pnpm config set fetch-retry-maxtimeout 120000
-            pnpm config set enable-pre-post-scripts true
             
-            # Setup pnpm store directory
-            export PNPM_STORE_DIR=/var/cache/pnpm
-            mkdir -p $PNPM_STORE_DIR
-
-            # Generate Prisma client first so both frontend and backend can use it
-            echo "Installing db dependencies and generating Prisma client..."
-            cd db
-            # Install all dependencies (including dev) for build process
-            # --ignore-scripts flag will skip build scripts, we'll run them manually if needed
-            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
-            pnpm run generate
-            cd ..
-
-            # Install frontend and backend deps sequentially to avoid ENOTEMPTY errors
-            echo "Installing frontend dependencies..."
-            cd frontend
-            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
-            echo "✅ Frontend dependencies installed"
-            cd ..
-            
-            echo "Installing backend dependencies..."
-            cd backend
-            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
-            echo "✅ Backend dependencies installed"
-            cd ..
-
-            echo "🔨 Building frontend..."
-            cd frontend
-            # Don't run clean - preserve Next.js cache for faster builds
-            # Disable Next.js telemetry
-            export NEXT_TELEMETRY_DISABLED=1
-            # Skip type checking and linting (already done in CI checks)
-            export SKIP_TYPE_CHECK=true
-            export SKIP_LINT=true
-            # Optimize build performance
-            export NODE_OPTIONS="--max-old-space-size=4096"
-            pnpm run build
-            cd ..
-
-            echo "🔨 Building backend..."
-            cd backend
-            pnpm run clean
-            pnpm run build
-            cd ..
-
-            echo "🗄️ Applying database migrations..."
-            cd db
-            pnpm run migrate:deploy
-            cd ..
-
-            echo "🔄 Restarting services..."
-            # Always update PM2 configuration from template to pick up changes
-            echo "Updating ecosystem.config.js from template..."
-            cp .github/ecosystem.config.template.js ecosystem.config.js
-            
-            pm2 stop ecosystem.config.js || true
-            pm2 delete ecosystem.config.js || true
-            pm2 start ecosystem.config.js
-            pm2 save
-
-            echo "✅ Production deployment completed successfully!"
             echo "📦 Release version: ${{ steps.get_version.outputs.VERSION }}"
-            pm2 status

@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for local development
+  postgres:
+    image: postgres:15-alpine
+    container_name: loyacrm-postgres-dev
+    environment:
+      POSTGRES_DB: loyacrm
+      POSTGRES_USER: loyacrm
+      POSTGRES_PASSWORD: dev_password_123
+    ports:
+      - "5435:5432"  # Different port for local dev
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - loyacrm-dev-network
+
+  # Backend Service for local development
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    container_name: loyacrm-backend-dev
+    environment:
+      DATABASE_URL: postgresql://loyacrm:dev_password_123@postgres:5432/loyacrm
+      JWT_SECRET: dev_jwt_secret_key_for_local_development_only
+      PORT: 4003
+      NODE_ENV: development
+    ports:
+      - "4003:4003"
+    depends_on:
+      - postgres
+    networks:
+      - loyacrm-dev-network
+    # Override the production CMD to enable hot reload
+    command: pnpm run dev
+    volumes:
+      # Mount source code for hot reload
+      - ./backend/src:/app/src
+      - ./backend/package.json:/app/package.json
+      - ./backend/tsconfig.json:/app/tsconfig.json
+      - ./db/generated/prisma-client:/app/generated/prisma/
+
+  # Frontend Service for local development
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: loyacrm-frontend-dev
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4003
+      NEXT_PUBLIC_APP_VERSION: docker-dev
+    ports:
+      - "3003:3003"
+    depends_on:
+      - backend
+    networks:
+      - loyacrm-dev-network
+    # Override for development
+    command: pnpm run dev
+    volumes:
+      # Mount source code for hot reload
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/next.config.js:/app/next.config.js
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  loyacrm-dev-network:
+    driver: bridge
