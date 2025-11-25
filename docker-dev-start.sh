@@ -1,11 +1,25 @@
 #!/bin/bash
-cd "$(dirname "$0")/.."
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Change to project directory
+cd "$PROJECT_DIR"
 
 echo "🚀 Starting LoyaCareCRM in Docker (Development Mode)"
+echo "📍 Project directory: $PROJECT_DIR"
 echo "📍 Frontend: http://localhost:3003"
 echo "📍 Backend API: http://localhost:4003"
 echo "📍 Database: localhost:5435"
 echo ""
+
+# Check if we're in the right directory
+if [ ! -f "docker-compose.dev.yml" ]; then
+    echo "❌ Error: docker-compose.dev.yml not found in $PROJECT_DIR"
+    echo "Please run this script from the project root directory or check if the file exists."
+    exit 1
+fi
 
 # Check if .env.dev exists
 if [ ! -f ".env.dev" ]; then
