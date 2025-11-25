@@ -3,24 +3,24 @@ FROM node:24-alpine
 # Установите рабочую директорию
 WORKDIR /app
 
-# Скопируйте package.json и pnpm-lock.yaml
-COPY ../frontend/package*.json ./
+# Скопируйте workspace файлы
+COPY ../pnpm-workspace.yaml ./
 COPY ../pnpm-lock.yaml ./
+
+# Скопируйте package.json frontend
+COPY ../frontend/package.json ./frontend/package.json
 
 # Установите pnpm
 RUN npm install -g pnpm
 
-# Установите зависимости
-RUN pnpm install --frozen-lockfile
+# Установите все зависимости для workspace
+RUN pnpm install --no-frozen-lockfile
 
 # Скопируйте исходный код frontend
-COPY ../frontend/ .
-
-# Соберите приложение
-RUN pnpm run build
+COPY ../frontend/ ./frontend/
 
 # Экспонируйте порт
 EXPOSE 3002
 
-# Команда запуска
+# Команда запуска (будет переопределена в docker-compose для dev режима)
 CMD ["pnpm", "run", "start"]

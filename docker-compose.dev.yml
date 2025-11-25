@@ -27,13 +27,15 @@ services:
     networks:
       - loyacrm-dev-network
     # Override the production CMD to enable hot reload
-    command: pnpm run dev
+    command: sh -c "cd backend && pnpm run dev"
     volumes:
       # Mount source code for hot reload
-      - ./backend/src:/app/src
-      - ./backend/package.json:/app/package.json
-      - ./backend/tsconfig.json:/app/tsconfig.json
-      - ./db/generated/prisma-client:/app/generated/prisma/
+      - ./backend/src:/app/backend/src
+      - ./backend/package.json:/app/backend/package.json
+      - ./backend/tsconfig.json:/app/backend/tsconfig.json
+      - ./db:/app/db
+      - ./db/generated/prisma-client:/app/backend/generated/prisma/
+      # Don't mount node_modules - let container use its own
 
   # Frontend Service for local development
   frontend:
@@ -43,6 +45,8 @@ services:
     container_name: loyacrm-frontend-dev
     env_file:
       - .env.dev
+    environment:
+      - PORT=3003
     ports:
       - "3003:3003"
     depends_on:
@@ -50,14 +54,15 @@ services:
     networks:
       - loyacrm-dev-network
     # Override for development
-    command: pnpm run dev
+    command: sh -c "cd frontend && pnpm run dev"
     volumes:
       # Mount source code for hot reload
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
-      - ./frontend/package.json:/app/package.json
-      - ./frontend/next.config.js:/app/next.config.js
-      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/public:/app/frontend/public
+      # - ./frontend/package.json:/app/frontend/package.json  # Don't mount to allow Next.js to modify it
+      - ./frontend/next.config.js:/app/frontend/next.config.js
+      - ./frontend/tsconfig.json:/app/frontend/tsconfig.json
+      # Don't mount node_modules - let container use its own
 
 volumes:
   postgres_dev_data:
