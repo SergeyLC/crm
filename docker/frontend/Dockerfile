@@ -10,17 +10,30 @@ COPY ../pnpm-lock.yaml ./
 # Скопируйте package.json frontend
 COPY ../frontend/package.json ./frontend/package.json
 
-# Установите pnpm
-RUN npm install -g pnpm
+# Скопируйте db файлы для генерации Prisma клиента
+COPY ../db/package.json ./db/package.json
+COPY ../db/prisma/ ./db/prisma/
 
-# Установите все зависимости для workspace
+# Установите pnpm глобально
+RUN npm install -g pnpm prisma
+
+# Установите все зависимости для workspace (включая devDependencies для генерации Prisma клиента)
 RUN pnpm install --no-frozen-lockfile
 
 # Скопируйте исходный код frontend
 COPY ../frontend/ ./frontend/
 
+# Скопируйте db исходный код
+COPY ../db/ ./db/
+
+# Генерируйте Prisma клиент для frontend
+RUN cd db && pnpm run generate
+
+# Соберите Next.js приложение
+RUN cd frontend && pnpm run build
+
 # Экспонируйте порт
 EXPOSE 3002
 
 # Команда запуска (будет переопределена в docker-compose для dev режима)
-CMD ["pnpm", "run", "start"]
+CMD ["sh", "-c", "cd frontend && pnpm run start"]
