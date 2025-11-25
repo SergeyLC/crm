@@ -37,7 +37,16 @@
 - Добавляется build metadata с хешем коммита: `1.4.2+sha.a3f09e1`
 - Build версия записывается в `NEXT_PUBLIC_APP_VERSION` в `.env.production.local`
 
-**Шаги:**
+**Режимы развертывания:**
+- **PM2 (по умолчанию):** Традиционное развертывание с PM2 процесс менеджером
+- **Docker:** Контейнеризованное развертывание с Docker Compose
+
+**Выбор режима:**
+Установите переменную окружения `DEPLOYMENT_TYPE` в GitHub Secrets:
+- `DEPLOYMENT_TYPE=docker` - для Docker развертывания
+- `DEPLOYMENT_TYPE=pm2` или отсутствие переменной - для PM2 развертывания
+
+**Шаги (PM2 режим):**
 1. Запуск тестов и проверок
 2. Генерация build версии
 3. Деплой на staging сервер
@@ -47,6 +56,17 @@
 7. Применение миграций БД
 8. **Заполнение БД тестовыми данными** (`pnpm run seed`)
 9. Перезапуск PM2 сервисов
+
+**Шаги (Docker режим):**
+1. Запуск тестов и проверок
+2. Генерация build версии
+3. Деплой на staging сервер
+4. Создание `.env.docker` файла из GitHub Secrets
+5. Сборка Docker образов
+6. Запуск Docker сервисов
+7. Ожидание готовности PostgreSQL
+8. Применение миграций БД в Docker контейнере
+9. Генерация Prisma клиента
 
 **Назначение:** Автоматическая сборка и деплой каждого изменения в main на staging для тестирования.
 
@@ -61,6 +81,7 @@
 - `STAGING_CORS_ORIGIN`
 - `STAGING_NEXT_PUBLIC_API_URL`
 - `STAGING_NEXT_PUBLIC_BACKEND_API_URL`
+- `DEPLOYMENT_TYPE` (опционально: `docker` или `pm2`)
 
 ---
 
@@ -70,6 +91,15 @@
 
 **Файл:** `.github/workflows/deploy-production.yml`
 
+**Режимы развертывания:**
+- **PM2 (по умолчанию):** Традиционное развертывание с PM2 процесс менеджером
+- **Docker:** Контейнеризованное развертывание с Docker Compose
+
+**Выбор режима:**
+Установите переменную окружения `DEPLOYMENT_TYPE` в GitHub Secrets:
+- `DEPLOYMENT_TYPE=docker` - для Docker развертывания
+- `DEPLOYMENT_TYPE=pm2` или отсутствие переменной - для PM2 развертывания
+
 **Release Job:**
 1. Проверка, что тег на ветке `main`
 2. Извлечение версии из тега (v1.4.2 → 1.4.2)
@@ -77,13 +107,22 @@
 4. Commit изменений в main
 5. Создание GitHub Release
 
-**Deploy Job:**
+**Deploy Job (PM2 режим):**
 1. Деплой на production сервер
 2. Создание environment файлов с release версией
 3. Установка зависимостей
 4. Сборка frontend и backend
 5. Применение миграций БД (БЕЗ seed - это production!)
 6. Перезапуск PM2 сервисов
+
+**Deploy Job (Docker режим):**
+1. Деплой на production сервер
+2. Создание `.env.docker` файла из GitHub Secrets
+3. Сборка Docker образов
+4. Запуск Docker сервисов
+5. Ожидание готовности PostgreSQL
+6. Применение миграций БД в Docker контейнере
+7. Генерация Prisma клиента
 
 **Назначение:** Официальный релиз на production с обновлением версии в package.json и созданием GitHub Release.
 
@@ -98,6 +137,7 @@
 - `CORS_ORIGIN`
 - `NEXT_PUBLIC_API_URL`
 - `NEXT_PUBLIC_BACKEND_API_URL`
+- `DEPLOYMENT_TYPE` (опционально: `docker` или `pm2`)
 
 ---
 
