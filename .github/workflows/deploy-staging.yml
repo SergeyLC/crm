@@ -6,6 +6,16 @@ on:
       - main
     tags-ignore:  # Exclude all tags
       - '**'
+  workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Deployment type'
+        required: true
+        default: 'pm2'
+        type: choice
+        options:
+          - pm2
+          - docker
 
 jobs:
   # Job 1: Check if this is a release commit
@@ -48,7 +58,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: [check_release, tests]  # Wait for check and tests
-    if: needs.check_release.outputs.skip == 'false'
+    if: needs.check_release.outputs.skip == 'false' || github.event_name == 'workflow_dispatch'
     environment: staging  # Use staging environment secrets
 
     steps:
@@ -56,6 +66,20 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history for git commands
+
+      - name: Set deployment type
+        id: deployment_type
+        run: |
+          # Priority: workflow_dispatch input > env var > default pm2
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            DEPLOYMENT_TYPE="${{ inputs.deployment_type }}"
+            echo "Using workflow_dispatch input: $DEPLOYMENT_TYPE"
+          else
+            DEPLOYMENT_TYPE="${DEPLOYMENT_TYPE:-pm2}"
+            echo "Using environment variable or default: $DEPLOYMENT_TYPE"
+          fi
+          
+          echo "deployment_type=$DEPLOYMENT_TYPE" >> $GITHUB_OUTPUT
 
       - name: Generate build version
         id: version
@@ -91,7 +115,7 @@ jobs:
 
             echo "🚀 Starting staging deployment..."
             echo "📦 Build version: ${{ steps.version.outputs.BUILD_VERSION }}"
-            echo "🔧 Deployment type: ${DEPLOYMENT_TYPE:-pm2}"
+            echo "🔧 Deployment type: ${{ steps.deployment_type.outputs.deployment_type }}"
 
             cd /var/www/loyacrm-staging
 
@@ -99,7 +123,7 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            if [ "${DEPLOYMENT_TYPE:-pm2}" = "docker" ]; then
+            if [ "${{ steps.deployment_type.outputs.deployment_type }}" = "docker" ]; then
               echo "🐳 Docker staging deployment mode"
               
               # Extract password from DATABASE_URL for Docker
