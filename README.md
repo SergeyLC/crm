@@ -6,6 +6,50 @@
 
 LoyaCareCRM is a modern Customer Relationship Management (CRM) system built with modular architecture. The system is designed for managing leads, deals, contacts, and users with an intuitive interface based on Kanban boards and tables.
 
+## 🚀 Quick Start
+
+### 🐳 Docker (Recommended)
+
+#### Development Environment
+```bash
+# Clone repository
+git clone <your-repository-url> loyacrm
+cd loyacrm
+
+# Copy environment file
+cp .env.dev.example .env.dev
+
+# Start development environment with hot reload
+docker-compose -f docker-compose.dev.yml up --build -d
+
+# Access application
+# Frontend: http://localhost:3003
+# Backend API: http://localhost:4003/api
+# Database: localhost:5435
+```
+
+#### Production Environment
+```bash
+# Configure production environment
+cp .env.backend.example .env.backend
+cp .env.frontend.example .env.frontend
+
+# Edit environment variables
+nano .env.backend  # Database and secrets
+nano .env.frontend # API URLs
+
+# Start production environment
+docker-compose up --build -d
+
+# Access application
+# Frontend: http://localhost:3002
+# Backend API: http://localhost:4002/api
+```
+
+### 🖥️ Manual Setup
+
+For manual Ubuntu server deployment, see [DEPLOYMENT.md](DEPLOYMENT.md)
+
 ## 🏗️ Project Architecture
 
 The project consists of three main parts:
@@ -48,6 +92,59 @@ LoyaCareCRM/
 ### Database
 - **PostgreSQL** - relational database
 - **Prisma** - modern ORM for TypeScript
+
+## 🐳 Docker Management
+
+### Development Environment
+```bash
+# Start development containers with hot reload
+docker-compose -f docker-compose.dev.yml up -d
+
+# Start with rebuild
+docker-compose -f docker-compose.dev.yml up --build -d
+
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f
+
+# Stop containers
+docker-compose -f docker-compose.dev.yml down
+
+# Access database
+docker-compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
+
+# Run backend commands
+docker-compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
+```
+
+### Production Environment
+```bash
+# Start production containers
+docker-compose up -d
+
+# Update and restart
+docker-compose pull && docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop containers
+docker-compose down
+```
+
+### Useful Docker Commands
+```bash
+# Check container status
+docker ps
+
+# View resource usage
+docker stats
+
+# Clean up unused resources
+docker system prune -a
+
+# Rebuild without cache
+docker-compose build --no-cache
+```
 
 ## 🏛️ Frontend Architecture (Feature-Sliced Design)
 
@@ -139,63 +236,88 @@ frontend/src/
 
 ## 🛠️ Installation and Setup
 
-### Prerequisites
+### 🐳 Docker Setup (Recommended)
+
+#### Prerequisites
+- Docker 24.0+
+- Docker Compose 2.0+
+- Git
+
+#### Quick Start
+```bash
+# Clone repository
+git clone <repository-url>
+cd LoyaCRM
+
+# Development environment
+cp .env.dev.example .env.dev
+docker-compose -f docker-compose.dev.yml up --build -d
+
+# Production environment
+cp .env.backend.example .env.backend
+cp .env.frontend.example .env.frontend
+docker-compose up --build -d
+```
+
+### 🖥️ Manual Setup
+
+#### Prerequisites
 - Node.js 24+
 - PostgreSQL
 - pnpm 10+
 
-### 1. Clone Repository
+#### 1. Clone Repository
 ```bash
 git clone <repository-url>
 cd LoyaCRM
 ```
 
-### 2. Install Dependencies
+#### 2. Install Dependencies
 
-#### Database
+##### Database
 ```bash
 cd db
 pnpm install
 ```
 
-#### Backend
+##### Backend
 ```bash
 cd backend
 pnpm install
 ```
 
-#### Frontend
+##### Frontend
 ```bash
 cd frontend
 pnpm install
 ```
 
-### 3. Environment Variables Setup
+#### 3. Environment Variables Setup
 
 Create `.env` files in respective directories:
 
-#### db/.env
+##### db/.env
 ```env
 DATABASE_URL="postgresql://username:password@localhost:5432/loyacrm"
 ```
 
-#### backend/.env
+##### backend/.env
 ```env
 DATABASE_URL="postgresql://username:password@localhost:5432/loyacrm"
 JWT_SECRET="your-jwt-secret"
 PORT=4000
 ```
 
-### 4. Database Initialization
+#### 4. Database Initialization
 ```bash
 cd db
 pnpm exec prisma migrate dev
 pnpm exec prisma db seed  # if seed script exists
 ```
 
-### 5. Run Project
+#### 5. Run Project
 
-#### Development Mode (all services simultaneously)
+##### Development Mode (all services simultaneously)
 ```bash
 # Terminal 1: Backend
 cd backend
@@ -206,7 +328,7 @@ cd frontend
 pnpm run dev
 ```
 
-#### Production Build
+##### Production Build
 ```bash
 # Backend
 cd backend
@@ -344,16 +466,48 @@ pnpm run test:coverage
 
 ## 📦 Deployment
 
-### Docker (if configured)
+### 🐳 Docker Deployment (Recommended)
+
+#### Development Environment
 ```bash
-docker-compose up -d
+# Start with hot reload
+docker-compose -f docker-compose.dev.yml up -d
+
+# Access URLs:
+# Frontend: http://localhost:3003
+# Backend API: http://localhost:4003/api
+# Database: localhost:5435
 ```
 
-### Vercel (Frontend)
+#### Production Environment
 ```bash
-cd frontend
-vercel deploy
+# Start production containers
+docker-compose up -d
+
+# Access URLs:
+# Frontend: http://localhost:3002
+# Backend API: http://localhost:4002/api
 ```
+
+#### Update Deployment
+```bash
+# Pull latest changes
+git pull origin main
+
+# Update containers
+docker-compose pull && docker-compose up -d
+
+# Check status
+docker-compose ps
+```
+
+### 🖥️ Manual Ubuntu Server Deployment
+
+For detailed manual deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
+
+### 🚀 CI/CD with GitHub Actions
+
+The project includes automated deployment via GitHub Actions. See [DEPLOYMENT.md](DEPLOYMENT.md#github-actions-ci/cd-setup) for details.
 
 ## 🤝 Contributing
 

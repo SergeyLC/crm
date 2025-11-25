@@ -6,6 +6,50 @@
 
 LoyaCareCRM ist ein modernes Customer Relationship Management (CRM) System, das auf modularer Architektur basiert. Das System ist für die Verwaltung von Leads, Deals, Kontakten und Benutzern mit einer intuitiven Benutzeroberfläche basierend auf Kanban-Boards und Tabellen konzipiert.
 
+## 🚀 Schnellstart
+
+### 🐳 Docker (Empfohlen)
+
+#### Entwicklungsumgebung
+```bash
+# Repository klonen
+git clone <your-repository-url> loyacrm
+cd loyacrm
+
+# Umgebungsdatei kopieren
+cp .env.dev.example .env.dev
+
+# Entwicklungsumgebung mit Hot Reload starten
+docker-compose -f docker-compose.dev.yml up --build -d
+
+# Anwendung zugreifen
+# Frontend: http://localhost:3003
+# Backend API: http://localhost:4003/api
+# Datenbank: localhost:5435
+```
+
+#### Produktionsumgebung
+```bash
+# Produktionsumgebung konfigurieren
+cp .env.backend.example .env.backend
+cp .env.frontend.example .env.frontend
+
+# Umgebungsvariablen bearbeiten
+nano .env.backend  # Datenbank und Secrets
+nano .env.frontend # API-URLs
+
+# Produktionsumgebung starten
+docker-compose up --build -d
+
+# Anwendung zugreifen
+# Frontend: http://localhost:3002
+# Backend API: http://localhost:4002/api
+```
+
+### 🖥️ Manuelle Installation
+
+Für manuelle Ubuntu-Server-Installation siehe [DEPLOYMENT.de.md](DEPLOYMENT.de.md)
+
 ## 🏗️ Projektarchitektur
 
 Das Projekt besteht aus drei Hauptteilen:
@@ -48,6 +92,59 @@ LoyaCareCRM/
 ### Datenbank
 - **PostgreSQL** - relationale Datenbank
 - **Prisma** - modernes ORM für TypeScript
+
+## 🐳 Docker-Verwaltung
+
+### Entwicklungsumgebung
+```bash
+# Entwicklungscontainer mit Hot Reload starten
+docker-compose -f docker-compose.dev.yml up -d
+
+# Mit Neubau starten
+docker-compose -f docker-compose.dev.yml up --build -d
+
+# Logs anzeigen
+docker-compose -f docker-compose.dev.yml logs -f
+
+# Container stoppen
+docker-compose -f docker-compose.dev.yml down
+
+# Datenbank zugreifen
+docker-compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
+
+# Backend-Befehle ausführen
+docker-compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
+```
+
+### Produktionsumgebung
+```bash
+# Produktionscontainer starten
+docker-compose up -d
+
+# Aktualisieren und neu starten
+docker-compose pull && docker-compose up -d
+
+# Logs anzeigen
+docker-compose logs -f
+
+# Container stoppen
+docker-compose down
+```
+
+### Nützliche Docker-Befehle
+```bash
+# Container-Status prüfen
+docker ps
+
+# Ressourcennutzung anzeigen
+docker stats
+
+# Nicht verwendete Ressourcen bereinigen
+docker system prune -a
+
+# Ohne Cache neu bauen
+docker-compose build --no-cache
+```
 
 ## 🏛️ Frontend-Architektur (Feature-Sliced Design)
 
@@ -139,7 +236,32 @@ frontend/src/
 
 ## 🛠️ Installation und Setup
 
-### Voraussetzungen
+### 🐳 Docker-Installation (Empfohlen)
+
+#### Voraussetzungen
+- Docker 24.0+
+- Docker Compose 2.0+
+- Git
+
+#### Schnellstart
+```bash
+# Repository klonen
+git clone <repository-url>
+cd LoyaCRM
+
+# Entwicklungsumgebung
+cp .env.dev.example .env.dev
+docker-compose -f docker-compose.dev.yml up --build -d
+
+# Produktionsumgebung
+cp .env.backend.example .env.backend
+cp .env.frontend.example .env.frontend
+docker-compose up --build -d
+```
+
+### 🖥️ Manuelle Installation
+
+#### Voraussetzungen
 - Node.js 24+
 - PostgreSQL
 - pnpm 10+
@@ -344,16 +466,48 @@ pnpm run test:coverage
 
 ## 📦 Deployment
 
-### Docker (falls konfiguriert)
+### 🐳 Docker Deployment (Empfohlen)
+
+#### Entwicklungsumgebung
 ```bash
-docker-compose up -d
+# Mit Hot Reload starten
+docker-compose -f docker-compose.dev.yml up -d
+
+# Zugriffs-URLs:
+# Frontend: http://localhost:3003
+# Backend API: http://localhost:4003/api
+# Datenbank: localhost:5435
 ```
 
-### Vercel (Frontend)
+#### Produktionsumgebung
 ```bash
-cd frontend
-vercel deploy
+# Produktionscontainer starten
+docker-compose up -d
+
+# Zugriffs-URLs:
+# Frontend: http://localhost:3002
+# Backend API: http://localhost:4002/api
 ```
+
+#### Deployment aktualisieren
+```bash
+# Neueste Änderungen ziehen
+git pull origin main
+
+# Container aktualisieren
+docker-compose pull && docker-compose up -d
+
+# Status prüfen
+docker-compose ps
+```
+
+### 🖥️ Manuelle Ubuntu-Server-Installation
+
+Für detaillierte manuelle Deployment-Anleitungen siehe [DEPLOYMENT.de.md](DEPLOYMENT.de.md)
+
+### 🚀 CI/CD mit GitHub Actions
+
+Das Projekt enthält automatisierte Bereitstellung via GitHub Actions. Siehe [DEPLOYMENT.de.md](DEPLOYMENT.de.md#github-actions-ci/cd-setup) für Details.
 
 ## 🤝 Mitwirken
 
