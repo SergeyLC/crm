@@ -8,8 +8,20 @@ const nextConfig = () => {
   // Base configuration
   const baseConfig = {
     reactStrictMode: true,
+    // Disable i18n for development testing
+    i18n: null,
     // Set the workspace root for proper file tracing in monorepo
     outputFileTracingRoot: path.join(__dirname, '..'),
+    // Redirects configuration
+    async redirects() {
+      return [
+        {
+          source: '/',
+          destination: '/de',
+          permanent: false,
+        },
+      ];
+    },
     // TypeScript configuration (applies to all environments)
     typescript: {
       // Skip type checking during build on server (already validated in CI/CD)

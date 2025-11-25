@@ -15,7 +15,7 @@ import {
   useCreateGroupMutation,
   GroupRole,
 } from "@/entities/group";
-import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
+import { NEXT_PUBLIC_API_URL } from "@/shared/config/urls";
 import { UsersResponse, UserExt } from "@/entities/user";
 import { groupSchema, GroupFormData } from "../validation";
 import { useGroupUsers } from "./useGroupUsers";
@@ -237,7 +237,7 @@ export function useGroupManagement(group: Group | null) {
 
       // Use idempotent PUT to replace the group's members with the final list of userIds.
       // This keeps the frontend simple: compute the final userId set and send in one request.
-      const API_BASE_URL = NEXT_PUBLIC_BACKEND_API_URL || "/api";
+      const API_BASE_URL = NEXT_PUBLIC_API_URL ? `${NEXT_PUBLIC_API_URL}/api` : "/api";
 
       // Compute final list of userIds that should be members after save
       let finalUserIds: string[] = [];

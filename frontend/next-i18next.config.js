@@ -1,10 +1,9 @@
-import path from 'path';
 import { generatedNS } from './src/generated-i18n';
 export default {
   i18n: {
-    defaultLocale: 'de',
+    defaultLocale: 'en',
     locales: ['de', 'en'],
-    localeDetection: true,
+    localeDetection: false,
   },
   defaultNS: 'shared',
   // localePath: path.resolve('./public/locales'),
