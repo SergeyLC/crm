@@ -126,37 +126,87 @@ jobs:
             if [ "${{ steps.deployment_type.outputs.deployment_type }}" = "docker" ]; then
               echo "🐳 Docker staging deployment mode"
               
-              # Extract password from DATABASE_URL for Docker
-              DB_PASSWORD=$(echo "${{ secrets.DATABASE_URL }}" | sed -n 's/.*:\/\/\([^:]*\):\([^@]*\)@.*/\2/p')
-              
-              echo "🔧 Creating .env.docker file from GitHub Secrets..."
-              printf '# Database\nPOSTGRES_DB=loyacrm\nPOSTGRES_USER=loyacrm\nPOSTGRES_PASSWORD=%s\n\n# Backend\nDATABASE_URL=%s\nJWT_SECRET=%s\nPORT=4002\nNODE_ENV=production\n\n# Frontend\nNEXT_PUBLIC_API_URL=%s\nNEXT_PUBLIC_APP_VERSION=%s\n' \
-                "$DB_PASSWORD" \
+              echo "🔧 Creating .env.backend.stage and .env.frontend.stage files from GitHub Secrets..."
+              printf '# Database (External - for Stage Docker deployment)\nDATABASE_URL="%s"\n\n# Backend\nPORT=4004\nJWT_SECRET=%s\nCORS_ORIGIN=%s\nNODE_ENV=production\nPRISMA_LOG_LEVEL=warn\nLOG_LEVEL=info\n' \
                 "${{ secrets.DATABASE_URL }}" \
                 "${{ secrets.JWT_SECRET }}" \
+                "${{ secrets.CORS_ORIGIN }}" > .env.backend.stage
+              
+              printf '# Frontend\nPORT=3004\nNEXT_PUBLIC_API_URL=%s\nNEXT_PUBLIC_BACKEND_API_URL=%s\nNEXT_PUBLIC_APP_VERSION=%s\nNEXT_TELEMETRY_DISABLED=1\n' \
                 "${{ secrets.NEXT_PUBLIC_API_URL }}" \
-                "${{ steps.version.outputs.BUILD_VERSION }}" > .env.docker
+                "${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}" \
+                "${{ steps.version.outputs.BUILD_VERSION }}" > .env.frontend.stage
               
-              chmod 600 .env.docker
+              chmod 600 .env.backend.stage
+              chmod 600 .env.frontend.stage
               
-              echo "✅ .env.docker created with build version: ${{ steps.version.outputs.BUILD_VERSION }}"
+              echo "✅ Stage environment files created with build version: ${{ steps.version.outputs.BUILD_VERSION }}"
               
+              echo "📦 Preparing dependencies and generated client..."
+              
+              # Install pnpm if not already installed
+              if ! command -v pnpm &> /dev/null; then
+                echo "Installing pnpm..."
+                npm install -g pnpm@10
+              fi
+
+              # Configure pnpm for better performance
+              pnpm config set store-dir /var/cache/pnpm
+              pnpm config set fetch-timeout 300000
+              pnpm config set fetch-retry-mintimeout 20000
+              pnpm config set fetch-retry-maxtimeout 120000
+              pnpm config set enable-pre-post-scripts true
+              
+              # Setup pnpm store directory
+              export PNPM_STORE_DIR=/var/cache/pnpm
+              mkdir -p $PNPM_STORE_DIR
+
+              # Generate Prisma client first so both frontend and backend can use it
+              echo "Installing db dependencies and generating Prisma client..."
+              cd db
+              pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+              pnpm run generate
+              cd ..
+
+              # Install frontend and backend deps sequentially to avoid ENOTEMPTY errors
+              echo "Installing frontend dependencies..."
+              cd frontend
+              pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+              echo "✅ Frontend dependencies installed"
+              cd ..
+              
+              echo "Installing backend dependencies..."
+              cd backend
+              pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+              echo "✅ Backend dependencies installed"
+              cd ..
+
+              echo "🔨 Building frontend..."
+              cd frontend
+              export NEXT_TELEMETRY_DISABLED=1
+              export SKIP_TYPE_CHECK=true
+              export SKIP_LINT=true
+              export NODE_OPTIONS="--max-old-space-size=4096"
+              pnpm run build
+              cd ..
+
+              echo "🔨 Building backend..."
+              cd backend
+              pnpm run clean
+              pnpm run build
+              cd ..
+
+              echo "🗄️ Applying database migrations..."
+              cd db
+              pnpm run migrate:deploy
+              cd ..
+
               echo "🐳 Building and starting Docker services..."
-              docker-compose build --no-cache
-              docker-compose up -d
-              
-              echo "🗄️ Running database migrations in Docker..."
-              docker-compose exec -T postgres bash -c "
-                until pg_isready -h localhost -p 5432 -U loyacrm; do
-                  echo 'Waiting for PostgreSQL...'
-                  sleep 2
-                done
-              "
-              docker-compose run --rm backend pnpm run db:migrate:deploy
-              docker-compose run --rm backend pnpm run db:generate
+              docker-compose -f docker-compose.stage.yml build --no-cache
+              docker-compose -f docker-compose.stage.yml up -d
               
               echo "✅ Docker staging deployment completed successfully!"
-              docker-compose ps
+              docker-compose -f docker-compose.stage.yml ps
               
             else
               echo "📦 PM2 staging deployment mode (legacy)"
