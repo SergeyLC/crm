@@ -1,10 +1,14 @@
 #!/bin/bash
 
+#!/bin/bash
+
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Change to project directory
+# For scripts in project root, PROJECT_DIR is the same as SCRIPT_DIR
+PROJECT_DIR="$SCRIPT_DIR"
+
+# Change to project directory (already there, but just in case)
 cd "$PROJECT_DIR"
 
 echo "🛑 Stopping LoyaCareCRM Docker development services..."
