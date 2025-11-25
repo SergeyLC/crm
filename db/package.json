@@ -9,23 +9,25 @@
     "migrate:reset": "prisma migrate reset --force",
     "migrate:status": "prisma migrate status",
     "studio": "prisma studio",
-    "seed": "tsc && dotenv -e .env.production.local -e .env.local -e .env -- node temp/seed.js",
+    "seed": "tsc && node temp/seed.js",
     "type-check": "tsc --noEmit",
     "lint": "echo 'No linting configured for db'",
     "lint:check": "echo 'No linting configured for db'"
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0",
+    "@prisma/adapter-pg": "^6.15.0",
+    "@prisma/client": "^7.0.1",
     "@types/uuid": "^10.0.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^16.4.5",
+    "pg": "^8.13.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/node": "latest",
     "dotenv-cli": "^7.4.2",
-    "prisma": "^6.15.0",
+    "prisma": "^7.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   }
