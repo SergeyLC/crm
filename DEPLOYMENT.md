@@ -61,13 +61,13 @@ cd loyacrm
 cp .env.dev.example .env.dev
 
 # Start development environment
-docker-compose -f docker-compose.dev.yml up --build -d
+docker compose -f docker-compose.dev.yml up --build -d
 
 # Check container status
-docker-compose -f docker-compose.dev.yml ps
+docker compose -f docker-compose.dev.yml ps
 
 # View logs
-docker-compose -f docker-compose.dev.yml logs -f
+docker compose -f docker-compose.dev.yml logs -f
 ```
 
 #### 3. Stage Environment Setup
@@ -84,11 +84,17 @@ nano .env.frontend.stage # Configure API URLs
 ./docker-stage-start.sh
 
 # Check status
-docker-compose -f docker-compose.stage.yml ps
+docker compose -f docker-compose.stage.yml ps
 
 # View logs
 ./docker-stage-logs.sh
 ```
+
+**Stage Environment Features:**
+- Uses external PostgreSQL database (no embedded volumes)
+- Separate database instance for stage testing
+- Ports: Frontend 3004, Backend 4004, Database 5436
+- Mirrors production setup without persistent volumes
 
 #### 4. Production Environment Setup
 ```bash
@@ -101,10 +107,10 @@ nano .env.backend  # Configure database and secrets
 nano .env.frontend # Configure API URLs
 
 # Start production environment
-docker-compose up --build -d
+docker compose up --build -d
 
 # Check status
-docker-compose ps
+docker compose ps
 ```
 
 ### 🌐 Access URLs
@@ -112,7 +118,7 @@ docker-compose ps
 | Environment | Frontend | Backend API | Database |
 |-------------|----------|-------------|----------|
 | **Development** | http://localhost:3003 | http://localhost:4003/api | localhost:5435 |
-| **Stage** | http://localhost:3004 | http://localhost:4004/api | localhost:5436 |
+| **Stage** | http://localhost:3004 | http://localhost:4004/api | localhost:5436 (external) |
 | **Production** | http://localhost:3002 | http://localhost:4002/api | External PostgreSQL |
 
 ### 🔧 Docker Management Commands
@@ -120,19 +126,19 @@ docker-compose ps
 #### Development Environment
 ```bash
 # Start development containers
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 
 # Stop development containers
-docker-compose -f docker-compose.dev.yml down
+docker compose -f docker-compose.dev.yml down
 
 # Rebuild and restart
-docker-compose -f docker-compose.dev.yml up --build --force-recreate
+docker compose -f docker-compose.dev.yml up --build --force-recreate
 
 # View logs
-docker-compose -f docker-compose.dev.yml logs -f [service-name]
+docker compose -f docker-compose.dev.yml logs -f [service-name]
 
 # Access container shell
-docker-compose -f docker-compose.dev.yml exec [service-name] sh
+docker compose -f docker-compose.dev.yml exec [service-name] sh
 ```
 
 #### Stage Environment
@@ -147,22 +153,22 @@ docker-compose -f docker-compose.dev.yml exec [service-name] sh
 ./docker-stage-logs.sh [service-name]
 
 # Access container shell
-docker-compose -f docker-compose.stage.yml exec [service-name] sh
+docker compose -f docker-compose.stage.yml exec [service-name] sh
 ```
 
 #### Production Environment
 ```bash
 # Start production containers
-docker-compose up -d
+docker compose up -d
 
 # Stop production containers
-docker-compose down
+docker compose down
 
 # Update and restart
-docker-compose pull && docker-compose up -d
+docker compose pull && docker compose up -d
 
 # View logs
-docker-compose logs -f [service-name]
+docker compose logs -f [service-name]
 ```
 
 ### 📊 Monitoring and Troubleshooting
@@ -186,24 +192,23 @@ docker inspect loyacrm-postgres-dev
 #### Database Operations
 ```bash
 # Access PostgreSQL in development
-docker-compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
+docker compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
 
 # Access PostgreSQL in stage
-docker-compose -f docker-compose.stage.yml exec postgres psql -U loyacrm -d loyacrm
+docker compose -f docker-compose.stage.yml exec postgres psql -U loyacrm -d loyacrm
 
 # Run database migrations in development
-docker-compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
+docker compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
 
 # Run database migrations in stage
-docker-compose -f docker-compose.stage.yml exec backend sh -c "cd db && pnpm run migrate:deploy"
+docker compose -f docker-compose.stage.yml exec backend sh -c "cd db && pnpm run migrate:deploy"
 
 # Reset development database
-docker-compose -f docker-compose.dev.yml down -v  # Removes volumes
-docker-compose -f docker-compose.dev.yml up -d   # Recreates with fresh data
+docker compose -f docker-compose.dev.yml down -v  # Removes volumes
+docker compose -f docker-compose.dev.yml up -d   # Recreates with fresh data
 
 # Reset stage database
 ./docker-stage-stop.sh
-docker volume rm loyacarecrm_postgres_stage_data 2>/dev/null || true
 ./docker-stage-start.sh
 ```
 
@@ -232,7 +237,7 @@ newgrp docker
 docker system prune -a
 
 # Rebuild without cache
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ### 🔄 Updates and Maintenance
@@ -243,21 +248,21 @@ docker-compose build --no-cache
 git pull origin main
 
 # Update development environment
-docker-compose -f docker-compose.dev.yml up --build -d
+docker compose -f docker-compose.dev.yml up --build -d
 
 # Update production environment
-docker-compose down
-docker-compose pull
-docker-compose up -d
+docker compose down
+docker compose pull
+docker compose up -d
 ```
 
 #### Backup Database (Development)
 ```bash
 # Create backup
-docker-compose -f docker-compose.dev.yml exec postgres pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
+docker compose -f docker-compose.dev.yml exec postgres pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
 
 # Restore backup
-docker-compose -f docker-compose.dev.yml exec -T postgres psql -U loyacrm loyacrm < backup_20241201.sql
+docker compose -f docker-compose.dev.yml exec -T postgres psql -U loyacrm loyacrm < backup_20241201.sql
 ```
 
 ### 🔒 Security Considerations
@@ -274,7 +279,7 @@ docker-compose -f docker-compose.dev.yml exec -T postgres psql -U loyacrm loyacr
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock clair-scanner [image-name]
 
 # Update base images regularly
-docker-compose build --pull
+docker compose build --pull
 
 # Use secrets management
 # Consider using Docker secrets or external secret managers

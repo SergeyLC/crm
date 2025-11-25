@@ -150,13 +150,13 @@ pnpm run generate
 pg_dump -h localhost -U loyacrm loyacrm > current_db_backup.sql
 
 # Запустите Docker базу (временно)
-docker-compose up -d postgres
+docker compose up -d postgres
 
 # Подождите 30 секунд, затем восстановите
 docker exec -i loyacrm-postgres-docker psql -U loyacrm loyacrm < current_db_backup.sql
 
 # Остановите Docker базу
-docker-compose down
+docker compose down
 ```
 
 ## 🚀 Шаг 4: Запуск Docker сервисов
@@ -167,13 +167,13 @@ docker-compose down
 cd /var/www/loyacrm
 
 # Сборка образов
-docker-compose build
+docker compose build
 
 # Запуск сервисов
-docker-compose up -d
+docker compose up -d
 
 # Проверьте статус
-docker-compose ps
+docker compose ps
 ```
 
 ### 4.2 Локальная разработка
@@ -185,7 +185,7 @@ docker-compose ps
 ./docker-dev-start.sh
 
 # Или вручную
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 ```
 
 **Порты для локальной разработки:**
@@ -206,12 +206,12 @@ docker-compose -f docker-compose.dev.yml up -d
 
 ```bash
 # Логи всех сервисов
-docker-compose logs -f
+docker compose logs -f
 
 # Логи конкретного сервиса
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f postgres
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f postgres
 ```
 
 ## ✅ Шаг 5: Тестирование
@@ -316,7 +316,7 @@ sudo systemctl reload nginx
 
 ```bash
 # Статус контейнеров
-docker-compose ps
+docker compose ps
 
 # Использование ресурсов
 docker stats
@@ -365,10 +365,10 @@ sudo systemctl reload nginx
 
 ```bash
 # Просмотр логов
-docker-compose logs -f
+docker compose logs -f
 
 # Перезапуск сервиса
-docker-compose restart backend
+docker compose restart backend
 
 # Вход в контейнер
 docker exec -it loyacrm-backend-docker sh
@@ -379,7 +379,7 @@ docker volume prune
 
 # Мониторинг
 docker stats
-docker-compose ps
+docker compose ps
 ```
 
 ### Резервное копирование
@@ -396,20 +396,20 @@ docker run --rm -v loyacrm_postgres_data:/data -v /backup:/backup alpine tar czf
 
 ### Контейнеры не запускаются
 ```bash
-docker-compose logs
-docker-compose config
+docker compose logs
+docker compose config
 ```
 
 ### База данных недоступна
 ```bash
-docker-compose ps postgres
-docker-compose logs postgres
+docker compose ps postgres
+docker compose logs postgres
 ```
 
 ### Приложение не отвечает
 ```bash
-docker-compose logs backend
-docker-compose logs frontend
+docker compose logs backend
+docker compose logs frontend
 docker network inspect loyacrm_loyacrm-network
 ```
 

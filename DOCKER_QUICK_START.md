@@ -13,7 +13,7 @@
 ./docker-dev-start.sh
 
 # Или вручную:
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 ```
 
 **Доступ к сервисам:**
@@ -31,7 +31,7 @@ docker-compose -f docker-compose.dev.yml up -d
 ./docker-dev-stop.sh
 
 # Статус
-docker-compose -f docker-compose.dev.yml ps
+docker compose -f docker-compose.dev.yml ps
 ```
 
 ## 🏭 Production развертывание (Production)
@@ -53,17 +53,17 @@ docker-compose -f docker-compose.dev.yml ps
 
 2. **Запустите сервисы:**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 3. **Проверьте статус:**
    ```bash
-   docker-compose ps
+   docker compose ps
    ```
 
 4. **Посмотрите логи:**
    ```bash
-   docker-compose logs -f
+   docker compose logs -f
    ```
 
 ## 📊 Доступ к сервисам
@@ -111,12 +111,12 @@ docker-compose -f docker-compose.dev.yml ps
 
 ### Development
 ```bash
-docker-compose -f docker-compose.dev.yml build --no-cache
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml build --no-cache
+docker compose -f docker-compose.dev.yml up -d
 ```
 
 ### Production
 ```bash
-docker-compose build --no-cache
-docker-compose up -d
+docker compose build --no-cache
+docker compose up -d
 ```
