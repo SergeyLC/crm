@@ -1,0 +1,11 @@
+{
+  "title": "Einstellungen",
+  "profile": "Profileinstellungen",
+  "profileDescription": "Verwalten Sie Ihre Profilinformationen und Einstellungen.",
+  "notifications": "Benachrichtigungen",
+  "notificationsDescription": "Konfigurieren Sie Ihre Benachrichtigungseinstellungen.",
+  "security": "Sicherheit",
+  "securityDescription": "Verwalten Sie Ihr Passwort und Sicherheitseinstellungen.",
+  "preferences": "Einstellungen",
+  "preferencesDescription": "Passen Sie Ihre Anwendungseinstellungen an."
+}
