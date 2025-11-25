@@ -1,14 +1,12 @@
 services:
-  # PostgreSQL Database for Stage
+  # PostgreSQL Database for stage (external, no volumes)
   postgres:
     image: postgres:15-alpine
     container_name: loyacrm-postgres-stage
     env_file:
-      - .env.dev  # Reuse dev database config for simplicity
+      - .env.dev  # Use same env as dev for consistency
     ports:
       - "5436:5432"  # Different port for stage
-    volumes:
-      - postgres_stage_data:/var/lib/postgresql/data
     networks:
       - loyacrm-stage-network
 
@@ -21,10 +19,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env.backend.stage
-    environment:
-      - PORT=4004
     ports:
-      - "4004:4004"  # Different port for stage
+      - "4004:4004"
     depends_on:
       - postgres
     networks:
@@ -39,17 +35,12 @@ services:
     restart: unless-stopped
     env_file:
       - .env.frontend.stage
-    environment:
-      - PORT=3004
     ports:
-      - "3004:3004"  # Different port for stage
+      - "3004:3004"
     depends_on:
       - backend
     networks:
       - loyacrm-stage-network
-
-volumes:
-  postgres_stage_data:
 
 networks:
   loyacrm-stage-network:
