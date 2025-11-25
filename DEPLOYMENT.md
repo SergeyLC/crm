@@ -1,10 +1,261 @@
-# 🚀 LoyaCareCRM Ubuntu Server Deployment Guide
+# 🚀 LoyaCareCRM Deployment Guide
 
-*Complete deployment instructions for CRM system on clean Ubuntu server*
+*Complete deployment instructions for CRM system*
 
 *[🇸 English | [🇩🇪 Deutsch](DEPLOYMENT.de.md)*
 
-## 📋 Prerequisites
+## 📋 Deployment Options
+
+LoyaCareCRM supports multiple deployment methods:
+
+### 🐳 **Docker Deployment (Recommended)**
+- **Development**: Local development with hot reload
+- **Production**: Containerized production deployment
+- **CI/CD**: Automated deployment via GitHub Actions
+
+### 🖥️ **Traditional Server Deployment**
+- Manual Ubuntu server setup with PM2, Nginx, PostgreSQL
+- Suitable for custom server configurations
+
+---
+
+## 🐳 Docker Deployment
+
+### Prerequisites
+
+#### System Requirements
+- **Docker**: Version 24.0+
+- **Docker Compose**: Version 2.0+
+- **Git**: Latest version
+- **4GB RAM minimum** (8GB recommended)
+- **2GB free disk space**
+
+#### Installation
+```bash
+# Install Docker (Ubuntu/Debian)
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Verify installation
+docker --version
+docker-compose --version
+```
+
+### 🚀 Quick Start with Docker
+
+#### 1. Clone Repository
+```bash
+git clone <your-repository-url> loyacrm
+cd loyacrm
+```
+
+#### 2. Development Environment Setup
+```bash
+# Copy development environment file
+cp .env.dev.example .env.dev
+
+# Start development environment
+docker-compose -f docker-compose.dev.yml up --build -d
+
+# Check container status
+docker-compose -f docker-compose.dev.yml ps
+
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f
+```
+
+#### 3. Production Environment Setup
+```bash
+# Copy production environment files
+cp .env.backend.example .env.backend
+cp .env.frontend.example .env.frontend
+
+# Edit environment variables
+nano .env.backend  # Configure database and secrets
+nano .env.frontend # Configure API URLs
+
+# Start production environment
+docker-compose up --build -d
+
+# Check status
+docker-compose ps
+```
+
+### 🌐 Access URLs
+
+| Environment | Frontend | Backend API | Database |
+|-------------|----------|-------------|----------|
+| **Development** | http://localhost:3003 | http://localhost:4003/api | localhost:5435 |
+| **Production** | http://localhost:3002 | http://localhost:4002/api | External PostgreSQL |
+
+### 🔧 Docker Management Commands
+
+#### Development Environment
+```bash
+# Start development containers
+docker-compose -f docker-compose.dev.yml up -d
+
+# Stop development containers
+docker-compose -f docker-compose.dev.yml down
+
+# Rebuild and restart
+docker-compose -f docker-compose.dev.yml up --build --force-recreate
+
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f [service-name]
+
+# Access container shell
+docker-compose -f docker-compose.dev.yml exec [service-name] sh
+```
+
+#### Production Environment
+```bash
+# Start production containers
+docker-compose up -d
+
+# Stop production containers
+docker-compose down
+
+# Update and restart
+docker-compose pull && docker-compose up -d
+
+# View logs
+docker-compose logs -f [service-name]
+```
+
+### 📊 Monitoring and Troubleshooting
+
+#### Check Container Health
+```bash
+# List all containers
+docker ps -a
+
+# Check container logs
+docker logs loyacrm-backend-dev
+docker logs loyacrm-frontend-dev
+
+# Check resource usage
+docker stats
+
+# Inspect container
+docker inspect loyacrm-postgres-dev
+```
+
+#### Database Operations
+```bash
+# Access PostgreSQL in development
+docker-compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
+
+# Run database migrations
+docker-compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
+
+# Reset development database
+docker-compose -f docker-compose.dev.yml down -v  # Removes volumes
+docker-compose -f docker-compose.dev.yml up -d   # Recreates with fresh data
+```
+
+#### Common Issues
+
+**Port conflicts:**
+```bash
+# Check what's using ports
+sudo lsof -i :3003
+sudo lsof -i :4003
+sudo lsof -i :5435
+
+# Change ports in docker-compose files if needed
+```
+
+**Permission issues:**
+```bash
+# Fix Docker permissions
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+**Build failures:**
+```bash
+# Clear Docker cache
+docker system prune -a
+
+# Rebuild without cache
+docker-compose build --no-cache
+```
+
+### 🔄 Updates and Maintenance
+
+#### Update Application
+```bash
+# Pull latest changes
+git pull origin main
+
+# Update development environment
+docker-compose -f docker-compose.dev.yml up --build -d
+
+# Update production environment
+docker-compose down
+docker-compose pull
+docker-compose up -d
+```
+
+#### Backup Database (Development)
+```bash
+# Create backup
+docker-compose -f docker-compose.dev.yml exec postgres pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
+
+# Restore backup
+docker-compose -f docker-compose.dev.yml exec -T postgres psql -U loyacrm loyacrm < backup_20241201.sql
+```
+
+### 🔒 Security Considerations
+
+#### Environment Variables
+- Never commit `.env` files to repository
+- Use strong passwords for database
+- Rotate JWT secrets regularly
+- Use different secrets for dev/prod environments
+
+#### Production Security
+```bash
+# Run security scan
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock clair-scanner [image-name]
+
+# Update base images regularly
+docker-compose build --pull
+
+# Use secrets management
+# Consider using Docker secrets or external secret managers
+```
+
+### 📋 Docker Deployment Checklist
+
+**Development Setup:**
+- [ ] Docker and Docker Compose installed
+- [ ] Repository cloned
+- [ ] `.env.dev` configured
+- [ ] Development containers running
+- [ ] Frontend accessible at http://localhost:3003
+- [ ] Backend API responding at http://localhost:4003/api
+- [ ] Database accessible at localhost:5435
+- [ ] Hot reload working for code changes
+
+**Production Setup:**
+- [ ] Production environment files configured
+- [ ] External PostgreSQL database ready
+- [ ] Domain/DNS configured
+- [ ] SSL certificates obtained
+- [ ] Production containers deployed
+- [ ] Application accessible via domain
+- [ ] Monitoring and logging configured
+
+---
+
+## 🖥️ Traditional Ubuntu Server Deployment
 
 ### 1. System Update
 ```bash
@@ -865,5 +1116,5 @@ This setup provides a complete CI/CD pipeline for automated deployment of your L
 ---
 
 **Author:** Sergey Daub (sergeydaub@gmail.com)
-**Version:** 1.0
-**Date:** August 27, 2025
+**Version:** 2.0
+**Date:** 25 November 2025
