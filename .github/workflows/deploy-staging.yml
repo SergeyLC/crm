@@ -83,7 +83,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           command_timeout: 60m
-          envs: DEPLOYMENT_TYPE=docker  # Set deployment type to docker for staging
           script: |-
             set -e
             
@@ -92,7 +91,7 @@ jobs:
 
             echo "🚀 Starting staging deployment..."
             echo "📦 Build version: ${{ steps.version.outputs.BUILD_VERSION }}"
-            echo "🔧 Deployment type: $DEPLOYMENT_TYPE"
+            echo "🔧 Deployment type: ${DEPLOYMENT_TYPE:-pm2}"
 
             cd /var/www/loyacrm-staging
 
@@ -100,7 +99,7 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            if [ "$DEPLOYMENT_TYPE" = "docker" ]; then
+            if [ "${DEPLOYMENT_TYPE:-pm2}" = "docker" ]; then
               echo "🐳 Docker staging deployment mode"
               
               # Extract password from DATABASE_URL for Docker

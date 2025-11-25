@@ -106,7 +106,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           command_timeout: 60m
-          envs: DEPLOYMENT_TYPE=docker  # Set deployment type to docker
           script: |
             set -e  # Stop execution on error
             
@@ -116,7 +115,7 @@ jobs:
 
             echo "🚀 Starting production deployment..."
             echo "📦 Release version: ${{ steps.get_version.outputs.VERSION }}"
-            echo "🔧 Deployment type: $DEPLOYMENT_TYPE"
+            echo "🔧 Deployment type: ${DEPLOYMENT_TYPE:-pm2}"
 
             # Navigate to project directory
             cd /var/www/loyacrm
@@ -125,7 +124,7 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            if [ "$DEPLOYMENT_TYPE" = "docker" ]; then
+            if [ "${DEPLOYMENT_TYPE:-pm2}" = "docker" ]; then
               echo "🐳 Docker deployment mode"
               
               # Extract password from DATABASE_URL for Docker
