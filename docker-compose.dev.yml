@@ -5,10 +5,8 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: loyacrm-postgres-dev
-    environment:
-      POSTGRES_DB: loyacrm
-      POSTGRES_USER: loyacrm
-      POSTGRES_PASSWORD: dev_password_123
+    env_file:
+      - .env.dev
     ports:
       - "5435:5432"  # Different port for local dev
     volumes:
@@ -22,11 +20,8 @@ services:
       context: .
       dockerfile: docker/backend/Dockerfile
     container_name: loyacrm-backend-dev
-    environment:
-      DATABASE_URL: postgresql://loyacrm:dev_password_123@postgres:5432/loyacrm
-      JWT_SECRET: dev_jwt_secret_key_for_local_development_only
-      PORT: 4003
-      NODE_ENV: development
+    env_file:
+      - .env.dev
     ports:
       - "4003:4003"
     depends_on:
@@ -48,9 +43,8 @@ services:
       context: .
       dockerfile: docker/frontend/Dockerfile
     container_name: loyacrm-frontend-dev
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:4003
-      NEXT_PUBLIC_APP_VERSION: docker-dev
+    env_file:
+      - .env.dev
     ports:
       - "3003:3003"
     depends_on:
