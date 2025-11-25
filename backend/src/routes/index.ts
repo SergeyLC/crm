@@ -24,3 +24,5 @@ router.use('/pipelines', pipelineRoutes);
 router.get('/ping', (_req, res) => res.send('pong'));
 
 export default router;
+
+// Test hot reload - added comment at ${new Date().toISOString()}

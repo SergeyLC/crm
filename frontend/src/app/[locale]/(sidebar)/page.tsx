@@ -1,4 +1,5 @@
 "use client";
+// Test hot reload - modified at ${new Date().toISOString()}
 import { useTranslation } from 'react-i18next';
 import { usePathname } from 'next/navigation';
 import Grid from '@mui/material/Grid';
