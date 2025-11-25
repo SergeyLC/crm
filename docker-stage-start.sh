@@ -19,12 +19,12 @@ if [ ! -f ".env.frontend.stage" ]; then
 fi
 
 # Build and start services
-docker-compose -f docker-compose.stage.yml build --no-cache
-docker-compose -f docker-compose.stage.yml up -d
+docker compose -f docker-compose.stage.yml build --no-cache
+docker compose -f docker-compose.stage.yml up -d
 
 echo "✅ Stage environment started successfully!"
 echo "🌐 Frontend: http://localhost:3004"
 echo "🔧 Backend: http://localhost:4004"
 echo ""
-echo "📊 Check status: docker-compose -f docker-compose.stage.yml ps"
-echo "📝 View logs: docker-compose -f docker-compose.stage.yml logs -f"
+echo "📊 Check status: docker compose -f docker-compose.stage.yml ps"
+echo "📝 View logs: docker compose -f docker-compose.stage.yml logs -f"

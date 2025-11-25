@@ -12,7 +12,7 @@ else
 fi
 
 if [ "$SERVICE" ]; then
-    docker-compose -f docker-compose.stage.yml logs -f "$SERVICE"
+    docker compose -f docker-compose.stage.yml logs -f "$SERVICE"
 else
-    docker-compose -f docker-compose.stage.yml logs -f
+    docker compose -f docker-compose.stage.yml logs -f
 fi

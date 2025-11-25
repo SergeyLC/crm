@@ -33,12 +33,12 @@ fi
 
 # Run database migrations first
 echo "🗄️  Running database migrations..."
-docker-compose -f docker-compose.dev.yml run --rm backend pnpm run db:migrate:deploy
-docker-compose -f docker-compose.dev.yml run --rm backend pnpm run db:generate
+docker compose -f docker-compose.dev.yml run --rm backend pnpm run db:migrate:deploy
+docker compose -f docker-compose.dev.yml run --rm backend pnpm run db:generate
 
 echo ""
 echo "🐳 Starting Docker services..."
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 
 echo ""
 echo "⏳ Waiting for services to be ready..."
@@ -46,6 +46,6 @@ sleep 10
 
 echo ""
 echo "✅ Services started!"
-echo "📊 Check status: docker-compose -f docker-compose.dev.yml ps"
-echo "📝 View logs: docker-compose -f docker-compose.dev.yml logs -f"
-echo "🛑 Stop: docker-compose -f docker-compose.dev.yml down"
+echo "📊 Check status: docker compose -f docker-compose.dev.yml ps"
+echo "📝 View logs: docker compose -f docker-compose.dev.yml logs -f"
+echo "🛑 Stop: docker compose -f docker-compose.dev.yml down"

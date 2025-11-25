@@ -1,3 +1,3 @@
 #!/bin/bash
 cd /var/www/loyacrm
-docker-compose logs -f
+docker compose logs -f
