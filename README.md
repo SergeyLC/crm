@@ -51,6 +51,10 @@ docker-compose up --build -d
 
 For manual Ubuntu server deployment, see [DEPLOYMENT.md](DEPLOYMENT.md)
 
+For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](DOCKER_DEVELOPMENT.md)
+
+For Docker production deployment, see [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
+
 ## 🏗️ Project Architecture
 
 The project consists of three main parts:
@@ -95,6 +99,10 @@ LoyaCareCRM/
 - **Prisma** - modern ORM for TypeScript
 
 ## 🐳 Docker Management
+
+For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](DOCKER_DEVELOPMENT.md)
+
+For Docker production deployment, see [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
 
 ### Development Environment
 ```bash
