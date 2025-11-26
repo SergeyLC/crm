@@ -23,9 +23,10 @@ cp .env.dev.example .env.dev
 docker-compose -f docker-compose.dev.yml up --build -d
 
 # Access application
-# Frontend: http://localhost:3003
-# Backend API: http://localhost:4003/api
+# Frontend: http://localhost
+# Backend API: http://localhost/api
 # Database: localhost:5435
+# Health check: http://localhost/api/health
 ```
 
 #### Production Environment
@@ -113,8 +114,17 @@ docker-compose -f docker-compose.dev.yml down
 docker-compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
 
 # Run backend commands
-docker-compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
+docker-compose -f docker-compose.dev.yml exec backend sh -c "cd /app/db && pnpm run migrate"
+
+# Check health
+curl http://localhost/api/health
 ```
+
+**Development Environment Features:**
+- **Health checks** for PostgreSQL and Backend services
+- **Named volumes** for persistent database data
+- **Backup directory** mounted at `./backups` for database backups
+- **Hot reload** for frontend and backend development
 
 ### Production Environment
 ```bash
@@ -474,9 +484,10 @@ pnpm run test:coverage
 docker-compose -f docker-compose.dev.yml up -d
 
 # Access URLs:
-# Frontend: http://localhost:3003
-# Backend API: http://localhost:4003/api
+# Frontend: http://localhost
+# Backend API: http://localhost/api
 # Database: localhost:5435
+# Health check: http://localhost/api/health
 ```
 
 #### Production Environment
