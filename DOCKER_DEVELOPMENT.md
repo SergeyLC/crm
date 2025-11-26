@@ -12,7 +12,7 @@ This document describes setting up the local development environment for LoyaCar
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   PostgreSQL    │    │   Backend       │    │   Frontend      │    │   Nginx Proxy   │
 │   (Docker)      │    │   (Docker)      │    │   (Docker)      │    │   (Docker)      │
-│   Port: 5435    │◄──►│   Port: 4003    │◄──►│   Port: 3003    │◄──►│   Port: 80      │
+│   Port: 5435    │◄──►│   Port: 4003    │◄──►│   Port: 3003    │◄──►│   Port: 3003    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
          ▲                       ▲                       ▲                       ▲
          │                       │                       │                       │
@@ -27,9 +27,9 @@ This document describes setting up the local development environment for LoyaCar
 ### Ports for Development Environment
 
 - **PostgreSQL:** 5435 (with named volume for data)
-- **Backend:** 4003 (direct) / 80/api (nginx proxy)
-- **Frontend:** 3003 (direct) / 80 (nginx proxy)
-- **Nginx Proxy:** 80 (reverse proxy for frontend and backend)
+- **Backend:** 4003 (direct) / 3003/api (nginx proxy)
+- **Frontend:** 3003 (nginx proxy only - for full HMR)
+- **Nginx Proxy:** 3003 (reverse proxy for frontend and backend)
 
 ### Development Setup Features
 
@@ -131,15 +131,12 @@ docker compose -f docker-compose.dev.yml ps
 
 ```bash
 # Backend API via nginx proxy
-curl http://localhost/api/health
+curl http://localhost:3003/api/health
 
 # Backend API direct
 curl http://localhost:4003/api/health
 
 # Frontend via nginx proxy
-curl http://localhost
-
-# Frontend direct (for full HMR)
 curl http://localhost:3003
 
 # Database
@@ -149,8 +146,7 @@ psql -h localhost -p 5435 -U loyacrm loyacrm -c "SELECT version();"
 ### Functional testing
 
 Open in browser:
-- **Via nginx proxy:** `http://localhost` (recommended for production-like experience)
-- **Direct access:** `http://localhost:3003` (for full HMR functionality)
+- **Via nginx proxy:** `http://localhost:3003` (recommended - includes HMR via WebSocket proxy)
 
 Ensure that:
 - ✅ Application loads
@@ -190,10 +186,7 @@ Development setup supports HMR for fast development:
 
 **Using HMR:**
 ```bash
-# Via nginx proxy (may have limitations)
-open http://localhost
-
-# Direct access for full HMR functionality
+# Via nginx proxy (recommended - includes WebSocket proxy for HMR)
 open http://localhost:3003
 ```
 
@@ -203,7 +196,7 @@ open http://localhost:3003
 
 ```bash
 # Check health of all services
-curl http://localhost/api/health
+curl http://localhost:3003/api/health
 
 # Container status
 docker compose -f docker-compose.dev.yml ps
@@ -368,12 +361,11 @@ lsof -i :80
 - [ ] Repository cloned
 - [ ] `.env.dev` configured with correct credentials
 - [ ] Development services started (`./docker-dev-start.sh`)
-- [ ] Application available on ports 80 (nginx) and 3003 (direct)
-- [ ] API available on ports 80/api (nginx) and 4003 (direct)
+- [ ] Application available on ports 3003 (nginx proxy) and 4003 (backend direct)
+- [ ] API available on ports 3003/api (nginx proxy) and 4003 (direct)
 - [ ] Database available on port 5435 with seeded data
 - [ ] Health checks pass for all services
-- [ ] Hot Module Replacement works (via direct access localhost:3003)
-- [ ] Nginx reverse proxy correctly proxies WebSocket for HMR
+- [ ] Hot Module Replacement works via nginx proxy on port 3003
 
 ## 🎯 Development Setup Advantages
 
