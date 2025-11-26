@@ -99,7 +99,7 @@ docker compose -f docker-compose.stage.yml logs -f
 - Health checks ensure service availability
 - Production-like setup for testing
 
-#### 4. Production Environment Setup
+### Production Environment Setup
 ```bash
 # Copy production environment files
 cp .env.backend.example .env.backend
@@ -117,6 +117,46 @@ docker compose -f docker-compose.yml ps
 
 # View logs
 docker compose -f docker-compose.yml logs -f
+```
+
+### Understanding Persistent Storage (Production)
+
+**Important:** PostgreSQL data is stored in a Docker named volume `loyacrm_prod_pg_data`. This volume persists data between container restarts, deployments, and even container recreation. The volume is automatically created by Docker Compose and survives `docker compose down` commands.
+
+**Volume location:** Docker manages the volume storage location automatically. To inspect:
+```bash
+# List volumes
+docker volume ls
+
+# Inspect volume details
+docker volume inspect loyacrm_prod_pg_data
+
+# Check volume usage
+docker system df -v
+```
+
+**⚠️ Data Safety:** Never delete the volume manually unless you want to lose all database data. Use `docker compose down -v` only if you intentionally want to reset the database.
+
+### Production Database Setup
+```bash
+# Start only database service first
+docker compose -f docker-compose.yml up -d postgres
+
+# Wait for database to be ready
+sleep 30
+
+# Run migrations through container
+docker compose -f docker-compose.yml exec backend sh -c "cd db && pnpm run migrate:deploy && pnpm run generate"
+```
+
+### Data Migration (Optional)
+If migrating from existing database:
+```bash
+# Create dump of current database
+pg_dump -h localhost -U loyacrm loyacrm > current_db_backup.sql
+
+# Restore to Docker database
+docker compose -f docker-compose.yml exec -T postgres psql -U loyacrm loyacrm < current_db_backup.sql
 ```
 
 ### 🌐 Access URLs
@@ -517,7 +557,67 @@ docker compose -f docker-compose.dev.yml exec postgres pg_dump -U loyacrm loyacr
 docker compose -f docker-compose.dev.yml exec -T postgres psql -U loyacrm loyacrm < backup_20241201.sql
 ```
 
-### 🔒 Security Considerations
+### 🔄 Migration from Traditional Deployment
+
+**⚠️ Execute only after thorough testing of Docker setup!**
+
+### Step 1: Stop Current Services
+```bash
+# Stop PM2 services
+pm2 stop all
+
+# Stop PostgreSQL service
+sudo systemctl stop postgresql
+```
+
+### Step 2: Update Nginx Configuration
+If you have host Nginx, update configuration to use Docker ports:
+
+```bash
+sudo nano /etc/nginx/sites-available/loyacrm
+```
+
+Change proxy_pass directives:
+```nginx
+# Before (traditional deployment)
+proxy_pass http://localhost:3000;
+proxy_pass http://localhost:4000/api/;
+
+# After (Docker deployment)
+proxy_pass http://localhost:80;  # Docker Nginx proxy
+# OR directly to containers if no Docker Nginx:
+# proxy_pass http://localhost:3003;
+# proxy_pass http://localhost:4003/api/;
+```
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### Step 3: Update Environment Variables
+Update `.env` files to use Docker service names and ports if needed.
+
+### Step 4: Start Docker Services
+```bash
+# Start Docker production environment
+docker compose -f docker-compose.yml up -d
+
+# Verify everything works
+curl http://localhost/api/health
+```
+
+### Step 5: Clean Up (Optional)
+After successful migration:
+```bash
+# Remove PM2
+sudo pnpm remove -g pm2
+
+# Remove traditional PostgreSQL (if not needed)
+sudo apt remove postgresql postgresql-contrib
+```
+
+## 🔒 Security Considerations
 
 #### Environment Variables
 - Never commit `.env` files to repository

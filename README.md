@@ -53,7 +53,7 @@ For manual Ubuntu server deployment, see [DEPLOYMENT.md](docs/deployment/DEPLOYM
 
 For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/DOCKER_DEVELOPMENT.md)
 
-For Docker production deployment, see [DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)
+For Docker production deployment, see [DEPLOYMENT_DOCKER.md](docs/deployment/DEPLOYMENT_DOCKER.md)
 
 ## 🏗️ Project Architecture
 
@@ -102,7 +102,7 @@ LoyaCareCRM/
 
 For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/deployment/DOCKER_DEVELOPMENT.md)
 
-For Docker production deployment, see [DOCKER_DEPLOYMENT.md](docs/deployment/DOCKER_DEPLOYMENT.md)
+For Docker production deployment, see [DEPLOYMENT_DOCKER.md](docs/deployment/DEPLOYMENT_DOCKER.md)
 
 ### Development Environment
 ```bash
