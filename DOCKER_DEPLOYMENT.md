@@ -13,22 +13,23 @@ This document describes production deployment of LoyaCareCRM using Docker. Docke
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   PostgreSQL    │    │   Backend       │    │   Frontend      │    │   Nginx Proxy   │
-│   (External)    │    │   (Docker)      │    │   (Docker)      │    │   (Host)        │
-│   Port: 5434    │◄──►│   Port: 4002    │◄──►│   Port: 3002    │◄──►│   Port: 82      │
+│   (Container)   │    │   (Docker)      │    │   (Docker)      │    │   (Docker)      │
+│   Port: 5432    │◄──►│   Port: 4003    │◄──►│   Port: 3003    │◄──►│   Port: 80      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ### Ports for Production Environment
 
-- **PostgreSQL:** 5434 (external database)
-- **Backend:** 4002 (internal container port)
-- **Frontend:** 3002 (internal container port)
-- **Nginx Proxy:** 82 (host reverse proxy)
+- **PostgreSQL:** 5432 (internal container port, not exposed externally)
+- **Backend:** 4003 (internal container port)
+- **Frontend:** 3003 (internal container port)
+- **Nginx Proxy:** 80 (exposed to host)
 
 ### Production Setup Features
 
-- **External PostgreSQL:** Uses external database for persistence
-- **Nginx Reverse Proxy:** Host-based proxy for routing
+- **Containerized PostgreSQL:** Database runs in Docker container with persistent volume
+- **Docker Network:** All services communicate through internal Docker network
+- **Nginx Reverse Proxy:** Containerized proxy for routing
 - **SSL Termination:** HTTPS at nginx level
 - **Environment Variables:** Production secrets through .env files
 - **CI/CD Integration:** Automatic deployment through GitHub Actions
@@ -103,22 +104,20 @@ nano .env.docker
 
 The `.env.docker` file is created automatically in GitHub Actions from repository secrets (GitHub Secrets) during deployment.
 
-Fill `.env.docker` with real values:
+Fill `.env.backend` with real values:
 
 ```bash
 # Database
-POSTGRES_DB=loyacrm
-POSTGRES_USER=loyacrm
-POSTGRES_PASSWORD=your_actual_strong_password
-
-# Backend
 DATABASE_URL=postgresql://loyacrm:your_actual_strong_password@postgres:5432/loyacrm
 JWT_SECRET=your_actual_jwt_secret_key_here
-PORT=4002
+PORT=4003
 NODE_ENV=production
+```
 
-# Frontend
-NEXT_PUBLIC_API_URL=http://localhost:4002
+Fill `.env.frontend` with real values:
+
+```bash
+NEXT_PUBLIC_API_URL=http://backend:4003
 NEXT_PUBLIC_APP_VERSION=docker
 ```
 
@@ -133,13 +132,20 @@ NEXT_PUBLIC_APP_VERSION=docker
 ```bash
 cd /var/www/loyacrm
 
-# Set environment variables for Docker database
-export DATABASE_URL="postgresql://loyacrm:your_strong_password@localhost:5434/loyacrm"
+# Start only database service first
+docker compose up -d postgres
 
-# Run migrations
-cd db
-pnpm run migrate:deploy
-pnpm run generate
+# Wait for database to be ready
+sleep 30
+
+# Run migrations through container
+docker compose exec backend sh -c "cd db && pnpm run migrate:deploy && pnpm run generate"
+
+# Or run migrations from host (if database is accessible)
+# cd db
+# export DATABASE_URL="postgresql://loyacrm:your_password@localhost:5432/loyacrm"
+# pnpm run migrate:deploy
+# pnpm run generate
 ```
 
 ### 3.2 Data copying (optional)
@@ -150,14 +156,8 @@ If you need to copy data from current database:
 # Create dump of current database
 pg_dump -h localhost -U loyacrm loyacrm > current_db_backup.sql
 
-# Start Docker database (temporarily)
-docker compose up -d postgres
-
-# Wait 30 seconds, then restore
-docker exec -i loyacrm-postgres-docker psql -U loyacrm loyacrm < current_db_backup.sql
-
-# Stop Docker database
-docker compose down
+# Restore to Docker database
+docker compose exec -T postgres psql -U loyacrm loyacrm < current_db_backup.sql
 ```
 
 ## 🚀 Step 4: Start Docker Services
@@ -203,80 +203,91 @@ docker compose logs -f postgres
 ### 5.1 Availability check
 
 ```bash
-# Backend API
-curl http://localhost:4002/api/health
+# Check through Nginx proxy
+curl http://localhost/api/health
 
-# Frontend
-curl http://localhost:3002
+# Or check services directly through Docker
+docker compose exec backend curl -f http://localhost:4003/api/health
+docker compose exec frontend curl -f http://localhost:3003
 
-# Database (external)
-psql -h localhost -p 5434 -U loyacrm loyacrm -c "SELECT version();"
+# Check database connectivity
+docker compose exec postgres pg_isready -U loyacrm
 ```
 
 ### 5.2 Functional testing
 
-Open in browser: `http://your-server-ip:82`
+Open in browser: `http://your-server-ip`
 
 Make sure that:
-- ✅ Application loads
+- ✅ Application loads through Nginx proxy
 - ✅ API requests work
-- ✅ Database is accessible
-- ✅ Nginx proxy works correctly
+- ✅ Database is accessible from backend
+- ✅ All containers are healthy
 
 ## 🌐 Step 6: Nginx Setup for Docker
 
-### 6.1 Create configuration
+### 6.1 Nginx configuration
 
-Create `/etc/nginx/sites-available/loyacrm-docker`:
+Nginx is already configured in the Docker Compose setup and runs in a container. The configuration is in `nginx.prod.conf`:
 
 ```nginx
-server {
-    listen 82;
-    server_name your-domain.com your-server-ip;
+events {
+    worker_connections 1024;
+}
 
-    # Docker Frontend (Next.js)
-    location / {
-        proxy_pass http://localhost:3002;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+http {
+    upstream backend {
+        server backend:4003;
     }
 
-    # Docker Backend API
-    location /api/ {
-        proxy_pass http://localhost:4002/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+    upstream frontend {
+        server frontend:3003;
     }
 
-    # Next.js static files
-    location /_next/static/ {
-        proxy_pass http://localhost:3002;
-        add_header Cache-Control "public, max-age=31536000, immutable";
+    server {
+        listen 80;
+        server_name localhost;
+
+        # Frontend (Next.js)
+        location / {
+            proxy_pass http://frontend;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        # Backend API
+        location /api/ {
+            proxy_pass http://backend/api/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        # Next.js static files
+        location /_next/static/ {
+            proxy_pass http://frontend;
+            add_header Cache-Control "public, max-age=31536000, immutable";
+        }
     }
 }
 ```
 
-### 6.2 Activate configuration
+### 6.2 Access the application
 
-```bash
-sudo ln -s /etc/nginx/sites-available/loyacrm-docker /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
+Docker version is available at: `http://your-server-ip`
 
-Now Docker version is available at: `http://your-server-ip:82`
+The Nginx container exposes port 80 to the host, so no additional host nginx configuration is needed.
 
 ## 📊 Step 7: Monitoring and Management
 
@@ -305,9 +316,11 @@ docker compose ps
 # Resource usage
 docker stats
 
-# Health check
-curl http://localhost:4003/api/health
-curl http://localhost:3003
+# Health check through nginx
+curl http://localhost/api/health
+
+# Or check services directly
+docker compose exec backend curl -f http://localhost:4003/api/health
 ```
 
 ## 🔄 Step 8: Full Transition to Docker
@@ -369,11 +382,11 @@ docker compose ps
 ### Backup
 
 ```bash
-# Database backup
-docker exec loyacrm-postgres-docker pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
+# Database backup from container
+docker compose exec postgres pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
 
-# Volume backup
-docker run --rm -v loyacrm_postgres_data:/data -v /backup:/backup alpine tar czf /backup/postgres_data.tar.gz -C /data .
+# Volume backup (if needed)
+docker run --rm -v loyacrm_prod_pg_data:/data -v $(pwd)/backup:/backup alpine tar czf /backup/postgres_data_$(date +%Y%m%d).tar.gz -C /data .
 ```
 
 ## 🚨 Troubleshooting
@@ -386,8 +399,14 @@ docker compose config
 
 ### Database unavailable
 ```bash
-# Check external PostgreSQL
-psql -h localhost -p 5434 -U loyacrm loyacrm -c "SELECT version();"
+# Check PostgreSQL container status
+docker compose ps postgres
+
+# Check database logs
+docker compose logs postgres
+
+# Test database connectivity from backend
+docker compose exec backend sh -c "cd db && pnpm run migrate:deploy"
 ```
 
 ### Application doesn't respond
@@ -410,13 +429,13 @@ lsof -i :4002
 ## 📋 Deployment Checklist
 
 - [ ] Docker and Docker Compose installed
-- [ ] External PostgreSQL configured on port 5434
 - [ ] Environment variables configured in `.env.backend` and `.env.frontend`
 - [ ] Docker services built and started
-- [ ] Application accessible on ports 3002/4002
-- [ ] Nginx configured for port 82
+- [ ] Application accessible at `http://your-server-ip`
+- [ ] API accessible at `http://your-server-ip/api`
+- [ ] Database migrations executed
+- [ ] All containers healthy (`docker compose ps`)
 - [ ] Functional testing passed
-- [ ] **After testing:** Transition to Docker completed
 
 ## 🎯 Docker Deployment Advantages
 
@@ -425,10 +444,10 @@ lsof -i :4002
 - **Reproducibility:** Consistent environment across all servers
 - **Management:** Simplified dependency management
 - **Rollback:** Fast rollback to previous version
-- **Production Ready:** Nginx proxy, external database, SSL support
+- **Production Ready:** Containerized nginx proxy, persistent database storage, SSL support
 
 ---
 
 **Author:** Sergey Daub
 **Date:** 26 November 2025
-**Version:** 3.1 - Updated Docker Compose installation instructions
+**Version:** 3.2 - Corrected PostgreSQL configuration (containerized, not external)
