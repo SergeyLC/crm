@@ -546,17 +546,21 @@ NEXT_PUBLIC_BACKEND_API_URL=https://api.your-domain.com/api
 #### Deploy with Docker
 
 ```bash
-# Build and start
-docker compose -f docker-compose.prod.yml --env-file .env.docker.prod up -d
+# Build and start production environment
+docker compose -f docker-compose.yml up --build -d
 
-# Run migrations
-docker compose -f docker-compose.prod.yml exec backend pnpm run db:migrate:deploy
+# Run database migrations
+docker compose -f docker-compose.yml exec backend sh -c "cd db && pnpm run migrate:deploy"
 
 # View logs
-docker compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.yml logs -f
 
-# Stop
-docker compose -f docker-compose.prod.yml down
+# Stop production environment
+docker compose -f docker-compose.yml down
+
+# Reset database (removes all data)
+docker compose -f docker-compose.yml down -v
+docker compose -f docker-compose.yml up -d
 ```
 
 ---

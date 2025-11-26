@@ -83,20 +83,21 @@ nano .env.backend.stage  # Configure database and secrets
 nano .env.frontend.stage # Configure API URLs
 
 # Start stage environment
-./docker-stage-start.sh
+docker compose -f docker-compose.stage.yml up --build -d
 
 # Check status
 docker compose -f docker-compose.stage.yml ps
 
 # View logs
-./docker-stage-logs.sh
+docker compose -f docker-compose.stage.yml logs -f
 ```
 
 **Stage Environment Features:**
-- Uses external PostgreSQL database (no embedded volumes)
+- Uses embedded PostgreSQL database with named volumes
 - Separate database instance for stage testing
-- Ports: Frontend 3004, Backend 4004, Database 5436
-- Mirrors production setup without persistent volumes
+- All services accessible through Nginx reverse proxy on port 3004
+- Health checks ensure service availability
+- Production-like setup for testing
 
 #### 4. Production Environment Setup
 ```bash
@@ -109,19 +110,22 @@ nano .env.backend  # Configure database and secrets
 nano .env.frontend # Configure API URLs
 
 # Start production environment
-docker compose up --build -d
+docker compose -f docker-compose.yml up --build -d
 
 # Check status
-docker compose ps
+docker compose -f docker-compose.yml ps
+
+# View logs
+docker compose -f docker-compose.yml logs -f
 ```
 
 ### 🌐 Access URLs
 
-| Environment | Frontend | Backend API | Database |
-|-------------|----------|-------------|----------|
-| **Development** | http://localhost:3003 | http://localhost:4003/api | localhost:5435 |
-| **Stage** | http://localhost:3004 | http://localhost:4004/api | localhost:5436 (external) |
-| **Production** | http://localhost:3002 | http://localhost:4002/api | External PostgreSQL |
+| Environment | Frontend | Backend API | Database | Nginx Port |
+|-------------|----------|-------------|----------|------------|
+| **Development** | http://localhost:3003 | http://localhost:3003/api | localhost:5435 | 3003 |
+| **Stage** | http://localhost:3004 | http://localhost:3004/api | localhost:5436 | 3004 |
+| **Production** | http://localhost:80 | http://localhost:80/api | localhost:5432 | 80 |
 
 ### 🔧 Docker Management Commands
 
@@ -146,13 +150,16 @@ docker compose -f docker-compose.dev.yml exec [service-name] sh
 #### Stage Environment
 ```bash
 # Start stage containers
-./docker-stage-start.sh
+docker compose -f docker-compose.stage.yml up -d
 
 # Stop stage containers
-./docker-stage-stop.sh
+docker compose -f docker-compose.stage.yml down
+
+# Rebuild and restart
+docker compose -f docker-compose.stage.yml up --build --force-recreate
 
 # View logs
-./docker-stage-logs.sh [service-name]
+docker compose -f docker-compose.stage.yml logs -f [service-name]
 
 # Access container shell
 docker compose -f docker-compose.stage.yml exec [service-name] sh
@@ -161,16 +168,19 @@ docker compose -f docker-compose.stage.yml exec [service-name] sh
 #### Production Environment
 ```bash
 # Start production containers
-docker compose up -d
+docker compose -f docker-compose.yml up -d
 
 # Stop production containers
-docker compose down
+docker compose -f docker-compose.yml down
 
 # Update and restart
-docker compose pull && docker compose up -d
+docker compose -f docker-compose.yml pull && docker compose -f docker-compose.yml up -d
 
 # View logs
-docker compose logs -f [service-name]
+docker compose -f docker-compose.yml logs -f [service-name]
+
+# Access container shell
+docker compose -f docker-compose.yml exec [service-name] sh
 ```
 
 ### 📊 Monitoring and Troubleshooting
@@ -199,19 +209,29 @@ docker compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacr
 # Access PostgreSQL in stage
 docker compose -f docker-compose.stage.yml exec postgres psql -U loyacrm -d loyacrm
 
+# Access PostgreSQL in production
+docker compose -f docker-compose.yml exec postgres psql -U loyacrm -d loyacrm
+
 # Run database migrations in development
 docker compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
 
 # Run database migrations in stage
 docker compose -f docker-compose.stage.yml exec backend sh -c "cd db && pnpm run migrate:deploy"
 
+# Run database migrations in production
+docker compose -f docker-compose.yml exec backend sh -c "cd db && pnpm run migrate:deploy"
+
 # Reset development database
 docker compose -f docker-compose.dev.yml down -v  # Removes volumes
 docker compose -f docker-compose.dev.yml up -d   # Recreates with fresh data
 
 # Reset stage database
-./docker-stage-stop.sh
-./docker-stage-start.sh
+docker compose -f docker-compose.stage.yml down -v
+docker compose -f docker-compose.stage.yml up -d
+
+# Reset production database
+docker compose -f docker-compose.yml down -v
+docker compose -f docker-compose.yml up -d
 ```
 
 #### Common Issues
@@ -219,9 +239,12 @@ docker compose -f docker-compose.dev.yml up -d   # Recreates with fresh data
 **Port conflicts:**
 ```bash
 # Check what's using ports
-sudo lsof -i :3003
-sudo lsof -i :4003
-sudo lsof -i :5435
+sudo lsof -i :3003  # Development
+sudo lsof -i :3004  # Stage
+sudo lsof -i :80    # Production
+sudo lsof -i :5435  # Dev database
+sudo lsof -i :5436  # Stage database
+sudo lsof -i :5432  # Prod database
 
 # Change ports in docker-compose files if needed
 ```
@@ -252,10 +275,13 @@ git pull origin main
 # Update development environment
 docker compose -f docker-compose.dev.yml up --build -d
 
+# Update stage environment
+docker compose -f docker-compose.stage.yml up --build -d
+
 # Update production environment
-docker compose down
-docker compose pull
-docker compose up -d
+docker compose -f docker-compose.yml down
+docker compose -f docker-compose.yml pull
+docker compose -f docker-compose.yml up -d
 ```
 
 #### Backup Database (Development)
@@ -304,18 +330,18 @@ docker compose build --pull
 - [ ] Repository cloned
 - [ ] `.env.backend.stage` and `.env.frontend.stage` configured
 - [ ] Stage containers running
-- [ ] Frontend accessible at http://localhost:3004
-- [ ] Backend API responding at http://localhost:4004/api
+- [ ] Application accessible at http://localhost:3004
+- [ ] API available at http://localhost:3004/api
 - [ ] Database accessible at localhost:5436
-- [ ] Database migrations applied
+- [ ] Health checks passing for all services
 
 **Production Setup:**
 - [ ] Production environment files configured
-- [ ] External PostgreSQL database ready
-- [ ] Domain/DNS configured
-- [ ] SSL certificates obtained
 - [ ] Production containers deployed
-- [ ] Application accessible via domain
+- [ ] Application accessible at http://localhost:80
+- [ ] API available at http://localhost:80/api
+- [ ] Database accessible at localhost:5432
+- [ ] Nginx reverse proxy configured
 - [ ] Monitoring and logging configured
 
 ---
