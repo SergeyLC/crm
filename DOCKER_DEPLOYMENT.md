@@ -28,6 +28,7 @@ This document describes production deployment of LoyaCareCRM using Docker. Docke
 ### Production Setup Features
 
 - **Containerized PostgreSQL:** Database runs in Docker container with persistent volume
+- **Persistent Data Storage:** Named volume `loyacrm_prod_pg_data` ensures data survives container restarts and deployments
 - **Docker Network:** All services communicate through internal Docker network
 - **Nginx Reverse Proxy:** Containerized proxy for routing
 - **SSL Termination:** HTTPS at nginx level
@@ -127,7 +128,25 @@ NEXT_PUBLIC_APP_VERSION=docker
 
 ## 🗄️ Step 3: Database Preparation
 
-### 3.1 Run migrations for Docker database
+### 3.1 Understanding Persistent Storage
+
+**Important:** PostgreSQL data is stored in a Docker named volume `loyacrm_prod_pg_data`. This volume persists data between container restarts, deployments, and even container recreation. The volume is automatically created by Docker Compose and survives `docker compose down` commands.
+
+**Volume location:** Docker manages the volume storage location automatically. To inspect:
+```bash
+# List volumes
+docker volume ls
+
+# Inspect volume details
+docker volume inspect loyacrm_prod_pg_data
+
+# Check volume usage
+docker system df -v
+```
+
+**⚠️ Data Safety:** Never delete the volume manually unless you want to lose all database data. Use `docker compose down -v` only if you intentionally want to reset the database.
+
+### 3.2 Run migrations for Docker database
 
 ```bash
 cd /var/www/loyacrm
@@ -440,6 +459,7 @@ lsof -i :4002
 ## 🎯 Docker Deployment Advantages
 
 - **Isolation:** Each component in separate container
+- **Persistent Storage:** Named volumes ensure database data survives deployments and restarts
 - **Scalability:** Easy to scale services
 - **Reproducibility:** Consistent environment across all servers
 - **Management:** Simplified dependency management
@@ -450,4 +470,4 @@ lsof -i :4002
 
 **Author:** Sergey Daub
 **Date:** 26 November 2025
-**Version:** 3.2 - Corrected PostgreSQL configuration (containerized, not external)
+**Version:** 3.3 - Added persistent storage documentation for PostgreSQL volume
