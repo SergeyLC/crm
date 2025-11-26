@@ -20,6 +20,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env.backend
+    environment:
+      - PORT=4003
     depends_on:
       - postgres
     networks:
@@ -34,6 +36,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env.frontend
+    environment:
+      - PORT=3003
     depends_on:
       - backend
     networks:
