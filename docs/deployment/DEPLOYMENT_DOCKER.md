@@ -561,7 +561,7 @@ docker compose -f docker-compose.dev.yml exec -T postgres psql -U loyacrm loyacr
 
 **⚠️ Execute only after thorough testing of Docker setup!**
 
-### Step 1: Stop Current Services
+### Step 1: Stop Current Services *(Server)*
 ```bash
 # Stop PM2 services
 pm2 stop all
@@ -570,7 +570,7 @@ pm2 stop all
 sudo systemctl stop postgresql
 ```
 
-### Step 2: Update Nginx Configuration
+### Step 2: Update Nginx Configuration *(Server)*
 If you have host Nginx, update configuration to use Docker ports:
 
 ```bash
@@ -595,10 +595,10 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### Step 3: Update Environment Variables
+### Step 3: Update Environment Variables *(Server)*
 Update `.env` files to use Docker service names and ports if needed.
 
-### Step 4: Start Docker Services
+### Step 4: Start Docker Services *(Server)*
 ```bash
 # Start Docker production environment
 docker compose -f docker-compose.yml up -d
@@ -607,7 +607,7 @@ docker compose -f docker-compose.yml up -d
 curl http://localhost/api/health
 ```
 
-### Step 5: Clean Up (Optional)
+### Step 5: Clean Up (Optional) *(Server)*
 After successful migration:
 ```bash
 # Remove PM2
@@ -739,31 +739,31 @@ docker compose build --pull
 
 **Что происходит при deployment:**
 
-1. **Клонирование/обновление кода:**
+1. **Клонирование/обновление кода:** *(GitHub Actions → Server)*
    ```bash
    cd /var/www/docker/loyacrm  # или loyacrm-staging
    git fetch origin
    git reset --hard origin/main  # Копирует ВЕСЬ репозиторий
    ```
 
-2. **Создание environment файлов:**
+2. **Создание environment файлов:** *(GitHub Actions)*
    - Production: `.env.docker` (единый файл)
    - Staging: `.env.backend.stage` + `.env.frontend.stage` (раздельные файлы)
 
-3. **Установка зависимостей:**
+3. **Установка зависимостей:** *(GitHub Actions → Server)*
    ```bash
    cd db && pnpm install && pnpm run generate
    cd ../frontend && pnpm install
    cd ../backend && pnpm install
    ```
 
-4. **Сборка приложений:**
+4. **Сборка приложений:** *(GitHub Actions → Server)*
    ```bash
    cd frontend && pnpm run build  # Создает .next/
    cd ../backend && pnpm run build  # Создает dist/
    ```
 
-5. **Запуск Docker:**
+5. **Запуск Docker:** *(GitHub Actions → Server)*
    ```bash
    # Production
    docker-compose build --no-cache
@@ -832,7 +832,7 @@ In your repository settings (`Settings` → `Secrets and variables` → `Actions
 
 ### Server Preparation
 
-#### 1. Install Dependencies
+#### 1. Install Dependencies *(Server)*
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -850,7 +850,7 @@ docker --version
 docker compose version
 ```
 
-#### 2. Setup PostgreSQL (Optional - if not using Docker)
+#### 2. Setup PostgreSQL (Optional - if not using Docker) *(Server)*
 If using external PostgreSQL instead of Docker container:
 ```bash
 # Install PostgreSQL
@@ -864,7 +864,7 @@ GRANT ALL PRIVILEGES ON DATABASE loyacrm TO loyacrm_user;
 \q
 ```
 
-#### 3. Clone Repository
+#### 3. Clone Repository *(Server)*
 ```bash
 sudo mkdir -p /var/www
 cd /var/www
@@ -872,7 +872,7 @@ git clone https://github.com/your-username/LoyaCareCRM.git loyacrm
 cd loyacrm
 ```
 
-#### 4. Configure Environment Variables
+#### 4. Configure Environment Variables *(Server)*
 Create `.env` files on the server:
 
 **`/var/www/loyacrm/.env.backend`:**
@@ -892,11 +892,11 @@ NEXT_PUBLIC_BACKEND_API_URL="https://your-domain.com/api"
 
 The workflow file `.github/workflows/deploy-production.yml` is already configured and will:
 
-1. **Code Validation** - Run linting and type checking
-2. **Application Build** - Build frontend and backend
-3. **Database Migration** - Apply database migrations
-4. **Docker Deployment** - Build and start Docker containers
-5. **Health Check** - Verify application availability
+1. **Code Validation** *(GitHub Actions)* - Run linting and type checking
+2. **Application Build** *(GitHub Actions)* - Build frontend and backend
+3. **Database Migration** *(GitHub Actions → Server)* - Apply database migrations
+4. **Docker Deployment** *(GitHub Actions → Server)* - Build and start Docker containers
+5. **Health Check** *(GitHub Actions → Server)* - Verify application availability
 
 ### Important Notes
 
@@ -938,20 +938,20 @@ pnpm run deploy -- -t -m "add new customer dashboard feature"
 **What the script does:**
 
 **For Regular Commits (Staging):**
-1. ✅ Commits unstaged changes with provided message
-2. ✅ Syncs with remote (`git pull --rebase`)
-3. ✅ Includes list of all unpushed commits in message
-4. ✅ If multiple unpushed commits exist: creates summary commit with `chore(staging): v{VERSION}`
-5. ✅ Pushes to main → triggers staging deployment
+1. ✅ Commits unstaged changes with provided message *(Local → GitHub)*
+2. ✅ Syncs with remote (`git pull --rebase`) *(Local → GitHub)*
+3. ✅ Includes list of all unpushed commits in message *(Local)*
+4. ✅ If multiple unpushed commits exist: creates summary commit with `chore(staging): v{VERSION}` *(Local)*
+5. ✅ Pushes to main → triggers staging deployment *(Local → GitHub → Server)*
 
 **For Releases (Production with `-t` flag):**
-1. ✅ Reads current version from `frontend/package.json` and git tags
-2. ✅ Auto-increments patch version (e.g., `0.1.33` → `0.1.34`)
-3. ✅ Creates commit with `chore(release): v{VERSION}` message
-4. ✅ Includes list of all unpushed commits in commit message
-5. ✅ Pushes commit to main
-6. ✅ Creates and pushes annotated release tag: `v0.1.34`
-7. ✅ GitHub Actions automatically deploys to production and updates package.json
+1. ✅ Reads current version from `frontend/package.json` and git tags *(Local)*
+2. ✅ Auto-increments patch version (e.g., `0.1.33` → `0.1.34`) *(Local)*
+3. ✅ Creates commit with `chore(release): v{VERSION}` message *(Local)*
+4. ✅ Includes list of all unpushed commits in commit message *(Local)*
+5. ✅ Pushes commit to main *(Local → GitHub)*
+6. ✅ Creates and pushes annotated release tag: `v0.1.34` *(Local → GitHub)*
+7. ✅ GitHub Actions automatically deploys to production and updates package.json *(GitHub → Server)*
 
 **Command Options:**
 - `-m "message"` - **Required**: Custom description for commit/release
