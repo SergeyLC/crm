@@ -127,61 +127,285 @@ docker compose -f docker-compose.yml logs -f
 | **Stage** | http://localhost:3004 | http://localhost:3004/api | localhost:5436 | 3004 |
 | **Production** | http://localhost:80 | http://localhost:80/api | localhost:5432 | 80 |
 
+### 🛠️ Docker Convenience Scripts
+
+This project includes several convenience scripts to simplify Docker management across different environments. These scripts provide a user-friendly interface for common Docker operations, making deployment and maintenance more accessible to developers and operations teams.
+
+#### Benefits of Using Convenience Scripts:
+- **Simplified Commands**: Single commands instead of complex Docker Compose syntax
+- **Error Prevention**: Built-in validation and error checking
+- **Environment Safety**: Environment-specific configurations prevent accidental cross-environment operations
+- **User Experience**: Clear output messages and status indicators
+- **Consistency**: Standardized operations across all environments
+- **Documentation**: Self-documenting commands with help text
+
+#### Available Scripts by Environment:
+
+**Development Environment:**
+- `docker-dev-start.sh` - Starts development environment with database migrations and health checks
+- `docker-dev-stop.sh` - Stops all development services cleanly
+- `docker-dev-logs.sh` - Displays real-time logs from development containers
+
+**Stage Environment:**
+- `docker-stage-start.sh` - Starts staging environment with build and validation
+- `docker-stage-stop.sh` - Stops staging services
+- `docker-stage-logs.sh` - Shows staging container logs (supports service filtering)
+
+**Production Environment:**
+- `docker-start.sh` - Starts production services on deployment server
+- `docker-stop.sh` - Stops production services
+- `docker-logs.sh` - Displays production logs
+- `docker-update.sh` - Updates and restarts production services
+
+#### Script Features:
+- **Environment Validation**: Checks for required files and configurations
+- **Error Handling**: Graceful failure with informative error messages
+- **Status Output**: Clear success/failure indicators
+- **Service Health**: Automatic health checks where applicable
+- **Directory Safety**: Validates working directory before operations
+
 ### 🔧 Docker Management Commands
 
 #### Development Environment
 ```bash
-# Start development containers
+# Quick start/stop/logs (recommended for beginners)
+./docker-dev-start.sh    # Start with migrations and checks
+./docker-dev-stop.sh     # Stop all services
+./docker-dev-logs.sh     # View logs
+
+# Or manual commands
 docker compose -f docker-compose.dev.yml up -d
-
-# Stop development containers
 docker compose -f docker-compose.dev.yml down
-
-# Rebuild and restart
-docker compose -f docker-compose.dev.yml up --build --force-recreate
-
-# View logs
 docker compose -f docker-compose.dev.yml logs -f [service-name]
-
-# Access container shell
-docker compose -f docker-compose.dev.yml exec [service-name] sh
 ```
 
 #### Stage Environment
 ```bash
-# Start stage containers
-docker compose -f docker-compose.stage.yml up -d
+# Quick start/stop/logs
+./docker-stage-start.sh   # Start stage environment
+./docker-stage-stop.sh    # Stop stage services
+./docker-stage-logs.sh    # View logs (optionally: [service-name])
 
-# Stop stage containers
+# Or manual commands
+docker compose -f docker-compose.stage.yml up --build -d
 docker compose -f docker-compose.stage.yml down
-
-# Rebuild and restart
-docker compose -f docker-compose.stage.yml up --build --force-recreate
-
-# View logs
 docker compose -f docker-compose.stage.yml logs -f [service-name]
-
-# Access container shell
-docker compose -f docker-compose.stage.yml exec [service-name] sh
 ```
 
 #### Production Environment
 ```bash
-# Start production containers
+# Quick management (on server)
+./docker-start.sh         # Start production services
+./docker-stop.sh          # Stop production services
+./docker-logs.sh          # View production logs
+./docker-update.sh        # Update and restart
+
+# Or manual commands
 docker compose -f docker-compose.yml up -d
-
-# Stop production containers
 docker compose -f docker-compose.yml down
-
-# Update and restart
-docker compose -f docker-compose.yml pull && docker compose -f docker-compose.yml up -d
-
-# View logs
 docker compose -f docker-compose.yml logs -f [service-name]
-
-# Access container shell
-docker compose -f docker-compose.yml exec [service-name] sh
 ```
+
+#### Script Details and Usage
+
+##### Development Scripts
+
+**`docker-dev-start.sh`**
+- **Purpose**: Complete development environment startup with validation
+- **What it does**:
+  - Validates environment files exist
+  - Checks Docker availability
+  - Starts all services with database migrations
+  - Runs health checks
+  - Displays access URLs and status
+- **Usage**: `./docker-dev-start.sh`
+- **Output**: Service status, access URLs, health check results
+
+**`docker-dev-stop.sh`**
+- **Purpose**: Clean shutdown of development environment
+- **What it does**:
+  - Stops all running containers
+  - Preserves data volumes
+  - Shows stopped services
+- **Usage**: `./docker-dev-stop.sh`
+- **Output**: Confirmation of stopped services
+
+**`docker-dev-logs.sh`**
+- **Purpose**: Real-time log monitoring for development
+- **What it does**:
+  - Displays logs from all services
+  - Supports optional service filtering
+  - Follows log output in real-time
+- **Usage**: `./docker-dev-logs.sh [service-name]`
+- **Output**: Continuous log stream
+
+##### Stage Scripts
+
+**`docker-stage-start.sh`**
+- **Purpose**: Production-like staging environment startup
+- **What it does**:
+  - Validates stage-specific environment files
+  - Builds images if needed
+  - Starts services with proper networking
+  - Verifies nginx proxy configuration
+  - Shows access information
+- **Usage**: `./docker-stage-start.sh`
+- **Output**: Build status, service URLs, health indicators
+
+**`docker-stage-stop.sh`**
+- **Purpose**: Clean staging environment shutdown
+- **What it does**:
+  - Stops all staging containers
+  - Maintains data integrity
+  - Confirms successful shutdown
+- **Usage**: `./docker-stage-stop.sh`
+- **Output**: Stop confirmation messages
+
+**`docker-stage-logs.sh`**
+- **Purpose**: Staging environment log monitoring
+- **What it does**:
+  - Shows logs from staging services
+  - Supports service-specific filtering
+  - Includes nginx proxy logs
+- **Usage**: `./docker-stage-logs.sh [service-name]`
+- **Output**: Filtered or full log streams
+
+##### Production Scripts
+
+**`docker-start.sh`**
+- **Purpose**: Production service startup (server deployment)
+- **What it does**:
+  - Starts production containers
+  - Verifies service health
+  - Configures networking
+  - Enables monitoring
+- **Usage**: `./docker-start.sh` (on production server)
+- **Output**: Startup status and access URLs
+
+**`docker-stop.sh`**
+- **Purpose**: Production service shutdown
+- **What it does**:
+  - Gracefully stops services
+  - Maintains data consistency
+  - Prepares for maintenance
+- **Usage**: `./docker-stop.sh` (on production server)
+- **Output**: Shutdown confirmation
+
+**`docker-logs.sh`**
+- **Purpose**: Production log monitoring
+- **What it does**:
+  - Displays production service logs
+  - Supports service filtering
+  - Includes system monitoring
+- **Usage**: `./docker-logs.sh [service-name]` (on production server)
+- **Output**: Production log streams
+
+**`docker-update.sh`**
+- **Purpose**: Rolling update for production services
+- **What it does**:
+  - Pulls latest images
+  - Stops old containers
+  - Starts new containers
+  - Runs health checks
+  - Cleans up old images
+- **Usage**: `./docker-update.sh` (on production server)
+- **Output**: Update progress and status
+
+### 🔧 Utility Scripts
+
+In addition to Docker management scripts, the project includes several utility scripts for development, testing, and deployment workflows.
+
+#### Development and Testing Scripts
+
+**`check-node-version.sh`**
+- **Purpose**: Validates Node.js installation and version compatibility
+- **What it does**:
+  - Checks if Node.js is installed
+  - Verifies version meets requirements (Node.js 24+)
+  - Shows system information
+  - Provides upgrade instructions if needed
+- **Usage**: `./check-node-version.sh`
+- **Output**: Version status and compatibility report
+
+**`run-e2e-tests.sh`**
+- **Purpose**: Runs end-to-end tests on dedicated test ports
+- **What it does**:
+  - Uses test-specific ports (Frontend: 3001, Backend: 4001)
+  - Prevents interference with development servers
+  - Runs Playwright test suite
+  - Provides clear success/failure feedback
+- **Usage**: `./run-e2e-tests.sh` or `cd frontend && pnpm run playwright`
+- **Output**: Test results and status
+
+**`test-pre-push.sh`**
+- **Purpose**: Simulates pre-push hook for local testing
+- **What it does**:
+  - Runs TypeScript type checking
+  - Executes ESLint linting
+  - Runs test suites
+  - Verifies builds (Frontend + Backend)
+  - Tests basic functionality
+- **Usage**: `./test-pre-push.sh`
+- **Output**: Comprehensive test results
+
+#### Deployment and Monitoring Scripts
+
+**`deploy.sh`**
+- **Purpose**: Automated deployment with version management and tagging
+- **What it does**:
+  - Commits unstaged changes with custom messages
+  - Auto-increments version numbers for releases
+  - Creates and pushes Git tags for production deployment
+  - Supports staging deployments
+  - Includes commit history in release notes
+- **Usage**:
+  - Staging: `./deploy.sh -m "fix: bug description"`
+  - Production: `./deploy.sh -t -m "new features release"`
+  - Specific version: `./deploy.sh -v 1.5.0 -m "major release"`
+- **Output**: Deployment status, version information, and next steps
+
+**`check-deployment.sh`**
+- **Purpose**: Comprehensive deployment status monitoring (server-side)
+- **What it does**:
+  - Checks PM2 process status
+  - Displays recent application logs
+  - Tests service availability (health checks)
+  - Shows system resource usage
+  - Reports disk and memory usage
+- **Usage**: `./check-deployment.sh` (on production server)
+- **Output**: Complete system and application health report
+
+#### Git and Development Workflow Scripts
+
+**`scripts/install-hooks.sh`**
+- **Purpose**: Installs Git hooks for automated code quality checks
+- **What it does**:
+  - Copies pre-push hook to `.git/hooks/`
+  - Sets executable permissions
+  - Ensures code quality before pushes
+- **Usage**: `./scripts/install-hooks.sh`
+- **Output**: Hook installation confirmation
+
+**`scripts/pre-push` (Git Hook)**
+- **Purpose**: Automated pre-push validation (installed by install-hooks.sh)
+- **What it does**:
+  - Runs TypeScript type checking across all packages
+  - Executes ESLint linting
+  - Runs test suites (unit + E2E)
+  - Verifies builds for frontend and backend
+  - Prevents pushes with failing code
+- **Triggers**: Automatically on `git push` to branches
+- **Skips**: Tag pushes and delete operations
+- **Output**: Comprehensive quality check results
+
+**`scripts/deploy.js`**
+- **Purpose**: Legacy deployment script (superseded by deploy.sh)
+- **What it does**:
+  - Auto-increments patch version in db/package.json
+  - Creates commits and Git tags
+  - Pushes changes and tags to remote
+- **Usage**: `node scripts/deploy.js` (legacy, use deploy.sh instead)
+- **Note**: Replaced by the more advanced `deploy.sh` script
 
 ### 📊 Monitoring and Troubleshooting
 
