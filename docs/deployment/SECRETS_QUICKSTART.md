@@ -1,28 +1,28 @@
 # Quick Start: GitHub Secrets for Deployment
 
-## 🎯 Что изменилось
+## 🎯 What changed
 
-Теперь деплой **автоматически создает** `.env.production.local` файлы из GitHub Secrets. Больше не нужно вручную создавать эти файлы на сервере!
+Now deployment **automatically creates** `.env.production.local` files from GitHub Secrets. No more need to manually create these files on the server!
 
-## 📋 Необходимые GitHub Secrets
+## 📋 Required GitHub Secrets
 
-Добавьте следующие 8 секретов в ваш GitHub репозиторий:
+Add the following 8 secrets to your GitHub repository:
 
-### 1. Подключение к серверу
+### 1. Server connection
 ```
 SERVER_HOST=161.97.67.253
 SERVER_USER=ubuntu
-SERVER_SSH_KEY=<содержимое приватного SSH ключа>
+SERVER_SSH_KEY=<content of private SSH key>
 ```
 
-### 2. База данных
+### 2. Database
 ```
 DATABASE_URL=postgresql://loyacare_prod:password@localhost:5432/loya_care_crm_prod
 ```
 
-### 3. Безопасность
+### 3. Security
 ```bash
-# Сгенерировать: openssl rand -hex 32
+# Generate: openssl rand -hex 32
 JWT_SECRET=8f7a3b2c1d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b
 ```
 
@@ -37,27 +37,27 @@ NEXT_PUBLIC_API_URL=https://your-domain.com
 NEXT_PUBLIC_BACKEND_API_URL=https://api.your-domain.com/api
 ```
 
-## 🚀 Как добавить секреты в GitHub
+## 🚀 How to add secrets to GitHub
 
-### Быстрый способ:
+### Quick way:
 
-1. Откройте: `https://github.com/Betreut-zu-Hause/LoyaCareCRM/settings/secrets/actions`
-2. Нажмите **"New repository secret"**
-3. Добавьте каждый секрет из списка выше
-4. **Важно:** имена секретов должны совпадать точно!
+1. Open: `https://github.com/Betreut-zu-Hause/LoyaCareCRM/settings/secrets/actions`
+2. Click **"New repository secret"**
+3. Add each secret from the list above
+4. **Important:** secret names must match exactly!
 
-### Или через UI:
+### Or through UI:
 
-1. Перейдите в ваш репозиторий на GitHub
-2. **Settings** (вверху)
-3. **Secrets and variables** → **Actions** (слева)
+1. Go to your repository on GitHub
+2. **Settings** (at the top)
+3. **Secrets and variables** → **Actions** (on the left)
 4. **New repository secret**
-5. Заполните **Name** и **Value**
+5. Fill in **Name** and **Value**
 6. **Add secret**
 
-## ✅ Проверка
+## ✅ Verification
 
-После добавления всех 8 секретов, вы должны увидеть их в списке:
+After adding all 8 secrets, you should see them in the list:
 
 ```
 ✓ SERVER_HOST
@@ -70,55 +70,55 @@ NEXT_PUBLIC_BACKEND_API_URL=https://api.your-domain.com/api
 ✓ NEXT_PUBLIC_BACKEND_API_URL
 ```
 
-## 🧪 Тестирование
+## 🧪 Testing
 
-Запустите деплой:
+Run deployment:
 
 ```bash
 git tag v1.0.1
 git push origin v1.0.1
 ```
 
-Проверьте в **Actions** → workflow должен:
-1. ✅ Создать `.env.production.local` файлы
-2. ✅ Установить права `chmod 600`
-3. ✅ Перезапустить PM2
+Check in **Actions** → workflow should:
+1. ✅ Create `.env.production.local` files
+2. ✅ Set permissions `chmod 600`
+3. ✅ Restart PM2
 
-## 📚 Подробная документация
+## 📚 Detailed documentation
 
-Для детальной информации смотрите:
-- `.github/GITHUB_SECRETS_GUIDE.md` - Полное руководство по секретам
-- `.github/SERVER_SETUP.md` - Первоначальная настройка сервера
-- `README.env.md` - Документация по переменным окружения
-- `DEPLOYMENT_PRODUCTION.md` - Руководство по деплою
+For detailed information see:
+- `.github/GITHUB_SECRETS_GUIDE.md` - Complete guide to secrets
+- `.github/SERVER_SETUP.md` - Initial server setup
+- `README.env.md` - Documentation on environment variables
+- `DEPLOYMENT_PRODUCTION.md` - Deployment guide
 
-## 🔒 Безопасность
+## 🔒 Security
 
-- ✅ Секреты **зашифрованы** в GitHub
-- ✅ Секреты **не видны** в логах Actions
-- ✅ `.env.production.local` файлы **не коммитятся** в git
-- ✅ Файлы защищены `chmod 600` на сервере
+- ✅ Secrets are **encrypted** in GitHub
+- ✅ Secrets are **not visible** in Actions logs
+- ✅ `.env.production.local` files are **not committed** to git
+- ✅ Files are protected with `chmod 600` on the server
 
-## ⚡ Преимущества
+## ⚡ Advantages
 
-**Раньше:**
-- ручное создание `.env.production.local` на сервере
-- риск забыть обновить секреты при изменении
-- сложно синхронизировать между окружениями
+**Before:**
+- manual creation of `.env.production.local` on the server
+- risk of forgetting to update secrets when changing
+- difficult to synchronize between environments
 
-**Теперь:**
-- ✅ Автоматическое создание при каждом деплое
-- ✅ Централизованное управление секретами в GitHub
-- ✅ Легко обновить - просто измените секрет и передеплойте
+**Now:**
+- ✅ Automatic creation on every deployment
+- ✅ Centralized secret management in GitHub
+- ✅ Easy to update - just change the secret and redeploy
 
-## 🆘 Проблемы?
+## 🆘 Problems?
 
-Если деплой не работает:
+If deployment doesn't work:
 
-1. **Проверьте все 8 секретов добавлены**
-2. **Имена секретов точно совпадают** (case-sensitive!)
-3. **SSH ключ правильный** (включая BEGIN/END строки)
-4. **DATABASE_URL формат правильный**
-5. Проверьте логи в **Actions** → кликните на workflow
+1. **Check all 8 secrets are added**
+2. **Secret names match exactly** (case-sensitive!)
+3. **SSH key is correct** (including BEGIN/END lines)
+4. **DATABASE_URL format is correct**
+5. Check logs in **Actions** → click on workflow
 
-Детальная помощь: `.github/GITHUB_SECRETS_GUIDE.md`
+Detailed help: `.github/GITHUB_SECRETS_GUIDE.md`

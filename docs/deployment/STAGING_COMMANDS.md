@@ -1,21 +1,21 @@
 # Staging Setup Commands - Copy & Paste
 
-Готовые команды для быстрой настройки staging на сервере **161.97.67.253**.
+Ready-to-use commands for quick staging setup on server **161.97.67.253**.
 
-## 🚀 Все команды одним блоком
+## 🚀 All Commands in One Block
 
 ```bash
 #!/bin/bash
-# Staging Setup Script для 161.97.67.253
+# Staging Setup Script for 161.97.67.253
 
-# Цвета для вывода
+# Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
 echo -e "${BLUE}🚀 Starting staging setup...${NC}"
 
-# 1. Создать staging БД
+# 1. Create staging database
 echo -e "${BLUE}📦 Creating staging database...${NC}"
 sudo -u postgres psql << 'EOF'
 CREATE USER loyacare_staging WITH PASSWORD 'StAgInG_PaSsWoRd_2024!';
@@ -24,7 +24,7 @@ GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_staging TO loyacare_staging;
 \q
 EOF
 
-# 2. Клонировать репозиторий
+# 2. Clone repository
 echo -e "${BLUE}📥 Cloning repository...${NC}"
 sudo mkdir -p /var/www/loyacrm-staging
 sudo chown $USER:$USER /var/www/loyacrm-staging
@@ -32,7 +32,7 @@ cd /var/www/loyacrm-staging
 git clone https://github.com/Betreut-zu-Hause/LoyaCareCRM.git .
 git checkout main
 
-# 3. Создать environment файлы
+# 3. Create environment files
 echo -e "${BLUE}🔧 Creating environment files...${NC}"
 
 # Backend .env
@@ -64,18 +64,18 @@ PRISMA_LOG_LEVEL=warn
 EOF
 chmod 600 db/.env.production.local
 
-# 4. Установить pnpm если не установлен
+# 4. Install pnpm if not installed
 if ! command -v pnpm &> /dev/null; then
     echo -e "${BLUE}📦 Installing pnpm...${NC}"
     npm install -g pnpm@10
 fi
 
-# Настроить pnpm
+# Configure pnpm
 pnpm config set store-dir /var/cache/pnpm
 pnpm config set fetch-timeout 300000
 pnpm config set enable-pre-post-scripts true
 
-# 5. Собрать проект
+# 5. Build project
 echo -e "${BLUE}🔨 Building project...${NC}"
 
 # DB
@@ -99,13 +99,13 @@ pnpm install --frozen-lockfile --prefer-offline
 pnpm run build
 cd ..
 
-# Миграции и seed
+# Migrations and seed
 cd db
 pnpm run migrate:deploy
 pnpm run seed
 cd ..
 
-# 6. Создать PM2 конфигурацию
+# 6. Create PM2 configuration
 echo -e "${BLUE}⚙️  Creating PM2 config...${NC}"
 cat > ecosystem.staging.config.js << 'EOF'
 module.exports = {
@@ -157,15 +157,15 @@ module.exports = {
 };
 EOF
 
-# 7. Запустить PM2
+# 7. Start PM2
 echo -e "${BLUE}🚀 Starting PM2 services...${NC}"
 pm2 start ecosystem.staging.config.js
 pm2 save
 
-# 8. Настроить Nginx
+# 8. Configure Nginx
 echo -e "${BLUE}🌐 Configuring Nginx...${NC}"
 sudo tee /etc/nginx/sites-available/loyacrm-staging > /dev/null << 'EOF'
-# Staging Frontend на порту 8001
+# Staging Frontend on port 8001
 server {
     listen 8001;
     server_name 161.97.67.253;
@@ -186,7 +186,7 @@ server {
     }
 }
 
-# Staging Backend API на порту 8002
+# Staging Backend API on port 8002
 server {
     listen 8002;
     server_name 161.97.67.253;
@@ -209,12 +209,12 @@ sudo ln -s /etc/nginx/sites-available/loyacrm-staging /etc/nginx/sites-enabled/ 
 sudo nginx -t
 sudo systemctl reload nginx
 
-# 9. Открыть порты в firewall
+# 9. Open ports in firewall
 echo -e "${BLUE}🔓 Opening firewall ports...${NC}"
 sudo ufw allow 8001/tcp comment 'Staging Frontend'
 sudo ufw allow 8002/tcp comment 'Staging Backend API'
 
-# 10. Проверка
+# 10. Verification
 echo -e "${GREEN}✅ Staging setup complete!${NC}"
 echo ""
 echo "📊 Status:"
@@ -235,17 +235,17 @@ echo "   2. Test access: curl http://161.97.67.253:8002/api/health"
 echo "   3. Open in browser: http://161.97.67.253:8001"
 ```
 
-## 📝 Ручная установка (пошагово)
+## 📝 Manual Installation (Step by Step)
 
-Если автоматический скрипт не подходит, выполните команды по одной:
+If the automatic script doesn't work, execute commands one by one:
 
-### 1. База данных
+### 1. Database
 
 ```bash
 sudo -u postgres psql
 ```
 
-В PostgreSQL:
+In PostgreSQL:
 ```sql
 CREATE USER loyacare_staging WITH PASSWORD 'StAgInG_PaSsWoRd_2024!';
 CREATE DATABASE loya_care_crm_staging OWNER loyacare_staging;
@@ -253,7 +253,7 @@ GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_staging TO loyacare_staging;
 \q
 ```
 
-### 2. Клонировать репозиторий
+### 2. Clone repository
 
 ```bash
 sudo mkdir -p /var/www/loyacrm-staging
@@ -262,11 +262,11 @@ cd /var/www/loyacrm-staging
 git clone https://github.com/Betreut-zu-Hause/LoyaCareCRM.git .
 ```
 
-### 3. Environment файлы
+### 3. Environment files
 
-См. секцию 3 в автоматическом скрипте выше.
+See section 3 in the automatic script above.
 
-### 4. Установить и собрать
+### 4. Install and build
 
 ```bash
 cd /var/www/loyacrm-staging
@@ -288,9 +288,9 @@ cd backend && pnpm install && pnpm run build && cd ..
 cd db && pnpm run migrate:deploy && pnpm run seed && cd ..
 ```
 
-### 5. PM2 и Nginx
+### 5. PM2 and Nginx
 
-См. секции 6-8 в автоматическом скрипте.
+See sections 6-8 in the automatic script.
 
 ## 🔑 GitHub Secrets
 
@@ -338,13 +338,13 @@ STAGING_NEXT_PUBLIC_BACKEND_API_URL=http://161.97.67.253:8002/api
 
 **Note:** The workflow uses Environment secrets (Option A) by default.
 
-## ✅ Проверка установки
+## ✅ Installation Verification
 
 ```bash
-# PM2 статус
+# PM2 status
 pm2 status
 
-# Логи
+# Logs
 pm2 logs loyacrm-staging-backend --lines 20
 pm2 logs loyacrm-staging-frontend --lines 20
 
@@ -356,16 +356,16 @@ curl http://161.97.67.253:8002/api/health
 curl -I http://localhost:3001
 curl -I http://161.97.67.253:8001
 
-# Nginx порты
+# Nginx ports
 sudo ss -tulpn | grep nginx | grep -E '8001|8002'
-# Или:
+# Or:
 sudo lsof -i :8001 -i :8002
 
 # Firewall
 sudo ufw status | grep -E '8001|8002'
 ```
 
-## 🔄 Обновление staging
+## 🔄 Updating Staging
 
 ```bash
 cd /var/www/loyacrm-staging
@@ -377,7 +377,7 @@ cd db && pnpm run migrate:deploy && cd ..
 pm2 restart loyacrm-staging-backend loyacrm-staging-frontend
 ```
 
-## 🆘 Проблемы
+## 🆘 Problems
 
 ### "Connection refused"
 ```bash
@@ -389,7 +389,7 @@ pm2 logs
 ```bash
 cd /var/www/loyacrm-staging/backend
 grep CORS_ORIGIN .env.production.local
-# Должно быть: http://161.97.67.253:8001
+# Should be: http://161.97.67.253:8001
 pm2 restart loyacrm-staging-backend
 ```
 

@@ -2,214 +2,214 @@
 
 ## 🚀 Performance Improvements
 
-Оптимизированная конфигурация nginx добавляет:
+The optimized nginx configuration adds:
 
-### 1. **Gzip сжатие (экономит 70-80% трафика)**
+### 1. **Gzip compression (saves 70-80% traffic)**
 ```nginx
 gzip on;
 gzip_comp_level 6;
 gzip_types text/plain text/css application/json application/javascript...;
 ```
-**Эффект:** Страница 500KB → 100KB
+**Effect:** Page 500KB → 100KB
 
-### 2. **HTTP/2 (ускорение на 30-50%)**
+### 2. **HTTP/2 (30-50% speedup)**
 ```nginx
 listen 443 ssl http2;
 ```
-**Эффект:** Параллельная загрузка ресурсов, меньше latency
+**Effect:** Parallel resource loading, less latency
 
-### 3. **Aggressive кеширование статики**
-- `_next/static/` - 1 год (immutable)
-- `_next/image` - 1 год
-- `/public/` - 1 час
-- `favicon.ico` - 1 день
+### 3. **Aggressive static caching**
+- `_next/static/` - 1 year (immutable)
+- `_next/image` - 1 year
+- `/public/` - 1 hour
+- `favicon.ico` - 1 day
 
-**Эффект:** Повторные визиты загружаются мгновенно
+**Effect:** Repeat visits load instantly
 
-### 4. **Rate Limiting (защита от DDoS)**
+### 4. **Rate Limiting (DDoS protection)**
 ```nginx
 limit_req zone=api_limit burst=5 nodelay;  # API: 10 req/s
 limit_req zone=general_limit burst=20 nodelay;  # Frontend: 30 req/s
 ```
-**Эффект:** Защита от перегрузки и злоупотреблений
+**Effect:** Protection against overload and abuse
 
 ### 5. **Connection Keepalive**
 ```nginx
 upstream frontend {
     server localhost:3000;
-    keepalive 64;  # Переиспользование соединений
+    keepalive 64;  # Connection reuse
 }
 ```
-**Эффект:** Меньше TCP handshakes, быстрее отклик
+**Effect:** Fewer TCP handshakes, faster response
 
-### 6. **Оптимизированные буферы**
+### 6. **Optimized buffers**
 ```nginx
-client_max_body_size 10M;  # Загрузка файлов до 10MB
-proxy_buffers 8 4k;  # Эффективная буферизация
+client_max_body_size 10M;  # File upload up to 10MB
+proxy_buffers 8 4k;  # Efficient buffering
 ```
 
-## 📋 Как применить
+## 📋 How to apply
 
-### Шаг 1: Backup текущей конфигурации
+### Step 1: Backup current configuration
 ```bash
 sudo cp /etc/nginx/sites-available/loyacrm /etc/nginx/sites-available/loyacrm.backup
 ```
 
-### Шаг 2: Скопировать оптимизированную конфигурацию
+### Step 2: Copy optimized configuration
 ```bash
-# Из репозитория скопируйте .github/nginx-optimized.conf
+# Copy .github/nginx-optimized.conf from the repository
 sudo cp /path/to/repo/.github/nginx-optimized.conf /etc/nginx/sites-available/loyacrm
 ```
 
-### Шаг 3: Отредактировать под ваш домен
+### Step 3: Edit for your domain
 ```bash
 sudo nano /etc/nginx/sites-available/loyacrm
 ```
 
-Замените:
-- `your-domain.com` → ваш реальный домен
-- `www.your-domain.com` → ваш www домен (если есть)
+Replace:
+- `your-domain.com` → your real domain
+- `www.your-domain.com` → your www domain (if any)
 
-### Шаг 4: Проверить конфигурацию
+### Step 4: Test configuration
 ```bash
 sudo nginx -t
 ```
 
-**Ожидаемый вывод:**
+**Expected output:**
 ```
 nginx: configuration file /etc/nginx/nginx.conf test is successful
 ```
 
-### Шаг 5: Применить изменения
+### Step 5: Apply changes
 ```bash
 sudo systemctl reload nginx
 ```
 
-### Шаг 6: Проверить gzip
+### Step 6: Test gzip
 ```bash
 curl -H "Accept-Encoding: gzip" -I https://your-domain.com
 ```
 
-**Должно быть:**
+**Should be:**
 ```
 Content-Encoding: gzip
 ```
 
-### Шаг 7: Настроить SSL и HTTP/2
+### Step 7: Set up SSL and HTTP/2
 
-После получения SSL сертификата:
+After obtaining SSL certificate:
 ```bash
 sudo certbot --nginx -d your-domain.com -d www.your-domain.com
 ```
 
-Certbot автоматически:
-- ✅ Добавит SSL сертификаты
-- ✅ Включит HTTP/2
-- ✅ Настроит редирект HTTP → HTTPS
-- ✅ Автопродление сертификатов
+Certbot automatically:
+- ✅ Adds SSL certificates
+- ✅ Enables HTTP/2
+- ✅ Sets up HTTP → HTTPS redirect
+- ✅ Automatic certificate renewal
 
-## 📊 Измерение производительности
+## 📊 Performance Measurement
 
-### До оптимизации:
+### Before optimization:
 ```bash
 curl -w "@curl-format.txt" -o /dev/null -s https://your-domain.com
 ```
 
-### После оптимизации:
+### After optimization:
 ```bash
-# Должны увидеть:
-# - time_total: снижение на 30-50%
-# - size_download: снижение на 70-80% (благодаря gzip)
+# Should see:
+# - time_total: reduction by 30-50%
+# - size_download: reduction by 70-80% (thanks to gzip)
 ```
 
-### Тест с инструментами:
+### Test with tools:
 - **Google PageSpeed Insights**: https://pagespeed.web.dev/
 - **GTmetrix**: https://gtmetrix.com/
 - **WebPageTest**: https://www.webpagetest.org/
 
-**Ожидаемые улучшения:**
-- PageSpeed Score: +20-30 баллов
+**Expected improvements:**
+- PageSpeed Score: +20-30 points
 - First Contentful Paint: -30-40%
 - Time to Interactive: -20-30%
 
-## 🔍 Мониторинг
+## 🔍 Monitoring
 
-### Проверить активные соединения:
+### Check active connections:
 ```bash
 sudo ss -s
 ```
 
-### Проверить rate limiting:
+### Check rate limiting:
 ```bash
 sudo tail -f /var/log/nginx/error.log | grep limiting
 ```
 
-### Проверить кеш headers:
+### Check cache headers:
 ```bash
 curl -I https://your-domain.com/_next/static/chunks/main.js
-# Должно быть: Cache-Control: public, max-age=31536000, immutable
+# Should be: Cache-Control: public, max-age=31536000, immutable
 ```
 
-## ⚠️ Важные замечания
+## ⚠️ Important notes
 
-1. **Rate limiting может блокировать легитимных пользователей**
-   - Если видите ошибки 503 - увеличьте `burst` значения
-   - Текущие лимиты: API 10 req/s, Frontend 30 req/s
+1. **Rate limiting may block legitimate users**
+   - If you see 503 errors - increase `burst` values
+   - Current limits: API 10 req/s, Frontend 30 req/s
 
-2. **client_max_body_size установлен в 10MB**
-   - Если нужно загружать файлы больше → увеличьте
-   - Пример: `client_max_body_size 50M;`
+2. **client_max_body_size is set to 10MB**
+   - If you need to upload larger files → increase
+   - Example: `client_max_body_size 50M;`
 
-3. **Gzip сжатие использует CPU**
-   - `gzip_comp_level 6` - баланс между скоростью и сжатием
-   - Если CPU загружен → уменьшите до 4
-   - Если CPU свободен → увеличьте до 9
+3. **Gzip compression uses CPU**
+   - `gzip_comp_level 6` - balance between speed and compression
+   - If CPU is loaded → decrease to 4
+   - If CPU is free → increase to 9
 
-4. **После SSL сертификата**
-   - Раскомментируйте HTTPS server block
-   - Включите HSTS (после тестирования!)
+4. **After SSL certificate**
+   - Uncomment the HTTPS server block
+   - Enable HSTS (after testing!)
 
-## 🎯 Staging конфигурация
+## 🎯 Staging configuration
 
-Для staging используйте аналогичную конфигурацию, но с другими портами:
-- Frontend: `localhost:3001` (вместо 3000)
-- Backend: `localhost:4001` (вместо 4000)
-- Rate limits: можно сделать более строгие (staging для тестов)
+For staging, use a similar configuration, but with different ports:
+- Frontend: `localhost:3001` (instead of 3000)
+- Backend: `localhost:4001` (instead of 4000)
+- Rate limits: can be made stricter (staging for tests)
 
-## 📈 Ожидаемые результаты
+## 📈 Expected results
 
-**До оптимизации:**
-- Размер страницы: ~500KB
-- Время загрузки: ~2-3 секунды
-- Количество запросов: ~40
+**Before optimization:**
+- Page size: ~500KB
+- Load time: ~2-3 seconds
+- Number of requests: ~40
 
-**После оптимизации:**
-- Размер страницы: ~100KB (gzip)
-- Время загрузки: ~0.8-1.2 секунды (HTTP/2 + cache)
-- Количество запросов: ~10 (cache работает)
-- Повторные визиты: <0.3 секунды
+**After optimization:**
+- Page size: ~100KB (gzip)
+- Load time: ~0.8-1.2 seconds (HTTP/2 + cache)
+- Number of requests: ~10 (cache works)
+- Repeat visits: <0.3 seconds
 
 ## 🛠️ Troubleshooting
 
-### Проблема: 502 Bad Gateway
+### Problem: 502 Bad Gateway
 ```bash
-# Проверить, что Node.js приложения запущены
+# Check that Node.js applications are running
 pm2 status
 
-# Проверить порты
+# Check ports
 sudo ss -tulpn | grep -E '3000|4000'
 ```
 
-### Проблема: 503 Service Temporarily Unavailable
+### Problem: 503 Service Temporarily Unavailable
 ```bash
-# Rate limiting срабатывает
-# Увеличьте burst в конфигурации или проверьте логи
+# Rate limiting is triggered
+# Increase burst in configuration or check logs
 sudo tail -f /var/log/nginx/error.log
 ```
 
-### Проблема: Gzip не работает
+### Problem: Gzip is not working
 ```bash
-# Проверить main nginx.conf
+# Check main nginx.conf
 sudo nano /etc/nginx/nginx.conf
-# Убедитесь что нет `gzip off;` в главной конфигурации
+# Make sure there is no `gzip off;` in the main configuration
 ```
