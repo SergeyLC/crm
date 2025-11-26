@@ -1,0 +1,191 @@
+name: Docker Staging Deployment
+
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:  # Exclude all tags
+      - '**'
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip running tests'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  # Job 1: Check if this is a release commit
+  check_release:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git commands
+
+      - name: Check if this is a release commit
+        id: check
+        run: |
+          # Get first line of commit message
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          echo "Commit message (first line): $COMMIT_MSG"
+
+          # Check if commit message indicates a release:
+          # - Starts with "chore(release): v0.1.32" (from deploy.sh)
+          # - Starts with "chore: bump version to 0.1.32" (from GitHub Actions)
+          # Note: [skip ci] is handled automatically by GitHub Actions and doesn't need explicit check here
+          if echo "$COMMIT_MSG" | grep -qE '^chore\((release|version)\): |^chore: bump version to '; then
+            echo "This is a release-related commit, skipping staging deployment"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Not a release commit, proceeding with staging deployment"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Job 2: Run tests (only if not a release commit and not skipped)
+  tests:
+    needs: check_release
+    if: needs.check_release.outputs.skip == 'false' && inputs.skip_tests != true
+    uses: ./.github/workflows/test.yml
+
+  # Job 3: Deploy to staging (only if tests pass or skipped)
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [check_release, tests]  # Wait for check and tests
+    if: needs.check_release.outputs.skip == 'false' || github.event_name == 'workflow_dispatch'
+    environment: staging  # Use staging environment secrets
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git commands
+
+      - name: Generate build version
+        id: version
+        run: |
+          # Get stable version from package.json
+          STABLE_VERSION=$(node -p "require('./frontend/package.json').version")
+
+          # Get short commit hash
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+
+          # Generate build version with metadata
+          BUILD_VERSION="${STABLE_VERSION}+sha.${COMMIT_HASH}"
+
+          echo "BUILD_VERSION=${BUILD_VERSION}" >> $GITHUB_OUTPUT
+          echo "STABLE_VERSION=${STABLE_VERSION}" >> $GITHUB_OUTPUT
+          echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_OUTPUT
+
+          echo "📦 Stable version: ${STABLE_VERSION}"
+          echo "🔨 Build version: ${BUILD_VERSION}"
+
+      - name: Deploy Docker to staging server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 60m
+          script: |-
+            set -e
+
+            export CI=true
+            export PRISMA_SKIP_POSTINSTALL_GENERATE=false
+
+            echo "🚀 Starting Docker staging deployment..."
+            echo "📦 Build version: ${{ steps.version.outputs.BUILD_VERSION }}"
+            echo "🐳 Deployment directory: /var/www/docker/loyacrm-staging"
+
+            cd /var/www/docker/loyacrm-staging
+
+            echo "📥 Updating code..."
+            git fetch origin
+            git reset --hard origin/main
+
+            echo "🔧 Creating .env.backend.stage and .env.frontend.stage files from GitHub Secrets..."
+            printf '# Database (External - for Stage Docker deployment)\nDATABASE_URL="%s"\n\n# Backend\nPORT=4004\nJWT_SECRET=%s\nCORS_ORIGIN=%s\nNODE_ENV=production\nPRISMA_LOG_LEVEL=warn\nLOG_LEVEL=info\n' \
+              "${{ secrets.DATABASE_URL }}" \
+              "${{ secrets.JWT_SECRET }}" \
+              "${{ secrets.CORS_ORIGIN }}" > .env.backend.stage
+
+            printf '# Frontend\nPORT=3004\nNEXT_PUBLIC_API_URL=%s\nNEXT_PUBLIC_BACKEND_API_URL=%s\nNEXT_PUBLIC_APP_VERSION=%s\nNEXT_TELEMETRY_DISABLED=1\n' \
+              "${{ secrets.NEXT_PUBLIC_API_URL }}" \
+              "${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}" \
+              "${{ steps.version.outputs.BUILD_VERSION }}" > .env.frontend.stage
+
+            chmod 600 .env.backend.stage
+            chmod 600 .env.frontend.stage
+
+            echo "✅ Stage environment files created with build version: ${{ steps.version.outputs.BUILD_VERSION }}"
+
+            echo "📦 Preparing dependencies and generated client..."
+
+            # Install pnpm if not already installed
+            if ! command -v pnpm &> /dev/null; then
+              echo "Installing pnpm..."
+              npm install -g pnpm@10
+            fi
+
+            # Configure pnpm for better performance
+            pnpm config set store-dir /var/cache/pnpm
+            pnpm config set fetch-timeout 300000
+            pnpm config set fetch-retry-mintimeout 20000
+            pnpm config set fetch-retry-maxtimeout 120000
+            pnpm config set enable-pre-post-scripts true
+
+            # Setup pnpm store directory
+            export PNPM_STORE_DIR=/var/cache/pnpm
+            mkdir -p $PNPM_STORE_DIR
+
+            # Generate Prisma client first so both frontend and backend can use it
+            echo "Installing db dependencies and generating Prisma client..."
+            cd db
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+            pnpm run generate
+            cd ..
+
+            # Install frontend and backend deps sequentially to avoid ENOTEMPTY errors
+            echo "Installing frontend dependencies..."
+            cd frontend
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+            echo "✅ Frontend dependencies installed"
+            cd ..
+
+            echo "Installing backend dependencies..."
+            cd backend
+            pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+            echo "✅ Backend dependencies installed"
+            cd ..
+
+            echo "🔨 Building frontend..."
+            cd frontend
+            export NEXT_TELEMETRY_DISABLED=1
+            export SKIP_TYPE_CHECK=true
+            export SKIP_LINT=true
+            export NODE_OPTIONS="--max-old-space-size=4096"
+            pnpm run build
+            cd ..
+
+            echo "🔨 Building backend..."
+            cd backend
+            pnpm run clean
+            pnpm run build
+            cd ..
+
+            echo "🗄️ Applying database migrations..."
+            cd db
+            pnpm run migrate:deploy
+            cd ..
+
+            echo "🐳 Building and starting Docker services..."
+            docker-compose -f docker-compose.stage.yml build --no-cache
+            docker-compose -f docker-compose.stage.yml up -d
+
+            echo "✅ Docker staging deployment completed successfully!"
+            docker-compose -f docker-compose.stage.yml ps
+
+            echo "📦 Build version: ${{ steps.version.outputs.BUILD_VERSION }}"
