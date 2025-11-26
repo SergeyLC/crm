@@ -16,11 +16,9 @@ services:
     networks:
       - loyacrm-stage-network
 
-  # Backend Service for Stage
+  # Backend Service for Stage - Using pre-built image from GitHub Container Registry
   backend:
-    build:
-      context: .
-      dockerfile: docker/backend/Dockerfile
+    image: ${BACKEND_IMAGE:-ghcr.io/betreut-zu-hause/loyacrm/backend:staging}
     container_name: loyacrm-backend-stage
     restart: unless-stopped
     env_file:
@@ -38,11 +36,9 @@ services:
     networks:
       - loyacrm-stage-network
 
-  # Frontend Service for Stage
+  # Frontend Service for Stage - Using pre-built image from GitHub Container Registry
   frontend:
-    build:
-      context: .
-      dockerfile: docker/frontend/Dockerfile
+    image: ${FRONTEND_IMAGE:-ghcr.io/betreut-zu-hause/loyacrm/frontend:staging}
     container_name: loyacrm-frontend-stage
     restart: unless-stopped
     env_file:

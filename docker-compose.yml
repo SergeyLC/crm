@@ -15,11 +15,9 @@ services:
     networks:
       - loyacrm-network
 
-  # Backend Service
+  # Backend Service - Using pre-built image from GitHub Container Registry
   backend:
-    build:
-      context: .
-      dockerfile: docker/backend/Dockerfile
+    image: ${BACKEND_IMAGE:-ghcr.io/betreut-zu-hause/loyacrm/backend:latest}
     container_name: loyacrm-backend-prod
     restart: unless-stopped
     env_file:
@@ -37,11 +35,9 @@ services:
     networks:
       - loyacrm-network
 
-  # Frontend Service
+  # Frontend Service - Using pre-built image from GitHub Container Registry
   frontend:
-    build:
-      context: .
-      dockerfile: docker/frontend/Dockerfile
+    image: ${FRONTEND_IMAGE:-ghcr.io/betreut-zu-hause/loyacrm/frontend:latest}
     container_name: loyacrm-frontend-prod
     restart: unless-stopped
     env_file:
