@@ -565,10 +565,9 @@ This project is licensed under the MIT License.
 All project documentation is organized in the [`docs/`](./docs/) directory:
 
 ### 🚀 Deployment & Infrastructure
-- **[Deployment Guide](docs/deployment/DEPLOYMENT.md)** - Complete Ubuntu server deployment
-- **[Docker Deployment](docs/deployment/DOCKER_DEPLOYMENT.md)** - Production Docker setup
-- **[Docker Development](docs/deployment/DOCKER_DEVELOPMENT.md)** - Development Docker environment
-- **[Docker Quick Start](docs/deployment/DOCKER_QUICK_START.md)** - Quick Docker setup guide
+- **[Deployment Guide](docs/deployment/DEPLOYMENT.md)** - Main deployment overview and quick start
+- **[Docker Deployment](docs/deployment/DEPLOYMENT_DOCKER.md)** - Complete Docker deployment guide
+- **[Traditional Deployment](docs/deployment/DEPLOYMENT_TRADITIONAL.md)** - Manual Ubuntu server deployment
 - **[CI/CD Workflow](docs/deployment/CI_CD_WORKFLOW.md)** - GitHub Actions automation
 
 ### 🗄️ Database & Environment
