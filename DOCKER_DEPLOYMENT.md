@@ -46,16 +46,15 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 sudo usermod -aG docker $USER
 
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+# Docker Compose V2 is included with Docker 20.10+
+# No separate installation needed - use 'docker compose' (not 'docker-compose')
 
 # Reboot or apply group changes
 newgrp docker
 
 # Verify installation
 docker --version
-docker-compose --version
+docker compose version
 ```
 
 ## 📁 Step 2: Prepare Docker Configuration
@@ -432,4 +431,4 @@ lsof -i :4002
 
 **Author:** Sergey Daub
 **Date:** 26 November 2025
-**Version:** 3.0 - Production deployment guide (separated from development)
+**Version:** 3.1 - Updated Docker Compose installation instructions
