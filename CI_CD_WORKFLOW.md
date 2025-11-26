@@ -1,85 +1,85 @@
 # CI/CD Workflow Documentation
 
-## Обзор
+## Overview
 
-Наша CI/CD инфраструктура разделена на три основных workflow:
+Our CI/CD infrastructure is divided into three main workflows:
 
-1. **Tests** - запуск тестов при каждом push
-2. **Build and Deploy Staging** - сборка и деплой на staging при push в main
-3. **Production Release** - релиз на production по тегу
+1. **Tests** - run tests on every push
+2. **Build and Deploy Staging** - build and deploy to staging on push to main
+3. **Production Release** - release to production on tag
 
 ## 1. Tests Workflow
 
-**Триггер:** Push в любую ветку (исключая теги)
+**Trigger:** Push to any branch (excluding tags)
 
-**Файл:** `.github/workflows/test.yml`
+**File:** `.github/workflows/test.yml`
 
-**Шаги:**
-- Установка зависимостей
-- Генерация Prisma client
-- Генерация i18n файлов
+**Steps:**
+- Install dependencies
+- Generate Prisma client
+- Generate i18n files
 - Type checking (TypeScript)
-- Lint проверка
-- Запуск unit тестов
+- Lint checking
+- Run unit tests
 
-**Назначение:** Обеспечить качество кода на всех ветках перед merge.
+**Purpose:** Ensure code quality on all branches before merge.
 
 ---
 
 ## 2. Build and Deploy Staging
 
-**Триггер:** Push в ветку `main` (исключая теги)
+**Trigger:** Push to `main` branch (excluding tags)
 
-**Файл:** `.github/workflows/deploy-staging.yml`
+**File:** `.github/workflows/deploy-staging.yml`
 
-**Генерация Build Version:**
-- Читается стабильная версия из `frontend/package.json` (например, `1.4.2`)
-- Добавляется build metadata с хешем коммита: `1.4.2+sha.a3f09e1`
-- Build версия записывается в `NEXT_PUBLIC_APP_VERSION` в `.env.production.local`
+**Build Version Generation:**
+- Reads stable version from `frontend/package.json` (e.g., `1.4.2`)
+- Adds build metadata with commit hash: `1.4.2+sha.a3f09e1`
+- Build version is written to `NEXT_PUBLIC_APP_VERSION` in `.env.production.local`
 
-**Режимы развертывания:**
-- **PM2 (по умолчанию):** Традиционное развертывание с PM2 процесс менеджером
-- **Docker:** Контейнеризованное развертывание с Docker Compose
+**Deployment Modes:**
+- **PM2 (default):** Traditional deployment with PM2 process manager
+- **Docker:** Containerized deployment with Docker Compose
 
-**Выбор режима:**
-Установите переменную окружения `DEPLOYMENT_TYPE` в GitHub Secrets:
-- `DEPLOYMENT_TYPE=docker` - для Docker развертывания
-- `DEPLOYMENT_TYPE=pm2` или отсутствие переменной - для PM2 развертывания (**по умолчанию**)
+**Mode Selection:**
+Set the `DEPLOYMENT_TYPE` environment variable in GitHub Secrets:
+- `DEPLOYMENT_TYPE=docker` - for Docker deployment
+- `DEPLOYMENT_TYPE=pm2` or absence of variable - for PM2 deployment (**default**)
 
-**Ручной запуск (workflow_dispatch):**
-Для тестирования разных типов развертывания без изменения secrets:
-1. Перейдите в раздел "Actions" репозитория на GitHub
-2. Выберите workflow "Build and Deploy Staging"
-3. Нажмите "Run workflow"
-4. Выберите тип развертывания (PM2 или Docker)
+**Manual Run (workflow_dispatch):**
+For testing different deployment types without changing secrets:
+1. Go to the "Actions" section of the repository on GitHub
+2. Select the "Build and Deploy Staging" workflow
+3. Click "Run workflow"
+4. Select deployment type (PM2 or Docker)
 
-**Шаги (PM2 режим):**
-1. Запуск тестов и проверок
-2. Генерация build версии
-3. Деплой на staging сервер
-4. Создание environment файлов с build версией
-5. Установка зависимостей
-6. Сборка frontend и backend
-7. Применение миграций БД
-8. **Заполнение БД тестовыми данными** (`pnpm run seed`)
-9. Перезапуск PM2 сервисов
+**Steps (PM2 mode):**
+1. Run tests and checks
+2. Generate build version
+3. Deploy to staging server
+4. Create environment files with build version
+5. Install dependencies
+6. Build frontend and backend
+7. Apply database migrations
+8. **Populate database with test data** (`pnpm run seed`)
+9. Restart PM2 services
 
-**Шаги (Docker режим):**
-1. Запуск тестов и проверок
-2. Генерация build версии
-3. Деплой на staging сервер
-4. Создание `.env.docker` файла из GitHub Secrets
-5. Сборка Docker образов
-6. Запуск Docker сервисов
-7. Ожидание готовности PostgreSQL
-8. Применение миграций БД в Docker контейнере
-9. Генерация Prisma клиента
+**Steps (Docker mode):**
+1. Run tests and checks
+2. Generate build version
+3. Deploy to staging server
+4. Create `.env.docker` file from GitHub Secrets
+5. Build Docker images
+6. Start Docker services
+7. Wait for PostgreSQL readiness
+8. Apply database migrations in Docker container
+9. Generate Prisma client
 
-**Назначение:** Автоматическая сборка и деплой каждого изменения в main на staging для тестирования.
+**Purpose:** Automatic build and deploy of every change in main to staging for testing.
 
-**Важно:** Staging БД заполняется тестовыми данными через `seed.ts` при каждом деплое. Это создает пользователей (`admin@loya.care`, `v1@loya.care` и т.д.) с паролем `1` для тестирования.
+**Important:** Staging database is populated with test data via `seed.ts` on every deploy. This creates users (`admin@loya.care`, `v1@loya.care`, etc.) with password `1` for testing.
 
-**Секреты (staging):**
+**Secrets (staging):**
 - `STAGING_SERVER_HOST`
 - `STAGING_SERVER_USER`
 - `STAGING_SERVER_SSH_KEY`
@@ -88,62 +88,62 @@
 - `STAGING_CORS_ORIGIN`
 - `STAGING_NEXT_PUBLIC_API_URL`
 - `STAGING_NEXT_PUBLIC_BACKEND_API_URL`
-- `DEPLOYMENT_TYPE` (опционально: `docker` или `pm2`)
+- `DEPLOYMENT_TYPE` (optional: `docker` or `pm2`)
 
 ---
 
 ## 3. Production Release
 
-**Триггер:** Push тега с префиксом `v*` (например, `v1.4.2`)
+**Trigger:** Push tag with `v*` prefix (e.g., `v1.4.2`)
 
-**Файл:** `.github/workflows/deploy-production.yml`
+**File:** `.github/workflows/deploy-production.yml`
 
-**Режимы развертывания:**
-- **PM2 (по умолчанию):** Традиционное развертывание с PM2 процесс менеджером
-- **Docker:** Контейнеризованное развертывание с Docker Compose
+**Deployment Modes:**
+- **PM2 (default):** Traditional deployment with PM2 process manager
+- **Docker:** Containerized deployment with Docker Compose
 
-**Выбор режима:**
-Установите переменную окружения `DEPLOYMENT_TYPE` в GitHub Secrets:
-- `DEPLOYMENT_TYPE=docker` - для Docker развертывания
-- `DEPLOYMENT_TYPE=pm2` или отсутствие переменной - для PM2 развертывания (**по умолчанию**)
+**Mode Selection:**
+Set the `DEPLOYMENT_TYPE` environment variable in GitHub Secrets:
+- `DEPLOYMENT_TYPE=docker` - for Docker deployment
+- `DEPLOYMENT_TYPE=pm2` or absence of variable - for PM2 deployment (**default**)
 
-**Ручной запуск (workflow_dispatch):**
-Для тестирования разных типов развертывания без изменения secrets:
-1. Перейдите в раздел "Actions" репозитория на GitHub
-2. Выберите workflow "Production Release"
-3. Нажмите "Run workflow"
-4. Выберите тип развертывания (PM2 или Docker)
-5. Опционально укажите версию для развертывания
+**Manual Run (workflow_dispatch):**
+For testing different deployment types without changing secrets:
+1. Go to the "Actions" section of the repository on GitHub
+2. Select the "Production Release" workflow
+3. Click "Run workflow"
+4. Select deployment type (PM2 or Docker)
+5. Optionally specify version for deployment
 
 **Release Job:**
-1. Проверка, что тег на ветке `main`
-2. Извлечение версии из тега (v1.4.2 → 1.4.2)
-3. Обновление `frontend/package.json` с новой версией
-4. Commit изменений в main
-5. Создание GitHub Release
+1. Check that tag is on `main` branch
+2. Extract version from tag (v1.4.2 → 1.4.2)
+3. Update `frontend/package.json` with new version
+4. Commit changes to main
+5. Create GitHub Release
 
-**Deploy Job (PM2 режим):**
-1. Деплой на production сервер
-2. Создание environment файлов с release версией
-3. Установка зависимостей
-4. Сборка frontend и backend
-5. Применение миграций БД (БЕЗ seed - это production!)
-6. Перезапуск PM2 сервисов
+**Deploy Job (PM2 mode):**
+1. Deploy to production server
+2. Create environment files with release version
+3. Install dependencies
+4. Build frontend and backend
+5. Apply database migrations (WITHOUT seed - this is production!)
+6. Restart PM2 services
 
-**Deploy Job (Docker режим):**
-1. Деплой на production сервер
-2. Создание `.env.docker` файла из GitHub Secrets
-3. Сборка Docker образов
-4. Запуск Docker сервисов
-5. Ожидание готовности PostgreSQL
-6. Применение миграций БД в Docker контейнере
-7. Генерация Prisma клиента
+**Deploy Job (Docker mode):**
+1. Deploy to production server
+2. Create `.env.docker` file from GitHub Secrets
+3. Build Docker images
+4. Start Docker services
+5. Wait for PostgreSQL readiness
+6. Apply database migrations in Docker container
+7. Generate Prisma client
 
-**Назначение:** Официальный релиз на production с обновлением версии в package.json и созданием GitHub Release.
+**Purpose:** Official release to production with version update in package.json and GitHub Release creation.
 
-**Важно:** Production деплой НЕ запускает seed - работает только с реальными данными через миграции.
+**Important:** Production deploy does NOT run seed - works only with real data through migrations.
 
-**Секреты (production):**
+**Secrets (production):**
 - `SERVER_HOST`
 - `SERVER_USER`
 - `SERVER_SSH_KEY`
@@ -152,92 +152,92 @@
 - `CORS_ORIGIN`
 - `NEXT_PUBLIC_API_URL`
 - `NEXT_PUBLIC_BACKEND_API_URL`
-- `DEPLOYMENT_TYPE` (опционально: `docker` или `pm2`)
+- `DEPLOYMENT_TYPE` (optional: `docker` or `pm2`)
 
 ---
 
-## Версионирование
+## Versioning
 
-### Стабильная версия в package.json
+### Stable Version in package.json
 
-`frontend/package.json` содержит **только стабильную release версию**.
+`frontend/package.json` contains **only stable release version**.
 
-- Формат: `X.Y.Z` (например, `1.4.2`)
-- Обновляется **только** при создании production релиза через GitHub Actions
-- Не изменяется вручную при каждом commit
+- Format: `X.Y.Z` (e.g., `1.4.2`)
+- Updated **only** when creating production release through GitHub Actions
+- Not changed manually on every commit
 
 ### Build Metadata (Staging)
 
-При каждом push в `main`:
-- Формат: `X.Y.Z+sha.HASH` (например, `1.4.2+sha.a3f09e1`)
-- Используется только в CI/CD и staging
-- Записывается в `NEXT_PUBLIC_APP_VERSION` в `.env` файлах
+On every push to `main`:
+- Format: `X.Y.Z+sha.HASH` (e.g., `1.4.2+sha.a3f09e1`)
+- Used only in CI/CD and staging
+- Written to `NEXT_PUBLIC_APP_VERSION` in `.env` files
 
 ### Release Version (Production)
 
-При создании тега:
-- Формат: `vX.Y.Z` (например, `v1.4.2`)
-- GitHub Actions обновит `package.json` до версии `X.Y.Z`
-- Создаст GitHub Release
-- Задеплоит на production с этой версией в `NEXT_PUBLIC_APP_VERSION`
+When creating tag:
+- Format: `vX.Y.Z` (e.g., `v1.4.2`)
+- GitHub Actions will update `package.json` to version `X.Y.Z`
+- Create GitHub Release
+- Deploy to production with this version in `NEXT_PUBLIC_APP_VERSION`
 
 ---
 
-## Использование deploy.sh
+## Using deploy.sh
 
-Скрипт `deploy.sh` помогает автоматизировать процесс деплоя:
+The `deploy.sh` script helps automate the deployment process:
 
-### Простой push в main (staging)
+### Simple push to main (staging)
 
 ```bash
 ./deploy.sh -m "fix: add new feature"
 ```
 
-**Результат:**
-- Commit с сообщением "fix: add new feature" + список непушнутых коммитов
-- Push в main
-- GitHub Actions проверит, не релизный ли это коммит
-- Если нет - запустит tests и staging deploy
-- Staging получит версию типа `0.1.33+sha.a3f09e1`
+**Result:**
+- Commit with message "fix: add new feature" + list of unpushed commits
+- Push to main
+- GitHub Actions will check if it's a release commit
+- If not - will run tests and staging deploy
+- Staging will get version like `0.1.33+sha.a3f09e1`
 
-### Множественные коммиты (auto staging deploy)
+### Multiple commits (auto staging deploy)
 
-Если у вас несколько непушнутых коммитов и вы запускаете:
+If you have several unpushed commits and you run:
 
 ```bash
 ./deploy.sh -m "deploy multiple changes"
 ```
 
-**Результат:**
-- Создаётся summary commit: `chore(staging): v0.1.33 - deploy multiple changes`
-- В теле коммита список всех непушнутых коммитов
-- Push в main → staging deployment
+**Result:**
+- Creates summary commit: `chore(staging): v0.1.33 - deploy multiple changes`
+- Commit body contains list of all unpushed commits
+- Push to main → staging deployment
 
-### Создание release (production)
+### Creating release (production)
 
 ```bash
 ./deploy.sh -t -m "performance improvements and bug fixes"
 ```
 
-**Результат:**
-- Автоинкремент версии: `0.1.33` → `0.1.34`
+**Result:**
+- Auto-increment version: `0.1.33` → `0.1.34`
 - Commit: `chore(release): v0.1.34 - performance improvements and bug fixes`
-- Push в main (staging пропустит релизный коммит)
-- Создание тега `v0.1.34`
-- Push тега
+- Push to main (staging will skip release commit)
+- Create tag `v0.1.34`
+- Push tag
 - GitHub Actions:
-  - Запустит production deploy
-  - Обновит `package.json` до версии `0.1.34`
-  - Создаст GitHub Release
-  - Создаст коммит `chore: bump version to 0.1.34`
+  - Will run production deploy
+  - Update `package.json` to version `0.1.34`
+  - Create GitHub Release
+  - Create commit `chore: bump version to 0.1.34`
 
-### Параметры deploy.sh
+### deploy.sh Parameters
 
-- `-m "message"` - **Обязательно**: сообщение для commit/release
-- `-t` - Создать release tag (автоинкремент patch версии)
-- `-v VERSION` - Указать конкретную версию (например, `-v 1.5.0`)
+- `-m "message"` - **Required**: message for commit/release
+- `-t` - Create release tag (auto-increment patch version)
+- `-v VERSION` - Specify specific version (e.g., `-v 1.5.0`)
 
-**Важно:** Unpushed commits всегда включаются в сообщение коммита для полной истории изменений.
+**Important:** Unpushed commits are always included in commit message for complete change history.
 
 ---
 
@@ -266,11 +266,11 @@
 
 ---
 
-## Настройка GitHub Secrets
+## Setting up GitHub Secrets
 
-### Для Staging
+### For Staging
 
-В настройках репозитория добавьте:
+In repository settings add:
 
 ```
 STAGING_SERVER_HOST=staging.example.com
@@ -283,7 +283,7 @@ STAGING_NEXT_PUBLIC_API_URL=https://staging.example.com/api
 STAGING_NEXT_PUBLIC_BACKEND_API_URL=https://staging.example.com:3001
 ```
 
-### Для Production
+### For Production
 
 ```
 SERVER_HOST=example.com
@@ -300,96 +300,96 @@ NEXT_PUBLIC_BACKEND_API_URL=https://example.com:3001
 
 ## Best Practices
 
-1. **Не изменяйте версию в package.json вручную** - это делает GitHub Actions при релизе
-2. **Используйте семантическое версионирование** (semver): MAJOR.MINOR.PATCH
-3. **Тестируйте на staging перед релизом** - каждый push в main автоматически деплоится на staging
-4. **Создавайте теги только для production релизов**
-5. **Используйте понятные сообщения в тегах** - они будут видны в GitHub Releases
+1. **Do not change version in package.json manually** - GitHub Actions does this during release
+2. **Use semantic versioning** (semver): MAJOR.MINOR.PATCH
+3. **Test on staging before release** - every push to main is automatically deployed to staging
+4. **Create tags only for production releases**
+5. **Use clear messages in tags** - they will be visible in GitHub Releases
 
 ---
 
-## Примеры сценариев
+## Example Scenarios
 
-### Сценарий 1: Разработка новой фичи
+### Scenario 1: Developing new feature
 
 ```bash
-# Работаете в feature-ветке
+# Working in feature branch
 git checkout -b feature/new-dashboard
 
-# Делаете изменения
+# Make changes
 git add .
 git commit -m "Add new dashboard"
 git push origin feature/new-dashboard
 
-# ✅ Tests workflow запустится автоматически
+# ✅ Tests workflow will run automatically
 
-# Создаете PR в main
-# После merge в main:
+# Create PR to main
+# After merge to main:
 # ✅ Tests workflow
-# ✅ Build and Deploy Staging (версия 1.4.2+sha.xyz)
+# ✅ Build and Deploy Staging (version 1.4.2+sha.xyz)
 ```
 
-### Сценарий 2: Hotfix на production
+### Scenario 2: Hotfix on production
 
 ```bash
-# Фиксите баг в main
+# Fix bug in main
 git checkout main
 git pull
 
-# Делаете изменения
+# Make changes
 ./deploy.sh -v 1.4.3 -m "Hotfix: critical bug"
 
 # ✅ Tests workflow
 # ✅ Build and Deploy Staging
-# ✅ Production Release (версия 1.4.3)
+# ✅ Production Release (version 1.4.3)
 ```
 
-### Сценарий 3: Регулярный релиз
+### Scenario 3: Regular release
 
 ```bash
-# Накопилось несколько фич в main
-# Все протестированы на staging
+# Several features accumulated in main
+# All tested on staging
 
-# Создаем релиз
+# Create release
 ./deploy.sh -v 1.5.0 -m "Release: new features and improvements"
 
 # ✅ Production Release workflow
-# ✅ package.json обновлен до 1.5.0
-# ✅ GitHub Release создан
-# ✅ Production deployment выполнен
+# ✅ package.json updated to 1.5.0
+# ✅ GitHub Release created
+# ✅ Production deployment completed
 ```
 
 ---
 
 ## Troubleshooting
 
-### Проблема: Deploy не запустился
+### Problem: Deploy didn't start
 
-**Проверьте:**
-- Тег создан на ветке main?
-- Формат тега правильный (v1.2.3)?
-- GitHub Secrets настроены?
+**Check:**
+- Tag created on main branch?
+- Tag format correct (v1.2.3)?
+- GitHub Secrets configured?
 
-### Проблема: Версия в package.json не обновилась
+### Problem: Version in package.json didn't update
 
-**Причина:** Скорее всего, вы обновили package.json вручную перед созданием тега.
+**Cause:** Most likely, you updated package.json manually before creating tag.
 
-**Решение:** Откатите изменения, позвольте GitHub Actions обновить версию автоматически.
+**Solution:** Revert changes, let GitHub Actions update version automatically.
 
-### Проблема: Staging показывает старую версию
+### Problem: Staging shows old version
 
-**Проверьте:**
-- Деплой завершился успешно?
-- Environment переменная `NEXT_PUBLIC_APP_VERSION` установлена?
-- Перезапустились ли PM2 процессы?
+**Check:**
+- Deploy completed successfully?
+- Environment variable `NEXT_PUBLIC_APP_VERSION` set?
+- PM2 processes restarted?
 
 ---
 
-## Заключение
+## Conclusion
 
-Этот CI/CD workflow обеспечивает:
-- ✅ Автоматическое тестирование на всех ветках
-- ✅ Автоматический деплой на staging при каждом изменении в main
-- ✅ Контролируемые релизы на production через теги
-- ✅ Правильное версионирование без ручного вмешательства
-- ✅ Build metadata для отслеживания версий в staging
+This CI/CD workflow provides:
+- ✅ Automatic testing on all branches
+- ✅ Automatic deploy to staging on every change in main
+- ✅ Controlled releases to production through tags
+- ✅ Proper versioning without manual intervention
+- ✅ Build metadata for tracking versions in staging

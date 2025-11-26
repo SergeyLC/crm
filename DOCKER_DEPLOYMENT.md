@@ -1,14 +1,14 @@
 # 🚀 LoyaCareCRM Docker Deployment Guide
 
-*Production deployment с Docker: containerized application*
+*Production deployment with Docker: containerized application*
 
 *[🇸 English | [🇩🇪 Deutsch](DEPLOYMENT.de.md)*
 
-## 📋 Обзор
+## 📋 Overview
 
-Этот документ описывает production deployment LoyaCareCRM с использованием Docker. Docker обеспечивает изоляцию, масштабируемость и консистентность production среды.
+This document describes production deployment of LoyaCareCRM using Docker. Docker provides isolation, scalability, and consistency of the production environment.
 
-### Архитектура Production Deployment
+### Production Deployment Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -18,81 +18,81 @@
 └─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### Порты для Production Environment
+### Ports for Production Environment
 
 - **PostgreSQL:** 5434 (external database)
 - **Backend:** 4002 (internal container port)
 - **Frontend:** 3002 (internal container port)
 - **Nginx Proxy:** 82 (host reverse proxy)
 
-### Особенности Production Setup
+### Production Setup Features
 
-- **External PostgreSQL:** Использует внешнюю базу данных для persistence
-- **Nginx Reverse Proxy:** Host-based proxy для routing
-- **SSL Termination:** HTTPS на nginx уровне
-- **Environment Variables:** Production secrets через .env файлы
-- **CI/CD Integration:** Автоматический deployment через GitHub Actions
+- **External PostgreSQL:** Uses external database for persistence
+- **Nginx Reverse Proxy:** Host-based proxy for routing
+- **SSL Termination:** HTTPS at nginx level
+- **Environment Variables:** Production secrets through .env files
+- **CI/CD Integration:** Automatic deployment through GitHub Actions
 
-## 🛠️ Шаг 1: Установка Docker
+## 🛠️ Step 1: Install Docker
 
-### На сервере Ubuntu выполните:
+### On Ubuntu server execute:
 
 ```bash
-# Обновите систему
+# Update system
 sudo apt update && sudo apt upgrade -y
 
-# Установите Docker
+# Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 sudo usermod -aG docker $USER
 
-# Установите Docker Compose
+# Install Docker Compose
 sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
-# Перезагрузитесь или примените изменения группы
+# Reboot or apply group changes
 newgrp docker
 
-# Проверьте установку
+# Verify installation
 docker --version
 docker-compose --version
 ```
 
-## 📁 Шаг 2: Подготовка Docker конфигурации
+## 📁 Step 2: Prepare Docker Configuration
 
-### 2.1 Структура файлов
+### 2.1 File Structure
 
-Все необходимые файлы уже созданы в репозитории:
+All necessary files are already created in the repository:
 
 ```
 docker/
 ├── backend/
-│   └── Dockerfile          # Конфигурация для backend
+│   └── Dockerfile          # Configuration for backend
 ├── frontend/
-│   └── Dockerfile          # Конфигурация для frontend
-docker-compose.yml           # Оркестрация сервисов
-.env.docker                  # Переменные окружения для Docker
-DOCKER_QUICK_START.md        # Быстрый старт
+│   └── Dockerfile          # Configuration for frontend
+docker-compose.yml           # Service orchestration
+.env.docker                  # Environment variables for Docker
+DOCKER_QUICK_START.md        # Quick start
 ```
 
-### 2.2 Настройка переменных окружения
+### 2.2 Environment Variables Setup
 
-#### Разница между .env файлами:
+#### Difference between .env files:
 
-| Файл | Режим | Назначение | Создание |
-|------|-------|------------|----------|
-| **`.env.dev`** | Локальная разработка | Фиксированные dev значения для `./docker-dev-start.sh` | Из `.env.docker.example` |
-| **`.env.docker`** | Production Docker | Реальные секреты для production развертывания | Динамически в CI/CD из GitHub Secrets |
+| File | Mode | Purpose | Creation |
+|------|-------|---------|----------|
+| **`.env.dev`** | Local development | Fixed dev values for `./docker-dev-start.sh` | From `.env.docker.example` |
+| **`.env.docker`** | Production Docker | Real secrets for production deployment | Dynamically in CI/CD from GitHub Secrets |
 
-**Локальная разработка** использует `.env.dev` (загружается через `env_file: - .env.dev` в `docker-compose.dev.yml`).
+**Local development** uses `.env.dev` (loaded through `env_file: - .env.dev` in `docker-compose.dev.yml`).
 
-**Production** использует `.env.docker` (создается автоматически в GitHub Actions из секретов или вручную на сервере).
+**Production** uses `.env.docker` (created automatically in GitHub Actions from repository secrets or manually on server).
 
-#### Настройка для production:
+#### Setup for production:
 
-**Вариант 1: Ручная настройка на сервере**
+**Option 1: Manual setup on server**
 
-Скопируйте шаблон и настройте переменные окружения:
+Copy template and configure environment variables:
 
 ```bash
 cd /var/www/loyacrm
@@ -100,11 +100,11 @@ cp .env.docker.example .env.docker
 nano .env.docker
 ```
 
-**Вариант 2: Автоматическая настройка через CI/CD**
+**Option 2: Automatic setup through CI/CD**
 
-Файл `.env.docker` создается автоматически в GitHub Actions из секретов репозитория (GitHub Secrets) во время деплоя.
+The `.env.docker` file is created automatically in GitHub Actions from repository secrets (GitHub Secrets) during deployment.
 
-Заполните `.env.docker` реальными значениями:
+Fill `.env.docker` with real values:
 
 ```bash
 # Database
@@ -123,85 +123,85 @@ NEXT_PUBLIC_API_URL=http://localhost:4002
 NEXT_PUBLIC_APP_VERSION=docker
 ```
 
-⚠️ **Важно:** Файл `.env.docker` содержит чувствительные данные и НЕ должен коммититься в git. Он уже добавлен в `.gitignore`.
+⚠️ **Important:** The `.env.docker` file contains sensitive data and should NOT be committed to git. It is already added to `.gitignore`.
 
-**Примечание:** В CI/CD процессах (GitHub Actions) секреты автоматически подставляются из GitHub Secrets репозитория, обеспечивая безопасность хранения конфиденциальных данных.
+**Note:** In CI/CD processes (GitHub Actions), secrets are automatically substituted from GitHub Secrets repository, ensuring secure storage of confidential data.
 
-## 🗄️ Шаг 3: Подготовка базы данных
+## 🗄️ Step 3: Database Preparation
 
-### 3.1 Выполните миграции для Docker базы
+### 3.1 Run migrations for Docker database
 
 ```bash
 cd /var/www/loyacrm
 
-# Установите переменные окружения для Docker базы
+# Set environment variables for Docker database
 export DATABASE_URL="postgresql://loyacrm:your_strong_password@localhost:5434/loyacrm"
 
-# Выполните миграции
+# Run migrations
 cd db
 pnpm run migrate:deploy
 pnpm run generate
 ```
 
-### 3.2 Копирование данных (опционально)
+### 3.2 Data copying (optional)
 
-Если нужно скопировать данные из текущей базы:
+If you need to copy data from current database:
 
 ```bash
-# Создайте дамп текущей базы
+# Create dump of current database
 pg_dump -h localhost -U loyacrm loyacrm > current_db_backup.sql
 
-# Запустите Docker базу (временно)
+# Start Docker database (temporarily)
 docker compose up -d postgres
 
-# Подождите 30 секунд, затем восстановите
+# Wait 30 seconds, then restore
 docker exec -i loyacrm-postgres-docker psql -U loyacrm loyacrm < current_db_backup.sql
 
-# Остановите Docker базу
+# Stop Docker database
 docker compose down
 ```
 
-## 🚀 Шаг 4: Запуск Docker сервисов
+## 🚀 Step 4: Start Docker Services
 
-### 4.1 Production запуск
+### 4.1 Production start
 
 ```bash
 cd /var/www/loyacrm
 
-# Сборка образов
+# Build images
 docker compose build
 
-# Запуск сервисов
+# Start services
 docker compose up -d
 
-# Проверьте статус
+# Check status
 docker compose ps
 ```
 
-### 4.2 Проверка логов
+### 4.2 Check logs
 
 ```bash
-# Логи всех сервисов
+# Logs of all services
 docker compose logs -f
 
-# Логи конкретного сервиса
+# Logs of specific service
 docker compose logs -f backend
 docker compose logs -f frontend
 ```
 
 ```bash
-# Логи всех сервисов
+# Logs of all services
 docker compose logs -f
 
-# Логи конкретного сервиса
+# Logs of specific service
 docker compose logs -f backend
 docker compose logs -f frontend
 docker compose logs -f postgres
 ```
 
-## ✅ Шаг 5: Тестирование
+## ✅ Step 5: Testing
 
-### 5.1 Проверка доступности
+### 5.1 Availability check
 
 ```bash
 # Backend API
@@ -214,21 +214,21 @@ curl http://localhost:3002
 psql -h localhost -p 5434 -U loyacrm loyacrm -c "SELECT version();"
 ```
 
-### 5.2 Функциональное тестирование
+### 5.2 Functional testing
 
-Откройте в браузере: `http://your-server-ip:82`
+Open in browser: `http://your-server-ip:82`
 
-Убедитесь что:
-- ✅ Приложение загружается
-- ✅ API запросы работают
-- ✅ База данных доступна
-- ✅ Nginx proxy работает корректно
+Make sure that:
+- ✅ Application loads
+- ✅ API requests work
+- ✅ Database is accessible
+- ✅ Nginx proxy works correctly
 
-## 🌐 Шаг 6: Настройка Nginx для Docker
+## 🌐 Step 6: Nginx Setup for Docker
 
-### 6.1 Создайте конфигурацию
+### 6.1 Create configuration
 
-Создайте `/etc/nginx/sites-available/loyacrm-docker`:
+Create `/etc/nginx/sites-available/loyacrm-docker`:
 
 ```nginx
 server {
@@ -269,7 +269,7 @@ server {
 }
 ```
 
-### 6.2 Активируйте конфигурацию
+### 6.2 Activate configuration
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/loyacrm-docker /etc/nginx/sites-enabled/
@@ -277,62 +277,62 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-Теперь Docker версия доступна на: `http://your-server-ip:82`
+Now Docker version is available at: `http://your-server-ip:82`
 
-## 📊 Шаг 7: Мониторинг и управление
+## 📊 Step 7: Monitoring and Management
 
-### 7.1 Используйте готовые скрипты
+### 7.1 Use ready scripts
 
 ```bash
-# Запуск Docker сервисов
+# Start Docker services
 ./docker-start.sh
 
-# Остановка
+# Stop
 ./docker-stop.sh
 
-# Просмотр логов
+# View logs
 ./docker-logs.sh
 
-# Обновление (git pull + rebuild)
+# Update (git pull + rebuild)
 ./docker-update.sh
 ```
 
-### 7.2 Мониторинг состояния
+### 7.2 Status monitoring
 
 ```bash
-# Статус контейнеров
+# Container status
 docker compose ps
 
-# Использование ресурсов
+# Resource usage
 docker stats
 
-# Проверка здоровья
+# Health check
 curl http://localhost:4003/api/health
 curl http://localhost:3003
 ```
 
-## 🔄 Шаг 8: Полный переход на Docker
+## 🔄 Step 8: Full Transition to Docker
 
-**⚠️ Выполняйте только после тщательного тестирования!**
+**⚠️ Execute only after thorough testing!**
 
-### 8.1 Остановите текущие сервисы
+### 8.1 Stop current services
 
 ```bash
-# Остановите PM2 сервисы
+# Stop PM2 services
 pm2 stop all
 
-# Остановите PostgreSQL
+# Stop PostgreSQL
 sudo systemctl stop postgresql
 ```
 
-### 8.2 Переключите Nginx
+### 8.2 Switch Nginx
 
-Измените `/etc/nginx/sites-available/loyacrm`:
+Change `/etc/nginx/sites-available/loyacrm`:
 
 ```nginx
-# Измените порты в proxy_pass
-proxy_pass http://localhost:3001;  # вместо 3000
-proxy_pass http://localhost:4001/api/;  # вместо 4000
+# Change ports in proxy_pass
+proxy_pass http://localhost:3001;  # instead of 3000
+proxy_pass http://localhost:4001/api/;  # instead of 4000
 ```
 
 ```bash
@@ -340,58 +340,58 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 8.3 Обновите переменные окружения
+### 8.3 Update environment variables
 
-Обновите `.env` файлы для использования Docker портов.
+Update `.env` files to use Docker ports.
 
-## 🔧 Управление Docker развертыванием
+## 🔧 Docker Deployment Management
 
-### Полезные команды
+### Useful Commands
 
 ```bash
-# Просмотр логов
+# View logs
 docker compose logs -f
 
-# Перезапуск сервиса
+# Restart service
 docker compose restart backend
 
-# Вход в контейнер
+# Enter container
 docker exec -it loyacrm-backend-docker sh
 
-# Очистка
+# Cleanup
 docker system prune -a
 docker volume prune
 
-# Мониторинг
+# Monitoring
 docker stats
 docker compose ps
 ```
 
-### Резервное копирование
+### Backup
 
 ```bash
-# Бэкап базы данных
+# Database backup
 docker exec loyacrm-postgres-docker pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
 
-# Бэкап volume
+# Volume backup
 docker run --rm -v loyacrm_postgres_data:/data -v /backup:/backup alpine tar czf /backup/postgres_data.tar.gz -C /data .
 ```
 
 ## 🚨 Troubleshooting
 
-### Контейнеры не запускаются
+### Containers don't start
 ```bash
 docker compose logs
 docker compose config
 ```
 
-### База данных недоступна
+### Database unavailable
 ```bash
-# Проверьте external PostgreSQL
+# Check external PostgreSQL
 psql -h localhost -p 5434 -U loyacrm loyacrm -c "SELECT version();"
 ```
 
-### Приложение не отвечает
+### Application doesn't respond
 ```bash
 docker compose logs backend
 docker compose logs frontend
@@ -401,35 +401,35 @@ docker compose logs frontend
 
 **Port already in use:**
 ```bash
-# Найдите процесс использующий порт
+# Find process using port
 lsof -i :3002
 lsof -i :4002
 
-# Остановите конфликтующий сервис или измените порты
+# Stop conflicting service or change ports
 ```
 
-## 📋 Контрольный список Deployment
+## 📋 Deployment Checklist
 
-- [ ] Docker и Docker Compose установлены
-- [ ] External PostgreSQL настроена на порту 5434
-- [ ] Переменные окружения настроены в `.env.backend` и `.env.frontend`
-- [ ] Docker сервисы собраны и запущены
-- [ ] Приложение доступно на портах 3002/4002
-- [ ] Nginx настроен для порта 82
-- [ ] Функциональное тестирование пройдено
-- [ ] **После тестирования:** Переход на Docker завершен
+- [ ] Docker and Docker Compose installed
+- [ ] External PostgreSQL configured on port 5434
+- [ ] Environment variables configured in `.env.backend` and `.env.frontend`
+- [ ] Docker services built and started
+- [ ] Application accessible on ports 3002/4002
+- [ ] Nginx configured for port 82
+- [ ] Functional testing passed
+- [ ] **After testing:** Transition to Docker completed
 
-## 🎯 Преимущества Docker Deployment
+## 🎯 Docker Deployment Advantages
 
-- **Изоляция:** Каждый компонент в отдельном контейнере
-- **Масштабируемость:** Легко масштабировать сервисы
-- **Воспроизводимость:** Консистентная среда на всех серверах
-- **Управление:** Упрощенное управление зависимостями
-- **Откат:** Быстрый откат к предыдущей версии
+- **Isolation:** Each component in separate container
+- **Scalability:** Easy to scale services
+- **Reproducibility:** Consistent environment across all servers
+- **Management:** Simplified dependency management
+- **Rollback:** Fast rollback to previous version
 - **Production Ready:** Nginx proxy, external database, SSL support
 
 ---
 
-**Автор:** Sergey Daub
-**Дата:** 26 ноября 2025
-**Версия:** 3.0 - Production deployment guide (separated from development)
+**Author:** Sergey Daub
+**Date:** 26 November 2025
+**Version:** 3.0 - Production deployment guide (separated from development)

@@ -1,113 +1,113 @@
-# Быстрый запуск Docker версии для тестирования
+# Docker Quick Start Guide for Testing
 
-## 🚀 Локальная разработка (Development)
+## 🚀 Local Development (Development)
 
-### Предварительные требования
-- Docker и Docker Compose установлены
-- Проект склонирован локально
+### Prerequisites
+- Docker and Docker Compose installed
+- Project cloned locally
 
-### Быстрый старт разработки
+### Quick Development Start
 
 ```bash
-# Запуск всех сервисов с hot-reload
+# Start all services with hot-reload
 ./docker-dev-start.sh
 
-# Или вручную:
+# Or manually:
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-**Доступ к сервисам:**
-- Frontend: http://localhost:3003 (с hot-reload)
-- Backend API: http://localhost:4003 (с hot-reload)
+**Service Access:**
+- Frontend: http://localhost:3003 (with hot-reload)
+- Backend API: http://localhost:4003 (with hot-reload)
 - Database: localhost:5435
 
-### Управление разработкой
+### Development Management
 
 ```bash
-# Просмотр логов
+# View logs
 ./docker-dev-logs.sh
 
-# Остановка
+# Stop
 ./docker-dev-stop.sh
 
-# Статус
+# Status
 docker compose -f docker-compose.dev.yml ps
 ```
 
-## 🏭 Production развертывание (Production)
+## 🏭 Production Deployment (Production)
 
-### Предварительные требования
-- Docker и Docker Compose установлены
-- Проект склонирован в /var/www/loyacrm
-- **Создан `.env.docker` файл с реальными паролями (скопируйте из `.env.docker.example`)**
+### Prerequisites
+- Docker and Docker Compose installed
+- Project cloned to /var/www/loyacrm
+- **Create `.env.docker` file with real passwords (copy from `.env.docker.example`)**
 
-### Быстрый старт
+### Quick Start
 
-1. **Настройте переменные окружения:**
+1. **Configure environment variables:**
    ```bash
    cd /var/www/loyacrm
    cp .env.docker.example .env.docker
-   # Отредактируйте .env.docker с реальными значениями
+   # Edit .env.docker with real values
    nano .env.docker
    ```
 
-2. **Запустите сервисы:**
+2. **Start services:**
    ```bash
    docker compose up -d
    ```
 
-3. **Проверьте статус:**
+3. **Check status:**
    ```bash
    docker compose ps
    ```
 
-4. **Посмотрите логи:**
+4. **View logs:**
    ```bash
    docker compose logs -f
    ```
 
-## 📊 Доступ к сервисам
+## 📊 Service Access
 
-### Development (локальная разработка)
+### Development (local development)
 - **Frontend:** http://localhost:3003
 - **Backend API:** http://localhost:4003
 - **Database:** localhost:5435
 
-### Production (сервер)
+### Production (server)
 - **Frontend:** http://localhost:3002
 - **Backend API:** http://localhost:4002
 - **Database:** localhost:5434
 
-## 🛠️ Управление
+## 🛠️ Management
 
 ### Development
 ```bash
-# Запуск
+# Start
 ./docker-dev-start.sh
 
-# Логи
+# Logs
 ./docker-dev-logs.sh
 
-# Остановка
+# Stop
 ./docker-dev-stop.sh
 ```
 
 ### Production
 ```bash
-# Запуск
+# Start
 ./docker-start.sh
 
-# Логи
+# Logs
 ./docker-logs.sh
 
-# Остановка
+# Stop
 ./docker-stop.sh
 
-# Обновление
+# Update
 ./docker-update.sh
 ```
 
-## 🔄 Пересборка (после изменений в коде)
+## 🔄 Rebuild (after code changes)
 
 ### Development
 ```bash

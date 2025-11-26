@@ -1,12 +1,12 @@
 # 🚀 LoyaCareCRM Docker Development Guide
 
-*Локальная разработка с Docker: nginx proxy, health checks, volumes, seeding*
+*Local development with Docker: nginx proxy, health checks, volumes, seeding*
 
-## 📋 Обзор
+## 📋 Overview
 
-Этот документ описывает настройку локальной среды разработки LoyaCareCRM с использованием Docker. Docker обеспечивает изоляцию, консистентность и удобство разработки с hot-reload, health checks и автоматическим seeding базы данных.
+This document describes setting up the local development environment for LoyaCareCRM using Docker. Docker provides isolation, consistency, and convenience for development with hot-reload, health checks, and automatic database seeding.
 
-### Архитектура Development Setup
+### Development Setup Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -24,65 +24,65 @@
                     └─────────────────┘         └─────────────────┘
 ```
 
-### Порты для Development Environment
+### Ports for Development Environment
 
-- **PostgreSQL:** 5435 (с named volume для данных)
+- **PostgreSQL:** 5435 (with named volume for data)
 - **Backend:** 4003 (direct) / 80/api (nginx proxy)
 - **Frontend:** 3003 (direct) / 80 (nginx proxy)
-- **Nginx Proxy:** 80 (reverse proxy для frontend и backend)
+- **Nginx Proxy:** 80 (reverse proxy for frontend and backend)
 
-### Особенности Development Setup
+### Development Setup Features
 
-- **Nginx Reverse Proxy:** Объединяет frontend и backend под одним портом 80
-- **Health Checks:** Автоматическая проверка готовности сервисов
-- **Named Volumes:** Постоянное хранение данных PostgreSQL (`loyacrm_pg_data`)
-- **Database Seeding:** Автоматическое заполнение БД тестовыми данными
-- **Hot Module Replacement (HMR):** Поддержка WebSocket для live reloading
-- **API Health Endpoint:** `/api/health` для проверки backend состояния
+- **Nginx Reverse Proxy:** Combines frontend and backend under a single port 80
+- **Health Checks:** Automatic service readiness verification
+- **Named Volumes:** Persistent PostgreSQL data storage (`loyacrm_pg_data`)
+- **Database Seeding:** Automatic database population with test data
+- **Hot Module Replacement (HMR):** WebSocket support for live reloading
+- **API Health Endpoint:** `/api/health` for backend status checking
 
-## 🛠️ Установка Docker
+## 🛠️ Docker Installation
 
-### На локальной машине выполните:
+### On your local machine, run:
 
 ```bash
-# Обновите систему
+# Update the system
 sudo apt update && sudo apt upgrade -y
 
-# Установите Docker
+# Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 sudo usermod -aG docker $USER
 
-# Установите Docker Compose
+# Install Docker Compose
 sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
-# Перезагрузитесь или примените изменения группы
+# Reboot or apply group changes
 newgrp docker
 
-# Проверьте установку
+# Verify installation
 docker --version
 docker-compose --version
 ```
 
-## 📁 Подготовка Development Environment
+## 📁 Preparing Development Environment
 
-### 1. Клонирование репозитория
+### 1. Cloning the repository
 
 ```bash
 git clone <your-repository-url> loyacrm
 cd loyacrm
 ```
 
-### 2. Настройка переменных окружения
+### 2. Setting up environment variables
 
-Создайте `.env.dev` файл на основе шаблона:
+Create a `.env.dev` file based on the template:
 
 ```bash
 cp .env.dev.example .env.dev
 ```
 
-Содержимое `.env.dev`:
+Contents of `.env.dev`:
 ```bash
 # Database
 POSTGRES_DB=loyacrm
@@ -100,186 +100,186 @@ NEXT_PUBLIC_API_URL=http://localhost/api
 NEXT_PUBLIC_APP_VERSION=dev
 ```
 
-## 🚀 Запуск Development Environment
+## 🚀 Starting Development Environment
 
-### Быстрый старт
+### Quick start
 
 ```bash
-# Запуск всех сервисов
+# Start all services
 ./docker-dev-start.sh
 
-# Или вручную
+# Or manually
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-### Проверка статуса
+### Checking status
 
 ```bash
-# Статус контейнеров
+# Container status
 docker compose -f docker-compose.dev.yml ps
 
-# Логи
+# Logs
 ./docker-dev-logs.sh
 
-# Остановка
+# Stop
 ./docker-dev-stop.sh
 ```
 
-## ✅ Тестирование Development Setup
+## ✅ Testing Development Setup
 
-### Проверка доступности
+### Checking availability
 
 ```bash
-# Backend API через nginx proxy
+# Backend API via nginx proxy
 curl http://localhost/api/health
 
 # Backend API direct
 curl http://localhost:4003/api/health
 
-# Frontend через nginx proxy
+# Frontend via nginx proxy
 curl http://localhost
 
-# Frontend direct (для полной HMR)
+# Frontend direct (for full HMR)
 curl http://localhost:3003
 
 # Database
 psql -h localhost -p 5435 -U loyacrm loyacrm -c "SELECT version();"
 ```
 
-### Функциональное тестирование
+### Functional testing
 
-Откройте в браузере:
-- **Через nginx proxy:** `http://localhost` (рекомендуется для production-like experience)
-- **Direct access:** `http://localhost:3003` (для полной HMR функциональности)
+Open in browser:
+- **Via nginx proxy:** `http://localhost` (recommended for production-like experience)
+- **Direct access:** `http://localhost:3003` (for full HMR functionality)
 
-Убедитесь что:
-- ✅ Приложение загружается
-- ✅ API запросы работают (login, deals, etc.)
-- ✅ База данных доступна и содержит seeded data
-- ✅ Hot reload работает (при изменениях в коде)
+Ensure that:
+- ✅ Application loads
+- ✅ API requests work (login, deals, etc.)
+- ✅ Database is accessible and contains seeded data
+- ✅ Hot reload works (on code changes)
 
 ## 🗄️ Database Seeding
 
-При первом запуске development environment автоматически выполняется seeding базы данных:
+On first startup of the development environment, database seeding is performed automatically:
 
-- **Пользователи:** admin@example.com, employee@example.com, lead@example.com
-- **Пароли:** password123 (для всех пользователей)
-- **Роли:** Admin, Employee, Lead
-- **Сделки:** Несколько тестовых сделок для демонстрации
+- **Users:** admin@example.com, employee@example.com, lead@example.com
+- **Passwords:** password123 (for all users)
+- **Roles:** Admin, Employee, Lead
+- **Deals:** Several test deals for demonstration
 
-### Ручное reseeding
+### Manual reseeding
 
 ```bash
-# Остановить сервисы
+# Stop services
 docker compose -f docker-compose.dev.yml down
 
-# Удалить volume для сброса БД
+# Remove volume to reset DB
 docker volume rm loyacarecrm_loyacrm_pg_data
 
-# Перезапустить
+# Restart
 docker compose -f docker-compose.dev.yml up -d
 ```
 
 ## 🔄 Hot Module Replacement (HMR)
 
-Development setup поддерживает HMR для быстрой разработки:
+Development setup supports HMR for fast development:
 
-- **WebSocket Proxy:** Nginx проксирует WebSocket соединения для `/_next/webpack-hmr`
-- **Direct Access:** Для полной HMR функциональности используйте `http://localhost:3003`
-- **Turbopack Notes:** Если возникают проблемы с HMR, попробуйте прямой доступ к порту 3003
+- **WebSocket Proxy:** Nginx proxies WebSocket connections for `/_next/webpack-hmr`
+- **Direct Access:** For full HMR functionality, use `http://localhost:3003`
+- **Turbopack Notes:** If HMR issues occur, try direct access to port 3003
 
-**Использование HMR:**
+**Using HMR:**
 ```bash
-# Через nginx proxy (может иметь ограничения)
+# Via nginx proxy (may have limitations)
 open http://localhost
 
-# Direct access для полной HMR функциональности
+# Direct access for full HMR functionality
 open http://localhost:3003
 ```
 
-## 📊 Мониторинг Development Environment
+## 📊 Monitoring Development Environment
 
 ### Health Checks
 
 ```bash
-# Проверка здоровья всех сервисов
+# Check health of all services
 curl http://localhost/api/health
 
-# Статус контейнеров
+# Container status
 docker compose -f docker-compose.dev.yml ps
 
-# Использование ресурсов
+# Resource usage
 docker stats
 ```
 
-### Работа с базой данных
+### Working with database
 
 ```bash
-# Подключение к PostgreSQL
+# Connect to PostgreSQL
 psql -h localhost -p 5435 -U loyacrm loyacrm
 
-# Просмотр таблиц
+# View tables
 \dt
 
-# Выполнение команд в контейнере
+# Execute commands in container
 docker compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
 ```
 
-### Логи сервисов
+### Service logs
 
 ```bash
-# Все логи
+# All logs
 docker compose -f docker-compose.dev.yml logs -f
 
-# Логи конкретного сервиса
+# Specific service logs
 docker compose -f docker-compose.dev.yml logs -f backend
 docker compose -f docker-compose.dev.yml logs -f frontend
 docker compose -f docker-compose.dev.yml logs -f nginx
 ```
 
-## 🔧 Управление Development Environment
+## 🔧 Managing Development Environment
 
-### Перезапуск сервисов
+### Restarting services
 
 ```bash
-# Перезапуск всех сервисов
+# Restart all services
 docker compose -f docker-compose.dev.yml restart
 
-# Перезапуск конкретного сервиса
+# Restart specific service
 docker compose -f docker-compose.dev.yml restart backend
 
-# Rebuild и перезапуск
+# Rebuild and restart
 docker compose -f docker-compose.dev.yml up --build --force-recreate
 ```
 
-### Очистка
+### Cleanup
 
 ```bash
-# Остановка и удаление контейнеров
+# Stop and remove containers
 docker compose -f docker-compose.dev.yml down
 
-# Удаление volumes (сброс БД)
+# Remove volumes (reset DB)
 docker compose -f docker-compose.dev.yml down -v
 
-# Очистка неиспользуемых ресурсов
+# Clean unused resources
 docker system prune -a
 ```
 
 ## 🚨 Troubleshooting
 
-### Контейнеры не запускаются
+### Containers not starting
 ```bash
 docker compose -f docker-compose.dev.yml logs
 docker compose -f docker-compose.dev.yml config
 ```
 
-### База данных недоступна
+### Database unavailable
 ```bash
 docker compose -f docker-compose.dev.yml ps postgres
 docker compose -f docker-compose.dev.yml logs postgres
 ```
 
-### Приложение не отвечает
+### Application not responding
 ```bash
 docker compose -f docker-compose.dev.yml logs backend
 docker compose -f docker-compose.dev.yml logs frontend
@@ -287,106 +287,106 @@ docker compose -f docker-compose.dev.yml logs nginx
 docker network inspect loyacarecrm_loyacrm-dev-network
 ```
 
-### Проблемы с Hot Module Replacement (HMR)
+### Hot Module Replacement (HMR) issues
 
-**Симптомы:**
-- WebSocket connection failed errors в консоли браузера
-- Изменения в коде не отражаются автоматически
-- 404 ошибки на `/_next/webpack-hmr`
+**Symptoms:**
+- WebSocket connection failed errors in browser console
+- Code changes not reflected automatically
+- 404 errors on `/_next/webpack-hmr`
 
-**Решения:**
+**Solutions:**
 
-1. **Используйте direct access для полной HMR:**
+1. **Use direct access for full HMR:**
    ```bash
    open http://localhost:3003
    ```
 
-2. **Проверьте nginx конфигурацию:**
-   - Убедитесь что `nginx.conf` содержит WebSocket proxy для `/_next/webpack-hmr`
-   - Проверьте логи nginx: `docker compose -f docker-compose.dev.yml logs nginx`
+2. **Check nginx configuration:**
+   - Ensure `nginx.conf` contains WebSocket proxy for `/_next/webpack-hmr`
+   - Check nginx logs: `docker compose -f docker-compose.dev.yml logs nginx`
 
 3. **Turbopack compatibility:**
-   - Next.js может использовать Turbopack, который имеет ограниченную поддержку WebSocket proxy
-   - Для надежной HMR используйте direct access к порту 3003
+   - Next.js may use Turbopack, which has limited WebSocket proxy support
+   - For reliable HMR, use direct access to port 3003
 
-4. **Проверьте frontend логи:**
+4. **Check frontend logs:**
    ```bash
    docker compose -f docker-compose.dev.yml logs frontend
    ```
 
-### Database Seeding проблемы
+### Database Seeding issues
 
-**Seeding не выполняется:**
+**Seeding not performed:**
 ```bash
-# Проверьте логи backend
+# Check backend logs
 docker compose -f docker-compose.dev.yml logs backend
 
-# Выполните seeding вручную
+# Perform seeding manually
 docker compose -f docker-compose.dev.yml exec backend sh -c "cd db && pnpm run seed"
 ```
 
-**Пользователи не созданы:**
+**Users not created:**
 ```bash
-# Подключитесь к БД
+# Connect to DB
 psql -h localhost -p 5435 -U loyacrm loyacrm
 
-# Проверьте пользователей
+# Check users
 SELECT * FROM "User";
 ```
 
 ### Health Check failures
 
-**Сервис не проходит health check:**
+**Service fails health check:**
 ```bash
-# Проверьте статус
+# Check status
 docker compose -f docker-compose.dev.yml ps
 
-# Детальные логи
+# Detailed logs
 docker compose -f docker-compose.dev.yml logs [service-name]
 ```
 
 **Database health check fails:**
-- Убедитесь что PostgreSQL полностью запущен
-- Проверьте credentials в docker-compose.dev.yml
+- Ensure PostgreSQL is fully started
+- Check credentials in docker-compose.dev.yml
 
 ### Port conflicts
 
 **Port already in use:**
 ```bash
-# Найдите процесс использующий порт
+# Find process using the port
 lsof -i :3003
 lsof -i :4003
 lsof -i :5435
 lsof -i :80
 
-# Остановите конфликтующий сервис или измените порты
+# Stop conflicting service or change ports
 ```
 
-## 📋 Контрольный список Development Setup
+## 📋 Development Setup Checklist
 
-- [ ] Docker и Docker Compose установлены
-- [ ] Репозиторий клонирован
-- [ ] `.env.dev` настроен с правильными credentials
-- [ ] Development сервисы запущены (`./docker-dev-start.sh`)
-- [ ] Приложение доступно на портах 80 (nginx) и 3003 (direct)
-- [ ] API доступен на портах 80/api (nginx) и 4003 (direct)
-- [ ] База данных доступна на порту 5435 с seeded данными
-- [ ] Health checks проходят для всех сервисов
-- [ ] Hot Module Replacement работает (через direct access localhost:3003)
-- [ ] Nginx reverse proxy корректно проксирует WebSocket для HMR
+- [ ] Docker and Docker Compose installed
+- [ ] Repository cloned
+- [ ] `.env.dev` configured with correct credentials
+- [ ] Development services started (`./docker-dev-start.sh`)
+- [ ] Application available on ports 80 (nginx) and 3003 (direct)
+- [ ] API available on ports 80/api (nginx) and 4003 (direct)
+- [ ] Database available on port 5435 with seeded data
+- [ ] Health checks pass for all services
+- [ ] Hot Module Replacement works (via direct access localhost:3003)
+- [ ] Nginx reverse proxy correctly proxies WebSocket for HMR
 
-## 🎯 Преимущества Development Setup
+## 🎯 Development Setup Advantages
 
-- **Быстрая настройка:** Один скрипт запускает всю среду
-- **Изоляция:** Каждый компонент в отдельном контейнере
-- **Hot Reload:** Мгновенные изменения без перезапуска
-- **Seeding:** Автоматическое заполнение тестовыми данными
-- **Health Checks:** Автоматический мониторинг состояния
-- **Persistent Data:** Named volumes сохраняют данные между запусками
-- **WebSocket Support:** HMR через proxy с fallback на direct access
+- **Fast setup:** One script starts the entire environment
+- **Isolation:** Each component in a separate container
+- **Hot Reload:** Instant changes without restart
+- **Seeding:** Automatic population with test data
+- **Health Checks:** Automatic status monitoring
+- **Persistent Data:** Named volumes preserve data between runs
+- **WebSocket Support:** HMR via proxy with fallback to direct access
 
 ---
 
-**Автор:** Sergey Daub
-**Дата:** 26 ноября 2025
-**Версия:** 1.0 - Docker development environment setup
+**Author:** Sergey Daub
+**Date:** November 26, 2025
+**Version:** 1.0 - Docker development environment setup
