@@ -670,3 +670,258 @@ docker compose build --pull
 
 ---
 
+## 🚀 GitHub Actions CI/CD Setup
+
+### Overview
+This guide covers automated deployment using GitHub Actions for continuous integration and deployment (CI/CD) with Docker.
+
+### Prerequisites
+- GitHub repository access
+- Server with SSH access
+- Repository secrets configured
+
+### Required GitHub Secrets
+In your repository settings (`Settings` → `Secrets and variables` → `Actions`), add these secrets:
+
+#### SSH Access:
+- `SERVER_HOST` - Server IP address or domain
+- `SERVER_USER` - Server username (usually `root` or your username)
+- `SERVER_SSH_KEY` - Private SSH key for server access
+
+#### Environment Variables:
+- `DATABASE_URL` - Production database connection URL
+- `JWT_SECRET` - JWT secret key
+- `NEXT_PUBLIC_BACKEND_API_URL` - Backend API URL for production
+
+### Server Preparation
+
+#### 1. Install Dependencies
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Install Docker Compose
+sudo apt-get install docker-compose-plugin
+
+# Verify installation
+docker --version
+docker compose version
+```
+
+#### 2. Setup PostgreSQL (Optional - if not using Docker)
+If using external PostgreSQL instead of Docker container:
+```bash
+# Install PostgreSQL
+sudo apt install postgresql postgresql-contrib -y
+
+# Create database and user
+sudo -u postgres psql
+CREATE DATABASE loyacrm;
+CREATE USER loyacrm_user WITH PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE loyacrm TO loyacrm_user;
+\q
+```
+
+#### 3. Clone Repository
+```bash
+sudo mkdir -p /var/www
+cd /var/www
+git clone https://github.com/your-username/LoyaCareCRM.git loyacrm
+cd loyacrm
+```
+
+#### 4. Configure Environment Variables
+Create `.env` files on the server:
+
+**`/var/www/loyacrm/.env.backend`:**
+```bash
+PORT=4000
+DATABASE_URL="postgresql://loyacrm_user:your_secure_password@postgres:5432/loyacrm"
+JWT_SECRET="your_jwt_secret_here"
+USE_MOCK=false
+```
+
+**`/var/www/loyacrm/.env.frontend`:**
+```bash
+NEXT_PUBLIC_BACKEND_API_URL="https://your-domain.com/api"
+```
+
+### GitHub Actions Workflow
+
+The workflow file `.github/workflows/deploy-production.yml` is already configured and will:
+
+1. **Code Validation** - Run linting and type checking
+2. **Application Build** - Build frontend and backend
+3. **Database Migration** - Apply database migrations
+4. **Docker Deployment** - Build and start Docker containers
+5. **Health Check** - Verify application availability
+
+### Important Notes
+
+⚠️ **Security Warning:** Environment files are **NOT** stored in the repository. They are configured manually on the server and contain server-specific configurations.
+
+#### File Structure After Deployment:
+```
+/var/www/loyacrm/
+├── docker-compose.yml    # Docker services configuration
+├── .env.backend         # Backend environment variables
+├── .env.frontend        # Frontend environment variables
+└── docker/              # Dockerfiles and configurations
+```
+
+### Manual Deployment Trigger
+
+You can trigger deployment manually:
+1. Go to GitHub repository
+2. Click `Actions` tab
+3. Select `Deploy to Server` workflow
+4. Click `Run workflow`
+
+### Automated Deployment via Script
+
+The project includes a convenient deployment script that automates version bumping and tag creation:
+
+```bash
+# Standard staging deployment
+./deploy.sh -m "fix critical auth bug"
+
+# Create release tag (triggers production deployment)
+./deploy.sh -t -m "new features release"
+
+# Or from frontend directory
+cd frontend
+pnpm run deploy -- -t -m "add new customer dashboard feature"
+```
+
+**What the script does:**
+
+**For Regular Commits (Staging):**
+1. ✅ Commits unstaged changes with provided message
+2. ✅ Syncs with remote (`git pull --rebase`)
+3. ✅ Includes list of all unpushed commits in message
+4. ✅ If multiple unpushed commits exist: creates summary commit with `chore(staging): v{VERSION}`
+5. ✅ Pushes to main → triggers staging deployment
+
+**For Releases (Production with `-t` flag):**
+1. ✅ Reads current version from `frontend/package.json` and git tags
+2. ✅ Auto-increments patch version (e.g., `0.1.33` → `0.1.34`)
+3. ✅ Creates commit with `chore(release): v{VERSION}` message
+4. ✅ Includes list of all unpushed commits in commit message
+5. ✅ Pushes commit to main
+6. ✅ Creates and pushes annotated release tag: `v0.1.34`
+7. ✅ GitHub Actions automatically deploys to production and updates package.json
+
+**Command Options:**
+- `-m "message"` - **Required**: Custom description for commit/release
+- `-t` - Create and push release tag (triggers production deployment)
+- `-v VERSION` - Specify exact version (e.g., `-v 1.5.0`), otherwise auto-increments
+
+**Commit Message Formats:**
+
+*Regular staging commit:*
+```
+fix: critical auth bug
+
+* feat: add new dashboard
+* perf: optimize queries
+```
+
+*Multiple unpushed commits (auto-generated staging deploy):*
+```
+chore(staging): v0.1.33 - deploying multiple changes
+
+* feat: add new dashboard
+* perf: optimize queries
+* fix: critical auth bug
+```
+
+*Release commit:*
+```
+chore(release): v0.1.34 - new features release
+
+* feat: add customer dashboard
+* perf: improve database performance
+* fix: authentication bug
+```
+
+**Examples:**
+```bash
+# Standard staging push
+./deploy.sh -m "fix: authentication bug"
+# → Pushes to staging with version 0.1.33+sha.abc123
+
+# Production release
+./deploy.sh -t -m "performance improvements and bug fixes"
+# → Creates tag v0.1.34, deploys to production
+
+# Release with specific version
+./deploy.sh -v 1.5.0 -m "major release"
+# → Creates tag v1.5.0, deploys to production
+```
+
+### Monitoring and Logs
+
+#### Check Deployment Status:
+```bash
+# On server
+cd /var/www/loyacrm
+docker compose ps
+docker compose logs
+```
+
+#### View Application Logs:
+```bash
+docker compose logs -f frontend
+docker compose logs -f backend
+```
+
+### Troubleshooting
+
+#### If Deployment Fails:
+1. Check GitHub Actions logs for errors
+2. Verify SSH connection: `ssh -T user@server`
+3. Check server resources: `df -h` and `free -h`
+4. Verify environment variables are set correctly
+
+#### Common Issues:
+- **SSH Connection Failed**: Check `SERVER_SSH_KEY` format (should be private key)
+- **Build Failed**: Check Docker installation and permissions
+- **Migration Failed**: Verify database connection and permissions
+- **Services Not Starting**: Check Docker logs and port availability
+
+### Security Best Practices
+
+1. **SSH Keys**: Use separate SSH keys for each server
+2. **Environment Variables**: Never commit real values to repository
+3. **Database**: Use strong passwords and limit access
+4. **Firewall**: Configure UFW or iptables properly
+5. **SSL**: Enable HTTPS with Let's Encrypt
+
+### Useful Commands
+
+```bash
+# Check all services
+docker compose ps
+
+# View real-time logs
+docker compose logs --tail 50
+
+# Restart services
+docker compose restart
+
+# Check system resources
+htop
+df -h
+free -h
+
+# Backup database
+docker compose exec postgres pg_dump loyacrm > backup_$(date +%Y%m%d).sql
+```
+
+This setup provides a complete CI/CD pipeline for automated Docker deployment of your LoyaCareCRM application! 🎉
+
