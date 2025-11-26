@@ -1,6 +1,6 @@
 # LoyaCareCRM
 
-*🇺🇸 English  | [🇩🇪 Deutsch](README.de.md)*
+*🇺🇸 English  | [🇩🇪 Deutsch](docs/README.de.md)*
 
 ## 📋 Project Description
 
@@ -49,11 +49,11 @@ docker-compose up --build -d
 
 ### 🖥️ Manual Setup
 
-For manual Ubuntu server deployment, see [DEPLOYMENT.md](DEPLOYMENT.md)
+For manual Ubuntu server deployment, see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
-For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](DOCKER_DEVELOPMENT.md)
+For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/DOCKER_DEVELOPMENT.md)
 
-For Docker production deployment, see [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
+For Docker production deployment, see [DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)
 
 ## 🏗️ Project Architecture
 
@@ -100,9 +100,9 @@ LoyaCareCRM/
 
 ## 🐳 Docker Management
 
-For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](DOCKER_DEVELOPMENT.md)
+For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/DOCKER_DEVELOPMENT.md)
 
-For Docker production deployment, see [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
+For Docker production deployment, see [DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)
 
 ### Development Environment
 ```bash
@@ -522,11 +522,11 @@ docker-compose ps
 
 ### 🖥️ Manual Ubuntu Server Deployment
 
-For detailed manual deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
+For detailed manual deployment instructions, see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ### 🚀 CI/CD with GitHub Actions
 
-The project includes automated deployment via GitHub Actions. See [DEPLOYMENT.md](DEPLOYMENT.md#github-actions-ci/cd-setup) for details.
+The project includes automated deployment via GitHub Actions. See [DEPLOYMENT.md](docs/DEPLOYMENT.md#github-actions-ci/cd-setup) for details.
 
 ## 🤝 Contributing
 
@@ -557,3 +557,62 @@ This project is licensed under the MIT License.
 - [ ] Mobile application
 - [ ] Integration API
 - [ ] Advanced access permissions
+
+---
+
+## 📚 Documentation
+
+All project documentation is organized in the [`docs/`](./docs/) directory:
+
+### 🚀 Deployment & Infrastructure
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Complete Ubuntu server deployment
+- **[Docker Deployment](docs/DOCKER_DEPLOYMENT.md)** - Production Docker setup
+- **[Docker Development](docs/DOCKER_DEVELOPMENT.md)** - Development Docker environment
+- **[Docker Quick Start](docs/DOCKER_QUICK_START.md)** - Quick Docker setup guide
+- **[CI/CD Workflow](docs/CI_CD_WORKFLOW.md)** - GitHub Actions automation
+
+### 🗄️ Database & Environment
+- **[Database Environment Config](docs/DATABASE_ENV_CONFIG.md)** - Database configuration
+- **[Database Quick Reference](docs/DATABASE_QUICK_REFERENCE.md)** - Database commands
+- **[Environment Setup](docs/README.env.md)** - Environment variables guide
+
+### 🧪 Testing & Quality
+- **[Playwright Documentation](docs/PLAYWRIGHT_DOCUMENTATION_INDEX.md)** - E2E testing guide
+- **[Playwright Migration](docs/PLAYWRIGHT_MIGRATION_COMPLETE.md)** - Testing framework migration
+- **[Testing Strategy](docs/TESTING_STRATEGY.md)** - Testing approach and tools
+
+### ⚡ Performance & Optimization
+- **[Next.js Optimization](docs/NEXTJS_BUILD_OPTIMIZATION.md)** - Frontend performance
+- **[Nginx Optimization](docs/NGINX_OPTIMIZATION.md)** - Server optimization
+- **[Server Performance](docs/SERVER_PERFORMANCE.md)** - Performance monitoring
+
+### 🛠️ Development Tools
+- **[GitHub Secrets Guide](docs/GITHUB_SECRETS_GUIDE.md)** - CI/CD secrets setup
+- **[PNPM Migration](docs/PNPM_MIGRATION.md)** - Package manager migration
+- **[PNPM Summary](docs/PNPM_SUMMARY.md)** - PNPM usage guide
+
+### 📁 Component Documentation
+- **[Backend README](docs/backend/README.md)** - Backend architecture and setup
+- **[Frontend README](docs/frontend/README.md)** - Frontend architecture and setup
+- **[Database README](docs/db/README.md)** - Database schema and migrations
+
+### 🌍 Internationalization
+- **[German Documentation](docs/README.de.md)** - German version of main README
+- **[German Deployment](docs/DEPLOYMENT.de.md)** - German deployment guide
+- **[German Playwright Migration](docs/PLAYWRIGHT_MIGRATION_COMPLETE.de.md)** - German testing docs
+
+### 🔧 Specialized Guides
+- **[Deployment Optimization](docs/DEPLOYMENT_OPTIMIZATION.md)** - Deployment improvements
+- **[Fix Seed Error](docs/FIX_SEED_ERROR.md)** - Database seeding fixes
+- **[Secrets Quickstart](docs/SECRETS_QUICKSTART.md)** - Quick secrets setup
+- **[Server Setup](docs/SERVER_SETUP.md)** - Server configuration
+- **[Staging Setup](docs/STAGING_SETUP.md)** - Staging environment setup
+- **[Staging Commands](docs/STAGING_COMMANDS.md)** - Staging management
+- **[Staging Quick Setup](docs/STAGING_QUICK_SETUP_IP.md)** - Quick staging setup
+
+### 📖 Additional Resources
+- **[Environment Backend](docs/backend/README.env.md)** - Backend environment config
+- **[Tests Backend](docs/backend/tests/README.md)** - Backend testing documentation
+- **[Playwright Tests Summary](docs/PLAYWRIGHT_TESTS_SUMMARY.md)** - Test results summary
+- **[User Entity](docs/frontend/entities/user/README.md)** - User entity documentation
+- **[Auth Feature](docs/frontend/features/auth/README.md)** - Authentication feature docs
