@@ -670,6 +670,143 @@ docker compose build --pull
 
 ---
 
+## 🏗️ Server Directory Structure After Deployment
+
+После выполнения Docker deployment на сервере создается следующая структура директорий. Обратите внимание, что копируется **весь репозиторий**, а не только Docker файлы.
+
+### Production Docker (`/var/www/docker/loyacrm`)
+
+```
+/var/www/docker/loyacrm/
+├── .env.docker                    # Создается workflow'ом из секретов GitHub
+├── .git/                         # Полный git репозиторий
+├── .github/                      # Все workflow файлы
+├── backend/                      # Исходный код backend
+│   ├── dist/                     # Собранный backend (создается при build)
+│   ├── src/
+│   ├── package.json
+│   └── ...
+├── db/                           # База данных и миграции
+│   ├── prisma/
+│   ├── migrations/
+│   └── ...
+├── docker/                       # Docker файлы
+│   ├── backend/
+│   │   └── Dockerfile
+│   └── frontend/
+│       └── Dockerfile
+├── docker-compose.yml            # Production compose файл
+├── docker-compose.dev.yml        # Development compose файл
+├── docker-compose.stage.yml      # Stage compose файл
+├── frontend/                     # Исходный код frontend
+│   ├── .next/                    # Собранный frontend (создается при build)
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── ...
+├── scripts/                      # Скрипты развертывания
+├── docs/                         # Документация
+├── pnpm-lock.yaml               # Lock файл
+├── package.json                 # Root package.json
+└── ...                          # Все остальные файлы репозитория
+```
+
+### Staging Docker (`/var/www/docker/loyacrm-staging`)
+
+```
+/var/www/docker/loyacrm-staging/
+├── .env.backend.stage           # Создается workflow'ом
+├── .env.frontend.stage          # Создается workflow'ом
+├── .git/                        # Полный git репозиторий
+├── .github/                     # Все workflow файлы
+├── backend/                     # Исходный код backend
+│   ├── dist/                    # Собранный backend
+│   └── ...
+├── db/                          # База данных и миграции
+├── docker/                      # Docker файлы
+├── docker-compose.yml           # Production compose файл
+├── docker-compose.dev.yml       # Development compose файл
+├── docker-compose.stage.yml     # Stage compose файл (используется для staging)
+├── frontend/                    # Исходный код frontend
+│   ├── .next/                   # Собранный frontend
+│   └── ...
+├── scripts/                     # Скрипты развертывания
+├── docs/                        # Документация
+└── ...                         # Все остальные файлы репозитория
+```
+
+### 🔄 Процесс развертывания
+
+**Что происходит при deployment:**
+
+1. **Клонирование/обновление кода:**
+   ```bash
+   cd /var/www/docker/loyacrm  # или loyacrm-staging
+   git fetch origin
+   git reset --hard origin/main  # Копирует ВЕСЬ репозиторий
+   ```
+
+2. **Создание environment файлов:**
+   - Production: `.env.docker` (единый файл)
+   - Staging: `.env.backend.stage` + `.env.frontend.stage` (раздельные файлы)
+
+3. **Установка зависимостей:**
+   ```bash
+   cd db && pnpm install && pnpm run generate
+   cd ../frontend && pnpm install
+   cd ../backend && pnpm install
+   ```
+
+4. **Сборка приложений:**
+   ```bash
+   cd frontend && pnpm run build  # Создает .next/
+   cd ../backend && pnpm run build  # Создает dist/
+   ```
+
+5. **Запуск Docker:**
+   ```bash
+   # Production
+   docker-compose build --no-cache
+   docker-compose up -d
+   
+   # Staging  
+   docker-compose -f docker-compose.stage.yml build --no-cache
+   docker-compose -f docker-compose.stage.yml up -d
+   ```
+
+### 📁 Итоговая структура на сервере
+
+```
+/var/www/docker/
+├── loyacrm/                    # Production - полный репозиторий
+│   ├── .env.docker            # Production env
+│   ├── backend/dist/          # Собранный backend
+│   ├── frontend/.next/        # Собранный frontend
+│   ├── docker-compose.yml     # Production compose
+│   └── ...                    # Весь остальной код
+│
+└── loyacrm-staging/           # Staging - полный репозиторий
+    ├── .env.backend.stage     # Staging backend env
+    ├── .env.frontend.stage    # Staging frontend env
+    ├── backend/dist/          # Собранный backend
+    ├── frontend/.next/        # Собранный frontend
+    ├── docker-compose.stage.yml  # Staging compose
+    └── ...                    # Весь остальной код
+```
+
+### 🎯 Ключевые особенности
+
+- **Копируется весь репозиторий**, не только Docker файлы
+- **Environment файлы** создаются автоматически из GitHub Secrets
+- **Сборка происходит на сервере** (frontend и backend)
+- **Docker compose** запускает контейнеры с собранным кодом
+- **Разные директории** позволяют иметь production и staging параллельно
+- **Git репозиторий** поддерживается в актуальном состоянии
+
+Это позволяет иметь полную изоляцию между production и staging средами, при этом весь исходный код доступен для отладки и сопровождения.
+
+---
+
 ## 🚀 GitHub Actions CI/CD Setup
 
 ### Overview
