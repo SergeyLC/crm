@@ -22,6 +22,7 @@ router.use('/groups', groupRoutes);
 router.use('/pipelines', pipelineRoutes);
 
 router.get('/ping', (_req, res) => res.send('pong'));
+router.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 export default router;
 

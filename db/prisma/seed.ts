@@ -1,4 +1,6 @@
 import { PrismaClient, AppointmentType, DealStage } from '../generated/prisma-client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 
 // DATABASE_URL is loaded via dotenv-cli from package.json seed script
@@ -17,7 +19,11 @@ if (!process.env.DATABASE_URL) {
 
 console.log('Starting seed.ts...');
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({ adapter } as any);
 
 console.log('PrismaClient created');
 
