@@ -49,7 +49,7 @@ docker-compose up --build -d
 
 ### 🖥️ Manual Setup
 
-For manual Ubuntu server deployment, see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
+For manual Ubuntu server deployment, see [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)
 
 For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/DOCKER_DEVELOPMENT.md)
 
@@ -100,9 +100,9 @@ LoyaCareCRM/
 
 ## 🐳 Docker Management
 
-For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/DOCKER_DEVELOPMENT.md)
+For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/deployment/DOCKER_DEVELOPMENT.md)
 
-For Docker production deployment, see [DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)
+For Docker production deployment, see [DOCKER_DEPLOYMENT.md](docs/deployment/DOCKER_DEPLOYMENT.md)
 
 ### Development Environment
 ```bash
@@ -522,11 +522,11 @@ docker-compose ps
 
 ### 🖥️ Manual Ubuntu Server Deployment
 
-For detailed manual deployment instructions, see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
+For detailed manual deployment instructions, see [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)
 
 ### 🚀 CI/CD with GitHub Actions
 
-The project includes automated deployment via GitHub Actions. See [DEPLOYMENT.md](docs/DEPLOYMENT.md#github-actions-ci/cd-setup) for details.
+The project includes automated deployment via GitHub Actions. See [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md#github-actions-ci/cd-setup) for details.
 
 ## 🤝 Contributing
 
@@ -565,11 +565,11 @@ This project is licensed under the MIT License.
 All project documentation is organized in the [`docs/`](./docs/) directory:
 
 ### 🚀 Deployment & Infrastructure
-- **[Deployment Guide](docs/DEPLOYMENT.md)** - Complete Ubuntu server deployment
-- **[Docker Deployment](docs/DOCKER_DEPLOYMENT.md)** - Production Docker setup
-- **[Docker Development](docs/DOCKER_DEVELOPMENT.md)** - Development Docker environment
-- **[Docker Quick Start](docs/DOCKER_QUICK_START.md)** - Quick Docker setup guide
-- **[CI/CD Workflow](docs/CI_CD_WORKFLOW.md)** - GitHub Actions automation
+- **[Deployment Guide](docs/deployment/DEPLOYMENT.md)** - Complete Ubuntu server deployment
+- **[Docker Deployment](docs/deployment/DOCKER_DEPLOYMENT.md)** - Production Docker setup
+- **[Docker Development](docs/deployment/DOCKER_DEVELOPMENT.md)** - Development Docker environment
+- **[Docker Quick Start](docs/deployment/DOCKER_QUICK_START.md)** - Quick Docker setup guide
+- **[CI/CD Workflow](docs/deployment/CI_CD_WORKFLOW.md)** - GitHub Actions automation
 
 ### 🗄️ Database & Environment
 - **[Database Environment Config](docs/DATABASE_ENV_CONFIG.md)** - Database configuration
@@ -583,11 +583,11 @@ All project documentation is organized in the [`docs/`](./docs/) directory:
 
 ### ⚡ Performance & Optimization
 - **[Next.js Optimization](docs/NEXTJS_BUILD_OPTIMIZATION.md)** - Frontend performance
-- **[Nginx Optimization](docs/NGINX_OPTIMIZATION.md)** - Server optimization
-- **[Server Performance](docs/SERVER_PERFORMANCE.md)** - Performance monitoring
+- **[Nginx Optimization](docs/deployment/NGINX_OPTIMIZATION.md)** - Server optimization
+- **[Server Performance](docs/deployment/SERVER_PERFORMANCE.md)** - Performance monitoring
 
 ### 🛠️ Development Tools
-- **[GitHub Secrets Guide](docs/GITHUB_SECRETS_GUIDE.md)** - CI/CD secrets setup
+- **[GitHub Secrets Guide](docs/deployment/GITHUB_SECRETS_GUIDE.md)** - CI/CD secrets setup
 - **[PNPM Migration](docs/PNPM_MIGRATION.md)** - Package manager migration
 - **[PNPM Summary](docs/PNPM_SUMMARY.md)** - PNPM usage guide
 
@@ -598,17 +598,17 @@ All project documentation is organized in the [`docs/`](./docs/) directory:
 
 ### 🌍 Internationalization
 - **[German Documentation](docs/README.de.md)** - German version of main README
-- **[German Deployment](docs/DEPLOYMENT.de.md)** - German deployment guide
+- **[German Deployment](docs/deployment/DEPLOYMENT.de.md)** - German deployment guide
 - **[German Playwright Migration](docs/PLAYWRIGHT_MIGRATION_COMPLETE.de.md)** - German testing docs
 
 ### 🔧 Specialized Guides
-- **[Deployment Optimization](docs/DEPLOYMENT_OPTIMIZATION.md)** - Deployment improvements
-- **[Fix Seed Error](docs/FIX_SEED_ERROR.md)** - Database seeding fixes
-- **[Secrets Quickstart](docs/SECRETS_QUICKSTART.md)** - Quick secrets setup
-- **[Server Setup](docs/SERVER_SETUP.md)** - Server configuration
-- **[Staging Setup](docs/STAGING_SETUP.md)** - Staging environment setup
-- **[Staging Commands](docs/STAGING_COMMANDS.md)** - Staging management
-- **[Staging Quick Setup](docs/STAGING_QUICK_SETUP_IP.md)** - Quick staging setup
+- **[Deployment Optimization](docs/deployment/DEPLOYMENT_OPTIMIZATION.md)** - Deployment improvements
+- **[Fix Seed Error](docs/deployment/FIX_SEED_ERROR.md)** - Database seeding fixes
+- **[Secrets Quickstart](docs/deployment/SECRETS_QUICKSTART.md)** - Quick secrets setup
+- **[Server Setup](docs/deployment/SERVER_SETUP.md)** - Server configuration
+- **[Staging Setup](docs/deployment/STAGING_SETUP.md)** - Staging environment setup
+- **[Staging Commands](docs/deployment/STAGING_COMMANDS.md)** - Staging management
+- **[Staging Quick Setup](docs/deployment/STAGING_QUICK_SETUP_IP.md)** - Quick staging setup
 
 ### 📖 Additional Resources
 - **[Environment Backend](docs/backend/README.env.md)** - Backend environment config
