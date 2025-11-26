@@ -253,10 +253,172 @@ pm2 startup
 > - Rate limiting (DDoS protection)
 > - Security headers and optimized buffers
 
-### 1. Copy Optimized Configuration
+### 1. Create Optimized Site Configuration
 ```bash
-# Copy the optimized nginx configuration from the repository
-sudo cp /path/to/repo/.github/nginx-optimized.conf /etc/nginx/sites-available/loyacrm
+sudo nano /etc/nginx/sites-available/loyacrm
+```
+
+**Configuration contents:**
+```nginx
+# Optimized Nginx Configuration for LoyaCare CRM
+# Rate limiting zone (protect against DDoS)
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=general_limit:10m rate=30r/s;
+
+# Upstream definitions for better load balancing
+upstream frontend {
+    server localhost:3000;
+    keepalive 64;
+}
+
+upstream backend {
+    server localhost:4000;
+    keepalive 64;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name your-domain.com your-server-ip;
+
+    # Redirect HTTP to HTTPS (uncomment after SSL setup)
+    # return 301 https://$server_name$request_uri;
+    
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # Max upload size (adjust for your needs)
+    client_max_body_size 10M;
+    client_body_buffer_size 128k;
+
+    # Timeouts
+    proxy_connect_timeout 60s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
+
+    # Buffer sizes
+    proxy_buffer_size 4k;
+    proxy_buffers 8 4k;
+    proxy_busy_buffers_size 8k;
+
+    # Enable gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/json
+        application/javascript
+        application/xml+rss
+        application/rss+xml
+        font/truetype
+        font/opentype
+        application/vnd.ms-fontobject
+        image/svg+xml;
+    gzip_disable "msie6";
+
+    # Frontend (Next.js) - with rate limiting
+    location / {
+        limit_req zone=general_limit burst=20 nodelay;
+        
+        proxy_pass http://frontend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Backend API - with stricter rate limiting
+    location /api/ {
+        limit_req zone=api_limit burst=5 nodelay;
+        
+        proxy_pass http://backend/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        
+        # CORS headers (if needed)
+        # add_header Access-Control-Allow-Origin "https://your-domain.com" always;
+        # add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
+        # add_header Access-Control-Allow-Headers "Authorization, Content-Type" always;
+    }
+
+    # Next.js static files - aggressive caching
+    location /_next/static/ {
+        proxy_pass http://frontend;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        access_log off;
+    }
+
+    # Next.js images - cache for 1 year
+    location /_next/image {
+        proxy_pass http://frontend;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # Public static files - cache for 1 hour
+    location /public/ {
+        proxy_pass http://frontend;
+        add_header Cache-Control "public, max-age=3600";
+    }
+
+    # Favicon and robots.txt - cache for 1 day
+    location ~ ^/(favicon\.ico|robots\.txt)$ {
+        proxy_pass http://frontend;
+        add_header Cache-Control "public, max-age=86400";
+        access_log off;
+    }
+
+    # Health check endpoint (no rate limiting)
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+
+# HTTPS configuration (uncomment and configure after SSL setup)
+# server {
+#     listen 443 ssl http2;
+#     listen [::]:443 ssl http2;
+#     server_name your-domain.com www.your-domain.com;
+#
+#     # SSL certificates (managed by Certbot)
+#     ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+#     ssl_trusted_certificate /etc/letsencrypt/live/your-domain.com/chain.pem;
+#
+#     # Modern SSL configuration
+#     ssl_protocols TLSv1.2 TLSv1.3;
+#     ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
+#     ssl_prefer_server_ciphers off;
+#     ssl_session_cache shared:SSL:10m;
+#     ssl_session_timeout 1d;
+#     ssl_stapling on;
+#     ssl_stapling_verify on;
+#
+#     # HSTS (uncomment after testing)
+#     # add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+#
+#     # Include all location blocks from HTTP server above
+#     # ... (copy all location blocks here)
+# }
 ```
 
 ### 2. Edit Configuration for Your Domain
@@ -265,7 +427,8 @@ sudo nano /etc/nginx/sites-available/loyacrm
 ```
 
 **Required changes:**
-- Replace `161.97.67.253` with your actual server IP or domain
+- Replace `your-domain.com` with your actual domain
+- Replace `your-server-ip` with your actual server IP
 - Uncomment and configure SSL section after obtaining certificates
 - Adjust rate limiting if needed (current: API 10 req/s, Frontend 30 req/s)
 
