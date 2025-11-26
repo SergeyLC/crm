@@ -51,7 +51,7 @@ docker-compose up --build -d
 
 For manual Ubuntu server deployment, see [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)
 
-For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/DOCKER_DEVELOPMENT.md)
+For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/deployment/DOCKER_DEVELOPMENT.md)
 
 For Docker production deployment, see [DEPLOYMENT_DOCKER.md](docs/deployment/DEPLOYMENT_DOCKER.md)
 
