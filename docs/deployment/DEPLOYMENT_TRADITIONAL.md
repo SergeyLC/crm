@@ -245,57 +245,59 @@ pm2 startup
 
 ## 🌐 Configure Nginx as Reverse Proxy
 
-### 1. Create Site Configuration
+> **🚀 Performance Optimized Configuration**
+> This setup uses the optimized nginx configuration from **[NGINX_OPTIMIZATION.md](NGINX_OPTIMIZATION.md)** which includes:
+> - Gzip compression (70-80% traffic reduction)
+> - HTTP/2 support (30-50% speedup with SSL)
+> - Aggressive caching (instant repeat visits)
+> - Rate limiting (DDoS protection)
+> - Security headers and optimized buffers
+
+### 1. Copy Optimized Configuration
+```bash
+# Copy the optimized nginx configuration from the repository
+sudo cp /path/to/repo/.github/nginx-optimized.conf /etc/nginx/sites-available/loyacrm
+```
+
+### 2. Edit Configuration for Your Domain
 ```bash
 sudo nano /etc/nginx/sites-available/loyacrm
 ```
 
-Configuration contents:
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com your-server-ip;
+**Required changes:**
+- Replace `161.97.67.253` with your actual server IP or domain
+- Uncomment and configure SSL section after obtaining certificates
+- Adjust rate limiting if needed (current: API 10 req/s, Frontend 30 req/s)
 
-    # Frontend (Next.js)
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # Backend API
-    location /api/ {
-        proxy_pass http://localhost:4000/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # Next.js static files
-    location /_next/static/ {
-        proxy_pass http://localhost:3000;
-        add_header Cache-Control "public, max-age=31536000, immutable";
-    }
-}
-```
-
-### 2. Enable Site
+### 3. Enable Site
 ```bash
 sudo ln -s /etc/nginx/sites-available/loyacrm /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
+
+### 4. Test Optimizations
+
+**Test gzip compression:**
+```bash
+curl -H "Accept-Encoding: gzip" -I http://your-domain.com
+```
+Should return: `Content-Encoding: gzip`
+
+**Test caching:**
+```bash
+curl -I http://your-domain.com/_next/static/chunks/main.js
+```
+Should return: `Cache-Control: public, max-age=31536000, immutable`
+
+### Performance Improvements Included:
+- ✅ **Gzip compression** (70-80% traffic reduction)
+- ✅ **HTTP/2 support** (30-50% speedup when SSL enabled)
+- ✅ **Aggressive static caching** (1 year for immutable assets)
+- ✅ **Rate limiting** (DDoS protection)
+- ✅ **Connection keepalive** (fewer TCP handshakes)
+- ✅ **Optimized buffers** (efficient memory usage)
+- ✅ **Security headers** (XSS, frame, content protection)
 
 ## 🔒 SSL Setup (Optional but Recommended)
 
@@ -308,6 +310,42 @@ sudo apt install -y certbot python3-certbot-nginx
 ```bash
 sudo certbot --nginx -d your-domain.com
 ```
+
+**What Certbot does automatically:**
+- ✅ Adds SSL certificates to nginx configuration
+- ✅ Enables HTTP/2 support
+- ✅ Sets up HTTP → HTTPS redirect
+- ✅ Configures automatic certificate renewal
+- ✅ Updates nginx configuration with modern SSL settings
+
+### 3. After SSL Setup
+After running Certbot, uncomment the HTTPS server block in `/etc/nginx/sites-available/loyacrm`:
+
+```bash
+sudo nano /etc/nginx/sites-available/loyacrm
+```
+
+Find and uncomment the entire HTTPS server block (lines starting with `# server {` for port 443).
+
+### 4. Enable HSTS (After Testing)
+After confirming SSL works correctly, uncomment the HSTS header in the HTTPS block:
+```nginx
+add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+```
+
+### 5. Test SSL Configuration
+```bash
+# Test SSL certificate
+openssl s_client -connect your-domain.com:443 -servername your-domain.com
+
+# Test HTTP/2 support
+curl -I --http2 https://your-domain.com
+```
+
+**Expected improvements with SSL + HTTP/2:**
+- Page load time: -30-50%
+- Parallel resource loading
+- Better security headers
 
 ## 🛡️ Firewall Setup
 
