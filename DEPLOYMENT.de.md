@@ -37,13 +37,15 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 sudo usermod -aG docker $USER
 
-# Docker Compose installieren
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+# Docker Compose installieren (v2 plugin)
+# Docker Compose v2 kommt als Plugin mit Docker
+# Falls nicht enthalten, separat installieren:
+sudo apt-get update
+sudo apt-get install docker-compose-plugin
 
 # Installation überprüfen
 docker --version
-docker-compose --version
+docker compose version
 ```
 
 ### 🚀 Schnellstart mit Docker
@@ -60,13 +62,13 @@ cd loyacrm
 cp .env.dev.example .env.dev
 
 # Entwicklungsumgebung starten
-docker-compose -f docker-compose.dev.yml up --build -d
+docker compose -f docker-compose.dev.yml up --build -d
 
 # Container-Status prüfen
-docker-compose -f docker-compose.dev.yml ps
+docker compose -f docker-compose.dev.yml ps
 
 # Logs anzeigen
-docker-compose -f docker-compose.dev.yml logs -f
+docker compose -f docker-compose.dev.yml logs -f
 ```
 
 #### 3. Produktionsumgebung einrichten
@@ -80,10 +82,10 @@ nano .env.backend  # Datenbank und Secrets konfigurieren
 nano .env.frontend # API-URLs konfigurieren
 
 # Produktionsumgebung starten
-docker-compose up --build -d
+docker compose up --build -d
 
 # Status prüfen
-docker-compose ps
+docker compose ps
 ```
 
 ### 🌐 Zugriffs-URLs
@@ -98,34 +100,34 @@ docker-compose ps
 #### Entwicklungsumgebung
 ```bash
 # Entwicklungscontainer starten
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 
 # Entwicklungscontainer stoppen
-docker-compose -f docker-compose.dev.yml down
+docker compose -f docker-compose.dev.yml down
 
 # Neu bauen und neu starten
-docker-compose -f docker-compose.dev.yml up --build --force-recreate
+docker compose -f docker-compose.dev.yml up --build --force-recreate
 
 # Logs anzeigen
-docker-compose -f docker-compose.dev.yml logs -f [service-name]
+docker compose -f docker-compose.dev.yml logs -f [service-name]
 
 # Container-Shell zugreifen
-docker-compose -f docker-compose.dev.yml exec [service-name] sh
+docker compose -f docker-compose.dev.yml exec [service-name] sh
 ```
 
 #### Produktionsumgebung
 ```bash
 # Produktionscontainer starten
-docker-compose up -d
+docker compose up -d
 
 # Produktionscontainer stoppen
-docker-compose down
+docker compose down
 
 # Aktualisieren und neu starten
-docker-compose pull && docker-compose up -d
+docker compose pull && docker compose up -d
 
 # Logs anzeigen
-docker-compose logs -f [service-name]
+docker compose logs -f [service-name]
 ```
 
 ### 📊 Überwachung und Fehlerbehebung
@@ -149,14 +151,14 @@ docker inspect loyacrm-postgres-dev
 #### Datenbank-Operationen
 ```bash
 # PostgreSQL in Entwicklung zugreifen
-docker-compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
+docker compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
 
 # Datenbank-Migrationen ausführen
-docker-compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
+docker compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
 
 # Entwicklungsdatenbank zurücksetzen
-docker-compose -f docker-compose.dev.yml down -v  # Volumes entfernen
-docker-compose -f docker-compose.dev.yml up -d   # Neu mit frischen Daten erstellen
+docker compose -f docker-compose.dev.yml down -v  # Volumes entfernen
+docker compose -f docker-compose.dev.yml up -d   # Neu mit frischen Daten erstellen
 ```
 
 #### Häufige Probleme
@@ -184,7 +186,7 @@ newgrp docker
 docker system prune -a
 
 # Ohne Cache neu bauen
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ### 🔄 Updates und Wartung
@@ -195,21 +197,21 @@ docker-compose build --no-cache
 git pull origin main
 
 # Entwicklungsumgebung aktualisieren
-docker-compose -f docker-compose.dev.yml up --build -d
+docker compose -f docker-compose.dev.yml up --build -d
 
 # Produktionsumgebung aktualisieren
-docker-compose down
-docker-compose pull
-docker-compose up -d
+docker compose down
+docker compose pull
+docker compose up -d
 ```
 
 #### Datenbank sichern (Entwicklung)
 ```bash
 # Backup erstellen
-docker-compose -f docker-compose.dev.yml exec postgres pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
+docker compose -f docker-compose.dev.yml exec postgres pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
 
 # Backup wiederherstellen
-docker-compose -f docker-compose.dev.yml exec -T postgres psql -U loyacrm loyacrm < backup_20241201.sql
+docker compose -f docker-compose.dev.yml exec -T postgres psql -U loyacrm loyacrm < backup_20241201.sql
 ```
 
 ### 🔒 Sicherheitsüberlegungen

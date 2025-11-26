@@ -547,16 +547,16 @@ NEXT_PUBLIC_BACKEND_API_URL=https://api.your-domain.com/api
 
 ```bash
 # Build and start
-docker-compose -f docker-compose.prod.yml --env-file .env.docker.prod up -d
+docker compose -f docker-compose.prod.yml --env-file .env.docker.prod up -d
 
 # Run migrations
-docker-compose -f docker-compose.prod.yml exec backend pnpm run db:migrate:deploy
+docker compose -f docker-compose.prod.yml exec backend pnpm run db:migrate:deploy
 
 # View logs
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml logs -f
 
 # Stop
-docker-compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml down
 ```
 
 ---
