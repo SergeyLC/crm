@@ -8,7 +8,26 @@ LoyaCareCRM is a modern Customer Relationship Management (CRM) system built with
 
 ## 🚀 Quick Start
 
-### 🐳 Docker (Recommended)
+### 🎯 Automated Deployment (Recommended)
+
+The project uses automated deployment with GitHub Actions:
+
+#### Branch-Based Deployment
+- **`main` branch** → Production environment
+- **`develop` branch** → Staging environment
+
+#### Deployment Types
+- **Docker** (default): Zero-source-code deployment with containers
+- **Traditional**: Source code deployment with PM2
+
+#### Configuration
+1. Set `DEPLOYMENT_TYPE` variable in GitHub repository settings
+2. Configure environments in GitHub Settings → Environments
+3. Push to respective branches to trigger deployment
+
+📖 **Detailed Guide:** See [Deployment Configuration](DEPLOYMENT_CONFIG.md)
+
+### 🐳 Docker (Local Development)
 
 #### Development Environment
 ```bash

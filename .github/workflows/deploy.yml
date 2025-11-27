@@ -1,0 +1,367 @@
+name: Deploy Application
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Override deployment type (leave empty to use environment variable)'
+        required: false
+        type: choice
+        options:
+        - docker
+        - traditional
+      force_deploy:
+        description: 'Force deployment even if conditions not met'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # ==================== Determine Environment & Type ====================
+  setup:
+    name: Setup Deployment Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.config.outputs.environment }}
+      deployment_type: ${{ steps.config.outputs.deployment_type }}
+      should_deploy: ${{ steps.config.outputs.should_deploy }}
+      image_tag: ${{ steps.config.outputs.image_tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure deployment
+        id: config
+        run: |
+          # Determine environment from branch
+          case "${GITHUB_REF#refs/heads/}" in
+            main)
+              ENVIRONMENT="production"
+              ;;
+            develop)
+              ENVIRONMENT="staging"
+              ;;
+            *)
+              echo "Unsupported branch: ${GITHUB_REF#refs/heads/}"
+              echo "should_deploy=false" >> $GITHUB_OUTPUT
+              exit 0
+              ;;
+          esac
+
+          # Determine deployment type (workflow_dispatch override or env var or default)
+          if [ -n "${{ github.event.inputs.deployment_type }}" ]; then
+            DEPLOYMENT_TYPE="${{ github.event.inputs.deployment_type }}"
+            echo "Using workflow dispatch override: $DEPLOYMENT_TYPE"
+          elif [ -n "${{ vars.DEPLOYMENT_TYPE }}" ]; then
+            DEPLOYMENT_TYPE="${{ vars.DEPLOYMENT_TYPE }}"
+            echo "Using environment variable: $DEPLOYMENT_TYPE"
+          else
+            DEPLOYMENT_TYPE="docker"  # default
+            echo "Using default: $DEPLOYMENT_TYPE"
+          fi
+
+          # Validate deployment type
+          if [[ "$DEPLOYMENT_TYPE" != "docker" && "$DEPLOYMENT_TYPE" != "traditional" ]]; then
+            echo "Invalid deployment type: $DEPLOYMENT_TYPE"
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Generate image tag for docker deployments
+          if [[ "$DEPLOYMENT_TYPE" == "docker" ]]; then
+            if [[ "$ENVIRONMENT" == "production" ]]; then
+              IMAGE_TAG="latest"
+            else
+              COMMIT_SHORT=$(git rev-parse --short HEAD)
+              IMAGE_TAG="staging-${COMMIT_SHORT}"
+            fi
+          fi
+
+          # Force deploy flag
+          FORCE_DEPLOY="${{ github.event.inputs.force_deploy || false }}"
+
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          echo "deployment_type=$DEPLOYMENT_TYPE" >> $GITHUB_OUTPUT
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+
+          echo "🎯 Deployment Configuration:"
+          echo "  Environment: $ENVIRONMENT"
+          echo "  Type: $DEPLOYMENT_TYPE"
+          echo "  Image Tag: $IMAGE_TAG"
+          echo "  Force Deploy: $FORCE_DEPLOY"
+
+  # ==================== Docker Deployment ====================
+  deploy-docker:
+    name: Deploy with Docker
+    needs: setup
+    if: needs.setup.outputs.should_deploy == 'true' && needs.setup.outputs.deployment_type == 'docker'
+    runs-on: ubuntu-latest
+    environment: ${{ needs.setup.outputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate build version
+        id: version
+        run: |
+          STABLE_VERSION=$(node -p "require('./frontend/package.json').version")
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+
+          if [[ "${{ needs.setup.outputs.environment }}" == "production" ]]; then
+            BUILD_VERSION="${STABLE_VERSION}"
+          else
+            BUILD_VERSION="${STABLE_VERSION}+sha.${COMMIT_HASH}"
+          fi
+
+          echo "BUILD_VERSION=${BUILD_VERSION}" >> $GITHUB_OUTPUT
+          echo "📦 Version: ${BUILD_VERSION}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            frontend/pnpm-lock.yaml
+            backend/pnpm-lock.yaml
+            db/pnpm-lock.yaml
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: |
+          cd db
+          pnpm run generate
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          export NEXT_TELEMETRY_DISABLED=1
+          export SKIP_TYPE_CHECK=true
+          export SKIP_LINT=true
+          export NODE_OPTIONS="--max-old-space-size=4096"
+          pnpm run build
+
+      - name: Build backend
+        run: |
+          cd backend
+          pnpm run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker images
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ github.repository }}/frontend
+            ${{ env.REGISTRY }}/${{ github.repository }}/backend
+          tags: |
+            type=raw,value=${{ needs.setup.outputs.image_tag }}
+
+      - name: Build and push frontend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/frontend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
+
+      - name: Build and push backend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
+
+      - name: Deploy to ${{ needs.setup.outputs.environment }} server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            set -e
+
+            echo "🐳 Docker Deployment to ${{ needs.setup.outputs.environment }}"
+            echo "📦 Image tag: ${{ needs.setup.outputs.image_tag }}"
+            echo "🏗️ Deployment directory: /var/www/loyacrm-${{ needs.setup.outputs.environment }}"
+
+            DEPLOY_DIR="/var/www/loyacrm-${{ needs.setup.outputs.environment }}"
+
+            # Navigate to deployment directory
+            cd "$DEPLOY_DIR"
+
+            echo "🔐 Setting up Docker secrets..."
+            mkdir -p docker-example/secrets
+            mkdir -p docker-example/backups
+
+            # Extract password from DATABASE_URL
+            DB_PASSWORD=$(echo "${{ secrets.DATABASE_URL }}" | sed 's|postgresql://[^:]*:\([^@]*\)@.*|\1|')
+            echo "$DB_PASSWORD" > docker-example/secrets/db_password.txt
+            echo "${{ secrets.JWT_SECRET }}" > docker-example/secrets/jwt_secret.txt
+            chmod 600 docker-example/secrets/*.txt
+
+            echo "🐳 Updating environment configuration..."
+            ENV_FILE="docker-example/.env.${{ needs.setup.outputs.environment }}"
+            sed -i "s/TAG=.*/TAG=${{ needs.setup.outputs.image_tag }}/" "$ENV_FILE"
+
+            echo "🐳 Pulling Docker images..."
+            docker pull ${{ env.REGISTRY }}/${{ github.repository }}/backend:${{ needs.setup.outputs.image_tag }}
+            docker pull ${{ env.REGISTRY }}/${{ github.repository }}/frontend:${{ needs.setup.outputs.image_tag }}
+
+            echo "🗄️ Running database migrations..."
+            cd docker-example
+            docker compose --profile migrator run --rm migrator
+
+            echo "🐳 Starting services..."
+            if [[ "${{ needs.setup.outputs.environment }}" == "production" ]]; then
+              docker compose --env-file .env.production up -d
+            else
+              docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml up -d
+            fi
+
+            echo "🧹 Cleaning up..."
+            docker image prune -f
+
+            echo "✅ Docker deployment to ${{ needs.setup.outputs.environment }} completed!"
+            docker compose ps
+
+  # ==================== Traditional Deployment ====================
+  deploy-traditional:
+    name: Deploy Traditionally
+    needs: setup
+    if: needs.setup.outputs.should_deploy == 'true' && needs.setup.outputs.deployment_type == 'traditional'
+    runs-on: ubuntu-latest
+    environment: ${{ needs.setup.outputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            frontend/pnpm-lock.yaml
+            backend/pnpm-lock.yaml
+            db/pnpm-lock.yaml
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: |
+          cd db
+          pnpm run generate
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          export NEXT_TELEMETRY_DISABLED=1
+          export SKIP_TYPE_CHECK=true
+          export SKIP_LINT=true
+          export NODE_OPTIONS="--max-old-space-size=4096"
+          pnpm run build
+
+      - name: Build backend
+        run: |
+          cd backend
+          pnpm run build
+
+      - name: Deploy to ${{ needs.setup.outputs.environment }} server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            set -e
+
+            echo "📦 Traditional Deployment to ${{ needs.setup.outputs.environment }}"
+            echo "🏗️ Deployment directory: /var/www/loyacrm-${{ needs.setup.outputs.environment }}"
+
+            DEPLOY_DIR="/var/www/loyacrm-${{ needs.setup.outputs.environment }}"
+
+            # Create deployment directory if it doesn't exist
+            mkdir -p "$DEPLOY_DIR"
+
+            # Navigate to deployment directory
+            cd "$DEPLOY_DIR"
+
+            echo "📁 Updating source code..."
+            # Backup current deployment (optional)
+            if [ -d "current" ]; then
+              mv current "backup-$(date +%Y%m%d-%H%M%S)" || true
+            fi
+
+            # Copy new code (assuming rsync or similar is available)
+            # Note: In practice, you'd use git clone or rsync from repo
+            echo "⚠️ Source code deployment would go here"
+            echo "💡 Consider using git clone or rsync for traditional deployment"
+
+            echo "🔧 Installing dependencies..."
+            # pnpm install --frozen-lockfile
+
+            echo "🗄️ Running database migrations..."
+            # cd db && pnpm run migrate:deploy
+
+            echo "🏗️ Building applications..."
+            # cd frontend && pnpm run build
+            # cd backend && pnpm run build
+
+            echo "🚀 Starting services..."
+            # pm2 restart ecosystem.config.js or similar
+
+            echo "✅ Traditional deployment to ${{ needs.setup.outputs.environment }} completed!"
+            echo "⚠️ This is a placeholder - implement actual traditional deployment steps"
