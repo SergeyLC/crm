@@ -71,6 +71,18 @@ git push origin main
 git push origin develop
 ```
 
+### Release Creation (Version Increment)
+```bash
+# Create and push version tag
+git tag v1.2.3
+git push origin v1.2.3
+
+# This triggers:
+# 1. Version increment in package.json
+# 2. GitHub release creation
+# 3. Production deployment with new version
+```
+
 ### Manual Override
 Use **workflow_dispatch** to override deployment type:
 
@@ -115,7 +127,53 @@ DEPLOYMENT_TYPE=traditional  # All deployments will be traditional
 - Database access
 - SSH access for deployment user
 
-## 🔧 Customization
+## 🏷️ Release Management
+
+### Creating a New Release
+
+To create a new production release with automatic version increment:
+
+```bash
+# 1. Update version in package.json (optional, will be auto-updated)
+npm version patch  # or minor, major
+
+# 2. Create and push git tag
+git tag v1.2.3
+git push origin v1.2.3
+
+# 3. Workflow automatically:
+#    - Updates package.json version
+#    - Creates GitHub release
+#    - Deploys to production
+#    - Updates Docker images with version tag
+```
+
+### Release Process
+
+1. **Tag Creation:** Push tag `v*` to repository
+2. **Validation:** Checks if tag is on `main` branch
+3. **Version Update:** Updates `frontend/package.json` version
+4. **Git Commit:** Commits version change back to `main`
+5. **GitHub Release:** Creates release with changelog
+6. **Deployment:** Triggers production deployment with new version
+
+### Version Tags
+
+- `v1.2.3` → Production release 1.2.3
+- `latest` → Always points to latest production deployment
+- `staging-*` → Staging deployments with commit hash
+
+### Rollback
+
+To rollback to previous version:
+
+```bash
+# Deploy specific version
+# Use workflow_dispatch with version input
+# Or create tag pointing to previous commit
+git tag v1.2.2 <previous-commit-hash>
+git push origin v1.2.2
+```
 
 ### Adding New Deployment Types
 

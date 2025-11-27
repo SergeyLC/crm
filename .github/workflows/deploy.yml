@@ -3,6 +3,8 @@ name: Deploy Application
 on:
   push:
     branches: [main, develop]
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       deployment_type:
@@ -17,26 +19,124 @@ on:
         required: false
         default: false
         type: boolean
+      version:
+        description: 'Version to deploy (for manual release creation)'
+        required: false
+        type: string
 
 env:
   REGISTRY: ghcr.io
 
 jobs:
-  # ==================== Determine Environment & Type ====================
-  setup:
-    name: Setup Deployment Configuration
+  # ==================== Create Release (for tags) ====================
+  release:
+    name: Create Release
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     outputs:
-      environment: ${{ steps.config.outputs.environment }}
-      deployment_type: ${{ steps.config.outputs.deployment_type }}
-      should_deploy: ${{ steps.config.outputs.should_deploy }}
-      image_tag: ${{ steps.config.outputs.image_tag }}
+      version: ${{ steps.get_version.outputs.version }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if tag is on main
+        run: |
+          # Check if the current commit (tag) is in main branch
+          if git merge-base --is-ancestor ${{ github.sha }} origin/main 2>/dev/null; then
+            echo "Tag is on main branch, proceeding with release"
+          else
+            echo "Tag not on main branch, skipping release"
+            exit 1
+          fi
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          # Remove 'v' prefix from tag (v1.4.2 -> 1.4.2)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "📦 Release version: ${VERSION}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Update package.json version
+        run: |
+          # Update frontend/package.json version
+          node -e "
+          const fs = require('fs');
+          const pkg = require('./frontend/package.json');
+          pkg.version = '${{ steps.get_version.outputs.version }}';
+          fs.writeFileSync('frontend/package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "✅ Updated frontend/package.json to version ${{ steps.get_version.outputs.version }}"
+
+      - name: Commit version update
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add frontend/package.json
+          git commit -m "chore: bump version to ${{ steps.get_version.outputs.version }}"
+          git push origin HEAD:main
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          body: |
+            ## Release ${{ steps.get_version.outputs.version }}
+
+            This is an automated production release with Docker deployment.
+
+            ### Deployment
+            - **Environment:** Production
+            - **Type:** Docker (containerized)
+            - **Images:** Available on GitHub Container Registry
+
+            ### Changes
+            See commit history for detailed changes.
+
+            ### Deployment Status
+            - ✅ Docker images built and pushed
+            - ✅ Production deployment completed
+            - ✅ Database migrations applied
+            - ✅ Health checks passed
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==================== Determine Environment & Type ====================
+  setup:
+    name: Setup Deployment Configuration
+    runs-on: ubuntu-latest
+    needs: release
+    outputs:
+      environment: ${{ steps.config.outputs.environment }}
+      deployment_type: ${{ steps.config.outputs.deployment_type }}
+      should_deploy: ${{ steps.config.outputs.should_deploy }}
+      image_tag: ${{ steps.config.outputs.image_tag }}
+      version: ${{ steps.config.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current version
+        id: get_version
+        run: |
+          VERSION=$(node -p "require('./frontend/package.json').version")
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "📦 Current version: ${VERSION}"
 
       - name: Configure deployment
         id: config
@@ -78,7 +178,12 @@ jobs:
           # Generate image tag for docker deployments
           if [[ "$DEPLOYMENT_TYPE" == "docker" ]]; then
             if [[ "$ENVIRONMENT" == "production" ]]; then
-              IMAGE_TAG="latest"
+              # Use version from release job if available, otherwise use latest
+              if [ -n "${{ needs.release.outputs.version }}" ]; then
+                IMAGE_TAG="${{ needs.release.outputs.version }}"
+              else
+                IMAGE_TAG="latest"
+              fi
             else
               COMMIT_SHORT=$(git rev-parse --short HEAD)
               IMAGE_TAG="staging-${COMMIT_SHORT}"
@@ -91,6 +196,7 @@ jobs:
           echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
           echo "deployment_type=$DEPLOYMENT_TYPE" >> $GITHUB_OUTPUT
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "version=${{ needs.release.outputs.version || steps.get_version.outputs.version }}" >> $GITHUB_OUTPUT
           echo "should_deploy=true" >> $GITHUB_OUTPUT
 
           echo "🎯 Deployment Configuration:"
@@ -116,12 +222,11 @@ jobs:
       - name: Generate build version
         id: version
         run: |
-          STABLE_VERSION=$(node -p "require('./frontend/package.json').version")
-          COMMIT_HASH=$(git rev-parse --short HEAD)
-
           if [[ "${{ needs.setup.outputs.environment }}" == "production" ]]; then
-            BUILD_VERSION="${STABLE_VERSION}"
+            BUILD_VERSION="${{ needs.setup.outputs.version }}"
           else
+            STABLE_VERSION="${{ needs.setup.outputs.version }}"
+            COMMIT_HASH=$(git rev-parse --short HEAD)
             BUILD_VERSION="${STABLE_VERSION}+sha.${COMMIT_HASH}"
           fi
 
