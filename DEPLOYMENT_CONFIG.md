@@ -6,14 +6,40 @@ This guide explains how to configure the unified deployment system for LoyaCare 
 
 The deployment system uses two dimensions:
 - **Environment:** Determined by branch (`main` → production, `develop` → staging)
-- **Deployment Type:** Determined by `DEPLOYMENT_TYPE` variable (default: `docker`)
+- **Deployment Type:** Determined by configuration priority (default: `docker`)
 
 ### Supported Combinations
 
-| Branch | Environment | Default Type | Override Variable |
-|--------|-------------|--------------|-------------------|
-| `main` | production | docker | `DEPLOYMENT_TYPE=traditional` |
-| `develop` | staging | docker | `DEPLOYMENT_TYPE=traditional` |
+| Branch | Environment | Default Type | Override Methods |
+|--------|-------------|--------------|------------------|
+| `main` | production | docker | workflow_dispatch, vars, env |
+| `develop` | staging | docker | workflow_dispatch, vars, env |
+
+### Deployment Type Selection Guide
+
+#### When to Use Docker Deployment 🐳
+- **Recommended for:** Production and staging environments
+- **Benefits:** Isolated containers, easy rollback, consistent environment
+- **Use case:** Standard deployments, microservices architecture
+
+#### When to Use Traditional Deployment 📦
+- **Recommended for:** Development, testing, or legacy systems
+- **Benefits:** Direct server access, easier debugging, lower resource usage
+- **Use case:** Custom server configurations, development environments
+
+#### How to Choose Deployment Type
+
+1. **For Production:**
+   - Use **Docker** (default) for stability and isolation
+   - Use **Traditional** only if Docker is not feasible
+
+2. **For Staging:**
+   - Use **Docker** (default) to match production environment
+   - Use **Traditional** for development/testing flexibility
+
+3. **For Manual Testing:**
+   - Use **workflow_dispatch** to override type per deployment
+   - Test both types before committing to repository variables
 
 ## ⚙️ GitHub Configuration
 
@@ -62,12 +88,50 @@ Create two environments in **Settings → Environments**:
 
 ## 🔄 How It Works
 
+### Deployment Type Priority
+
+The system determines deployment type using this priority order:
+
+1. **Workflow Dispatch Override** (highest priority)
+   - Manual trigger via GitHub Actions UI
+   - Allows testing different deployment types
+   - Input: `deployment_type` (docker/traditional)
+
+2. **Environment Variable** (per-environment)
+   - Set in GitHub Environment variables
+   - Overrides repository default for specific environment
+   - Variable: `DEPLOYMENT_TYPE=docker`
+
+3. **Repository Variable** (global default)
+   - Set in repository Actions variables
+   - Applies to all branches/environments
+   - Variable: `DEPLOYMENT_TYPE=docker`
+
+4. **Default: `docker`** (lowest priority)
+   - Used when no other configuration is found
+   - Ensures consistent behavior
+
+### Examples
+
+```bash
+# Repository variable sets global default
+DEPLOYMENT_TYPE=traditional
+
+# Environment variable overrides for production only
+# Production environment: DEPLOYMENT_TYPE=docker
+# Result: Production uses Docker, Staging uses Traditional
+
+# Workflow dispatch overrides everything
+# Manual run with deployment_type=docker
+# Result: Uses Docker regardless of variables
+```
+
 ### Automatic Deployment
 ```bash
-# Push to main → Production Docker deployment
+# Push to main → Production deployment (type from config)
 git push origin main
 
-# Push to develop → Staging Docker deployment
+# Push to develop → Staging deployment (type from config)
 git push origin develop
 ```
 
@@ -84,12 +148,17 @@ git push origin v1.2.3
 ```
 
 ### Manual Override
-Use **workflow_dispatch** to override deployment type:
+
+Use **workflow_dispatch** to override deployment type for specific runs:
 
 1. Go to **Actions → Deploy Application**
 2. Click **Run workflow**
-3. Choose branch and deployment type
-4. Click **Run workflow**
+3. **Choose branch:** `main` (production) or `develop` (staging)
+4. **Set inputs:**
+   - **Deployment type:** Choose `docker` or `traditional` (leave empty to use default)
+   - **Force deploy:** Check to bypass normal conditions
+   - **Version:** Specify version for release creation (optional)
+5. Click **Run workflow**
 
 ### Environment Variable Override
 Set `DEPLOYMENT_TYPE` in repository variables to change default:
@@ -97,6 +166,11 @@ Set `DEPLOYMENT_TYPE` in repository variables to change default:
 ```yaml
 # In GitHub: Settings → Secrets and variables → Actions → Variables
 DEPLOYMENT_TYPE=traditional  # All deployments will be traditional
+```
+
+Or override per environment in **Settings → Environments → [environment] → Variables**:
+```yaml
+DEPLOYMENT_TYPE=docker  # Override for specific environment
 ```
 
 ## 🐳 Docker Deployment
@@ -210,9 +284,10 @@ feature)
 - Check GitHub Actions permissions
 
 ### Wrong Deployment Type
-- Check `DEPLOYMENT_TYPE` repository variable
-- Use workflow_dispatch to override manually
-- Verify environment variables in GitHub
+- Check deployment type priority order (workflow_dispatch > env var > repo var > default)
+- Use workflow_dispatch to override manually for testing
+- Verify environment variables in GitHub Environments
+- Check repository variables in Actions → Variables
 
 ### Docker Deployment Issues
 - Ensure `docker-example/` exists on server
@@ -238,3 +313,11 @@ feature)
 ---
 
 **Last Updated:** November 2025
+
+## 📝 Recent Changes
+
+### November 2025 - Deployment Type Selection Enhancement
+- **Added workflow_dispatch override** for manual deployment type selection
+- **Implemented priority system** for deployment type determination
+- **Enhanced documentation** with selection guide and examples
+- **Improved troubleshooting** for deployment type issues
