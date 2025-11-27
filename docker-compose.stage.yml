@@ -1,74 +1,9 @@
+version: "3.9"
 services:
-  # PostgreSQL Database for stage
-  postgres:
-    image: postgres:15-alpine
-    container_name: loyacrm-postgres-stage
-    env_file:
-      - .env.dev  # Use same env as dev for consistency
-    ports:
-      - "5436:5432"  # Different port for stage
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U loyacrm"]
-      interval: 10s
-      retries: 5
-    networks:
-      - loyacrm-stage-network
-
-  # Backend Service for Stage - Using pre-built image from GitHub Container Registry
-  backend:
-    image: ${BACKEND_IMAGE:-ghcr.io/betreut-zu-hause/loyacrm/backend:staging}
-    container_name: loyacrm-backend-stage
-    restart: unless-stopped
-    env_file:
-      - .env.backend.stage
-    environment:
-      - PORT=4003
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4003/api/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    networks:
-      - loyacrm-stage-network
-
-  # Frontend Service for Stage - Using pre-built image from GitHub Container Registry
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/betreut-zu-hause/loyacrm/frontend:staging}
-    container_name: loyacrm-frontend-stage
-    restart: unless-stopped
-    env_file:
-      - .env.frontend.stage
-    environment:
-      - PORT=3003
-    depends_on:
-      - backend
-    networks:
-      - loyacrm-stage-network
-
-  # Nginx Reverse Proxy for Stage
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/betreut-zu-hause/loyacrm/backend:staging}
   nginx:
-    image: nginx:alpine
-    container_name: loyacrm-nginx-stage
-    restart: unless-stopped
     ports:
-      - "3004:80"
-    volumes:
-      - ./nginx.stage.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - backend
-      - frontend
-    networks:
-      - loyacrm-stage-network
-
-networks:
-  loyacrm-stage-network:
-    driver: bridge
-
-volumes:
-  pg_data:
-    name: loyacrm_stage_pg_data
+      - "8080:80"

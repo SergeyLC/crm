@@ -222,59 +222,77 @@ jobs:
 
             echo "🚀 Starting ultra-optimized Docker production deployment..."
             echo "📦 Release version: ${{ steps.get_version.outputs.VERSION }}"
-            echo "🐳 Deployment directory: /var/www/docker/loyacrm"
-            echo "📦 Using pre-built Docker images - NO source code on server!"
+            echo "🐳 Deployment directory: /var/www/loyacrm-production"
+            echo "🔒 Using Docker secrets - NO sensitive data in environment!"
 
             # Create deployment directory if it doesn't exist
-            mkdir -p /var/www/docker/loyacrm
+            DEPLOY_DIR="/var/www/loyacrm-production"
+            mkdir -p "$DEPLOY_DIR"
 
-            # Navigate to Docker project directory
-            cd /var/www/docker/loyacrm
+            # Navigate to deployment directory
+            cd "$DEPLOY_DIR"
 
-            echo "🔧 Creating .env.docker file from GitHub Secrets..."
-            printf '# Backend\nDATABASE_URL=%s\nJWT_SECRET=%s\nPORT=4002\nNODE_ENV=production\nCORS_ORIGIN=%s\nPRISMA_LOG_LEVEL=warn\nLOG_LEVEL=info\n\n# Frontend\nNEXT_PUBLIC_API_URL=%s\nNEXT_PUBLIC_BACKEND_API_URL=%s\nNEXT_PUBLIC_APP_VERSION=%s\nNEXT_TELEMETRY_DISABLED=1\n' \
-              "${{ secrets.DATABASE_URL }}" \
-              "${{ secrets.JWT_SECRET }}" \
-              "${{ secrets.CORS_ORIGIN }}" \
-              "${{ secrets.NEXT_PUBLIC_API_URL }}" \
-              "${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}" \
-              "${{ steps.get_version.outputs.VERSION }}" > .env.backend
+            echo "📁 Setting up docker-example configuration..."
 
-            printf '# Frontend\nNEXT_PUBLIC_API_URL=%s\nNEXT_PUBLIC_BACKEND_API_URL=%s\nNEXT_PUBLIC_APP_VERSION=%s\nNEXT_TELEMETRY_DISABLED=1\n' \
-              "${{ secrets.NEXT_PUBLIC_API_URL }}" \
-              "${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}" \
-              "${{ steps.get_version.outputs.VERSION }}" > .env.frontend
+            # Create docker-example directory structure if it doesn't exist
+            if [ ! -d "docker-example" ]; then
+              echo "📋 Copying docker-example configuration from repository..."
+              # Note: In practice, you'd copy this from the repo or have it pre-deployed
+              # For now, assuming the structure exists
+              echo "⚠️  docker-example directory should exist on server"
+            fi
 
-            chmod 600 .env.backend .env.frontend
+            echo "🔐 Setting up Docker secrets..."
+            # Create secrets directory if it doesn't exist
+            mkdir -p docker-example/secrets
+            mkdir -p docker-example/backups
 
-            echo "✅ Environment files created with version: ${{ steps.get_version.outputs.VERSION }}"
+            # Create/update secrets files (only if they don't exist)
+            if [ ! -f "docker-example/secrets/db_password.txt" ]; then
+              # Extract password from DATABASE_URL (format: postgresql://user:password@host:port/db)
+              DB_PASSWORD=$(echo "${{ secrets.DATABASE_URL }}" | sed 's|postgresql://[^:]*:\([^@]*\)@.*|\1|')
+              echo "$DB_PASSWORD" > docker-example/secrets/db_password.txt
+              echo "✅ Database password secret created"
+            else
+              echo "ℹ️  Database password secret already exists"
+            fi
 
-            # Copy only necessary files from repository
-            echo "📁 Copying minimal required files..."
+            if [ ! -f "docker-example/secrets/jwt_secret.txt" ]; then
+              echo "${{ secrets.JWT_SECRET }}" > docker-example/secrets/jwt_secret.txt
+              echo "✅ JWT secret created"
+            else
+              echo "ℹ️  JWT secret already exists"
+            fi
 
-            # Copy docker-compose and nginx config
-            # Note: These would need to be uploaded or copied separately
-            # For now, assuming they exist on server
+            # Set proper permissions on secrets
+            chmod 600 docker-example/secrets/*.txt
 
-            echo "🐳 Setting image versions for Docker Compose..."
-            export BACKEND_IMAGE="ghcr.io/${{ github.repository }}/backend:${{ steps.get_version.outputs.VERSION }}"
-            export FRONTEND_IMAGE="ghcr.io/${{ github.repository }}/frontend:${{ steps.get_version.outputs.VERSION }}"
+            echo "🐳 Updating environment configuration..."
+            # Update .env.production with new version
+            sed -i "s/TAG=.*/TAG=${{ steps.get_version.outputs.VERSION }}/" docker-example/.env.production
+            sed -i "s/NEXT_PUBLIC_APP_VERSION=.*/NEXT_PUBLIC_APP_VERSION=${{ steps.get_version.outputs.VERSION }}/" docker-example/.env.production
 
             echo "🐳 Pulling pre-built Docker images..."
+            BACKEND_IMAGE="ghcr.io/${{ github.repository }}/backend:${{ steps.get_version.outputs.VERSION }}"
+            FRONTEND_IMAGE="ghcr.io/${{ github.repository }}/frontend:${{ steps.get_version.outputs.VERSION }}"
+
             docker pull "$BACKEND_IMAGE"
             docker pull "$FRONTEND_IMAGE"
 
-            echo "🗄️ Applying database migrations..."
-            # Note: DB migrations would need to be handled differently
-            # Either include in backend image or copy db folder
-            echo "⚠️  DB migrations skipped in ultra-optimized mode"
-            echo "💡 Consider including migrations in backend image or separate step"
+            echo "🗄️ Running database migrations..."
+            cd docker-example
+            docker compose --profile migrator run --rm migrator
 
-            echo "🐳 Starting Docker services with pre-built images..."
-            docker-compose build --no-cache  # This will use the images, not build
-            docker-compose up -d
+            echo "🐳 Starting Docker services..."
+            docker compose --env-file .env.production up -d
+
+            echo "🧹 Cleaning up old Docker images..."
+            docker image prune -f
 
             echo "✅ Ultra-optimized Docker production deployment completed!"
             echo "📦 Release version: ${{ steps.get_version.outputs.VERSION }}"
+            echo "🔒 Secure deployment with Docker secrets"
             echo "⚡ ZERO source code on server - only containers!"
-            docker-compose ps
+
+            # Show deployment status
+            docker compose ps

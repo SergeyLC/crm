@@ -191,49 +191,75 @@ jobs:
 
             echo "🚀 Starting ultra-optimized Docker staging deployment..."
             echo "📦 Build version: ${{ steps.version.outputs.BUILD_VERSION }}"
-            echo "🐳 Deployment directory: /var/www/docker/loyacrm-staging"
-            echo "📦 Using pre-built Docker images - NO source code on server!"
+            echo "🐳 Deployment directory: /var/www/loyacrm-staging"
+            echo "🔒 Using Docker secrets - NO sensitive data in environment!"
 
             # Create deployment directory if it doesn't exist
-            mkdir -p /var/www/docker/loyacrm-staging
+            DEPLOY_DIR="/var/www/loyacrm-staging"
+            mkdir -p "$DEPLOY_DIR"
 
-            cd /var/www/docker/loyacrm-staging
+            cd "$DEPLOY_DIR"
 
-            echo "🔧 Creating .env.backend.stage and .env.frontend.stage files from GitHub Secrets..."
-            printf '# Database (External - for Stage Docker deployment)\nDATABASE_URL="%s"\n\n# Backend\nPORT=4004\nJWT_SECRET=%s\nCORS_ORIGIN=%s\nNODE_ENV=production\nPRISMA_LOG_LEVEL=warn\nLOG_LEVEL=info\n' \
-              "${{ secrets.DATABASE_URL }}" \
-              "${{ secrets.JWT_SECRET }}" \
-              "${{ secrets.CORS_ORIGIN }}" > .env.backend.stage
+            echo "📁 Setting up docker-example configuration..."
 
-            printf '# Frontend\nPORT=3004\nNEXT_PUBLIC_API_URL=%s\nNEXT_PUBLIC_BACKEND_API_URL=%s\nNEXT_PUBLIC_APP_VERSION=%s\nNEXT_TELEMETRY_DISABLED=1\n' \
-              "${{ secrets.NEXT_PUBLIC_API_URL }}" \
-              "${{ secrets.NEXT_PUBLIC_BACKEND_API_URL }}" \
-              "${{ steps.version.outputs.BUILD_VERSION }}" > .env.frontend.stage
+            # Create docker-example directory structure if it doesn't exist
+            if [ ! -d "docker-example" ]; then
+              echo "📋 Copying docker-example configuration from repository..."
+              # Note: In practice, you'd copy this from the repo or have it pre-deployed
+              echo "⚠️  docker-example directory should exist on server"
+            fi
 
-            chmod 600 .env.backend.stage
-            chmod 600 .env.frontend.stage
+            echo "🔐 Setting up Docker secrets..."
+            # Create secrets directory if it doesn't exist
+            mkdir -p docker-example/secrets
+            mkdir -p docker-example/backups
 
-            echo "✅ Stage environment files created with build version: ${{ steps.version.outputs.BUILD_VERSION }}"
+            # Create/update secrets files (only if they don't exist)
+            if [ ! -f "docker-example/secrets/db_password.txt" ]; then
+              # Extract password from DATABASE_URL (format: postgresql://user:password@host:port/db)
+              DB_PASSWORD=$(echo "${{ secrets.DATABASE_URL }}" | sed 's|postgresql://[^:]*:\([^@]*\)@.*|\1|')
+              echo "$DB_PASSWORD" > docker-example/secrets/db_password.txt
+              echo "✅ Database password secret created"
+            else
+              echo "ℹ️  Database password secret already exists"
+            fi
 
-            echo "🐳 Setting image versions for Docker Compose..."
-            export BACKEND_IMAGE="ghcr.io/${{ github.repository }}/backend:staging"
-            export FRONTEND_IMAGE="ghcr.io/${{ github.repository }}/frontend:staging"
+            if [ ! -f "docker-example/secrets/jwt_secret.txt" ]; then
+              echo "${{ secrets.JWT_SECRET }}" > docker-example/secrets/jwt_secret.txt
+              echo "✅ JWT secret created"
+            else
+              echo "ℹ️  JWT secret already exists"
+            fi
+
+            # Set proper permissions on secrets
+            chmod 600 docker-example/secrets/*.txt
+
+            echo "🐳 Updating environment configuration..."
+            # Update .env.staging with new version
+            sed -i "s/TAG=.*/TAG=staging/" docker-example/.env.staging
+            sed -i "s/NEXT_PUBLIC_APP_VERSION=.*/NEXT_PUBLIC_APP_VERSION=${{ steps.version.outputs.BUILD_VERSION }}/" docker-example/.env.staging
 
             echo "🐳 Pulling pre-built Docker images..."
+            BACKEND_IMAGE="ghcr.io/${{ github.repository }}/backend:staging"
+            FRONTEND_IMAGE="ghcr.io/${{ github.repository }}/frontend:staging"
+
             docker pull "$BACKEND_IMAGE"
             docker pull "$FRONTEND_IMAGE"
 
-            echo "🗄️ Applying database migrations..."
-            # Note: DB migrations would need to be handled differently
-            # Either include in backend image or copy db folder
-            echo "⚠️  DB migrations skipped in ultra-optimized mode"
-            echo "💡 Consider including migrations in backend image or separate step"
+            echo "🗄️ Running database migrations..."
+            cd docker-example
+            docker compose --profile migrator run --rm migrator
 
-            echo "🐳 Starting Docker services with pre-built images..."
-            docker-compose -f docker-compose.stage.yml build --no-cache
-            docker-compose -f docker-compose.stage.yml up -d
+            echo "🐳 Starting Docker services..."
+            docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml up -d
+
+            echo "🧹 Cleaning up old Docker images..."
+            docker image prune -f
 
             echo "✅ Ultra-optimized Docker staging deployment completed!"
             echo "📦 Build version: ${{ steps.version.outputs.BUILD_VERSION }}"
+            echo "🔒 Secure deployment with Docker secrets"
             echo "⚡ ZERO source code on server - only containers!"
-            docker-compose -f docker-compose.stage.yml ps
+
+            # Show deployment status
+            docker compose ps

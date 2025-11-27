@@ -453,7 +453,7 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    # Статические файлы Next.js
+    # Static files Next.js
     location /_next/static/ {
         proxy_pass http://localhost:3000;
         add_header Cache-Control "public, max-age=31536000, immutable";
