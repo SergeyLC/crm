@@ -53,7 +53,6 @@ jobs:
         uses: ./.github/actions/setup-deployment/action.yml
         with:
           deployment_type_override: ${{ github.event.inputs.deployment_type }}
-          release_version: ${{ needs.release.outputs.version }}
 
   # ==================== Docker Deployment ====================
   deploy-docker:
