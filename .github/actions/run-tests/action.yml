@@ -1,0 +1,49 @@
+name: 'Run Tests'
+description: 'Run test suite for the application'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'pnpm'
+        cache-dependency-path: |
+          pnpm-lock.yaml
+          frontend/pnpm-lock.yaml
+          backend/pnpm-lock.yaml
+          db/pnpm-lock.yaml
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash
+
+    - name: Generate Prisma client
+      run: |
+        cd db
+        pnpm run generate
+      shell: bash
+
+    - name: Run tests
+      run: pnpm run test:ci
+      shell: bash
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      if: success()
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false

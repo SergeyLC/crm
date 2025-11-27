@@ -1,0 +1,109 @@
+name: 'Setup Deployment'
+description: 'Configure deployment environment and type'
+
+inputs:
+  deployment_type_override:
+    description: 'Override deployment type (docker/traditional)'
+    required: false
+  environment:
+    description: 'Target environment override'
+    required: false
+    default: 'auto'
+  release_version:
+    description: 'Version from release job (if available)'
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get current version
+      id: get_version
+      run: |
+        VERSION=$(node -p "require('./frontend/package.json').version")
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "📦 Current version: ${VERSION}"
+      shell: bash
+
+    - name: Configure deployment
+      id: config
+      run: |
+        # Determine environment from branch or override
+        if [ -n "${{ inputs.environment }}" ] && [ "${{ inputs.environment }}" != "auto" ]; then
+          ENVIRONMENT="${{ inputs.environment }}"
+        else
+          case "${GITHUB_REF#refs/heads/}" in
+            main)
+              ENVIRONMENT="production"
+              ;;
+            develop)
+              ENVIRONMENT="staging"
+              ;;
+            *)
+              echo "Unsupported branch: ${GITHUB_REF#refs/heads/}"
+              echo "should_deploy=false" >> $GITHUB_OUTPUT
+              exit 0
+              ;;
+          esac
+        fi
+
+        # Determine deployment type (workflow_dispatch override or env var or default)
+        if [ -n "${{ inputs.deployment_type_override }}" ]; then
+          DEPLOYMENT_TYPE="${{ inputs.deployment_type_override }}"
+          echo "Using override: $DEPLOYMENT_TYPE"
+        elif [ -n "${{ vars.DEPLOYMENT_TYPE }}" ]; then
+          DEPLOYMENT_TYPE="${{ vars.DEPLOYMENT_TYPE }}"
+          echo "Using environment variable: $DEPLOYMENT_TYPE"
+        else
+          DEPLOYMENT_TYPE="docker"  # default
+          echo "Using default: $DEPLOYMENT_TYPE"
+        fi
+
+        # Validate deployment type
+        if [[ "$DEPLOYMENT_TYPE" != "docker" && "$DEPLOYMENT_TYPE" != "traditional" ]]; then
+          echo "Invalid deployment type: $DEPLOYMENT_TYPE"
+          echo "should_deploy=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+        # Generate image tag for docker deployments
+        if [[ "$DEPLOYMENT_TYPE" == "docker" ]]; then
+          if [[ "$ENVIRONMENT" == "production" ]]; then
+            IMAGE_TAG="latest"
+          else
+            COMMIT_SHORT=$(git rev-parse --short HEAD)
+            IMAGE_TAG="staging-${COMMIT_SHORT}"
+          fi
+        fi
+
+        echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+        echo "deployment_type=$DEPLOYMENT_TYPE" >> $GITHUB_OUTPUT
+        echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "should_deploy=true" >> $GITHUB_OUTPUT
+
+        echo "🎯 Deployment Configuration:"
+        echo "  Environment: $ENVIRONMENT"
+        echo "  Type: $DEPLOYMENT_TYPE"
+        echo "  Image Tag: $IMAGE_TAG"
+      shell: bash
+
+outputs:
+  environment:
+    description: 'Target environment'
+    value: ${{ steps.config.outputs.environment }}
+  deployment_type:
+    description: 'Deployment type'
+    value: ${{ steps.config.outputs.deployment_type }}
+  should_deploy:
+    description: 'Whether deployment should proceed'
+    value: ${{ steps.config.outputs.should_deploy }}
+  image_tag:
+    description: 'Docker image tag'
+    value: ${{ steps.config.outputs.image_tag }}
+  version:
+    description: 'Application version'
+    value: ${{ inputs.release_version || steps.get_version.outputs.version }}

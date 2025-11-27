@@ -1,0 +1,178 @@
+name: 'Docker Deployment'
+description: 'Deploy application using Docker containers'
+
+inputs:
+  environment:
+    description: 'Target environment'
+    required: true
+  image_tag:
+    description: 'Docker image tag to deploy'
+    required: true
+  version:
+    description: 'Application version'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Generate build version
+      id: version
+      run: |
+        if [[ "${{ inputs.environment }}" == "production" ]]; then
+          BUILD_VERSION="${{ inputs.version }}"
+        else
+          STABLE_VERSION="${{ inputs.version }}"
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          BUILD_VERSION="${STABLE_VERSION}+sha.${COMMIT_HASH}"
+        fi
+
+        echo "BUILD_VERSION=${BUILD_VERSION}" >> $GITHUB_OUTPUT
+        echo "📦 Version: ${BUILD_VERSION}"
+      shell: bash
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'pnpm'
+        cache-dependency-path: |
+          pnpm-lock.yaml
+          frontend/pnpm-lock.yaml
+          backend/pnpm-lock.yaml
+          db/pnpm-lock.yaml
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash
+
+    - name: Generate Prisma client
+      run: |
+        cd db
+        pnpm run generate
+      shell: bash
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        export NEXT_TELEMETRY_DISABLED=1
+        export SKIP_TYPE_CHECK=true
+        export SKIP_LINT=true
+        export NODE_OPTIONS="--max-old-space-size=4096"
+        pnpm run build
+      shell: bash
+
+    - name: Build backend
+      run: |
+        cd backend
+        pnpm run build
+      shell: bash
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata for Docker images
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: |
+          ghcr.io/${{ github.repository }}/frontend
+          ghcr.io/${{ github.repository }}/backend
+        tags: |
+          type=raw,value=${{ inputs.image_tag }}
+
+    - name: Build and push frontend Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/frontend/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          BUILD_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
+
+    - name: Build and push backend Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/backend/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          BUILD_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
+
+    - name: Deploy to ${{ inputs.environment }} server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        command_timeout: 30m
+        script: |
+          set -e
+
+          echo "🐳 Docker Deployment to ${{ inputs.environment }}"
+          echo "📦 Image tag: ${{ inputs.image_tag }}"
+          echo "🏗️ Deployment directory: /var/www/loyacrm-${{ inputs.environment }}"
+
+          DEPLOY_DIR="/var/www/loyacrm-${{ inputs.environment }}"
+
+          # Navigate to deployment directory
+          cd "$DEPLOY_DIR"
+
+          echo "🔐 Setting up Docker secrets..."
+          mkdir -p docker-example/secrets
+          mkdir -p docker-example/backups
+
+          # Extract password from DATABASE_URL
+          DB_PASSWORD=$(echo "${{ secrets.DATABASE_URL }}" | sed 's|postgresql://[^:]*:\([^@]*\)@.*|\1|')
+          echo "$DB_PASSWORD" > docker-example/secrets/db_password.txt
+          echo "${{ secrets.JWT_SECRET }}" > docker-example/secrets/jwt_secret.txt
+          chmod 600 docker-example/secrets/*.txt
+
+          echo "🐳 Updating environment configuration..."
+          ENV_FILE="docker-example/.env.${{ inputs.environment }}"
+          sed -i "s/TAG=.*/TAG=${{ inputs.image_tag }}/" "$ENV_FILE"
+
+          echo "🐳 Pulling Docker images..."
+          docker pull ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}
+          docker pull ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}
+
+          echo "🗄️ Running database migrations..."
+          cd docker-example
+          docker compose --profile migrator run --rm migrator
+
+          echo "🐳 Starting services..."
+          if [[ "${{ inputs.environment }}" == "production" ]]; then
+            docker compose --env-file .env.production up -d
+          else
+            docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml up -d
+          fi
+
+          echo "🧹 Cleaning up..."
+          docker image prune -f
+
+          echo "✅ Docker deployment to ${{ inputs.environment }} completed!"
+          docker compose ps

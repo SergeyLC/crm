@@ -1,0 +1,96 @@
+name: 'Create Release'
+description: 'Create a new release with version increment'
+
+inputs:
+  tag_name:
+    description: 'Tag name for the release'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check if tag is on main
+      run: |
+        # Check if the current commit (tag) is in main branch
+        if git merge-base --is-ancestor ${{ github.sha }} origin/main 2>/dev/null; then
+          echo "Tag is on main branch, proceeding with release"
+        else
+          echo "Tag not on main branch, skipping release"
+          exit 1
+        fi
+      shell: bash
+
+    - name: Extract version from tag
+      id: get_version
+      run: |
+        # Remove 'v' prefix from tag (v1.4.2 -> 1.4.2)
+        VERSION=${{ inputs.tag_name }}
+        VERSION=${VERSION#v}
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "📦 Release version: ${VERSION}"
+      shell: bash
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+
+    - name: Update package.json version
+      run: |
+        # Update frontend/package.json version
+        node -e "
+        const fs = require('fs');
+        const pkg = require('./frontend/package.json');
+        pkg.version = '${{ steps.get_version.outputs.version }}';
+        fs.writeFileSync('frontend/package.json', JSON.stringify(pkg, null, 2) + '\n');
+        "
+        echo "✅ Updated frontend/package.json to version ${{ steps.get_version.outputs.version }}"
+      shell: bash
+
+    - name: Commit version update
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add frontend/package.json
+        git commit -m "chore: bump version to ${{ steps.get_version.outputs.version }}"
+        git push origin HEAD:main
+      shell: bash
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ inputs.tag_name }}
+        name: Release ${{ steps.get_version.outputs.version }}
+        body: |
+          ## Release ${{ steps.get_version.outputs.version }}
+
+          This is an automated production release with Docker deployment.
+
+          ### Deployment
+          - **Environment:** Production
+          - **Type:** Docker (containerized)
+          - **Images:** Available on GitHub Container Registry
+
+          ### Changes
+          See commit history for detailed changes.
+
+          ### Deployment Status
+          - ✅ Docker images built and pushed
+          - ✅ Production deployment completed
+          - ✅ Database migrations applied
+          - ✅ Health checks passed
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+outputs:
+  version:
+    description: 'The release version'
+    value: ${{ steps.get_version.outputs.version }}

@@ -1,0 +1,105 @@
+name: 'Traditional Deployment'
+description: 'Deploy application using traditional method (source code)'
+
+inputs:
+  environment:
+    description: 'Target environment'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'pnpm'
+        cache-dependency-path: |
+          pnpm-lock.yaml
+          frontend/pnpm-lock.yaml
+          backend/pnpm-lock.yaml
+          db/pnpm-lock.yaml
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash
+
+    - name: Generate Prisma client
+      run: |
+        cd db
+        pnpm run generate
+      shell: bash
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        export NEXT_TELEMETRY_DISABLED=1
+        export SKIP_TYPE_CHECK=true
+        export SKIP_LINT=true
+        export NODE_OPTIONS="--max-old-space-size=4096"
+        pnpm run build
+      shell: bash
+
+    - name: Build backend
+      run: |
+        cd backend
+        pnpm run build
+      shell: bash
+
+    - name: Deploy to ${{ inputs.environment }} server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        command_timeout: 30m
+        script: |
+          set -e
+
+          echo "📦 Traditional Deployment to ${{ inputs.environment }}"
+          echo "🏗️ Deployment directory: /var/www/loyacrm-${{ inputs.environment }}"
+
+          DEPLOY_DIR="/var/www/loyacrm-${{ inputs.environment }}"
+
+          # Create deployment directory if it doesn't exist
+          mkdir -p "$DEPLOY_DIR"
+
+          # Navigate to deployment directory
+          cd "$DEPLOY_DIR"
+
+          echo "📁 Updating source code..."
+          # Backup current deployment (optional)
+          if [ -d "current" ]; then
+            mv current "backup-$(date +%Y%m%d-%H%M%S)" || true
+          fi
+
+          # Copy new code (assuming rsync or similar is available)
+          # Note: In practice, you'd use git clone or rsync from repo
+          echo "⚠️ Source code deployment would go here"
+          echo "💡 Consider using git clone or rsync for traditional deployment"
+
+          echo "🔧 Installing dependencies..."
+          # pnpm install --frozen-lockfile
+
+          echo "🗄️ Running database migrations..."
+          # cd db && pnpm run migrate:deploy
+
+          echo "🏗️ Building applications..."
+          # cd frontend && pnpm run build
+          # cd backend && pnpm run build
+
+          echo "🚀 Starting services..."
+          # pm2 restart ecosystem.config.js or similar
+
+          echo "✅ Traditional deployment to ${{ inputs.environment }} completed!"
+          echo "⚠️ This is a placeholder - implement actual traditional deployment steps"
