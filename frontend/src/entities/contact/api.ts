@@ -7,7 +7,7 @@ import {
   CreateContactDTO,
 } from "./types";
 
-const API_BASE_URL = NEXT_PUBLIC_API_URL ? `${NEXT_PUBLIC_API_URL}/api` : '/api';
+const API_BASE_URL = NEXT_PUBLIC_API_URL || '/api';
 
 // API functions
 const fetchContacts = async (): Promise<ContactExt[]> => {

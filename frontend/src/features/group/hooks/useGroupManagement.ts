@@ -237,7 +237,7 @@ export function useGroupManagement(group: Group | null) {
 
       // Use idempotent PUT to replace the group's members with the final list of userIds.
       // This keeps the frontend simple: compute the final userId set and send in one request.
-      const API_BASE_URL = NEXT_PUBLIC_API_URL ? `${NEXT_PUBLIC_API_URL}/api` : "/api";
+      const API_BASE_URL = NEXT_PUBLIC_API_URL || "/api";
 
       // Compute final list of userIds that should be members after save
       let finalUserIds: string[] = [];
