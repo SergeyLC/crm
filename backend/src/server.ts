@@ -1,9 +1,9 @@
+// Загрузка переменных окружения ПЕРЕД всеми импортами
 import { loadEnv } from './config/env';
+loadEnv();
+
 import app from './app';
 import prisma from "./prisma/client";
-
-// Загрузка переменных окружения перед всем остальным
-loadEnv();
 
 const PORT = process.env.PORT || 4000;
 
