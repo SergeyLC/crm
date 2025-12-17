@@ -123,6 +123,9 @@ importers:
       '@prisma/client':
         specifier: ^7.0.1
         version: 7.0.1(prisma@7.0.1(@types/react@18.3.26)(magicast@0.3.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3))(typescript@5.9.3)
+      '@prisma/client-runtime-utils':
+        specifier: ^7.0.1
+        version: 7.0.1
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
@@ -145,6 +148,9 @@ importers:
       '@types/node':
         specifier: latest
         version: 24.10.1
+      '@types/pg':
+        specifier: ^8.15.6
+        version: 8.15.6
       dotenv-cli:
         specifier: ^7.4.2
         version: 7.4.4
