@@ -12,7 +12,7 @@ export const initialState: AuthState = {
   user: null,
   token: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false, // Changed to false to prevent form blocking on initial render
   error: null,
 };
 

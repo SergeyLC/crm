@@ -13,10 +13,37 @@ interface AuthProviderProps {
  * Client-side AuthProvider with full authentication logic
  */
 function ClientAuthProvider({ children }: AuthProviderProps) {
-  const [state, dispatch] = useReducer(authReducer, initialState);
+  // Initialize with isLoading: true if token exists
+  const hasToken = typeof window !== 'undefined' && localStorage.getItem("token");
+  const [state, dispatch] = useReducer(authReducer, {
+    ...initialState,
+    isLoading: hasToken ? true : false,
+  });
+
+  // Function for checking authentication
+  const checkAuth = async () => {
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      dispatch({ type: "AUTH_CHECK_FAILURE" });
+      return;
+    }
+
+    try {
+      dispatch({ type: "AUTH_CHECK_START" });
+      const user = await authApi.getCurrentUser(token);
+      dispatch({ type: "AUTH_CHECK_SUCCESS", payload: { user, token } });
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      localStorage.removeItem("token");
+      dispatch({ type: "AUTH_CHECK_FAILURE" });
+    }
+  };
 
   // Check authentication on load
-  useEffect(() => { checkAuth(); }, []);
+  useEffect(() => { 
+    checkAuth(); 
+  }, []);
 
   // Function for logging in
   const login = async (credentials: LoginCredentials) => {
@@ -40,25 +67,6 @@ function ClientAuthProvider({ children }: AuthProviderProps) {
     } finally {
       localStorage.removeItem("token");
       dispatch({ type: "LOGOUT" });
-    }
-  };
-
-  // Function for checking authentication
-  const checkAuth = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      dispatch({ type: "AUTH_CHECK_FAILURE" });
-      return;
-    }
-
-    try {
-      dispatch({ type: "AUTH_CHECK_START" });
-      const user = await authApi.getCurrentUser(token);
-      dispatch({ type: "AUTH_CHECK_SUCCESS", payload: { user } });
-    } catch (error) {
-      console.error("Auth check failed:", error);
-      localStorage.removeItem("token");
-      dispatch({ type: "AUTH_CHECK_FAILURE" });
     }
   };
 

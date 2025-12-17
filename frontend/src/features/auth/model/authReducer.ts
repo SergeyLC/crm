@@ -6,7 +6,7 @@ export type AuthAction =
   | { type: "LOGIN_FAILURE"; payload: string }
   | { type: "LOGOUT" }
   | { type: "AUTH_CHECK_START" }
-  | { type: "AUTH_CHECK_SUCCESS"; payload: { user: User } }
+  | { type: "AUTH_CHECK_SUCCESS"; payload: { user: User; token: string } }
   | { type: "AUTH_CHECK_FAILURE" };
 
 export function authReducer(state: AuthState, action: AuthAction): AuthState {
@@ -31,6 +31,7 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLoading: false,
         isAuthenticated: true,
         user: action.payload.user,
+        token: action.payload.token,
         error: null,
       };
 
