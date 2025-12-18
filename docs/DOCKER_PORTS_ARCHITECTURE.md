@@ -1,80 +1,80 @@
-# Архитектура портов Docker
+# Docker Ports Architecture
 
-## Принцип работы
+## How It Works
 
-### Внутри Docker-сети (между контейнерами)
+### Inside Docker Network (Container-to-Container)
 
-Все сервисы используют **стандартные порты** для всех окружений:
+All services use **standard ports** across all environments:
 
-- **Frontend**: порт `3000`
-- **Backend**: порт `4000`
-- **PostgreSQL**: порт `5432`
+- **Frontend**: port `3000`
+- **Backend**: port `4000`
+- **PostgreSQL**: port `5432`
 
-Контейнеры общаются друг с другом по именам сервисов внутри Docker-сети:
-- `http://frontend:3000` - доступ к frontend
-- `http://backend:4000/api` - доступ к backend API
-- `postgresql://postgres:5432` - доступ к базе данных
+Containers communicate with each other by service names within the Docker network:
+- `http://frontend:3000` - frontend access
+- `http://backend:4000/api` - backend API access
+- `postgresql://postgres:5432` - database access
 
-### Проброс портов наружу (host machine)
+### External Port Mapping (Host Machine)
 
-**Nginx** проксирует внутренние порты на внешние, разные для каждого окружения:
+**Nginx** proxies internal ports to external ones, different for each environment:
 
 #### Development (docker-compose.dev.yml)
 ```
-Host (ваш компьютер)     →  Nginx (внутри Docker)  →  Сервис
+Host (your machine)      →  Nginx (inside Docker)  →  Service
 localhost:3003           →  nginx:80               →  frontend:3000
 localhost:3003/api       →  nginx:80               →  backend:4000/api
-localhost:5435           →  прямой проброс         →  postgres:5432
+localhost:5435           →  direct mapping         →  postgres:5432
 ```
 
 #### Staging (docker-compose.stage.yml)
 ```
-Host                     →  Nginx                  →  Сервис
+Host                     →  Nginx                  →  Service
 localhost:3001           →  nginx:80               →  frontend:3000
 localhost:3001/api       →  nginx:80               →  backend:4000/api
-localhost:5433           →  прямой проброс         →  postgres:5432
+localhost:5433           →  direct mapping         →  postgres:5432
 ```
 
 #### Production (docker-compose.yml)
 ```
-Host                     →  Nginx                  →  Сервис
+Host                     →  Nginx                  →  Service
 :80 / :443               →  nginx:80/443           →  frontend:3000
 :80/api / :443/api       →  nginx:80/443           →  backend:4000/api
-(БД не проброшена)       →  только внутри Docker   →  postgres:5432
+(DB not exposed)         →  internal only          →  postgres:5432
 ```
 
-## Преимущества такой архитектуры
+## Architecture Benefits
 
-### 1. Простота и консистентность
-- ✅ Внутри контейнеров всегда одни и те же порты (3000/4000)
-- ✅ Не нужно менять код или переменные окружения при смене окружения
-- ✅ Dockerfile работает одинаково для всех окружений
+### 1. Simplicity and Consistency
+- ✅ Always same ports inside containers (3000/4000)
+- ✅ No need to change code or environment variables when switching environments
+- ✅ Dockerfile works the same way for all environments
 
-### 2. Безопасность
-- ✅ Контейнеры не открывают порты напрямую наружу (кроме nginx)
-- ✅ Все запросы идут через единую точку входа (nginx)
-- ✅ Легко добавить SSL, rate limiting, аутентификацию на уровне nginx
+### 2. Security
+- ✅ Containers don't expose ports directly (except nginx)
+- ✅ All requests go through single entry point (nginx)
+- ✅ Easy to add SSL, rate limiting, authentication at nginx level
 
-### 3. Гибкость
-- ✅ Можно запускать несколько окружений одновременно на одной машине
-- ✅ Внешние порты не конфликтуют (3003 для dev, 3001 для stage)
-- ✅ Легко добавить новые окружения
+### 3. Flexibility
+- ✅ Can run multiple environments simultaneously on one machine
+- ✅ External ports don't conflict (3003 for dev, 3001 for stage)
+- ✅ Easy to add new environments
 
-### 4. Масштабируемость
-- ✅ Nginx может балансировать нагрузку между несколькими инстансами
-- ✅ Легко добавить новые сервисы в Docker-сеть
+### 4. Scalability
+- ✅ Nginx can balance load between multiple instances
+- ✅ Easy to add new services to Docker network
 
-## Конфигурационные файлы
+## Configuration Files
 
 ### .env.dev
 ```env
-# Backend всегда на порту 4000 внутри контейнера
+# Backend always runs on port 4000 inside container
 PORT=4000
 
-# Frontend обращается к backend через Docker-сеть
+# Frontend accesses backend through Docker network
 NEXT_PUBLIC_BACKEND_API_URL=http://backend:4000/api
 
-# Клиент (браузер) обращается к API через относительный путь
+# Client (browser) accesses API via relative path
 NEXT_PUBLIC_API_URL=/api
 ```
 
@@ -82,31 +82,31 @@ NEXT_PUBLIC_API_URL=/api
 ```yaml
 backend:
   expose:
-    - "4000"  # Только внутри Docker-сети
+    - "4000"  # Only inside Docker network
 
 frontend:
   environment:
     - PORT=3000
   expose:
-    - "3000"  # Только внутри Docker-сети
+    - "3000"  # Only inside Docker network
 
 nginx:
   ports:
-    - "3003:80"  # Проброс наружу: localhost:3003 → nginx:80
+    - "3003:80"  # External mapping: localhost:3003 → nginx:80
 ```
 
 ### nginx.conf
 ```nginx
 upstream backend {
-    server backend:4000;  # Стандартный внутренний порт
+    server backend:4000;  # Standard internal port
 }
 
 upstream frontend {
-    server frontend:3000;  # Стандартный внутренний порт
+    server frontend:3000;  # Standard internal port
 }
 
 server {
-    listen 80;  # Nginx слушает на 80 внутри контейнера
+    listen 80;  # Nginx listens on 80 inside container
 
     location /api {
         proxy_pass http://backend;  # → backend:4000
@@ -118,59 +118,59 @@ server {
 }
 ```
 
-## Типичные сценарии использования
+## Common Usage Scenarios
 
-### Разработка (Development)
-1. Запустите: `./docker-dev-start.sh`
-2. Откройте браузер: `http://localhost:3003`
-3. API доступно по: `http://localhost:3003/api`
+### Development
+1. Run: `./docker-dev-start.sh`
+2. Open browser: `http://localhost:3003`
+3. API available at: `http://localhost:3003/api`
 
-### Тестирование на stage
-1. Запустите: `./docker-stage-start.sh`
-2. Откройте браузер: `http://localhost:3001`
-3. API доступно по: `http://localhost:3001/api`
+### Staging Testing
+1. Run: `./docker-stage-start.sh`
+2. Open browser: `http://localhost:3001`
+3. API available at: `http://localhost:3001/api`
 
 ### Production
-1. Запустите: `docker compose up -d`
-2. Откройте браузер: `https://your-domain.com`
-3. API доступно по: `https://your-domain.com/api`
+1. Run: `docker compose up -d`
+2. Open browser: `https://your-domain.com`
+3. API available at: `https://your-domain.com/api`
 
-## Отладка
+## Debugging
 
-### Проверить порты контейнеров
+### Check Container Ports
 ```bash
 docker compose -f docker-compose.dev.yml ps
 ```
 
-### Проверить переменные окружения
+### Check Environment Variables
 ```bash
 docker exec loyacrm-backend-dev env | grep PORT
 docker exec loyacrm-frontend-dev env | grep PORT
 ```
 
-### Тестировать напрямую (минуя Nginx)
+### Test Directly (Bypassing Nginx)
 ```bash
-# Backend (внутри Docker-сети)
+# Backend (inside Docker network)
 docker exec loyacrm-backend-dev curl http://localhost:4000/api/health
 
-# Frontend (внутри Docker-сети)
+# Frontend (inside Docker network)
 docker exec loyacrm-frontend-dev curl http://localhost:3000
 ```
 
-### Проверить логи Nginx
+### Check Nginx Logs
 ```bash
 docker compose -f docker-compose.dev.yml logs nginx
 ```
 
-## Миграция со старой схемы
+## Migration from Old Schema
 
-### Было (неправильно)
-- Dev: backend на 4003, frontend на 3003
-- Stage: backend на 4001, frontend на 3001
-- Prod: backend на 4000, frontend на 3000
-- Путаница с портами в разных окружениях
+### Before (Incorrect)
+- Dev: backend on 4003, frontend on 3003
+- Stage: backend on 4001, frontend on 3001
+- Prod: backend on 4000, frontend on 3000
+- Port confusion across different environments
 
-### Стало (правильно)
-- **Внутри всегда**: backend на 4000, frontend на 3000
-- **Снаружи**: Nginx проксирует на разные порты (3003 для dev, 3001 для stage, 80/443 для prod)
-- Код приложения не знает о внешних портах
+### After (Correct)
+- **Inside always**: backend on 4000, frontend on 3000
+- **Outside**: Nginx proxies to different ports (3003 for dev, 3001 for stage, 80/443 for prod)
+- Application code doesn't know about external ports
