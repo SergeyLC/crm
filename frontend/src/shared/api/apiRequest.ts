@@ -1,5 +1,6 @@
-import { NEXT_PUBLIC_API_URL } from '../config';
 import { safeJsonParse } from '../lib/safeJsonParse';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 export const apiRequest = {
   async get<T>(endpoint: string): Promise<T> {
@@ -28,9 +29,9 @@ export const apiRequest = {
   
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     // const baseUrl = endpoint.startsWith("/api")
-    //   ? NEXT_PUBLIC_API_URL
+    //   ? API_URL
     //   : NEXT_PUBLIC_BACKEND_API_URL;
-    const baseUrl = NEXT_PUBLIC_API_URL;
+    const baseUrl = API_URL;
 
     const headers = {
       "Content-Type": "application/json",

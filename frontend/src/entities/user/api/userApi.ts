@@ -7,9 +7,7 @@ import {
   UpdateUserDTO,
   UserStatus
 } from "../model/types";
-import { NEXT_PUBLIC_API_URL } from "@/shared/config/urls";
-
-const API_BASE_URL = NEXT_PUBLIC_API_URL || '/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 // API functions
 const fetchUsers = async (): Promise<UsersResponse> => {

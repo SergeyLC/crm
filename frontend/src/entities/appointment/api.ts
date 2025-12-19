@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { NEXT_PUBLIC_API_URL } from "@/shared/config/urls";
 import { AppointmentExt, CreateAppointmentDTO, UpdateAppointmentDTO } from "./types";
 
-const API_BASE_URL = NEXT_PUBLIC_API_URL || '/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 // API functions
 const fetchAppointments = async (): Promise<AppointmentExt[]> => {
