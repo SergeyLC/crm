@@ -1,0 +1,103 @@
+# ==================== Stage 1: Dependencies ====================
+FROM node:24-alpine AS deps
+
+WORKDIR /app
+
+# Скопировать workspace файлы
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+
+# Скопировать package.json
+COPY frontend/package.json ./frontend/package.json
+COPY db/package.json ./db/package.json
+
+# Установить pnpm
+RUN npm install -g pnpm
+
+# Установить зависимости
+RUN pnpm install --frozen-lockfile
+
+# ==================== Stage 2: Builder ====================
+FROM node:24-alpine AS builder
+
+WORKDIR /app
+
+# Скопировать зависимости из предыдущего stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/frontend/node_modules ./frontend/node_modules
+COPY --from=deps /app/db/node_modules ./db/node_modules
+
+# Скопировать workspace файлы
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+
+# Скопировать db для генерации Prisma клиента
+COPY db/ ./db/
+
+# Установить pnpm и prisma глобально
+RUN npm install -g pnpm prisma
+
+# Генерировать Prisma клиент
+RUN cd db && pnpm run generate
+
+# Скопировать frontend код
+COPY frontend/ ./frontend/
+
+# Скопировать .env.production для build-time переменных
+COPY frontend/.env.production ./frontend/.env.production
+
+# Build args для Next.js
+ARG NEXT_PUBLIC_API_URL=/api
+ARG NEXT_PUBLIC_BACKEND_API_URL
+ARG NEXT_PUBLIC_APP_VERSION=production
+
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_BACKEND_API_URL=${NEXT_PUBLIC_BACKEND_API_URL}
+ENV NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION}
+
+# Собрать Next.js приложение
+RUN cd frontend && pnpm run build
+
+# ==================== Stage 3: Runner ====================
+FROM node:24-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Создать пользователя для запуска приложения
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Установить pnpm глобально
+RUN npm install -g pnpm
+
+# Скопировать workspace файлы
+COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/pnpm-lock.yaml ./
+
+# Скопировать package.json файлы
+COPY --from=builder /app/frontend/package.json ./frontend/package.json
+COPY --from=builder /app/db/package.json ./db/package.json
+
+# Скопировать все node_modules
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/frontend/node_modules ./frontend/node_modules
+COPY --from=builder /app/db/node_modules ./db/node_modules
+
+# Скопировать необходимые файлы
+COPY --from=builder /app/frontend/public ./frontend/public
+
+# Скопировать built приложение
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next ./frontend/.next
+
+# Скопировать db и generated Prisma client
+COPY --from=builder /app/db ./db
+
+USER nextjs
+
+EXPOSE 3000
+
+# Запустить приложение используя pnpm
+CMD ["sh", "-c", "cd frontend && pnpm start -p ${PORT}"]
