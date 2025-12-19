@@ -12,6 +12,11 @@ const nextConfig = () => {
     i18n: null,
     // Set the workspace root for proper file tracing in monorepo
     outputFileTracingRoot: path.join(__dirname, '..'),
+    // Environment variables to be exposed to the client
+    env: {
+      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
+      NEXT_PUBLIC_BACKEND_API_URL: process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:4000/api',
+    },
     // Redirects configuration
     async redirects() {
       return [
