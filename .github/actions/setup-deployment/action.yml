@@ -5,6 +5,10 @@ inputs:
   deployment_type_override:
     description: 'Override deployment type (docker/traditional)'
     required: false
+  deployment_type_default:
+    description: 'Default deployment type from repository variables'
+    required: false
+    default: 'docker'
   environment:
     description: 'Target environment override'
     required: false
@@ -61,13 +65,13 @@ runs:
           fi
         fi
 
-        # Determine deployment type (workflow_dispatch override or default)
+        # Determine deployment type (workflow_dispatch override or repository variable or default)
         if [ -n "${{ inputs.deployment_type_override }}" ]; then
           DEPLOYMENT_TYPE="${{ inputs.deployment_type_override }}"
-          echo "🔧 Using override: $DEPLOYMENT_TYPE"
+          echo "🔧 Using manual override: $DEPLOYMENT_TYPE"
         else
-          DEPLOYMENT_TYPE="docker"  # default
-          echo "🔧 Using default: $DEPLOYMENT_TYPE"
+          DEPLOYMENT_TYPE="${{ inputs.deployment_type_default }}"
+          echo "🔧 Using configured default: $DEPLOYMENT_TYPE"
         fi
 
         # Validate deployment type

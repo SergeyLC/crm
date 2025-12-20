@@ -62,6 +62,7 @@ jobs:
         uses: ./.github/actions/setup-deployment
         with:
           deployment_type_override: ${{ github.event.inputs.deployment_type }}
+          deployment_type_default: ${{ vars.DEPLOYMENT_TYPE || 'docker' }}
 
   # ==================== Docker Deployment ====================
   deploy-docker:
