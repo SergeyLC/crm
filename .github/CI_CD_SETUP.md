@@ -38,6 +38,8 @@ Create two environments:
 - **Environment secrets**:
   | Secret | Description | Example |
   |--------|-------------|---------|
+  | `POSTGRES_DB` | Production database name | `loyacrm` |
+  | `POSTGRES_USER` | Production database user | `loyacrm` |
   | `POSTGRES_PASSWORD` | Production database password | Generated with `openssl rand -base64 32` |
   | `JWT_SECRET` | Production JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
 
@@ -46,6 +48,8 @@ Create two environments:
 - **Environment secrets**:
   | Secret | Description | Example |
   |--------|-------------|---------|
+  | `POSTGRES_DB` | Staging database name | `loyacrm_staging` |
+  | `POSTGRES_USER` | Staging database user | `loyacrm` or `loyacrm_staging` |
   | `POSTGRES_PASSWORD` | Staging database password | Generated with `openssl rand -base64 32` |
   | `JWT_SECRET` | Staging JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
 
@@ -110,20 +114,22 @@ cat ~/.ssh/id_ed25519
 
 1. Go to: **Settings → Environments → New environment**
 2. Name: `production`
-3. Click **Add secret**:
-   - Name: `POSTGRES_PASSWORD`
-   - Value: Run `openssl rand -base64 32` and paste result
-4. Click **Add secret** again:
-   - Name: `JWT_SECRET`
-   - Value: Run `openssl rand -base64 64` and paste result
-5. (Optional) Add **Required reviewers** for deployment approval
+3. Click **Add secret** for each:
+   - Name: `POSTGRES_DB`, Value: `loyacrm`
+   - Name: `POSTGRES_USER`, Value: `loyacrm`
+   - Name: `POSTGRES_PASSWORD`, Value: `openssl rand -base64 32`
+   - Name: `JWT_SECRET`, Value: `openssl rand -base64 64`
+4. (Optional) Add **Required reviewers** for deployment approval
 
 #### 2. Create Staging Environment
 
 1. **New environment**
 2. Name: `staging`
-3. **Add secret**: `POSTGRES_PASSWORD` (different from production!)
-4. **Add secret**: `JWT_SECRET` (different from production!)
+3. **Add secret** for each (different values from production!):
+   - Name: `POSTGRES_DB`, Value: `loyacrm_staging`
+   - Name: `POSTGRES_USER`, Value: `loyacrm`
+   - Name: `POSTGRES_PASSWORD`, Value: `openssl rand -base64 32`
+   - Name: `JWT_SECRET`, Value: `openssl rand -base64 64`
 
 #### 3. Add Repository Secrets
 
@@ -144,8 +150,12 @@ After setup, verify you have:
 
 - [ ] Environment `production` created
 - [ ] Environment `staging` created  
+- [ ] `production` has `POSTGRES_DB` secret
+- [ ] `production` has `POSTGRES_USER` secret
 - [ ] `production` has `POSTGRES_PASSWORD` secret
 - [ ] `production` has `JWT_SECRET` secret
+- [ ] `staging` has `POSTGRES_DB` secret
+- [ ] `staging` has `POSTGRES_USER` secret
 - [ ] `staging` has `POSTGRES_PASSWORD` secret
 - [ ] `staging` has `JWT_SECRET` secret
 - [ ] Repository has `SERVER_HOST` secret

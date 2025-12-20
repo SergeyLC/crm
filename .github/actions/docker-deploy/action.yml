@@ -11,6 +11,18 @@ inputs:
   version:
     description: 'Application version'
     required: true
+  postgres_db:
+    description: 'PostgreSQL database name'
+    required: true
+  postgres_user:
+    description: 'PostgreSQL user'
+    required: true
+  postgres_password:
+    description: 'PostgreSQL password'
+    required: true
+  jwt_secret:
+    description: 'JWT secret'
+    required: true
 
 runs:
   using: "composite"
@@ -182,17 +194,22 @@ runs:
           # Navigate to deployment directory
           cd "$DEPLOY_DIR"
 
-          # Create environment file from example if it doesn't exist
-          if [ ! -f "$ENV_FILE" ]; then
-            echo "⚠️  Environment file $ENV_FILE not found!"
-            echo "📝 Please create $ENV_FILE with your configuration"
-            echo "   You can use .env.production.example or .env.staging.example as a template"
-            exit 1
-          fi
+          # Update or create environment file with secrets
+          echo "⚙️  Configuring environment file..."
+          
+          # Update Docker image tags
+          sed -i "s|FRONTEND_IMAGE=.*|FRONTEND_IMAGE=ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}|" "$ENV_FILE" 2>/dev/null || echo "FRONTEND_IMAGE=ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}" >> "$ENV_FILE"
+          sed -i "s|BACKEND_IMAGE=.*|BACKEND_IMAGE=ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}|" "$ENV_FILE" 2>/dev/null || echo "BACKEND_IMAGE=ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}" >> "$ENV_FILE"
+          
+          # Update database configuration
+          sed -i "s|POSTGRES_DB=.*|POSTGRES_DB=${{ inputs.postgres_db }}|" "$ENV_FILE" 2>/dev/null || echo "POSTGRES_DB=${{ inputs.postgres_db }}" >> "$ENV_FILE"
+          sed -i "s|POSTGRES_USER=.*|POSTGRES_USER=${{ inputs.postgres_user }}|" "$ENV_FILE" 2>/dev/null || echo "POSTGRES_USER=${{ inputs.postgres_user }}" >> "$ENV_FILE"
+          sed -i "s|POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${{ inputs.postgres_password }}|" "$ENV_FILE" 2>/dev/null || echo "POSTGRES_PASSWORD=${{ inputs.postgres_password }}" >> "$ENV_FILE"
+          
+          # Update JWT secret
+          sed -i "s|JWT_SECRET=.*|JWT_SECRET=${{ inputs.jwt_secret }}|" "$ENV_FILE" 2>/dev/null || echo "JWT_SECRET=${{ inputs.jwt_secret }}" >> "$ENV_FILE"
 
-          echo "🐳 Updating Docker image tags in environment..."
-          sed -i "s|FRONTEND_IMAGE=.*|FRONTEND_IMAGE=ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}|" "$ENV_FILE"
-          sed -i "s|BACKEND_IMAGE=.*|BACKEND_IMAGE=ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}|" "$ENV_FILE"
+          echo "✅ Environment configured successfully"
 
           echo "🐳 Pulling Docker images..."
           docker pull ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}
