@@ -11,6 +11,9 @@ inputs:
   version:
     description: 'Application version'
     required: true
+  server_host:
+    description: 'Server IP or domain'
+    required: true
   postgres_db:
     description: 'PostgreSQL database name'
     required: true
@@ -194,12 +197,42 @@ runs:
           # Navigate to deployment directory
           cd "$DEPLOY_DIR"
 
+          # Determine port based on environment
+          if [[ "${{ inputs.environment }}" == "production" ]]; then
+            PORT="80"
+            BACKEND_URL="http://${{ inputs.server_host }}/api"
+            CORS_ORIGIN="http://${{ inputs.server_host }}"
+          else
+            PORT="8080"
+            BACKEND_URL="http://${{ inputs.server_host }}:8080/api"
+            CORS_ORIGIN="http://${{ inputs.server_host }}:8080"
+          fi
+
           # Update or create environment file with secrets
           echo "⚙️  Configuring environment file..."
           
-          # Update Docker image tags
+          # Create base file if doesn't exist
+          touch "$ENV_FILE"
+          
+          # Update Docker images
           sed -i "s|FRONTEND_IMAGE=.*|FRONTEND_IMAGE=ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}|" "$ENV_FILE" 2>/dev/null || echo "FRONTEND_IMAGE=ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}" >> "$ENV_FILE"
           sed -i "s|BACKEND_IMAGE=.*|BACKEND_IMAGE=ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}|" "$ENV_FILE" 2>/dev/null || echo "BACKEND_IMAGE=ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}" >> "$ENV_FILE"
+          
+          # Update network configuration
+          sed -i "s|NGINX_PORT=.*|NGINX_PORT=${PORT}|" "$ENV_FILE" 2>/dev/null || echo "NGINX_PORT=${PORT}" >> "$ENV_FILE"
+          sed -i "s|DOMAIN=.*|DOMAIN=${{ inputs.server_host }}|" "$ENV_FILE" 2>/dev/null || echo "DOMAIN=${{ inputs.server_host }}" >> "$ENV_FILE"
+          
+          # Update frontend configuration  
+          sed -i "s|FRONTEND_PORT=.*|FRONTEND_PORT=3000|" "$ENV_FILE" 2>/dev/null || echo "FRONTEND_PORT=3000" >> "$ENV_FILE"
+          sed -i "s|NEXT_PUBLIC_API_URL=.*|NEXT_PUBLIC_API_URL=/api|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_API_URL=/api" >> "$ENV_FILE"
+          sed -i "s|NEXT_PUBLIC_BACKEND_API_URL=.*|NEXT_PUBLIC_BACKEND_API_URL=${BACKEND_URL}|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_BACKEND_API_URL=${BACKEND_URL}" >> "$ENV_FILE"
+          sed -i "s|NEXT_PUBLIC_APP_VERSION=.*|NEXT_PUBLIC_APP_VERSION=${{ inputs.environment }}|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_APP_VERSION=${{ inputs.environment }}" >> "$ENV_FILE"
+          
+          # Update backend configuration
+          sed -i "s|BACKEND_PORT=.*|BACKEND_PORT=4000|" "$ENV_FILE" 2>/dev/null || echo "BACKEND_PORT=4000" >> "$ENV_FILE"
+          sed -i "s|NODE_ENV=.*|NODE_ENV=production|" "$ENV_FILE" 2>/dev/null || echo "NODE_ENV=production" >> "$ENV_FILE"
+          sed -i "s|LOG_LEVEL=.*|LOG_LEVEL=info|" "$ENV_FILE" 2>/dev/null || echo "LOG_LEVEL=info" >> "$ENV_FILE"
+          sed -i "s|CORS_ORIGIN=.*|CORS_ORIGIN=${CORS_ORIGIN}|" "$ENV_FILE" 2>/dev/null || echo "CORS_ORIGIN=${CORS_ORIGIN}" >> "$ENV_FILE"
           
           # Update database configuration
           sed -i "s|POSTGRES_DB=.*|POSTGRES_DB=${{ inputs.postgres_db }}|" "$ENV_FILE" 2>/dev/null || echo "POSTGRES_DB=${{ inputs.postgres_db }}" >> "$ENV_FILE"
@@ -209,7 +242,10 @@ runs:
           # Update JWT secret
           sed -i "s|JWT_SECRET=.*|JWT_SECRET=${{ inputs.jwt_secret }}|" "$ENV_FILE" 2>/dev/null || echo "JWT_SECRET=${{ inputs.jwt_secret }}" >> "$ENV_FILE"
 
-          echo "✅ Environment configured successfully"
+          echo "✅ Environment configured with:"
+          echo "   - Server: ${{ inputs.server_host }}:${PORT}"
+          echo "   - Database: ${{ inputs.postgres_db }}"
+          echo "   - Environment: ${{ inputs.environment }}"
 
           echo "🐳 Pulling Docker images..."
           docker pull ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}

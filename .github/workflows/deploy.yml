@@ -68,6 +68,7 @@ jobs:
           environment: ${{ needs.setup.outputs.environment }}
           image_tag: ${{ needs.setup.outputs.image_tag }}
           version: ${{ needs.setup.outputs.version }}
+          server_host: ${{ secrets.SERVER_HOST }}
           postgres_db: ${{ secrets.POSTGRES_DB }}
           postgres_user: ${{ secrets.POSTGRES_USER }}
           postgres_password: ${{ secrets.POSTGRES_PASSWORD }}
