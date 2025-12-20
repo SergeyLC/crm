@@ -50,6 +50,11 @@ runs:
         echo "📦 Version: ${BUILD_VERSION}"
       shell: bash
 
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -60,9 +65,6 @@ runs:
           frontend/pnpm-lock.yaml
           backend/pnpm-lock.yaml
           db/pnpm-lock.yaml
-
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
       with:
         version: 10
 
