@@ -226,7 +226,7 @@ runs:
           sed -i "s|FRONTEND_PORT=.*|FRONTEND_PORT=3000|" "$ENV_FILE" 2>/dev/null || echo "FRONTEND_PORT=3000" >> "$ENV_FILE"
           sed -i "s|NEXT_PUBLIC_API_URL=.*|NEXT_PUBLIC_API_URL=/api|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_API_URL=/api" >> "$ENV_FILE"
           sed -i "s|NEXT_PUBLIC_BACKEND_API_URL=.*|NEXT_PUBLIC_BACKEND_API_URL=${BACKEND_URL}|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_BACKEND_API_URL=${BACKEND_URL}" >> "$ENV_FILE"
-          sed -i "s|NEXT_PUBLIC_APP_VERSION=.*|NEXT_PUBLIC_APP_VERSION=${{ inputs.environment }}|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_APP_VERSION=${{ inputs.environment }}" >> "$ENV_FILE"
+          sed -i "s|NEXT_PUBLIC_APP_VERSION=.*|NEXT_PUBLIC_APP_VERSION=${{ inputs.version }}|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_APP_VERSION=${{ inputs.version }}" >> "$ENV_FILE"
           
           # Update backend configuration
           sed -i "s|BACKEND_PORT=.*|BACKEND_PORT=4000|" "$ENV_FILE" 2>/dev/null || echo "BACKEND_PORT=4000" >> "$ENV_FILE"
