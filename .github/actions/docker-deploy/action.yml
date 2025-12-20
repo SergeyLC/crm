@@ -123,6 +123,16 @@ runs:
         build-args: |
           BUILD_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
 
+    - name: Copy deployment files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "docker-compose.yml,docker-compose.stage.yml,nginx.conf,nginx.stage.conf,nginx.prod.conf"
+        target: "/tmp/loyacrm-deploy-${{ github.run_id }}/"
+        strip_components: 0
+
     - name: Deploy to ${{ inputs.environment }} server
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -140,25 +150,43 @@ runs:
           if [[ "${{ inputs.environment }}" == "production" ]]; then
             DEPLOY_DIR="/var/www/loyacrm-production"
             COMPOSE_FILE="docker-compose.yml"
+            NGINX_CONF="nginx.prod.conf"
             ENV_FILE=".env"
             CONTAINER_PREFIX="loyacrm"
           else
             DEPLOY_DIR="/var/www/loyacrm-staging"
             COMPOSE_FILE="docker-compose.stage.yml"
+            NGINX_CONF="nginx.stage.conf"
             ENV_FILE=".env.stage"
             CONTAINER_PREFIX="loyacrm-staging"
           fi
 
           echo "🏗️  Deployment directory: $DEPLOY_DIR"
           echo "📄 Compose file: $COMPOSE_FILE"
+          echo "📄 Nginx config: $NGINX_CONF"
           echo "⚙️  Environment file: $ENV_FILE"
+
+          # Create deployment directory if it doesn't exist
+          mkdir -p "$DEPLOY_DIR"
+          
+          # Copy deployment files from temp location
+          TEMP_DIR="/tmp/loyacrm-deploy-${{ github.run_id }}"
+          echo "📦 Copying deployment files..."
+          cp -f "$TEMP_DIR/$COMPOSE_FILE" "$DEPLOY_DIR/"
+          cp -f "$TEMP_DIR/$NGINX_CONF" "$DEPLOY_DIR/nginx.conf"
+          cp -f "$TEMP_DIR/nginx.conf" "$DEPLOY_DIR/" 2>/dev/null || true
+          
+          # Cleanup temp files
+          rm -rf "$TEMP_DIR"
 
           # Navigate to deployment directory
           cd "$DEPLOY_DIR"
 
-          # Ensure environment file exists
+          # Create environment file from example if it doesn't exist
           if [ ! -f "$ENV_FILE" ]; then
-            echo "❌ Environment file $ENV_FILE not found!"
+            echo "⚠️  Environment file $ENV_FILE not found!"
+            echo "📝 Please create $ENV_FILE with your configuration"
+            echo "   You can use .env.production.example or .env.staging.example as a template"
             exit 1
           fi
 

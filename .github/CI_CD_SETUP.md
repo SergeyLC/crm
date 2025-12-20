@@ -46,11 +46,38 @@ Configure these secrets in your repository: **Settings → Secrets and variables
 mkdir -p /var/www/loyacrm-production
 cd /var/www/loyacrm-production
 
-# Clone repository (or copy files)
-git clone https://github.com/SergeyLC/crm.git .
+# Create environment file
+# Copy from repository or create from template
+cat > .env << 'EOF'
+# Production Environment Configuration
 
-# Create environment file from example
-cp .env.production.example .env
+# Docker Images (will be updated automatically by GitHub Actions)
+FRONTEND_IMAGE=ghcr.io/sergeylc/crm/frontend:latest
+BACKEND_IMAGE=ghcr.io/sergeylc/crm/backend:latest
+
+# Network Configuration
+NGINX_PORT=80
+
+# Frontend Configuration
+FRONTEND_PORT=3000
+NEXT_PUBLIC_API_URL=/api
+NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api
+NEXT_PUBLIC_APP_VERSION=production
+
+# Backend Configuration
+BACKEND_PORT=4000
+NODE_ENV=production
+LOG_LEVEL=info
+CORS_ORIGIN=http://YOUR_SERVER_IP
+
+# Database Configuration
+POSTGRES_USER=loyacrm
+POSTGRES_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
+POSTGRES_DB=loyacrm
+
+# Security
+JWT_SECRET=CHANGE_THIS_TO_SECURE_RANDOM_STRING_MIN_32_CHARS
+EOF
 
 # Edit environment file with your values
 nano .env
@@ -59,8 +86,10 @@ nano .env
 **Required changes in `.env`:**
 - `POSTGRES_PASSWORD` - Set secure database password
 - `JWT_SECRET` - Set secure JWT secret (min 32 characters)
-- `NEXT_PUBLIC_BACKEND_API_URL` - Set to your server IP
-- `CORS_ORIGIN` - Set to your server IP
+- `NEXT_PUBLIC_BACKEND_API_URL` - Replace `YOUR_SERVER_IP` with your actual server IP
+- `CORS_ORIGIN` - Replace `YOUR_SERVER_IP` with your actual server IP
+
+**Note:** Docker Compose files (`docker-compose.yml`, `nginx.conf`) will be automatically copied during deployment.
 
 ### 2. Staging Server Setup
 
@@ -69,11 +98,37 @@ nano .env
 mkdir -p /var/www/loyacrm-staging
 cd /var/www/loyacrm-staging
 
-# Clone repository (or copy files)
-git clone https://github.com/SergeyLC/crm.git .
+# Create environment file
+cat > .env.stage << 'EOF'
+# Staging Environment Configuration
 
-# Create environment file from example
-cp .env.staging.example .env.stage
+# Docker Images (will be updated automatically by GitHub Actions)
+FRONTEND_IMAGE=ghcr.io/sergeylc/crm/frontend:staging
+BACKEND_IMAGE=ghcr.io/sergeylc/crm/backend:staging
+
+# Network Configuration
+NGINX_PORT=8080
+
+# Frontend Configuration
+FRONTEND_PORT=3000
+NEXT_PUBLIC_API_URL=/api
+NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api
+NEXT_PUBLIC_APP_VERSION=staging
+
+# Backend Configuration
+BACKEND_PORT=4000
+NODE_ENV=production
+LOG_LEVEL=debug
+CORS_ORIGIN=http://YOUR_SERVER_IP:8080
+
+# Database Configuration
+POSTGRES_USER=loyacrm
+POSTGRES_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
+POSTGRES_DB=loyacrm_staging
+
+# Security
+JWT_SECRET=CHANGE_THIS_TO_SECURE_RANDOM_STRING_MIN_32_CHARS
+EOF
 
 # Edit environment file with your values
 nano .env.stage
@@ -82,8 +137,10 @@ nano .env.stage
 **Required changes in `.env.stage`:**
 - `POSTGRES_PASSWORD` - Set secure database password
 - `JWT_SECRET` - Set secure JWT secret (min 32 characters)
-- `NEXT_PUBLIC_BACKEND_API_URL` - Set to your server IP:8080
-- `CORS_ORIGIN` - Set to your server IP:8080
+- `NEXT_PUBLIC_BACKEND_API_URL` - Replace `YOUR_SERVER_IP` with your actual server IP
+- `CORS_ORIGIN` - Replace `YOUR_SERVER_IP` with your actual server IP
+
+**Note:** Docker Compose files (`docker-compose.stage.yml`, `nginx.stage.conf`) will be automatically copied during deployment.
 
 ### 3. Docker Registry Authentication
 
@@ -98,17 +155,39 @@ Authenticate Docker to pull images from GitHub Container Registry:
 echo "YOUR_GITHUB_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
 ```
 
-### 4. Initial Docker Compose Setup
+### 4. Initial Database Setup
+
+After creating the environment file, initialize the PostgreSQL database:
 
 ```bash
 # Production
 cd /var/www/loyacrm-production
-docker compose up -d
+
+# First deployment will be done by GitHub Actions
+# But you can manually start postgres to initialize the database
+docker compose up -d postgres
+
+# Wait for postgres to be healthy
+sleep 10
+
+# Check postgres status
+docker compose ps postgres
 
 # Staging
 cd /var/www/loyacrm-staging
-docker compose -f docker-compose.stage.yml up -d
+
+# Start postgres
+docker compose -f docker-compose.stage.yml up -d postgres
+
+# Wait and check status
+sleep 10
+docker compose -f docker-compose.stage.yml ps postgres
 ```
+
+**Note:** 
+- Frontend and backend containers will be started automatically by GitHub Actions during first deployment
+- The deployment script will copy all necessary Docker Compose and Nginx configuration files
+- You only need to create the `.env` or `.env.stage` file manually
 
 ## Deployment Process
 
