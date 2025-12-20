@@ -78,22 +78,24 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     if: needs.setup.outputs.should_deploy == 'true' && needs.setup.outputs.deployment_type == 'docker'
-    environment: ${{ needs.setup.outputs.environment }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Deploy with Docker
         uses: ./.github/actions/docker-deploy
+        env:
+          # Environment context for secrets (will use staging or production environment if configured)
+          ENVIRONMENT: ${{ needs.setup.outputs.environment }}
         with:
           environment: ${{ needs.setup.outputs.environment }}
           image_tag: ${{ needs.setup.outputs.image_tag }}
           version: ${{ needs.setup.outputs.version }}
           server_host: ${{ secrets.SERVER_HOST }}
-          postgres_db: ${{ secrets.POSTGRES_DB }}
-          postgres_user: ${{ secrets.POSTGRES_USER }}
-          postgres_password: ${{ secrets.POSTGRES_PASSWORD }}
-          jwt_secret: ${{ secrets.JWT_SECRET }}
+          postgres_db: ${{ secrets.POSTGRES_DB || 'loyacrm_staging' }}
+          postgres_user: ${{ secrets.POSTGRES_USER || 'loyacrm' }}
+          postgres_password: ${{ secrets.POSTGRES_PASSWORD || 'CHANGE_ME' }}
+          jwt_secret: ${{ secrets.JWT_SECRET || 'CHANGE_ME_JWT_SECRET' }}
 
   # ==================== Traditional Deployment ====================
   deploy-traditional:
