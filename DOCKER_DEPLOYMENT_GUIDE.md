@@ -2,13 +2,24 @@
 
 Полная инструкция по развертыванию проекта на чистом сервере Ubuntu с использованием Docker.
 
+## Содержание
+
+- [Production развертывание](#концепция-развертывания) - основное окружение для работы
+- [Staging развертывание](#развертывание-staging-окружения) - тестовое окружение на порту 8080
+- [Управление и мониторинг](#управление-контейнерами)
+- [Устранение неполадок](#устранение-неполадок)
+
 ## Концепция развертывания
 
 **Рекомендуемый подход:** Docker образы собираются на машине разработчика или через CI/CD (GitHub Actions), затем загружаются в Container Registry и разворачиваются на сервере.
 
 **На сервере НЕ требуются исходники проекта** - только конфигурационные файлы (docker-compose.yml, nginx.conf, .env).
 
-Этот гайд описывает три способа развертывания:
+Этот гайд описывает:
+- **Production развертывание** - основное рабочее окружение (порт 80)
+- **Staging развертывание** - тестовое окружение для проверки изменений (порт 8080)
+
+### Способы развертывания Production:
 1. **GitHub Actions (рекомендуется)** - автоматическая сборка и публикация в GitHub Container Registry
 2. **Ручная сборка локально** - сборка на машине разработчика и загрузка образов на сервер
 3. **Сборка на сервере** - для тестирования (не рекомендуется для production)
@@ -784,6 +795,219 @@ docker stats
 # Проверка логов на ошибки
 docker compose logs --tail 100 | grep -i error
 ```
+
+## Развертывание Staging окружения
+
+Staging окружение позволяет тестировать изменения перед деплоем в production. Staging использует отдельные контейнеры, базу данных и порты.
+
+### Отличия Staging от Production
+
+| Параметр | Production | Staging |
+|----------|-----------|---------|
+| HTTP порт | 80 | 8080 |
+| База данных | `loyacrm` | `loyacrm_staging` |
+| Docker volume | `loyacrm_pg_data` | `loyacrm_pg_data_staging` |
+| Имена контейнеров | `loyacrm-*` | `loyacrm-staging-*` |
+| Docker образы | `:latest` | `:staging` |
+| Сеть | `loyacrm-network` | `loyacrm-staging-network` |
+| Директория | `/var/www/loyacrm-production` | `/var/www/loyacrm-staging` |
+
+### Шаг 1: Подготовка конфигурации Staging
+
+На локальной машине уже есть готовые файлы:
+- `docker-compose.stage.yml` - конфигурация для staging
+- `.env.stage` - шаблон переменных окружения для staging
+- `nginx.stage.conf` - nginx конфигурация для staging
+- `frontend/.env.staging` - переменные сборки frontend для staging
+
+### Шаг 2: Сборка образов для Staging
+
+```bash
+cd /path/to/LoyaCareCRM
+
+# Собрать Backend образ (одинаковый для prod и staging)
+docker build --platform linux/amd64 \
+  -t loyacrm-backend:staging \
+  -f docker/backend/Dockerfile .
+
+# Собрать Frontend образ с staging переменными
+docker build --platform linux/amd64 \
+  --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
+  --build-arg NEXT_PUBLIC_APP_VERSION=staging \
+  -t loyacrm-frontend:staging \
+  -f docker/frontend/Dockerfile.prod .
+```
+
+**⚠️ Важно:** Используйте `--platform linux/amd64` если собираете на Mac (ARM64) для сервера AMD64.
+
+### Шаг 3: Экспорт и копирование образов
+
+```bash
+# Экспортировать образы
+docker save loyacrm-backend:staging | gzip > loyacrm-backend-staging.tar.gz
+docker save loyacrm-frontend:staging | gzip > loyacrm-frontend-staging.tar.gz
+
+# Скопировать на сервер
+scp loyacrm-backend-staging.tar.gz loyacrm-frontend-staging.tar.gz \
+    docker-compose.stage.yml nginx.stage.conf .env.stage \
+    root@YOUR_SERVER_IP:/var/www/loyacrm-staging/
+```
+
+### Шаг 4: Настройка на сервере
+
+```bash
+ssh root@YOUR_SERVER_IP
+cd /var/www/loyacrm-staging
+
+# Создать директорию для бэкапов
+mkdir -p backups
+
+# Загрузить Docker образы
+docker load < loyacrm-backend-staging.tar.gz
+docker load < loyacrm-frontend-staging.tar.gz
+
+# Настроить .env
+cp .env.stage .env
+
+# Сгенерировать безопасные пароли
+DB_PASS=$(openssl rand -base64 32)
+JWT_SECRET=$(openssl rand -base64 64)
+
+# Обновить .env с паролями (используйте текстовый редактор)
+nano .env
+# Замените:
+# POSTGRES_PASSWORD=CHANGE_ME_STAGING_PASSWORD  ->  на сгенерированный пароль
+# JWT_SECRET=CHANGE_ME_STAGING_JWT_SECRET       ->  на сгенерированный секрет
+```
+
+### Шаг 5: Запуск Staging контейнеров
+
+```bash
+cd /var/www/loyacrm-staging
+
+# Запустить контейнеры
+docker compose -f docker-compose.stage.yml up -d
+
+# Проверить статус
+docker ps --filter name=loyacrm-staging
+
+# Проверить логи
+docker compose -f docker-compose.stage.yml logs -f
+```
+
+### Шаг 6: Применение миграций и Seed данных
+
+```bash
+# Применить миграции базы данных
+docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+
+# **ВАЖНО:** Запустить seed для создания тестовых данных
+docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+
+# Проверить созданные данные
+docker exec loyacrm-staging-postgres psql -U loyacrm -d loyacrm_staging \
+  -c 'SELECT COUNT(*) as users FROM "User"; SELECT COUNT(*) as contacts FROM "Contact";'
+```
+
+**Seed создаст:**
+- 13 пользователей (включая admin@loya.care с паролем "1")
+- 110 контактов
+- 110 сделок в различных стадиях
+- Тестовые группы и заметки
+
+### Шаг 7: Открытие порта 8080 (если требуется)
+
+По умолчанию многие хостинг-провайдеры блокируют нестандартные порты. Staging доступен локально на сервере, для доступа извне:
+
+**Вариант 1: Открыть порт у хостинг-провайдера**
+
+Обратитесь в поддержку хостинга для открытия порта 8080.
+
+**Вариант 2: SSH туннель (для разработчиков)**
+
+```bash
+# На локальной машине создать туннель
+ssh -L 8080:localhost:8080 root@YOUR_SERVER_IP -N
+
+# Затем открыть в браузере: http://localhost:8080/de
+```
+
+**Вариант 3: Path-based routing через production nginx**
+
+Настроить production nginx для проксирования `/staging/` на staging.
+
+### Шаг 8: Проверка Staging
+
+```bash
+# Тест API (на сервере)
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@loya.care","password":"1"}'
+
+# Должен вернуть: {"success":true,"user":{...},"token":"..."}
+
+# Тест Frontend
+curl -I http://localhost:8080/de
+# Должен вернуть: HTTP/1.1 200 OK
+```
+
+**Доступ к Staging:**
+- URL: `http://YOUR_SERVER_IP:8080/de`
+- Email: `admin@loya.care`
+- Password: `1`
+
+### Управление Staging
+
+```bash
+cd /var/www/loyacrm-staging
+
+# Просмотр логов
+docker compose -f docker-compose.stage.yml logs -f
+
+# Перезапуск сервисов
+docker compose -f docker-compose.stage.yml restart
+
+# Остановка
+docker compose -f docker-compose.stage.yml stop
+
+# Полная очистка (включая БД)
+docker compose -f docker-compose.stage.yml down -v
+```
+
+### Обновление Staging образов
+
+```bash
+# 1. На локальной машине пересобрать
+docker build --platform linux/amd64 \
+  --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
+  -t loyacrm-frontend:staging \
+  -f docker/frontend/Dockerfile.prod .
+
+# 2. Экспортировать и скопировать
+docker save loyacrm-frontend:staging | gzip > loyacrm-frontend-staging.tar.gz
+scp loyacrm-frontend-staging.tar.gz root@YOUR_SERVER_IP:/var/www/loyacrm-staging/
+
+# 3. На сервере загрузить и перезапустить
+ssh root@YOUR_SERVER_IP
+cd /var/www/loyacrm-staging
+docker load < loyacrm-frontend-staging.tar.gz
+docker compose -f docker-compose.stage.yml restart frontend
+```
+
+### Очистка временных файлов
+
+После успешного развертывания удалите архивы образов:
+
+```bash
+# На сервере
+cd /var/www/loyacrm-staging
+rm -f *.tar.gz
+
+# На локальной машине
+rm -f loyacrm-*-staging.tar.gz
+```
+
+---
 
 ## Устранение неполадок
 
