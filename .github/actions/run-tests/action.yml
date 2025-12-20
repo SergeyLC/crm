@@ -38,12 +38,3 @@ runs:
     - name: Run tests
       run: pnpm run test:ci
       shell: bash
-
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v4
-      if: success()
-      with:
-        file: ./coverage/lcov.info
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
