@@ -8,19 +8,52 @@
 - `needs.setup.outputs.should_deploy == 'true'`
 - `needs.setup.outputs.deployment_type == 'docker'`
 
-Наиболее вероятная причина - в репозитории GitHub не установлена переменная `DEPLOYMENT_TYPE` или она имеет неправильное значение.
+**Возможные причины:**
+
+1. **В репозитории GitHub не установлена переменная `DEPLOYMENT_TYPE`** или она имеет неправильное значение
+2. **Не настроены Environment secrets** - секреты должны быть на уровне environment (staging/production), а не на уровне репозитория
+3. **Environment не существует** - убедитесь, что в Settings → Environments созданы окружения `staging` и `production`
 
 ## Решение
 
-### Вариант 1: Установить переменную репозитория (рекомендуется)
+### Шаг 1: Создать Environments (ОБЯЗАТЕЛЬНО)
+
+GitHub Actions требует, чтобы окружения были созданы для доступа к environment secrets.
 
 1. Перейдите в репозиторий на GitHub
-2. **Settings → Secrets and variables → Actions → Variables**
-3. Нажмите **New repository variable**
-4. Создайте переменную:
+2. **Settings → Environments**
+3. Создайте два окружения:
+   - **staging** (для автоматических деплоев из main/develop)
+   - **production** (для релизов с тегами)
+
+### Шаг 2: Настроить Environment Secrets
+
+Для каждого окружения (staging и production) добавьте следующие секреты:
+
+**Settings → Environments → [staging/production] → Add Secret**
+
+Обязательные секреты для каждого окружения:
+- `POSTGRES_DB` - имя базы данных (например: `loyacrm_staging` или `loyacrm`)
+- `POSTGRES_USER` - пользователь БД (например: `loyacrm`)
+- `POSTGRES_PASSWORD` - пароль БД (сгенерируйте: `openssl rand -base64 32`)
+- `JWT_SECRET` - JWT секрет (сгенерируйте: `openssl rand -base64 64`)
+
+### Шаг 3: Настроить Repository Secrets
+
+Эти секреты общие для всех окружений:
+
+**Settings → Secrets and variables → Actions → Secrets → New repository secret**
+
+- `SERVER_HOST` - IP или домен сервера (например: `217.160.74.128`)
+- `SERVER_USER` - SSH пользователь (например: `root`)
+- `SERVER_SSH_KEY` - SSH приватный ключ (полностью, включая BEGIN/END)
+
+### Шаг 4: Установить переменную репозитория (опционально)
+
+1. **Settings → Secrets and variables → Actions → Variables**
+2. **New repository variable**:
    - **Name**: `DEPLOYMENT_TYPE`
    - **Value**: `docker`
-   - **Description** (optional): Default deployment type for all pushes
 
 ### Вариант 2: Использовать manual workflow dispatch
 
@@ -31,6 +64,37 @@
 3. Нажмите **Run workflow**
 4. В поле `deployment_type` введите: `docker`
 5. Нажмите **Run workflow**
+
+## Быстрая проверка настроек
+
+### 1. Проверить наличие Environments
+
+```bash
+# Вручную:
+# Settings → Environments
+# Должны быть: staging, production
+```
+
+### 2. Проверить environment secrets
+
+**Для staging:**
+```bash
+# Settings → Environments → staging → Secrets
+# Должны быть: POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, JWT_SECRET
+```
+
+**Для production:**
+```bash
+# Settings → Environments → production → Secrets  
+# Должны быть: POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, JWT_SECRET
+```
+
+### 3. Проверить repository secrets
+
+```bash
+# Settings → Secrets and variables → Actions → Secrets
+# Должны быть: SERVER_HOST, SERVER_USER, SERVER_SSH_KEY
+```
 
 ### Вариант 3: Проверить логи GitHub Actions
 
@@ -54,41 +118,56 @@
 - `should_deploy` = `true`
 - `image_tag` не пустой
 
+## Типичные ошибки
+
+### ❌ Job "Deploy with Docker" skipped
+
+**Причина:** Не созданы окружения (environments) или отсутствуют environment secrets
+
+**Решение:** 
+1. Создайте окружения `staging` и `production` в Settings → Environments
+2. Добавьте секреты в каждое окружение (см. Шаг 2 выше)
+3. Убедитесь, что repository secrets настроены (SERVER_HOST, SERVER_USER, SERVER_SSH_KEY)
+
+### ❌ Error: "Environment 'staging' does not exist"
+
+**Причина:** Окружение не создано в настройках репозитория
+
+**Решение:** Settings → Environments → New environment → staging
+
+### ❌ Secrets не найдены при деплое
+
+**Причина:** Секреты добавлены на уровне репозитория вместо уровня environment
+
+**Решение:** Переместите секреты POSTGRES_*, JWT_SECRET в environment secrets (Settings → Environments → staging/production → Secrets)
+
 ## Проверка текущих настроек
 
-### Проверить переменные репозитория:
-```bash
-# Через GitHub CLI
-gh variable list
+### Структура секретов (правильная):
 
-# Или вручную:
-# Settings → Secrets and variables → Actions → Variables
 ```
+Repository Level:
+├── Variables
+│   └── DEPLOYMENT_TYPE = "docker"
+└── Secrets
+    ├── SERVER_HOST
+    ├── SERVER_USER
+    └── SERVER_SSH_KEY
 
-### Проверить secrets репозитория:
-```bash
-# Через GitHub CLI
-gh secret list
+Environment Level (staging):
+└── Secrets
+    ├── POSTGRES_DB
+    ├── POSTGRES_USER
+    ├── POSTGRES_PASSWORD
+    └── JWT_SECRET
 
-# Должны быть установлены:
-# - SERVER_HOST
-# - SERVER_USER
-# - SERVER_SSH_KEY
+Environment Level (production):
+└── Secrets
+    ├── POSTGRES_DB
+    ├── POSTGRES_USER
+    ├── POSTGRES_PASSWORD
+    └── JWT_SECRET
 ```
-
-### Проверить environment secrets:
-
-**Production environment:**
-- `POSTGRES_DB`
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- `JWT_SECRET`
-
-**Staging environment:**
-- `POSTGRES_DB`
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- `JWT_SECRET`
 
 ## Дополнительная информация
 
