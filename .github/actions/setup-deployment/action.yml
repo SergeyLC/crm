@@ -61,13 +61,10 @@ runs:
           fi
         fi
 
-        # Determine deployment type (workflow_dispatch override or env var or default)
+        # Determine deployment type (workflow_dispatch override or default)
         if [ -n "${{ inputs.deployment_type_override }}" ]; then
           DEPLOYMENT_TYPE="${{ inputs.deployment_type_override }}"
           echo "🔧 Using override: $DEPLOYMENT_TYPE"
-        elif [ -n "${{ vars.DEPLOYMENT_TYPE }}" ]; then
-          DEPLOYMENT_TYPE="${{ vars.DEPLOYMENT_TYPE }}"
-          echo "🔧 Using environment variable: $DEPLOYMENT_TYPE"
         else
           DEPLOYMENT_TYPE="docker"  # default
           echo "🔧 Using default: $DEPLOYMENT_TYPE"
