@@ -36,6 +36,10 @@ runs:
     - name: Configure deployment
       id: config
       run: |
+        echo "🔍 Debug: GitHub Ref: ${GITHUB_REF}"
+        echo "🔍 Debug: deployment_type_override input: '${{ inputs.deployment_type_override }}'"
+        echo "🔍 Debug: deployment_type_default input: '${{ inputs.deployment_type_default }}'"
+        
         # Determine if this is a release tag push
         IS_RELEASE=false
         if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -82,6 +86,7 @@ runs:
         fi
 
         # Generate image tag for docker deployments
+        IMAGE_TAG=""
         if [[ "$DEPLOYMENT_TYPE" == "docker" ]]; then
           if [[ "$IS_RELEASE" == "true" ]]; then
             # Production release
@@ -103,6 +108,13 @@ runs:
         echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
         echo "should_deploy=true" >> $GITHUB_OUTPUT
         echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
+        
+        echo "🔍 Debug outputs:"
+        echo "  - environment: $ENVIRONMENT"
+        echo "  - deployment_type: $DEPLOYMENT_TYPE"
+        echo "  - image_tag: $IMAGE_TAG"
+        echo "  - should_deploy: true"
+        echo "  - is_release: $IS_RELEASE"
 
         echo ""
         echo "🎯 Deployment Configuration:"
