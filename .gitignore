@@ -48,6 +48,9 @@ ecosystem.config.js
 
 # typescript
 **/*.tsbuildinfo
+
+# docker exports
+*.tar.gz
 **/next-env.d.ts
     
 **/*storybook.log
