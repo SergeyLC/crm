@@ -1,227 +1,357 @@
 # Database Configuration - Quick Reference
 
-## Откуда Prisma берет DATABASE_URL?
+## How Prisma Gets DATABASE_URL in Docker Deployment
 
-### Короткий ответ
-Из файла `.env.production.local` или `.env.production.local` в директории **`db/`**
+### Short Answer
+**From Docker Compose environment variables**, not from `.env` files in `db/` directory.
 
-**Важно:** Скрипт `seed.ts` был обновлен для автоматической загрузки `.env` файлов.
-
-### Подробно
+### Detailed Explanation
 
 ```
-db/
-  ├── .env.production.local     ← ОТСЮДА берется DATABASE_URL для staging
-  ├── .env.production.local  ← ОТСЮДА берется DATABASE_URL для production
+Root directory:
+  ├── .env                    ← Production: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+  ├── .env.stage              ← Staging: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+  ├── docker-compose.yml      ← Constructs DATABASE_URL from variables
+  └── docker-compose.stage.yml ← Constructs DATABASE_URL from variables
+
+db/ directory (for local development only):
+  ├── .env                    ← Local: DATABASE_URL for development
+  ├── .env.development.local  ← Local: DATABASE_URL override
   └── prisma/
-      └── schema.prisma      ← Определяет: url = env("DATABASE_URL")
+      └── schema.prisma       ← No url specified, uses environment
 ```
 
-### Как это работает
+### How Docker Deployment Works
 
-1. Команда запускается из директории `db/`:
+1. **Docker Compose** constructs `DATABASE_URL` from variables in `.env` or `.env.stage`:
+   
+   **Production** (`.env`):
    ```bash
-   cd /var/www/loyacrm-staging/db
-   pnpm run migrate:deploy
+   POSTGRES_DB=loyacrm
+   POSTGRES_USER=loyacrm
+   POSTGRES_PASSWORD=your_password
+   ```
+   
+   **Staging** (`.env.stage`):
+   ```bash
+   POSTGRES_DB=loyacrm_staging
+   POSTGRES_USER=loyacrm
+   POSTGRES_PASSWORD=your_staging_password
    ```
 
-2. Prisma CLI ищет `.env` файлы в **текущей директории** (`db/`):
-   - `.env.production.local` (для staging)
-   - `.env.production.local` (для production)
-   - `.env` (для development)
-
-3. Читает `DATABASE_URL` из найденного файла:
-   ```bash
-   DATABASE_URL="postgresql://loyacare_staging:password@localhost:5432/loya_care_crm_staging"
+2. **docker-compose.yml** creates the connection string:
+   ```yaml
+   backend:
+     environment:
+       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
    ```
 
-**Примечание:** `seed.ts` теперь автоматически загружает `.env` файлы благодаря `dotenv` пакету, который был добавлен в зависимости.
+3. **Prisma commands** inside container use the environment variable:
+   ```bash
+   docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+   ```
 
-### В GitHub Actions
+### Local Development (Non-Docker)
 
-**Staging Workflow** создает файл из секретов:
-```yaml
-cat > db/.env.production.local << 'EOF'
-DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
-PRISMA_LOG_LEVEL=warn
-EOF
+For local development, Prisma reads from `db/.env` files:
 
+```bash
+# db/.env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/loyacrm_dev"
+```
+
+```bash
 cd db
-pnpm run migrate:deploy  # Использует DATABASE_URL из db/.env.production.local
-pnpm run seed            # Использует DATABASE_URL из db/.env.production.local
+pnpm run migrate:deploy  # Uses DATABASE_URL from db/.env
+pnpm run seed            # Uses DATABASE_URL from db/.env
 ```
 
-**Production Workflow** создает другой файл:
-```yaml
-cat > db/.env.production.local << 'EOF'
-DATABASE_URL=${{ secrets.DATABASE_URL }}
-PRISMA_LOG_LEVEL=warn
-EOF
+## Should You Run Seed After Migrations?
 
+### Short Answer
+
+- ✅ **Staging:** YES, always run seed
+- ❌ **Production:** NO, never run seed
+
+### Detailed Explanation
+
+### Staging Environment
+
+**YES, seed is required** to create test data:
+
+**Docker Deployment:**
+```bash
+# Run migrations
+docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+
+# Run seed
+docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+```
+
+**Local Development:**
+```bash
 cd db
-pnpm run migrate:deploy  # Использует DATABASE_URL из db/.env.production.local
-# НЕТ seed для production!
+pnpm run migrate:deploy  # Apply migrations
+pnpm run seed            # Fill with test data
+```
+
+**What seed.ts creates:**
+- **3 admin users:** `admin@loya.care`, `admin@beispiel.de`, `admin@example.com`
+- **10 employee users:** `v1@loya.care` through `v10@loya.care`
+- **Password for all:** `1`
+- **110 contacts** (11 per employee)
+- **110 deals** (11 per employee with various stages)
+- Test groups, notes, and appointments
+
+**Why:** Testing requires users and data.
+
+### Production Environment
+
+**NO, seed is NOT needed:**
+
+**Docker Deployment:**
+```bash
+# Only migrations
+docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+
+# ❌ DO NOT run seed in production!
+```
+
+**Why:** Production already has real user data.
+
+---
+
+## Docker Deployment Workflow
+
+### Production Deployment
+
+```bash
+# 1. Build Docker images with correct platform
+docker buildx build --platform linux/amd64 \
+  --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
+  -t loyacrm-frontend:latest \
+  -f docker/frontend/Dockerfile .
+
+docker buildx build --platform linux/amd64 \
+  -t loyacrm-backend:latest \
+  -f docker/backend/Dockerfile .
+
+# 2. Export and transfer to server
+docker save loyacrm-frontend:latest | gzip > frontend.tar.gz
+docker save loyacrm-backend:latest | gzip > backend.tar.gz
+scp *.tar.gz root@SERVER_IP:/tmp/
+
+# 3. On server: load images and start
+ssh root@SERVER_IP
+cd /var/www/loyacrm-production
+docker load < /tmp/frontend.tar.gz
+docker load < /tmp/backend.tar.gz
+docker compose up -d
+
+# 4. Run migrations (NO SEED!)
+docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+```
+
+### Staging Deployment
+
+```bash
+# 1. Build staging images
+docker buildx build --platform linux/amd64 \
+  --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
+  -t loyacrm-frontend:staging \
+  -f docker/frontend/Dockerfile .
+
+docker buildx build --platform linux/amd64 \
+  -t loyacrm-backend:staging \
+  -f docker/backend/Dockerfile .
+
+# 2. Export and transfer
+docker save loyacrm-frontend:staging | gzip > frontend-staging.tar.gz
+docker save loyacrm-backend:staging | gzip > backend-staging.tar.gz
+scp *-staging.tar.gz root@SERVER_IP:/tmp/
+
+# 3. On server: load and start
+ssh root@SERVER_IP
+cd /var/www/loyacrm-staging
+docker load < /tmp/frontend-staging.tar.gz
+docker load < /tmp/backend-staging.tar.gz
+docker compose -f docker-compose.stage.yml --env-file .env.stage up -d
+
+# 4. Run migrations AND seed
+docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 ---
 
-## Нужно ли применять seed после миграций?
+## Practical Commands
 
-### Короткий ответ
-
-- ✅ **Staging:** ДА, всегда запускать `pnpm run seed`
-- ❌ **Production:** НЕТ, никогда не запускать seed
-
-### Подробно
-
-### Staging (тестовое окружение)
-
-**ДА, нужен seed** для создания тестовых данных:
+### Docker Production Environment
 
 ```bash
-cd /var/www/loyacrm-staging/db
-pnpm run migrate:deploy  # Применить миграции
-pnpm run seed            # Заполнить тестовыми данными
+# Check DATABASE_URL in container
+docker exec loyacrm-backend env | grep DATABASE_URL
+
+# Check .env file on host
+cat /var/www/loyacrm-production/.env | grep POSTGRES
+
+# Apply migrations (NO SEED!)
+docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+
+# Check migration status
+docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate status'
+
+# View backend logs
+docker compose -f /var/www/loyacrm-production/docker-compose.yml logs -f backend
+
+# ❌ NEVER run in production:
+# docker exec loyacrm-backend sh -c 'cd /app/db && npm run seed'  # DON'T!
+# docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate reset'  # DON'T!
 ```
 
-**Что создает seed.ts:**
-- 3 администратора: `admin@loya.care`, `admin@beispiel.de`, `admin@example.com`
-- 10 сотрудников: `v1@loya.care` до `v10@loya.care`
-- Пароль для всех: `1`
-- Тестовые сделки, контакты, группы и т.д.
-
-**Зачем:** Для тестирования приложения нужны пользователи и данные.
-
-### Production (боевое окружение)
-
-**НЕТ, seed НЕ нужен:**
+### Docker Staging Environment
 
 ```bash
-cd /var/www/loyacrm/db
-pnpm run migrate:deploy  # Только миграции
-# НЕ запускать seed!
+# Check DATABASE_URL in container
+docker exec loyacrm-staging-backend env | grep DATABASE_URL
+
+# Check .env.stage file on host
+cat /var/www/loyacrm-staging/.env.stage | grep POSTGRES
+
+# Apply migrations
+docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+
+# Run seed (always for staging!)
+docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+
+# Reset database and reseed
+docker compose -f /var/www/loyacrm-staging/docker-compose.stage.yml stop backend postgres
+docker compose -f /var/www/loyacrm-staging/docker-compose.stage.yml rm -f postgres
+docker volume rm loyacrm_pg_data_staging
+docker compose -f /var/www/loyacrm-staging/docker-compose.stage.yml up -d
+sleep 20
+docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
 ```
 
-**Почему:** В production уже есть реальные данные пользователей.
-
----
-
-## Workflows Summary
-
-### Tests (на всех ветках)
-```
-Push в любую ветку → Тесты (type-check, lint, unit tests)
-```
-
-### Staging (при push в main)
-```
-Push в main → Tests + Build + Deploy Staging
-  ├── Создать .env с build версией (1.4.2+sha.abc123)
-  ├── Применить миграции: pnpm run migrate:deploy
-  └── ✅ Заполнить БД: pnpm run seed
-```
-
-### Production (при создании тега)
-```
-Push tag v1.5.0 → Release + Deploy Production
-  ├── Обновить package.json → 1.5.0
-  ├── Создать GitHub Release
-  ├── Создать .env с release версией (1.5.0)
-  ├── Применить миграции: pnpm run migrate:deploy
-  └── ❌ БЕЗ seed (это production!)
-```
-
----
-
-## Практические команды
-
-### На staging сервере
+### Local Development (Non-Docker)
 
 ```bash
-# Проверить DATABASE_URL
-cd /var/www/loyacrm-staging/db
-cat .env.production.local | grep DATABASE_URL
+# Check DATABASE_URL
+cd db
+cat .env | grep DATABASE_URL
 
-# Если файл не существует - создать его
-# (должен был быть создан при настройке, см. STAGING_SETUP.md)
-ls -la .env.production.local
-
-# Применить миграции
-cd /var/www/loyacrm-staging/db
+# Apply migrations
+cd db
 pnpm run migrate:deploy
 
-# Заполнить тестовыми данными (seed автоматически загрузит .env.production.local)
-cd /var/www/loyacrm-staging/db
+# Run seed
+cd db
 pnpm run seed
 
-# Сбросить БД и заполнить заново
-cd /var/www/loyacrm-staging/db
-pnpm run migrate:reset  # Автоматически запустит seed
-```
+# Reset database
+cd db
+pnpm run migrate:reset  # Automatically runs seed
 
-### На production сервере
-
-```bash
-# Проверить DATABASE_URL
-cd /var/www/loyacrm/db
-cat .env.production.local | grep DATABASE_URL
-
-# Применить миграции (БЕЗ seed!)
-cd /var/www/loyacrm/db
-pnpm run migrate:deploy
-
-# ❌ НИКОГДА не запускать на production:
-# pnpm run seed          # НЕ ДЕЛАТЬ!
-# pnpm run migrate:reset # НЕ ДЕЛАТЬ!
+# Open Prisma Studio
+cd db
+pnpm run studio
 ```
 
 ---
 
-## Проверка
+## Verification
 
-### Проверить к какой БД подключается Prisma
+### Check Which Database Prisma Connects To
 
+**Docker Production:**
 ```bash
-# Staging
-cd /var/www/loyacrm-staging/db
-echo "DATABASE_URL=$(grep DATABASE_URL .env.production.local | cut -d'=' -f2)"
+# Check DATABASE_URL in backend container
+docker exec loyacrm-backend env | grep DATABASE_URL
+# Should show: postgresql://loyacrm:password@postgres:5432/loyacrm
 
-# Production
-cd /var/www/loyacrm/db
-echo "DATABASE_URL=$(grep DATABASE_URL .env.production.local | cut -d'=' -f2)"
+# Check environment variables on host
+cat /var/www/loyacrm-production/.env | grep POSTGRES_DB
+# Should show: POSTGRES_DB=loyacrm
 ```
 
-### Проверить что seed создал пользователей
-
+**Docker Staging:**
 ```bash
-# Staging
-psql "postgresql://loyacare_staging:password@localhost:5432/loya_care_crm_staging" \
+# Check DATABASE_URL in staging backend container
+docker exec loyacrm-staging-backend env | grep DATABASE_URL
+# Should show: postgresql://loyacrm:password@postgres:5432/loyacrm_staging
+
+# Check environment variables on host
+cat /var/www/loyacrm-staging/.env.stage | grep POSTGRES_DB
+# Should show: POSTGRES_DB=loyacrm_staging
+```
+
+**Local Development:**
+```bash
+cd db
+cat .env | grep DATABASE_URL
+# Should show: postgresql://postgres:password@localhost:5432/loyacrm_dev
+```
+
+### Verify Seed Created Users
+
+**Docker Staging:**
+```bash
+# Query users from staging database
+docker exec loyacrm-staging-postgres psql -U loyacrm -d loyacrm_staging \
   -c "SELECT email, role FROM \"User\" LIMIT 5;"
 
-# Должно показать:
+# Should show:
 # admin@loya.care | ADMIN
 # v1@loya.care    | EMPLOYEE
 # v2@loya.care    | EMPLOYEE
 # ...
 ```
 
-### Логин в staging
+**Local Development:**
+```bash
+psql -U postgres -d loyacrm_dev \
+  -c "SELECT email, role FROM \"User\" LIMIT 5;"
+```
 
-После seed можно войти с тестовыми аккаунтами:
+### Test Login Credentials
 
+After running seed, you can login with test accounts:
+
+**Admin Account:**
 ```
 Email: admin@loya.care
 Password: 1
+```
 
+**Employee Accounts:**
+```
 Email: v1@loya.care
 Password: 1
+
+Email: v2@loya.care
+Password: 1
+
+... through v10@loya.care
 ```
+
+**Access URLs:**
+- Production: `http://YOUR_SERVER_IP/de`
+- Staging: `http://YOUR_SERVER_IP:8080/de`
+- Local: `http://localhost:3000/de`
 
 ---
 
-## Документация
+## Related Documentation
 
-Подробнее см.:
-- **DATABASE_ENV_CONFIG.md** - детальная конфигурация БД
-- **STAGING_SETUP.md** - настройка staging сервера
-- **CI_CD_WORKFLOW.md** - описание CI/CD процесса
+For more details, see:
+- **[DATABASE_ENV_CONFIG.md](DATABASE_ENV_CONFIG.md)** - Detailed database configuration
+- **[deployment/README.md](deployment/README.md)** - Docker deployment guide overview
+- **[deployment/04-staging-deployment.md](deployment/04-staging-deployment.md)** - Staging environment setup
+- **[deployment/05-management.md](deployment/05-management.md)** - Container management and operations
+- **[deployment/06-troubleshooting.md](deployment/06-troubleshooting.md)** - Common issues and solutions
+
+---
+
+**Last Updated:** December 20, 2025  
+**Deployment Method:** Docker Compose with manual build
