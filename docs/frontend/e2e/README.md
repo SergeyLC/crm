@@ -1,16 +1,24 @@
 # Playwright End-to-End Tests
 
-> 📖 **Documentation:** [Detailed Summary](./PLAYWRIGHT_TESTS_SUMMARY.md) | [🇪 Deutsche Version](./PLAYWRIGHT_TESTS_SUMMARY.de.md)
+Comprehensive end-to-end test suite for the LoyaCareCRM application using Playwright Test framework.
 
-This directory contains Playwright end-to-end tests for the LoyaCareCRM application.
+This directory contains automated tests for critical user workflows including Deal management, Lead management, form validation, and accessibility features.
 
 ## Prerequisites
 
-- Node.js 24+ 
+### Local Development
+- Node.js 24+
 - pnpm package manager
-- Project dependencies installed
+- Project dependencies installed (`pnpm install`)
+- Playwright browsers installed (`npx playwright install`)
+
+### Docker Environment
+- Docker and Docker Compose installed
+- Frontend container running (`docker compose up frontend`)
 
 ## Running Tests
+
+### Local Development
 
 ```bash
 # Install Playwright browsers (first time only)
@@ -35,18 +43,35 @@ pnpm run playwright:management
 pnpm run playwright:report
 ```
 
+### Docker Environment
+
+```bash
+# Production container
+docker exec loyacrm-frontend sh -c "cd /app/frontend && pnpm run playwright"
+
+# Staging container
+docker exec loyacrm-staging-frontend sh -c "cd /app/frontend && pnpm run playwright"
+
+# View test report from container
+docker exec loyacrm-frontend sh -c "cd /app/frontend && pnpm run playwright:report"
+```
+
 ## Test Structure
 
-- `demo-playwright.spec.ts` - Basic sanity tests to verify Playwright setup
-- `deal-edit-dialog.spec.ts` - Comprehensive tests for Deal CRUD operations (15 tests)
-- `lead-edit-dialog.spec.ts` - Comprehensive tests for Lead CRUD operations (15 tests)
-- `lead-management.spec.ts` - Tests for Lead listing and management features (8 tests)
-- `helpers/` - Shared utilities and helper functions
-  - `auth.ts` - Authentication mocking utilities
-- `fixtures/` - Test data
-  - `deals.json` - Mock deal data
-  - `leads.json` - Mock lead data
-  - `users.json` - Mock user data
+```
+frontend/e2e/
+├── demo-playwright.spec.ts          # Basic sanity tests (2 tests)
+├── deal-edit-dialog.spec.ts         # Deal CRUD operations (15 tests)
+├── lead-edit-dialog.spec.ts         # Lead CRUD operations (15 tests)
+├── lead-management.spec.ts          # Lead listing and management (8 tests)
+├── group-save.spec.ts               # Group/batch operations tests
+├── helpers/
+│   └── auth.ts                      # Authentication mocking utilities
+└── fixtures/
+    ├── deals.json                   # Mock deal data
+    ├── leads.json                   # Mock lead data
+    └── users.json                   # Mock user data
+```
 
 ## Test Coverage
 
@@ -114,9 +139,21 @@ test.describe('My Feature', () => {
 - Use VS Code Playwright extension for debugging
 - Check the `playwright-report/` directory for HTML reports after test runs
 
-## CI/CD
+## CI/CD Integration
 
-Tests are configured to run in headless mode by default, suitable for CI/CD pipelines.
+Tests run in headless mode by default, making them suitable for:
+- GitHub Actions workflows
+- Docker container environments
+- Pre-deployment validation
+- Automated testing pipelines
+
+### Pre-Push Hook
+
+Playwright tests run automatically before git push via the pre-push hook:
+```bash
+# Defined in scripts/pre-push
+pnpm run playwright
+```
 
 ## Comparison with Cypress
 
@@ -132,4 +169,17 @@ Both test suites provide comprehensive coverage for:
 - Accessibility features
 - Data persistence
 - Network error scenarios
+
+## Related Documentation
+
+- **[PLAYWRIGHT_DOCUMENTATION_INDEX.md](../../PLAYWRIGHT_DOCUMENTATION_INDEX.md)** - Documentation index and quick start
+- **[TESTING_STRATEGY.md](../../TESTING_STRATEGY.md)** - Overall testing strategy
+- **[deployment/06-troubleshooting.md](../../deployment/06-troubleshooting.md)** - Troubleshooting guide
+- **[Playwright Config](../../playwright.config.ts)** - Test configuration
+
+---
+
+**Last Updated:** December 20, 2024  
+**Test Framework:** Playwright 1.49+  
+**Total Tests:** 40+
 
