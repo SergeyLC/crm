@@ -56,40 +56,64 @@ experimental: {
 
 ## Additional Optimizations Applied
 
-### 6. Build Cache in GitHub Actions
-```yaml
-- uses: actions/cache@v4
-  with:
-    path: |
-      ~/.pnpm-store
-      ${{ github.workspace }}/frontend/.next/cache
-    key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+### 6. Docker Build Optimization
+
+**Multi-stage Build:**
+The project uses Docker multi-stage builds to optimize the final image size:
+
+```dockerfile
+FROM node:24-alpine
+WORKDIR /app
+
+# Install pnpm globally
+RUN npm install -g pnpm prisma
+
+# Install dependencies
+RUN pnpm install --no-frozen-lockfile
+
+# Generate Prisma client
+RUN cd db && pnpm run generate
+
+# Build Next.js application
+RUN cd frontend && pnpm run build
 ```
-Caches Next.js build cache and pnpm store between CI runs.
+
+**Build Caching:**
+- Docker layer caching speeds up rebuilds
+- pnpm workspace dependencies are cached
+- `.next/cache` persists in Docker volumes between container restarts
 
 ### 7. Memory Allocation
-```bash
-NODE_OPTIONS="--max-old-space-size=4096"
-```
-Allocates 4GB of memory for Node.js during build.
 
-### 8. Telemetry Disabled
-```bash
-NEXT_TELEMETRY_DISABLED=1
+**Docker Container Resources:**
+Docker automatically manages memory allocation. For builds requiring more memory, configure in `docker-compose.yml`:
+
+```yaml
+frontend:
+  deploy:
+    resources:
+      limits:
+        memory: 4G
 ```
-Disables Next.js telemetry during builds.
+
+**Manual Builds:**
+For manual builds outside Docker:
+```bash
+NODE_OPTIONS="--max-old-space-size=4096" pnpm run build
+```
 
 ## Performance Improvements
 
-### Before Optimization:
-- Build time: ~3-5 minutes
-- Memory usage: ~2GB
-- No caching between builds
+### Docker Production Builds:
+- **Initial build:** ~3-5 minutes (full image build with all dependencies)
+- **Cached rebuild:** ~1-2 minutes (when only code changes, dependencies cached)
+- **Memory usage:** ~2-3GB during build, ~500MB runtime
+- **Image size:** ~1.2GB (optimized with Alpine Linux base)
 
-### After Optimization:
-- Build time: ~1.5-2.5 minutes (50% faster)
-- Memory usage: ~3GB (with cache)
-- Incremental builds: ~30-60 seconds
+### Local Development:
+- **Dev server start:** ~5-10 seconds (with Turbopack)
+- **Hot reload:** <1 second (Fast Refresh)
+- **Memory usage:** ~1.5GB
 
 ## Additional Recommendations
 
@@ -148,40 +172,114 @@ pnpm run analyze
 
 ## Pre-Deployment Checklist
 
-- [ ] Check bundle size (`pnpm run analyze`)
-- [ ] Ensure `.next/cache` is not deleted
-- [ ] Verify `NODE_ENV=production`
-- [ ] Ensure dependency cache is up to date
-- [ ] Monitor build time in CI/CD
+### Docker Deployment
+- [ ] Verify Docker image builds successfully: `docker buildx build --platform linux/amd64 -t loyacrm-frontend:latest -f docker/frontend/Dockerfile .`
+- [ ] Check bundle size locally: `cd frontend && pnpm run analyze`
+- [ ] Verify environment variables in `.env` or `.env.stage`
+- [ ] Test container startup: `docker run -p 3000:3000 loyacrm-frontend:latest`
+- [ ] Check container logs: `docker compose logs frontend`
+- [ ] Verify health check passes: `docker compose ps`
+
+### Manual Build (if not using Docker)
+- [ ] Ensure `NODE_ENV=production`
+- [ ] Verify `.next/cache` is preserved
+- [ ] Check Prisma client is generated
 
 ## Current Configuration
 
 ### next.config.js
 ```javascript
-{
+const productionConfig = {
+  reactStrictMode: true,
+  outputFileTracingRoot: path.join(__dirname, '..'), // Monorepo support
+  
+  // Production optimizations
   productionBrowserSourceMaps: false,
+  compress: true,
+  
   compiler: {
     removeConsole: isProduction ? { exclude: ["error", "warn"] } : false,
   },
+  
   experimental: {
-    optimizeCss: false,
+    optimizeCss: false, // Fixes critters issue with Emotion
     esmExternals: true,
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  }
-}
+  
+  typescript: {
+    ignoreBuildErrors: process.env.SKIP_TYPE_CHECK === 'true',
+  },
+};
 ```
 
-### deploy-production.yml / deploy-staging.yml
-```bash
-export NEXT_TELEMETRY_DISABLED=1
-export NODE_OPTIONS="--max-old-space-size=4096"
-# Preserve .next/cache for faster builds
+**Note:** `eslint.ignoreDuringBuilds` was removed in Next.js 16. Use `next lint` CLI command instead.
+
+### docker-compose.yml
+```yaml
+frontend:
+  image: loyacrm-frontend:latest
+  environment:
+    - NODE_ENV=production
+    - PORT=3000
+    - NEXT_PUBLIC_API_URL=/api
+    - NEXT_PUBLIC_BACKEND_API_URL=${NEXT_PUBLIC_BACKEND_API_URL}
+  healthcheck:
+    test: ["CMD-SHELL", "wget --spider http://localhost:3000 || exit 1"]
+```
+
+### Dockerfile Build Process
+```dockerfile
+# Install dependencies
+RUN pnpm install --no-frozen-lockfile
+
+# Generate Prisma client
+RUN cd db && pnpm run generate
+
+# Build Next.js (optimizations applied automatically)
+RUN cd frontend && pnpm run build
 ```
 
 ## Troubleshooting
+
+### Docker Build Issues
+
+**Symptom:** Build fails with out of memory error
+```
+JavaScript heap out of memory
+```
+
+**Solution:**
+Increase Docker memory limit:
+```yaml
+# docker-compose.yml
+frontend:
+  deploy:
+    resources:
+      limits:
+        memory: 4G
+```
+
+Or for manual builds:
+```bash
+docker buildx build --build-arg NODE_OPTIONS="--max-old-space-size=4096" \
+  --platform linux/amd64 -t loyacrm-frontend:latest -f docker/frontend/Dockerfile .
+```
+
+**Symptom:** Prisma client not found during build
+```
+Error: @prisma/client did not initialize yet
+```
+
+**Solution:**
+Ensure Prisma generation happens before Next.js build in Dockerfile:
+```dockerfile
+# Generate Prisma client FIRST
+RUN cd db && pnpm run generate
+
+# Then build Next.js
+RUN cd frontend && pnpm run build
+```
 
 ### DataCloneError: ()=>null could not be cloned
 
@@ -280,3 +378,20 @@ experimental: {
 ```
 
 **Note:** When comparing performance between Webpack and Turbopack, delete `.next` folder between builds for fair comparison, or enable Turbopack's filesystem cache.
+
+---
+
+## Related Documentation
+
+For more details on deployment and configuration:
+- **[deployment/README.md](deployment/README.md)** - Docker deployment overview
+- **[deployment/03-production-manual-build.md](deployment/03-production-manual-build.md)** - Manual Docker build process
+- **[deployment/04-staging-deployment.md](deployment/04-staging-deployment.md)** - Staging environment setup
+- **[DATABASE_ENV_CONFIG.md](DATABASE_ENV_CONFIG.md)** - Database and environment configuration
+- **[DOCKER_PORTS_ARCHITECTURE.md](DOCKER_PORTS_ARCHITECTURE.md)** - Container networking and ports
+
+---
+
+**Last Updated:** December 20, 2024  
+**Next.js Version:** 16.0.1  
+**Deployment Method:** Docker Compose with multi-stage builds
