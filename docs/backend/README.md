@@ -1,8 +1,9 @@
-# Backend-Teil / Backend Part – CRM
+# Backend – LoyaCare CRM
 
 **API:** REST  
 **ORM:** Prisma  
-**Technologien / Tech Stack:** Node.js, Express  
+**Tech Stack:** Node.js 24+, Express 5, TypeScript  
+**Database:** PostgreSQL 16 with Prisma adapter-pg
 
 ## 📋 Environment Variables
 
@@ -10,7 +11,7 @@ Backend supports loading environment variables from `.env.*` files.
 
 Detailed documentation: [README.env.md](./README.env.md)
 
-### Quick Start:
+### Local Development:
 
 ```bash
 # 1. Create local environment file
@@ -18,35 +19,84 @@ cp .env.example .env.development.local
 
 # 2. Edit and add your secrets
 # .env.development.local:
-DATABASE_URL="postgresql://postgres:password@localhost:5432/loya_care_crm"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/loyacrm_dev"
 JWT_SECRET="your-secret-key-min-32-chars"
 
 # 3. Start the server
 pnpm run dev
 ```
 
-## Prisma Client  
-Im Ordner `generated/prisma-client` befinden sich die generierten Dateien für den **Prisma Client**.  
-Diese werden benötigt, um die **Datentypen (Types)** für die **Entities** aus der Datenbank zu erhalten.  
+### Docker Deployment:
 
-## Daten generieren / Generate Data Types  
-Um neue Typdefinitionen zu erstellen oder bestehende zu aktualisieren, bitte im **DB**-Projekt folgenden Befehl ausführen:  
+Environment variables are configured in:
+- **Production**: Root `.env` file
+- **Staging**: Root `.env.stage` file
+
+Docker Compose automatically constructs `DATABASE_URL` from `POSTGRES_*` variables:
+```bash
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+```
+
+Check backend logs:
+```bash
+# Production
+docker compose logs backend
+
+# Staging
+docker compose -f docker-compose.stage.yml logs backend
+```
+
+## Prisma Client
+
+Generated Prisma client files are located in `generated/prisma/` directory. These provide **type-safe database access** and TypeScript types for all database entities.
+
+### Generate Prisma Client
+
+To create or update type definitions after schema changes, run this command in the **db** project:
 
 ```bash
+cd db
 pnpm run generate
 ```
 
-💡 Hinweis / Note:
-Der prisma-client wird automatisch aus dem Datenbankschema erstellt. Änderungen am Schema erfordern das erneute Ausführen des obigen Befehls.
+This will:
+1. Generate Prisma client from `db/prisma/schema.prisma`
+2. Copy to `backend/generated/prisma/`
+3. Copy to `frontend/src/shared/generated/prisma/`
 
-Create admin in DB:
-```bash
-pnpm exec tsx src/scripts/createUser.ts [Name] [email] [password] ADMIN
+💡 **Note:** The Prisma client is automatically generated from the database schema. Any schema changes require re-running the command above.
+
+### Docker Environment
+
+In Docker containers, Prisma client is generated during image build:
+```dockerfile
+# Dockerfile
+RUN cd db && pnpm run generate
 ```
 
-Create employee in DB:
+## User Management Scripts
+
+Create users via CLI:
+
 ```bash
+# Create admin user
+pnpm exec tsx src/scripts/createUser.ts [Name] [email] [password] ADMIN
+
+# Create employee user
 pnpm exec tsx src/scripts/createUser.ts [Name] [email] [password] EMPLOYEE
+
+# Example
+pnpm exec tsx src/scripts/createUser.ts "John Doe" john@example.com securepass123 ADMIN
+```
+
+### Docker Container
+
+```bash
+# Production
+docker exec loyacrm-backend sh -c 'cd /app/backend && pnpm exec tsx src/scripts/createUser.ts "Admin" admin@example.com pass123 ADMIN'
+
+# Staging
+docker exec loyacrm-staging-backend sh -c 'cd /app/backend && pnpm exec tsx src/scripts/createUser.ts "Admin" admin@example.com pass123 ADMIN'
 ```
 
 ## 📚 API Endpoints
@@ -175,3 +225,54 @@ Base path: `/api`
 
 - `GET /api/ping` - Health check endpoint
   - Response: `"pong"`
+
+## 🐳 Docker Deployment
+
+### Container Commands
+
+```bash
+# Check backend status
+docker compose ps backend
+
+# View logs
+docker compose logs -f backend
+
+# Restart backend
+docker compose restart backend
+
+# Execute command in container
+docker exec loyacrm-backend sh -c 'cd /app/backend && pnpm run type-check'
+
+# Check environment variables
+docker exec loyacrm-backend env | grep DATABASE_URL
+```
+
+### Build and Deploy
+
+```bash
+# Build Docker image (from project root)
+docker buildx build --platform linux/amd64 \
+  -t loyacrm-backend:latest \
+  -f docker/backend/Dockerfile .
+
+# Deploy to server
+./deploy.sh production
+```
+
+See [deployment documentation](../deployment/README.md) for complete deployment guide.
+
+## 📚 Related Documentation
+
+- **[README.env.md](./README.env.md)** - Environment variables configuration
+- **[tests/README.md](./tests/README.md)** - Testing documentation
+- **[../db/README.md](../db/README.md)** - Database and Prisma guide
+- **[../deployment/README.md](../deployment/README.md)** - Docker deployment guide
+- **[../DATABASE_ENV_CONFIG.md](../DATABASE_ENV_CONFIG.md)** - Database configuration details
+
+---
+
+**Last Updated:** December 20, 2024  
+**Node.js:** 24+  
+**Express:** 5.1+  
+**Prisma:** 7.0.1  
+**Deployment:** Docker Compose

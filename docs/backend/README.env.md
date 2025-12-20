@@ -95,7 +95,34 @@ JWT_SECRET="my-super-secret-key-min-32-chars-long"
 
 ### Production
 
-For production, use system environment variables or `.env.production.local`:
+**Docker Deployment (Recommended):**
+
+Environment variables are configured in root `.env` or `.env.stage` files:
+
+```bash
+# Production (.env)
+POSTGRES_USER=loyacrm
+POSTGRES_PASSWORD=secure_password
+POSTGRES_DB=loyacrm
+JWT_SECRET=your-production-jwt-secret-min-32-chars
+NODE_ENV=production
+
+# Staging (.env.stage)
+POSTGRES_USER=loyacrm
+POSTGRES_PASSWORD=secure_password
+POSTGRES_DB=loyacrm_staging
+JWT_SECRET=your-staging-jwt-secret-min-32-chars
+NODE_ENV=production
+```
+
+Docker Compose automatically constructs `DATABASE_URL`:
+```
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+```
+
+**Traditional Deployment (PM2/systemd):**
+
+Use system environment variables or `.env.production.local`:
 
 ```bash
 # Via environment variables
@@ -140,6 +167,28 @@ If required variables are missing:
 
 ## 🛠️ Troubleshooting
 
+### Docker Environment
+
+**Problem: Backend can't connect to database in Docker**
+
+```bash
+# Check DATABASE_URL in container
+docker exec loyacrm-backend env | grep DATABASE_URL
+
+# Check if postgres container is running
+docker compose ps postgres
+
+# Check backend logs
+docker compose logs backend
+
+# Verify environment variables in docker-compose.yml
+cat docker-compose.yml | grep -A 10 "backend:"
+```
+
+**Solution**: Ensure root `.env` file has correct `POSTGRES_*` variables.
+
+### Local Development
+
 ### Problem: Variables not loading
 
 **Solution 1**: Check file name
@@ -179,3 +228,16 @@ git commit -m "Remove .env.local from git"
 
 - [dotenv documentation](https://github.com/motdotla/dotenv)
 - [Environment Variables Best Practices](https://12factor.net/config)
+- [Docker Compose Environment Variables](https://docs.docker.com/compose/environment-variables/)
+
+## Related Documentation
+
+- **[README.md](./README.md)** - Backend API documentation
+- **[../DATABASE_ENV_CONFIG.md](../DATABASE_ENV_CONFIG.md)** - Database configuration guide
+- **[../deployment/README.md](../deployment/README.md)** - Docker deployment guide
+- **[../db/README.md](../db/README.md)** - Database and Prisma guide
+
+---
+
+**Last Updated:** December 20, 2024  
+**Deployment:** Docker Compose with environment file configuration
