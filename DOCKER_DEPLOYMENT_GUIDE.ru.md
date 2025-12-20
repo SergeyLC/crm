@@ -1,99 +1,99 @@
 # LoyaCareCRM - Docker Deployment Guide
 
-Полная инструкция по развертыванию проекта на чистом сервере Ubuntu с использованием Docker.
+Complete guide for deploying the project on a clean Ubuntu server using Docker.
 
-## Содержание
+## Table of Contents
 
-- [Production развертывание](#концепция-развертывания) - основное окружение для работы
-- [Staging развертывание](#развертывание-staging-окружения) - тестовое окружение на порту 8080
-- [Управление и мониторинг](#управление-контейнерами)
-- [Устранение неполадок](#устранение-неполадок)
+- [Production Deployment](#deployment-concept) - main production environment
+- [Staging Deployment](#staging-environment-deployment) - test environment on port 8080
+- [Container Management](#container-management)
+- [Troubleshooting](#troubleshooting)
 
-## Концепция развертывания
+## Deployment Concept
 
-**Рекомендуемый подход:** Docker образы собираются на машине разработчика или через CI/CD (GitHub Actions), затем загружаются в Container Registry и разворачиваются на сервере.
+**Recommended approach:** Docker images are built on developer's machine or via CI/CD (GitHub Actions), then uploaded to Container Registry and deployed on the server.
 
-**На сервере НЕ требуются исходники проекта** - только конфигурационные файлы (docker-compose.yml, nginx.conf, .env).
+**Server does NOT require project source code** - only configuration files (docker-compose.yml, nginx.conf, .env).
 
-Этот гайд описывает:
-- **Production развертывание** - основное рабочее окружение (порт 80)
-- **Staging развертывание** - тестовое окружение для проверки изменений (порт 8080)
+This guide covers:
+- **Production deployment** - main production environment (port 80)
+- **Staging deployment** - testing environment for verifying changes (port 8080)
 
-### Способы развертывания Production:
-1. **GitHub Actions (рекомендуется)** - автоматическая сборка и публикация в GitHub Container Registry
-2. **Ручная сборка локально** - сборка на машине разработчика и загрузка образов на сервер
-3. **Сборка на сервере** - для тестирования (не рекомендуется для production)
+### Production Deployment Methods:
+1. **GitHub Actions (recommended)** - automatic build and publish to GitHub Container Registry
+2. **Manual local build** - build on developer's machine and upload images to server
+3. **Server build** - for testing only (not recommended for production)
 
-## Требования к серверу
+## Server Requirements
 
-- **OS**: Ubuntu 20.04 LTS или новее
-- **RAM**: Минимум 2GB (рекомендуется 4GB)
-- **CPU**: 2+ ядра
-- **Disk**: Минимум 10GB свободного места (без исходников)
-- **Доступ**: SSH с правами root или sudo
+- **OS**: Ubuntu 20.04 LTS or newer
+- **RAM**: Minimum 2GB (recommended 4GB)
+- **CPU**: 2+ cores
+- **Disk**: Minimum 10GB free space (without source code)
+- **Access**: SSH with root or sudo privileges
 
-## Шаг 1: Подключение к серверу
+## Step 1: Connect to Server
 
 ```bash
-# Замените YOUR_SERVER_IP на IP вашего сервера
+# Replace YOUR_SERVER_IP with your server's IP
 ssh root@YOUR_SERVER_IP
 
-# Если используете ключ SSH
+# If using SSH key
 ssh -i ~/.ssh/your_key root@YOUR_SERVER_IP
 ```
 
-## Шаг 2: Обновление системы
+## Step 2: Update System
 
 ```bash
-# Обновить список пакетов
+# Update package list
 apt update
 
-# Обновить установленные пакеты
+# Upgrade installed packages
 apt upgrade -y
 
-# Установить необходимые утилиты
+# Install necessary utilities
 apt install -y curl wget git nano
 ```
 
-## Шаг 3: Установка Docker
+## Step 3: Install Docker
 
 ```bash
-# Установить Docker
+# Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
 
-# Проверить установку
+# Verify installation
 docker --version
-# Должно вывести: Docker version 29.x.x или новее
+# Should output: Docker version 29.x.x or newer
 
-# Включить автозапуск Docker
+# Enable Docker autostart
 systemctl enable docker
 systemctl start docker
 ```
 
-## Шаг 4: Установка Docker Compose
+## Step 4: Install Docker Compose
 
 ```bash
-# Docker Compose обычно устанавливается с Docker
-# Проверить установку
+# Docker Compose usually comes with Docker
+# Verify installation
 docker compose version
-# Должно вывести: Docker Compose version v5.x.x или новее
+# Should output: Docker Compose version v5.x.x or newer
 ```
 
-## Шаг 5: Создание структуры директорий
+## Step 5: Create Directory Structure
 
 ```bash
-# Создать директории для проекта
+# Create project directories
 mkdir -p /var/www/loyacrm-production
 mkdir -p /var/www/loyacrm-production/backups
 
-# Установить права
+# Set permissions
 chmod -R 755 /var/www/loyacrm-production
 ```
 
-## Шаг 6: Подготовка конфигурационных файлов
+## Step 6: Prepare Configuration Files
 
-Есть три способа развертывания:
+There are three deployment methods:
 
 ---
 
