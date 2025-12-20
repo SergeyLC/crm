@@ -135,44 +135,56 @@ runs:
 
           echo "🐳 Docker Deployment to ${{ inputs.environment }}"
           echo "📦 Image tag: ${{ inputs.image_tag }}"
-          echo "🏗️ Deployment directory: /var/www/loyacrm-${{ inputs.environment }}"
+          
+          # Determine deployment directory and compose file
+          if [[ "${{ inputs.environment }}" == "production" ]]; then
+            DEPLOY_DIR="/var/www/loyacrm-production"
+            COMPOSE_FILE="docker-compose.yml"
+            ENV_FILE=".env"
+            CONTAINER_PREFIX="loyacrm"
+          else
+            DEPLOY_DIR="/var/www/loyacrm-staging"
+            COMPOSE_FILE="docker-compose.stage.yml"
+            ENV_FILE=".env.stage"
+            CONTAINER_PREFIX="loyacrm-staging"
+          fi
 
-          DEPLOY_DIR="/var/www/loyacrm-${{ inputs.environment }}"
+          echo "🏗️  Deployment directory: $DEPLOY_DIR"
+          echo "📄 Compose file: $COMPOSE_FILE"
+          echo "⚙️  Environment file: $ENV_FILE"
 
           # Navigate to deployment directory
           cd "$DEPLOY_DIR"
 
-          echo "🔐 Setting up Docker secrets..."
-          mkdir -p docker-example/secrets
-          mkdir -p docker-example/backups
+          # Ensure environment file exists
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "❌ Environment file $ENV_FILE not found!"
+            exit 1
+          fi
 
-          # Extract password from DATABASE_URL
-          DB_PASSWORD=$(echo "${{ secrets.DATABASE_URL }}" | sed 's|postgresql://[^:]*:\([^@]*\)@.*|\1|')
-          echo "$DB_PASSWORD" > docker-example/secrets/db_password.txt
-          echo "${{ secrets.JWT_SECRET }}" > docker-example/secrets/jwt_secret.txt
-          chmod 600 docker-example/secrets/*.txt
-
-          echo "🐳 Updating environment configuration..."
-          ENV_FILE="docker-example/.env.${{ inputs.environment }}"
-          sed -i "s/TAG=.*/TAG=${{ inputs.image_tag }}/" "$ENV_FILE"
+          echo "🐳 Updating Docker image tags in environment..."
+          sed -i "s|FRONTEND_IMAGE=.*|FRONTEND_IMAGE=ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}|" "$ENV_FILE"
+          sed -i "s|BACKEND_IMAGE=.*|BACKEND_IMAGE=ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}|" "$ENV_FILE"
 
           echo "🐳 Pulling Docker images..."
           docker pull ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}
           docker pull ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}
 
-          echo "🗄️ Running database migrations..."
-          cd docker-example
-          docker compose --profile migrator run --rm migrator
+          echo "🗄️  Running database migrations..."
+          docker exec ${CONTAINER_PREFIX}-backend sh -c 'cd /app/db && pnpm run migrate:deploy' || echo "⚠️  Migration failed or already up to date"
 
-          echo "🐳 Starting services..."
-          if [[ "${{ inputs.environment }}" == "production" ]]; then
-            docker compose --env-file .env.production up -d
-          else
-            docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml up -d
-          fi
+          echo "🐳 Restarting services with new images..."
+          docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate --no-deps backend frontend
 
-          echo "🧹 Cleaning up..."
+          echo "⏳ Waiting for services to be healthy..."
+          sleep 10
+          
+          echo "✅ Checking service status..."
+          docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps
+
+          echo "🧹 Cleaning up old images..."
           docker image prune -f
 
           echo "✅ Docker deployment to ${{ inputs.environment }} completed!"
-          docker compose ps
+          echo "📊 Container status:"
+          docker ps --filter "name=${CONTAINER_PREFIX}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

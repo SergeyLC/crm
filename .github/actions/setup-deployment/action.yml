@@ -32,51 +32,68 @@ runs:
     - name: Configure deployment
       id: config
       run: |
-        # Determine environment from branch or override
-        if [ -n "${{ inputs.environment }}" ] && [ "${{ inputs.environment }}" != "auto" ]; then
-          ENVIRONMENT="${{ inputs.environment }}"
+        # Determine if this is a release tag push
+        IS_RELEASE=false
+        if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          IS_RELEASE=true
+          ENVIRONMENT="production"
+          echo "🏷️  Release tag detected: ${GITHUB_REF#refs/tags/}"
         else
-          case "${GITHUB_REF#refs/heads/}" in
-            main)
-              ENVIRONMENT="production"
-              ;;
-            develop)
-              ENVIRONMENT="staging"
-              ;;
-            *)
-              echo "Unsupported branch: ${GITHUB_REF#refs/heads/}"
-              echo "should_deploy=false" >> $GITHUB_OUTPUT
-              exit 0
-              ;;
-          esac
+          # Determine environment from branch or override
+          if [ -n "${{ inputs.environment }}" ] && [ "${{ inputs.environment }}" != "auto" ]; then
+            ENVIRONMENT="${{ inputs.environment }}"
+          else
+            case "${GITHUB_REF#refs/heads/}" in
+              main)
+                ENVIRONMENT="staging"
+                echo "📌 Push to main branch → staging deployment"
+                ;;
+              develop)
+                ENVIRONMENT="staging"
+                echo "📌 Push to develop branch → staging deployment"
+                ;;
+              *)
+                echo "⚠️  Unsupported branch: ${GITHUB_REF#refs/heads/}"
+                echo "should_deploy=false" >> $GITHUB_OUTPUT
+                exit 0
+                ;;
+            esac
+          fi
         fi
 
         # Determine deployment type (workflow_dispatch override or env var or default)
         if [ -n "${{ inputs.deployment_type_override }}" ]; then
           DEPLOYMENT_TYPE="${{ inputs.deployment_type_override }}"
-          echo "Using override: $DEPLOYMENT_TYPE"
+          echo "🔧 Using override: $DEPLOYMENT_TYPE"
         elif [ -n "${{ vars.DEPLOYMENT_TYPE }}" ]; then
           DEPLOYMENT_TYPE="${{ vars.DEPLOYMENT_TYPE }}"
-          echo "Using environment variable: $DEPLOYMENT_TYPE"
+          echo "🔧 Using environment variable: $DEPLOYMENT_TYPE"
         else
           DEPLOYMENT_TYPE="docker"  # default
-          echo "Using default: $DEPLOYMENT_TYPE"
+          echo "🔧 Using default: $DEPLOYMENT_TYPE"
         fi
 
         # Validate deployment type
         if [[ "$DEPLOYMENT_TYPE" != "docker" && "$DEPLOYMENT_TYPE" != "traditional" ]]; then
-          echo "Invalid deployment type: $DEPLOYMENT_TYPE"
+          echo "❌ Invalid deployment type: $DEPLOYMENT_TYPE"
           echo "should_deploy=false" >> $GITHUB_OUTPUT
           exit 1
         fi
 
         # Generate image tag for docker deployments
         if [[ "$DEPLOYMENT_TYPE" == "docker" ]]; then
-          if [[ "$ENVIRONMENT" == "production" ]]; then
+          if [[ "$IS_RELEASE" == "true" ]]; then
+            # Production release
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            IMAGE_TAG="v${VERSION}"
+          elif [[ "$ENVIRONMENT" == "production" ]]; then
+            # Production (manual)
             IMAGE_TAG="latest"
           else
+            # Staging
             COMMIT_SHORT=$(git rev-parse --short HEAD)
-            IMAGE_TAG="staging-${COMMIT_SHORT}"
+            TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+            IMAGE_TAG="staging-${COMMIT_SHORT}-${TIMESTAMP}"
           fi
         fi
 
@@ -84,11 +101,14 @@ runs:
         echo "deployment_type=$DEPLOYMENT_TYPE" >> $GITHUB_OUTPUT
         echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
         echo "should_deploy=true" >> $GITHUB_OUTPUT
+        echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
 
+        echo ""
         echo "🎯 Deployment Configuration:"
         echo "  Environment: $ENVIRONMENT"
         echo "  Type: $DEPLOYMENT_TYPE"
         echo "  Image Tag: $IMAGE_TAG"
+        echo "  Is Release: $IS_RELEASE"
       shell: bash
 
 outputs:
@@ -107,3 +127,6 @@ outputs:
   version:
     description: 'Application version'
     value: ${{ inputs.release_version || steps.get_version.outputs.version }}
+  is_release:
+    description: 'Whether this is a release deployment'
+    value: ${{ steps.config.outputs.is_release }}
