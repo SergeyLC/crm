@@ -22,20 +22,135 @@ This project uses GitHub Actions for automated deployment to production and stag
 
 ## Required GitHub Secrets
 
-Configure these secrets in your repository: **Settings → Secrets and variables → Actions → Repository secrets**
+Configure secrets in your repository following this structure for better security and organization.
 
-### Server Access
+### Step 1: Create Environments
+
+**GitHub → Repository → Settings → Environments**
+
+Create two environments:
+
+#### **Production Environment**
+- **Name**: `production`
+- **Protection rules** (optional):
+  - ✅ Required reviewers (добавьте себя для подтверждения prod деплоя)
+  - ✅ Wait timer: 0 minutes
+- **Environment secrets**:
+  | Secret | Description | Example |
+  |--------|-------------|---------|
+  | `POSTGRES_PASSWORD` | Production database password | Generated with `openssl rand -base64 32` |
+  | `JWT_SECRET` | Production JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
+
+#### **Staging Environment**
+- **Name**: `staging`
+- **Environment secrets**:
+  | Secret | Description | Example |
+  |--------|-------------|---------|
+  | `POSTGRES_PASSWORD` | Staging database password | Generated with `openssl rand -base64 32` |
+  | `JWT_SECRET` | Staging JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
+
+### Step 2: Repository Secrets (Shared)
+
+**Settings → Secrets and variables → Actions → Repository secrets**
+
+These secrets are shared across all environments:
+
 | Secret | Description | Example |
 |--------|-------------|---------|
-| `SERVER_HOST` | Server IP address | `217.160.74.128` |
+| `SERVER_HOST` | Server IP address | `217.154.173.36` |
 | `SERVER_USER` | SSH username | `root` |
 | `SERVER_SSH_KEY` | Private SSH key for server access | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
 
-### Application Secrets
-| Secret | Description | Example |
-|--------|-------------|---------|
-| `JWT_SECRET` | JWT token secret (min 32 chars) | `your-super-secret-jwt-key-min-32-characters` |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` |
+### Benefits of This Structure
+
+✅ **Environment-specific secrets** - Different passwords for prod/staging  
+✅ **Same secret names** - No PROD/STAGING suffixes needed  
+✅ **Protection rules** - Can require approval for production deployments  
+✅ **Clean workflow code** - Secrets automatically scoped to environment  
+✅ **Better security** - Staging secrets can't leak to production
+
+### Architecture Diagram
+
+```
+GitHub Repository
+├── Repository Secrets (shared)
+│   ├── SERVER_HOST = 217.154.173.36
+│   ├── SERVER_USER = root
+│   └── SERVER_SSH_KEY = (SSH private key)
+│
+├── Environment: production
+│   ├── POSTGRES_PASSWORD = (prod password)
+│   └── JWT_SECRET = (prod secret)
+│
+└── Environment: staging
+    ├── POSTGRES_PASSWORD = (staging password)
+    └── JWT_SECRET = (staging secret)
+```
+
+### Quick Setup Commands
+
+Generate secure secrets:
+
+```bash
+# Generate PostgreSQL password (32 chars)
+openssl rand -base64 32
+
+# Generate JWT secret (64 chars)
+openssl rand -base64 64
+
+# Show your SSH private key (copy all output)
+cat ~/.ssh/id_rsa
+# or for newer keys:
+cat ~/.ssh/id_ed25519
+```
+
+### Step-by-Step Setup
+
+#### 1. Create Production Environment
+
+1. Go to: **Settings → Environments → New environment**
+2. Name: `production`
+3. Click **Add secret**:
+   - Name: `POSTGRES_PASSWORD`
+   - Value: Run `openssl rand -base64 32` and paste result
+4. Click **Add secret** again:
+   - Name: `JWT_SECRET`
+   - Value: Run `openssl rand -base64 64` and paste result
+5. (Optional) Add **Required reviewers** for deployment approval
+
+#### 2. Create Staging Environment
+
+1. **New environment**
+2. Name: `staging`
+3. **Add secret**: `POSTGRES_PASSWORD` (different from production!)
+4. **Add secret**: `JWT_SECRET` (different from production!)
+
+#### 3. Add Repository Secrets
+
+1. **Settings → Secrets and variables → Actions → Repository secrets**
+2. **New repository secret**:
+   - Name: `SERVER_HOST`
+   - Value: `217.154.173.36`
+3. **New repository secret**:
+   - Name: `SERVER_USER`
+   - Value: `root`
+4. **New repository secret**:
+   - Name: `SERVER_SSH_KEY`
+   - Value: Copy your entire private key including `-----BEGIN` and `-----END` lines
+
+### Verification Checklist
+
+After setup, verify you have:
+
+- [ ] Environment `production` created
+- [ ] Environment `staging` created  
+- [ ] `production` has `POSTGRES_PASSWORD` secret
+- [ ] `production` has `JWT_SECRET` secret
+- [ ] `staging` has `POSTGRES_PASSWORD` secret
+- [ ] `staging` has `JWT_SECRET` secret
+- [ ] Repository has `SERVER_HOST` secret
+- [ ] Repository has `SERVER_USER` secret
+- [ ] Repository has `SERVER_SSH_KEY` secret
 
 ## Server Setup
 
