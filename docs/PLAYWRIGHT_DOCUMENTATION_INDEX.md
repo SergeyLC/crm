@@ -2,34 +2,14 @@
 
 ## 📚 Documentation
 
-This project provides comprehensive Playwright test documentation in English and German.
-
-### 🚀 Quick Start Guides
-
-| Language | File | Description |
-|----------|------|-------------|
-| 🇬🇧 English | [PLAYWRIGHT_MIGRATION_COMPLETE.md](./PLAYWRIGHT_MIGRATION_COMPLETE.md) | Quick start guide |
-| 🇩🇪 Deutsch | [PLAYWRIGHT_MIGRATION_COMPLETE.de.md](./PLAYWRIGHT_MIGRATION_COMPLETE.de.md) | Schnellstart-Anleitung |
-
-### 📖 Detailed Test Summaries
-
-| Language | File | Description |
-|----------|------|-------------|
-| 🇬🇧 English | [frontend/e2e/PLAYWRIGHT_TESTS_SUMMARY.md](./frontend/e2e/PLAYWRIGHT_TESTS_SUMMARY.md) | Detailed test coverage description |
-| 🇩🇪 Deutsch | [frontend/e2e/PLAYWRIGHT_TESTS_SUMMARY.de.md](./frontend/e2e/PLAYWRIGHT_TESTS_SUMMARY.de.md) | Detaillierte Testabdeckungsbeschreibung |
+Comprehensive Playwright test documentation for the LoyaCare CRM project.
 
 ### 🔧 Technical Documentation
 
-- **Main README**: [frontend/e2e/README.md](./frontend/e2e/README.md) - Technical setup and usage (English)
-- **Configuration**: [frontend/playwright.config.ts](./frontend/playwright.config.ts) - Playwright configuration file
+- **Test Suite README**: [frontend/e2e/README.md](../frontend/e2e/README.md) - Detailed setup and usage
+- **Configuration**: [frontend/playwright.config.ts](../frontend/playwright.config.ts) - Playwright configuration
 
-## 📊 Test Statistics
-
-- **Total Tests**: 41
-- **Test Files**: 4
-- **Coverage**: Deal Management, Lead Management, Form Validation, Accessibility
-
-## 🚀 Quick Commands
+## 📊 Test Coverage
 
 ```bash
 # Install Playwright browsers (first time only)
@@ -48,6 +28,34 @@ pnpm run playwright:lead        # Lead dialog tests
 pnpm run playwright:management  # Management tests
 ```
 
+## 📊 Test Coverage
+
+- **Total Tests**: 41
+- **Test Files**: 4
+- **Areas Covered**: 
+  - Deal Management (CRUD operations, form validation)
+  - Lead Management (CRUD operations, form validation)
+  - Accessibility (ARIA labels, keyboard navigation)
+  - Form Validation (required fields, data formats)
+
+## 🐳 Docker Environment Testing
+
+For testing in Docker containers:
+
+```bash
+# Production container
+docker exec loyacrm-frontend sh -c "cd /app/frontend && pnpm run playwright"
+
+# Staging container
+docker exec loyacrm-staging-frontend sh -c "cd /app/frontend && pnpm run playwright"
+```
+
+## Related Documentation
+
+- **[TESTING_STRATEGY.md](TESTING_STRATEGY.md)** - Overall testing approach
+- **[deployment/06-troubleshooting.md](deployment/06-troubleshooting.md)** - Troubleshooting guide
+
 ---
 
-**Status**: ✅ Ready to use | Einsatzbereit
+**Last Updated:** December 20, 2024  
+**Status:** ✅ Active and maintained
