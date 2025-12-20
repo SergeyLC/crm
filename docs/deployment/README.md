@@ -18,6 +18,12 @@ Complete guide for deploying LoyaCareCRM on Ubuntu server using Docker.
 - **[Container Management](05-management.md)** - Day-to-day operations, updates, and backups
 - **[Troubleshooting](06-troubleshooting.md)** - Common issues and solutions
 
+### Supplementary Guides
+- **[GitHub Secrets Setup](GITHUB_SECRETS_GUIDE.md)** - Configure GitHub Actions secrets for CI/CD
+- **[Nginx Optimization](NGINX_OPTIMIZATION.md)** - Performance tuning, caching, and HTTP/2 setup
+- **[Server Performance](SERVER_PERFORMANCE.md)** - pnpm migration, npm optimization, and speed improvements
+- **[Deployment Optimization](DEPLOYMENT_OPTIMIZATION.md)** - CI/CD workflow optimizations and time savings
+
 ## 🚀 Quick Start
 
 ### For Production (Recommended Path)
@@ -85,6 +91,11 @@ Complete guide for deploying LoyaCareCRM on Ubuntu server using Docker.
 1. Check [Troubleshooting Guide](06-troubleshooting.md)
 2. Review container logs: `docker compose logs`
 3. Verify service status: `docker compose ps`
+4. Search [archived documentation](archive/) for legacy deployment methods
+
+## 📂 Archive
+
+Old deployment documentation has been moved to the [archive/](archive/) directory. These guides are kept for reference but may contain outdated information. **Always use the main guides above for current deployments.**
 
 ## 📝 License
 
