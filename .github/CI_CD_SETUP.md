@@ -164,139 +164,61 @@ After setup, verify you have:
 
 ## Server Setup
 
+После настройки GitHub Secrets нужно подготовить сервер.
+
+**Important**: Environment files (.env, .env.stage) are now **automatically created** by GitHub Actions using Environment Secrets. You only need to:
+1. Create deployment directories
+2. Install Docker and Docker Compose
+3. Login to GitHub Container Registry
+
 ### 1. Production Server Setup
 
 ```bash
 # Create deployment directory
 mkdir -p /var/www/loyacrm-production
-cd /var/www/loyacrm-production
 
-# Create environment file
-# Copy from repository or create from template
-cat > .env << 'EOF'
-# Production Environment Configuration
+# Ensure Docker and Docker Compose are installed
+docker --version
+docker compose version
 
-# Docker Images (will be updated automatically by GitHub Actions)
-FRONTEND_IMAGE=ghcr.io/sergeylc/crm/frontend:latest
-BACKEND_IMAGE=ghcr.io/sergeylc/crm/backend:latest
-
-# Network Configuration
-NGINX_PORT=80
-
-# Frontend Configuration
-FRONTEND_PORT=3000
-NEXT_PUBLIC_API_URL=/api
-NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api
-NEXT_PUBLIC_APP_VERSION=production
-
-# Backend Configuration
-BACKEND_PORT=4000
-NODE_ENV=production
-LOG_LEVEL=info
-CORS_ORIGIN=http://YOUR_SERVER_IP
-
-# Database Configuration
-POSTGRES_USER=loyacrm
-POSTGRES_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
-POSTGRES_DB=loyacrm
-
-# Security
-JWT_SECRET=CHANGE_THIS_TO_SECURE_RANDOM_STRING_MIN_32_CHARS
-EOF
-
-# Edit environment file with your values
-nano .env
+# Login to GitHub Container Registry (one-time setup)
+# Replace USERNAME with your GitHub username
+# Generate PAT at: https://github.com/settings/tokens (read:packages scope)
+echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
 ```
-
-**Required changes in `.env`:**
-- `POSTGRES_PASSWORD` - Set secure database password
-- `JWT_SECRET` - Set secure JWT secret (min 32 characters)
-- `NEXT_PUBLIC_BACKEND_API_URL` - Replace `YOUR_SERVER_IP` with your actual server IP
-- `CORS_ORIGIN` - Replace `YOUR_SERVER_IP` with your actual server IP
-
-**Note:** Docker Compose files (`docker-compose.yml`, `nginx.conf`) will be automatically copied during deployment.
 
 ### 2. Staging Server Setup
 
 ```bash
 # Create deployment directory
 mkdir -p /var/www/loyacrm-staging
-cd /var/www/loyacrm-staging
 
-# Create environment file
-cat > .env.stage << 'EOF'
-# Staging Environment Configuration
-
-# Docker Images (will be updated automatically by GitHub Actions)
-FRONTEND_IMAGE=ghcr.io/sergeylc/crm/frontend:staging
-BACKEND_IMAGE=ghcr.io/sergeylc/crm/backend:staging
-
-# Network Configuration
-NGINX_PORT=8080
-
-# Frontend Configuration
-FRONTEND_PORT=3000
-NEXT_PUBLIC_API_URL=/api
-NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api
-NEXT_PUBLIC_APP_VERSION=staging
-
-# Backend Configuration
-BACKEND_PORT=4000
-NODE_ENV=production
-LOG_LEVEL=debug
-CORS_ORIGIN=http://YOUR_SERVER_IP:8080
-
-# Database Configuration
-POSTGRES_USER=loyacrm
-POSTGRES_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
-POSTGRES_DB=loyacrm_staging
-
-# Security
-JWT_SECRET=CHANGE_THIS_TO_SECURE_RANDOM_STRING_MIN_32_CHARS
-EOF
-
-# Edit environment file with your values
-nano .env.stage
+# Login to GitHub Container Registry if not done already
+echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
 ```
 
-**Required changes in `.env.stage`:**
-- `POSTGRES_PASSWORD` - Set secure database password
-- `JWT_SECRET` - Set secure JWT secret (min 32 characters)
-- `NEXT_PUBLIC_BACKEND_API_URL` - Replace `YOUR_SERVER_IP` with your actual server IP
-- `CORS_ORIGIN` - Replace `YOUR_SERVER_IP` with your actual server IP
+**Note**: All configuration files (docker-compose, nginx.conf, .env) will be automatically managed by GitHub Actions. No manual file creation needed!
 
-**Note:** Docker Compose files (`docker-compose.stage.yml`, `nginx.stage.conf`) will be automatically copied during deployment.
+### 3. Initial Deployment
 
-### 3. Docker Registry Authentication
-
-Authenticate Docker to pull images from GitHub Container Registry:
+After server setup, trigger the first deployment:
 
 ```bash
-# Create GitHub Personal Access Token
-# Go to: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-# Generate new token with 'read:packages' scope
+# For staging: Push to main branch
+git push origin main
 
-# Login to GitHub Container Registry
-echo "YOUR_GITHUB_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+# For production: Create and push a release tag
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
-### 4. Initial Database Setup
-
-After creating the environment file, initialize the PostgreSQL database:
-
-```bash
-# Production
-cd /var/www/loyacrm-production
-
-# First deployment will be done by GitHub Actions
-# But you can manually start postgres to initialize the database
-docker compose up -d postgres
-
-# Wait for postgres to be healthy
-sleep 10
-
-# Check postgres status
-docker compose ps postgres
+GitHub Actions will:
+1. Build Docker images
+2. Copy deployment files to server
+3. Create/update environment files with secrets
+4. Pull images
+5. Run database migrations
+6. Start containers
 
 # Staging
 cd /var/www/loyacrm-staging
