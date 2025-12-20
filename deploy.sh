@@ -8,6 +8,48 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# Function to display usage information
+show_help() {
+  echo -e "${CYAN}╔════════════════════════════════════════════════════════════════════════════╗${NC}"
+  echo -e "${CYAN}║                     LoyaCare CRM Deployment Script                         ║${NC}"
+  echo -e "${CYAN}╚════════════════════════════════════════════════════════════════════════════╝${NC}"
+  echo -e ""
+  echo -e "${GREEN}USAGE:${NC}"
+  echo -e "  $0 [OPTIONS]"
+  echo -e ""
+  echo -e "${GREEN}OPTIONS:${NC}"
+  echo -e "  ${YELLOW}-m MESSAGE${NC}    Add custom commit message"
+  echo -e "  ${YELLOW}-v VERSION${NC}    Create release tag with specified version (e.g., 1.4.2)"
+  echo -e "  ${YELLOW}-t${NC}            Create release tag with auto-incremented patch version"
+  echo -e "  ${YELLOW}-s${NC}            Skip deployment (push to main without triggering CI/CD)"
+  echo -e "  ${YELLOW}-h, --help${NC}    Show this help message"
+  echo -e ""
+  echo -e "${GREEN}EXAMPLES:${NC}"
+  echo -e "  ${CYAN}# Regular commit and deploy to staging${NC}"
+  echo -e "  $0 -m \"fix: update user validation\""
+  echo -e ""
+  echo -e "  ${CYAN}# Create release with specific version${NC}"
+  echo -e "  $0 -m \"feat: add new dashboard\" -v 1.4.2"
+  echo -e ""
+  echo -e "  ${CYAN}# Create release with auto-incremented version${NC}"
+  echo -e "  $0 -m \"fix: resolve database connection issue\" -t"
+  echo -e ""
+  echo -e "  ${CYAN}# Push documentation changes without deployment${NC}"
+  echo -e "  $0 -m \"docs: update API documentation\" -s"
+  echo -e ""
+  echo -e "${GREEN}WORKFLOW:${NC}"
+  echo -e "  ${YELLOW}Without -v or -t:${NC}  Push to main → Deploy to staging"
+  echo -e "  ${YELLOW}With -v or -t:${NC}    Create release tag → Deploy to production"
+  echo -e "  ${YELLOW}With -s:${NC}          Push to main without triggering deployment"
+  echo -e ""
+  echo -e "${GREEN}NOTES:${NC}"
+  echo -e "  • Version format: X.Y.Z (e.g., 1.4.2)"
+  echo -e "  • Release tags trigger production deployment via GitHub Actions"
+  echo -e "  • Use -s flag for documentation-only changes"
+  echo -e "  • Auto-increment uses current version from package.json or latest git tag"
+  echo -e ""
+}
+
 # Parse command line arguments
 ADDITIONAL_MESSAGE=""
 COMMIT_MESSAGE_PREFIX=""
@@ -16,7 +58,15 @@ AUTO_INCREMENT=false  # Auto-increment patch version
 SKIP_DEPLOY=false  # Skip deployment (for docs-only changes)
 UNSTAGED_CHANGES_COMMITTED=false
 
-while getopts "m:v:ts" opt; do
+# Check for help flags first
+for arg in "$@"; do
+  if [ "$arg" = "-h" ] || [ "$arg" = "--help" ]; then
+    show_help
+    exit 0
+  fi
+done
+
+while getopts "m:v:tsh" opt; do
   case $opt in
     m)
       ADDITIONAL_MESSAGE="$OPTARG"
@@ -32,13 +82,13 @@ while getopts "m:v:ts" opt; do
       # -s flag skips deployment
       SKIP_DEPLOY=true
       ;;
+    h)
+      show_help
+      exit 0
+      ;;
     \?)
-      echo "Invalid option: -$OPTARG" >&2
-      echo "Usage: $0 [-m \"commit message\"] [-v VERSION | -t] [-s]"
-      echo "  -m: Add custom message to commit"
-      echo "  -v: Create release tag with specified version (e.g., 1.4.2)"
-      echo "  -t: Create release tag with auto-incremented patch version"
-      echo "  -s: Skip deployment (push to main without triggering deployment)"
+      echo -e "${RED}Invalid option: -$OPTARG${NC}" >&2
+      echo -e "${YELLOW}Use -h or --help for usage information${NC}"
       exit 1
       ;;
   esac
