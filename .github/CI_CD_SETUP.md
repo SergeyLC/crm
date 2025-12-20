@@ -144,23 +144,50 @@ cat ~/.ssh/id_ed25519
    - Name: `SERVER_SSH_KEY`
    - Value: Copy your entire private key including `-----BEGIN` and `-----END` lines
 
+#### 4. Configure Repository Variables (Optional)
+
+Control deployment type centrally without code changes:
+
+1. **Settings → Secrets and variables → Actions → Variables**
+2. **New repository variable**:
+   - Name: `DEPLOYMENT_TYPE`
+   - Value: `docker` (or `traditional`)
+   - Description: Default deployment type for all pushes
+
+**Priority:**
+- 🥇 Manual override (workflow_dispatch input) - highest
+- 🥈 Repository variable `DEPLOYMENT_TYPE` 
+- 🥉 Default: `docker` - lowest
+
+**Note:** Can be overridden during manual deployment via workflow_dispatch.
+
 ### Verification Checklist
 
 After setup, verify you have:
 
+**Environments:**
 - [ ] Environment `production` created
-- [ ] Environment `staging` created  
+- [ ] Environment `staging` created
+
+**Environment Secrets (production):**  
 - [ ] `production` has `POSTGRES_DB` secret
 - [ ] `production` has `POSTGRES_USER` secret
 - [ ] `production` has `POSTGRES_PASSWORD` secret
 - [ ] `production` has `JWT_SECRET` secret
+
+**Environment Secrets (staging):**
 - [ ] `staging` has `POSTGRES_DB` secret
 - [ ] `staging` has `POSTGRES_USER` secret
 - [ ] `staging` has `POSTGRES_PASSWORD` secret
 - [ ] `staging` has `JWT_SECRET` secret
+
+**Repository Secrets:**
 - [ ] Repository has `SERVER_HOST` secret
 - [ ] Repository has `SERVER_USER` secret
 - [ ] Repository has `SERVER_SSH_KEY` secret
+
+**Repository Variables (optional):**
+- [ ] Repository has `DEPLOYMENT_TYPE` variable (optional, defaults to `docker`)
 
 ## Server Setup
 
