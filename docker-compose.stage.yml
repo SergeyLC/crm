@@ -1,9 +1,85 @@
-version: "3.9"
 services:
-  frontend:
-    image: ${FRONTEND_IMAGE:-ghcr.io/betreut-zu-hause/loyacrm/frontend:staging}
-  backend:
-    image: ${BACKEND_IMAGE:-ghcr.io/betreut-zu-hause/loyacrm/backend:staging}
+  # ==================== Nginx ====================
   nginx:
+    image: nginx:alpine
+    container_name: loyacrm-staging-nginx
+    restart: unless-stopped
     ports:
-      - "8080:80"
+      - "${NGINX_PORT:-8080}:80"
+    volumes:
+      - ./nginx.stage.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks: [loyacrm-staging-network]
+
+  # ==================== Frontend ====================
+  frontend:
+    image: ${FRONTEND_IMAGE:-loyacrm-frontend:staging}
+    container_name: loyacrm-staging-frontend
+    restart: unless-stopped
+    environment:
+      - PORT=${FRONTEND_PORT:-3000}
+      - NODE_ENV=${NODE_ENV:-production}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_BACKEND_API_URL=${NEXT_PUBLIC_BACKEND_API_URL}
+      - NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION:-staging}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${FRONTEND_PORT:-3000} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks: [loyacrm-staging-network]
+
+  # ==================== Backend ====================
+  backend:
+    image: ${BACKEND_IMAGE:-loyacrm-backend:staging}
+    container_name: loyacrm-staging-backend
+    restart: unless-stopped
+    environment:
+      - PORT=${BACKEND_PORT:-4000}
+      - NODE_ENV=${NODE_ENV:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-loyacrm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-loyacrm_staging}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:${BACKEND_PORT:-4000}/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks: [loyacrm-staging-network]
+
+  # ==================== PostgreSQL ====================
+  postgres:
+    image: postgres:16-alpine
+    container_name: loyacrm-staging-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER:-loyacrm}
+      - POSTGRES_DB=${POSTGRES_DB:-loyacrm_staging}
+    volumes:
+      - pg_data_staging:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-loyacrm}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks: [loyacrm-staging-network]
+
+# ==================== Volumes & Networks ====================
+volumes:
+  pg_data_staging:
+    name: loyacrm_pg_data_staging
+
+networks:
+  loyacrm-staging-network:
+    driver: bridge
