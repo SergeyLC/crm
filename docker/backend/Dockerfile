@@ -7,8 +7,9 @@ WORKDIR /app
 COPY ../pnpm-workspace.yaml ./
 COPY ../pnpm-lock.yaml ./
 
-# Скопируйте package.json backend
+# Скопируйте package.json backend и db
 COPY ../backend/package.json ./backend/package.json
+COPY ../db/package.json ./db/package.json
 
 # Скопируйте db файлы для генерации Prisma клиента
 COPY ../db/prisma/ ./db/prisma/
