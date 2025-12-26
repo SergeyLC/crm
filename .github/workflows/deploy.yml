@@ -71,6 +71,15 @@ jobs:
         with:
           deployment_type_override: ${{ github.event.inputs.deployment_type }}
           deployment_type_default: ${{ vars.DEPLOYMENT_TYPE || 'docker' }}
+      - name: Output deployment configuration
+        run: |
+          echo "🚀 Deployment Configuration:"
+          echo "Environment: ${{ steps.setup.outputs.environment }}"
+          echo "Deployment Type: ${{ steps.setup.outputs.deployment_type }}"
+          echo "Should Deploy: ${{ steps.setup.outputs.should_deploy }}"
+          echo "Image Tag: ${{ steps.setup.outputs.image_tag }}"
+          echo "Version: ${{ steps.setup.outputs.version }}"
+          echo "Is Release: ${{ steps.setup.outputs.is_release }}"
 
   # ==================== Docker Deployment ====================
   deploy-docker:
