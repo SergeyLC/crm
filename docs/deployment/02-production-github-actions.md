@@ -19,6 +19,56 @@ Automated deployment using GitHub Actions and GitHub Container Registry.
 - GitHub repository with workflow configured
 - GitHub Personal Access Token (for pulling images)
 
+## ⚠️ Important: Workflow Permissions
+
+**CRITICAL**: Your GitHub Actions workflow must have proper permissions to push Docker images to GitHub Container Registry.
+
+In your `.github/workflows/deploy.yml` (or similar), add this at the top level:
+
+```yaml
+name: Deploy Application
+
+on:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  packages: write  # ← REQUIRED for pushing to GHCR
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # ... your jobs
+```
+
+**Without `packages: write` permission, you will see this error:**
+```
+ERROR: denied: installation not allowed to Create organization package
+```
+
+**Also ensure composite actions receive secrets as inputs:**
+
+Composite actions (`.github/actions/*/action.yml`) **cannot** access `${{ secrets.* }}` directly. All secrets must be passed as inputs:
+
+```yaml
+# ❌ WRONG - in composite action:
+password: ${{ secrets.GITHUB_TOKEN }}
+
+# ✅ CORRECT - define input:
+inputs:
+  github_token:
+    required: true
+
+# Use input in composite action:
+password: ${{ inputs.github_token }}
+
+# Pass secret from workflow:
+with:
+  github_token: ${{ secrets.GITHUB_TOKEN }}
+```
+
 ## Architecture
 
 ```

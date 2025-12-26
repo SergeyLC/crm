@@ -962,6 +962,92 @@ EOF
 cat /tmp/loyacrm-diagnostics.txt
 ```
 
+## GitHub Actions / CI/CD Issues
+
+### Job Skipped: "Deploy with Docker"
+
+**Symptom:** GitHub Actions workflow shows "Deploy with Docker" as skipped
+
+**Common Causes:**
+
+1. **Missing Workflow Permissions**
+   
+   **Error:** `denied: installation not allowed to Create organization package`
+   
+   **Solution:** Add permissions to workflow file:
+   ```yaml
+   name: Deploy Application
+   
+   permissions:
+     contents: read
+     packages: write  # ← REQUIRED for GHCR
+   ```
+
+2. **Composite Action Using Secrets Directly**
+   
+   **Error:** `Unrecognized named-value: 'secrets'`
+   
+   **Solution:** Composite actions cannot access `${{ secrets.* }}`. Pass secrets as inputs:
+   
+   ```yaml
+   # In composite action (action.yml):
+   inputs:
+     github_token:
+       description: 'GitHub token'
+       required: true
+     server_host:
+       required: true
+     server_ssh_key:
+       required: true
+   
+   runs:
+     using: "composite"
+     steps:
+       - name: Login to GHCR
+         uses: docker/login-action@v3
+         with:
+           password: ${{ inputs.github_token }}  # Use input, not secret
+   
+   # In workflow:
+   - name: Deploy with Docker
+     uses: ./.github/actions/docker-deploy
+     with:
+       github_token: ${{ secrets.GITHUB_TOKEN }}
+       server_host: ${{ secrets.SERVER_HOST }}
+       server_ssh_key: ${{ secrets.SERVER_SSH_KEY }}
+   ```
+
+3. **Missing GitHub Environments**
+   
+   If using `environment:` in jobs, create environments:
+   - Go to Settings → Environments
+   - Create `staging` and `production` environments
+   - Add environment-specific secrets (POSTGRES_*, JWT_SECRET)
+
+4. **Output Not Propagating**
+   
+   Ensure job outputs use `$GITHUB_OUTPUT`:
+   ```bash
+   echo "environment=staging" >> $GITHUB_OUTPUT
+   echo "deployment_type=docker" >> $GITHUB_OUTPUT
+   ```
+
+**Debug Steps:**
+
+```yaml
+# Add debug job to check outputs:
+check-setup:
+  runs-on: ubuntu-latest
+  needs: setup
+  if: always()
+  steps:
+    - name: Debug outputs
+      run: |
+        echo "Environment: ${{ needs.setup.outputs.environment }}"
+        echo "Deployment Type: ${{ needs.setup.outputs.deployment_type }}"
+        echo "Should Deploy: ${{ needs.setup.outputs.should_deploy }}"
+```
+
 ### Contact Support
 
 When reporting issues, include:
