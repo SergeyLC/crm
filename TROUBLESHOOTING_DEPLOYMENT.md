@@ -13,8 +13,33 @@
 1. **В репозитории GitHub не установлена переменная `DEPLOYMENT_TYPE`** или она имеет неправильное значение
 2. **Не настроены Environment secrets** - секреты должны быть на уровне environment (staging/production), а не на уровне репозитория
 3. **Environment не существует** - убедитесь, что в Settings → Environments созданы окружения `staging` и `production`
+4. **Composite action пытается использовать `secrets.*`** - composite actions не имеют доступа к secrets, все секреты должны передаваться как inputs
+5. **Нет прав `packages: write`** - workflow не может пушить образы в GitHub Container Registry
 
 ## Решение
+
+### Шаг 0: Настроить permissions в workflow (КРИТИЧНО)
+
+В файле `.github/workflows/deploy.yml` должен быть раздел `permissions`:
+
+```yaml
+name: Deploy Application
+
+on:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  packages: write  # ← ОБЯЗАТЕЛЬНО для push в GHCR
+
+env:
+  REGISTRY: ghcr.io
+```
+
+**Почему это важно:**
+- Без `packages: write` GitHub Actions не сможет пушить Docker образы в GitHub Container Registry
+- Ошибка: `denied: installation not allowed to Create organization package`
 
 ### Шаг 1: Создать Environments (ОБЯЗАТЕЛЬНО)
 
@@ -167,6 +192,58 @@ Environment Level (production):
     ├── POSTGRES_USER
     ├── POSTGRES_PASSWORD
     └── JWT_SECRET
+```
+
+## Частые ошибки
+
+### ❌ Ошибка 1: `Unrecognized named-value: 'secrets'`
+
+**Проблема:** Composite action пытается использовать `${{ secrets.SECRET_NAME }}`
+
+**Причина:** Composite actions **не имеют доступа** к контексту `secrets`
+
+**Решение:** Все секреты должны передаваться как `inputs` в composite action:
+
+```yaml
+# ❌ НЕПРАВИЛЬНО в composite action:
+- name: Log in to GitHub Container Registry
+  uses: docker/login-action@v3
+  with:
+    password: ${{ secrets.GITHUB_TOKEN }}  # НЕ РАБОТАЕТ!
+
+# ✅ ПРАВИЛЬНО в composite action:
+inputs:
+  github_token:
+    description: 'GitHub token'
+    required: true
+
+steps:
+  - name: Log in to GitHub Container Registry
+    uses: docker/login-action@v3
+    with:
+      password: ${{ inputs.github_token }}  # РАБОТАЕТ!
+
+# В workflow передаём секрет как input:
+- name: Deploy with Docker
+  uses: ./.github/actions/docker-deploy
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### ❌ Ошибка 2: `denied: installation not allowed to Create organization package`
+
+**Проблема:** GitHub Actions не может пушить Docker образы в GHCR
+
+**Причина:** Нет прав `packages: write` в workflow
+
+**Решение:** Добавить `permissions` в начало workflow:
+
+```yaml
+name: Deploy Application
+
+permissions:
+  contents: read
+  packages: write  # ← Это обязательно!
 ```
 
 ## Дополнительная информация
