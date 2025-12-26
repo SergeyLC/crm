@@ -80,6 +80,12 @@ jobs:
           echo "Image Tag: ${{ steps.setup.outputs.image_tag }}"
           echo "Version: ${{ steps.setup.outputs.version }}"
           echo "Is Release: ${{ steps.setup.outputs.is_release }}"
+          echo ""
+          echo "🔍 Debug - Raw outputs for job context:"
+          echo "environment='${{ steps.setup.outputs.environment }}'"
+          echo "deployment_type='${{ steps.setup.outputs.deployment_type }}'"
+          echo "should_deploy='${{ steps.setup.outputs.should_deploy }}'"
+          echo "image_tag='${{ steps.setup.outputs.image_tag }}'"
 
   # ==================== Docker Deployment ====================
   deploy-docker:
@@ -89,6 +95,16 @@ jobs:
     if: needs.setup.outputs.should_deploy == 'true' && needs.setup.outputs.deployment_type == 'docker'
     environment: ${{ needs.setup.outputs.environment }}
     steps:
+      - name: Debug deployment conditions
+        run: |
+          echo "🔍 Checking deployment conditions:"
+          echo "should_deploy = '${{ needs.setup.outputs.should_deploy }}'"
+          echo "deployment_type = '${{ needs.setup.outputs.deployment_type }}'"
+          echo "environment = '${{ needs.setup.outputs.environment }}'"
+          echo ""
+          echo "Condition check:"
+          echo "should_deploy == 'true': ${{ needs.setup.outputs.should_deploy == 'true' }}"
+          echo "deployment_type == 'docker': ${{ needs.setup.outputs.deployment_type == 'docker' }}"
       - name: Checkout code
         uses: actions/checkout@v4
 
