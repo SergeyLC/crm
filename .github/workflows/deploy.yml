@@ -86,12 +86,16 @@ jobs:
           echo "deployment_type='${{ steps.setup.outputs.deployment_type }}'"
           echo "should_deploy='${{ steps.setup.outputs.should_deploy }}'"
           echo "image_tag='${{ steps.setup.outputs.image_tag }}'"
+          echo ""
+          echo "✅ Setup job completed successfully"
+          echo "Exit code: $?"
 
   # ==================== Docker Deployment ====================
   deploy-docker:
     name: Deploy with Docker
     runs-on: ubuntu-latest
     needs: setup
+    if: success()  # Only run if setup succeeded
     # Alternative: try without quotes or use contains/fromJSON
     # if: |
     #   needs.setup.outputs.should_deploy == 'true' && 
