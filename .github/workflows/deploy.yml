@@ -96,7 +96,8 @@ jobs:
     if: |
       needs.setup.outputs.should_deploy == 'true' && 
       needs.setup.outputs.deployment_type == 'docker'
-    environment: ${{ needs.setup.outputs.environment }}
+    # TEMPORARY: Comment out environment to test if that's the issue
+    # environment: ${{ needs.setup.outputs.environment }}
     steps:
       - name: Debug deployment conditions
         run: |
