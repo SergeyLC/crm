@@ -228,10 +228,13 @@ jobs:
           image_tag: ${{ needs.setup.outputs.image_tag }}
           version: ${{ needs.setup.outputs.version }}
           server_host: ${{ secrets.SERVER_HOST }}
+          server_user: ${{ secrets.SERVER_USER }}
+          server_ssh_key: ${{ secrets.SERVER_SSH_KEY }}
           postgres_db: ${{ secrets.POSTGRES_DB || 'loyacrm_staging' }}
           postgres_user: ${{ secrets.POSTGRES_USER || 'loyacrm' }}
           postgres_password: ${{ secrets.POSTGRES_PASSWORD || 'CHANGE_ME' }}
           jwt_secret: ${{ secrets.JWT_SECRET || 'CHANGE_ME_JWT_SECRET' }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   # ==================== Traditional Deployment ====================
   deploy-traditional:

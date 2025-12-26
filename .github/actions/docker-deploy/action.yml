@@ -26,6 +26,15 @@ inputs:
   jwt_secret:
     description: 'JWT secret'
     required: true
+  github_token:
+    description: 'GitHub token for registry access'
+    required: true
+  server_user:
+    description: 'Server SSH user'
+    required: true
+  server_ssh_key:
+    description: 'Server SSH private key'
+    required: true
 
 runs:
   using: "composite"
@@ -100,7 +109,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ inputs.github_token }}
 
     - name: Extract metadata for Docker images
       id: meta
@@ -141,9 +150,9 @@ runs:
     - name: Copy deployment files to server
       uses: appleboy/scp-action@v0.1.7
       with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
+        host: ${{ inputs.server_host }}
+        username: ${{ inputs.server_user }}
+        key: ${{ inputs.server_ssh_key }}
         source: "docker-compose.yml,docker-compose.stage.yml,nginx.conf,nginx.stage.conf,nginx.prod.conf"
         target: "/tmp/loyacrm-deploy-${{ github.run_id }}/"
         strip_components: 0
@@ -151,9 +160,9 @@ runs:
     - name: Deploy to ${{ inputs.environment }} server
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
+        host: ${{ inputs.server_host }}
+        username: ${{ inputs.server_user }}
+        key: ${{ inputs.server_ssh_key }}
         command_timeout: 30m
         script: |
           set -e
