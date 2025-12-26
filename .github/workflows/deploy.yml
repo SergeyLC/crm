@@ -18,6 +18,10 @@ on:
         description: 'Version to deploy (for manual release creation)'
         required: false
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
 
