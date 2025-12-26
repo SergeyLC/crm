@@ -191,12 +191,10 @@ jobs:
     name: Deploy with Docker
     runs-on: ubuntu-latest
     needs: setup
-    # Testing: Use simple success() condition first
-    if: success()
-    # Original condition (commented for testing):
-    # if: needs.setup.outputs.should_deploy == 'true' && needs.setup.outputs.deployment_type == 'docker'
-    # TEMPORARY: Comment out environment until it's created in GitHub Settings
-    # environment: ${{ needs.setup.outputs.environment }}
+    # Use proper condition now that outputs are working
+    if: needs.setup.outputs.should_deploy == 'true' && needs.setup.outputs.deployment_type == 'docker'
+    # Environment is properly configured in GitHub Settings with secrets
+    environment: ${{ needs.setup.outputs.environment }}
     steps:
       - name: Debug deployment conditions
         run: |
