@@ -185,6 +185,10 @@ jobs:
           echo "Image Tag: ${{ needs.setup.outputs.image_tag }}"
           echo "Version: ${{ needs.setup.outputs.version }}"
           echo "Is Release: ${{ needs.setup.outputs.is_release }}"
+          echo ""
+          echo "🔍 Additional debugging for conditions:"
+          echo "Type of should_deploy: ${{ toJSON(needs.setup.outputs.should_deploy) }}"
+          echo "Type of deployment_type: ${{ toJSON(needs.setup.outputs.deployment_type) }}"
 
   # ==================== Docker Deployment ====================
   deploy-docker:
@@ -192,7 +196,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     # Simplified condition for testing - will check values in debug step
-    if: success()
+    if: always()
     # Environment is properly configured in GitHub Settings with secrets
     environment: ${{ needs.setup.outputs.environment }}
     steps:
@@ -206,20 +210,28 @@ jobs:
           echo "Condition check:"
           echo "should_deploy == 'true': ${{ needs.setup.outputs.should_deploy == 'true' }}"
           echo "deployment_type == 'docker': ${{ needs.setup.outputs.deployment_type == 'docker' }}"
-      - name: Checkout code
-        uses: actions/checkout@v4
+          echo "image_tag: ${{ needs.setup.outputs.image_tag }}"
+          echo "version: ${{ needs.setup.outputs.version }}"
+          echo "server_host: ${{ secrets.SERVER_HOST }}"
+          echo "postgres_db: ${{ secrets.POSTGRES_DB || 'loyacrm_staging' }}"
+          echo "postgres_user: ${{ secrets.POSTGRES_USER || 'loyacrm' }}"
+          echo "postgres_password: ${{ secrets.POSTGRES_PASSWORD || 'CHANGE_ME' }}"
+          echo "jwt_secret: ${{ secrets.JWT_SECRET || 'CHANGE_ME_JWT_SECRET' }}"
 
-      - name: Deploy with Docker
-        uses: ./.github/actions/docker-deploy
-        with:
-          environment: ${{ needs.setup.outputs.environment }}
-          image_tag: ${{ needs.setup.outputs.image_tag }}
-          version: ${{ needs.setup.outputs.version }}
-          server_host: ${{ secrets.SERVER_HOST }}
-          postgres_db: ${{ secrets.POSTGRES_DB || 'loyacrm_staging' }}
-          postgres_user: ${{ secrets.POSTGRES_USER || 'loyacrm' }}
-          postgres_password: ${{ secrets.POSTGRES_PASSWORD || 'CHANGE_ME' }}
-          jwt_secret: ${{ secrets.JWT_SECRET || 'CHANGE_ME_JWT_SECRET' }}
+      # - name: Checkout code
+      #   uses: actions/checkout@v4
+
+      # - name: Deploy with Docker
+      #   uses: ./.github/actions/docker-deploy
+      #   with:
+      #     environment: ${{ needs.setup.outputs.environment }}
+      #     image_tag: ${{ needs.setup.outputs.image_tag }}
+      #     version: ${{ needs.setup.outputs.version }}
+      #     server_host: ${{ secrets.SERVER_HOST }}
+      #     postgres_db: ${{ secrets.POSTGRES_DB || 'loyacrm_staging' }}
+      #     postgres_user: ${{ secrets.POSTGRES_USER || 'loyacrm' }}
+      #     postgres_password: ${{ secrets.POSTGRES_PASSWORD || 'CHANGE_ME' }}
+      #     jwt_secret: ${{ secrets.JWT_SECRET || 'CHANGE_ME_JWT_SECRET' }}
 
   # ==================== Traditional Deployment ====================
   deploy-traditional:
