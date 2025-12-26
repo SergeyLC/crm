@@ -195,7 +195,7 @@ jobs:
     if: success()
     # Original condition (commented for testing):
     # if: needs.setup.outputs.should_deploy == 'true' && needs.setup.outputs.deployment_type == 'docker'
-    # TEMPORARY: Comment out environment to test if that's the issue
+    # TEMPORARY: Comment out environment until it's created in GitHub Settings
     # environment: ${{ needs.setup.outputs.environment }}
     steps:
       - name: Debug deployment conditions
