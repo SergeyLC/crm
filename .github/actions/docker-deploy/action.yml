@@ -111,13 +111,22 @@ runs:
         username: ${{ github.actor }}
         password: ${{ inputs.github_token }}
 
+    - name: Prepare repository name
+      id: repo
+      run: |
+        # Convert repository name to lowercase for Docker
+        REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        echo "name=${REPO_LOWER}" >> $GITHUB_OUTPUT
+        echo "📦 Repository: ${REPO_LOWER}"
+      shell: bash
+
     - name: Extract metadata for Docker images
       id: meta
       uses: docker/metadata-action@v5
       with:
         images: |
-          ghcr.io/${{ github.repository }}/frontend
-          ghcr.io/${{ github.repository }}/backend
+          ghcr.io/${{ steps.repo.outputs.name }}/frontend
+          ghcr.io/${{ steps.repo.outputs.name }}/backend
         tags: |
           type=raw,value=${{ inputs.image_tag }}
 
@@ -223,9 +232,12 @@ runs:
           # Create base file if doesn't exist
           touch "$ENV_FILE"
           
+          # Convert repository name to lowercase for Docker
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          
           # Update Docker images
-          sed -i "s|FRONTEND_IMAGE=.*|FRONTEND_IMAGE=ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}|" "$ENV_FILE" 2>/dev/null || echo "FRONTEND_IMAGE=ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}" >> "$ENV_FILE"
-          sed -i "s|BACKEND_IMAGE=.*|BACKEND_IMAGE=ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}|" "$ENV_FILE" 2>/dev/null || echo "BACKEND_IMAGE=ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}" >> "$ENV_FILE"
+          sed -i "s|FRONTEND_IMAGE=.*|FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}|" "$ENV_FILE" 2>/dev/null || echo "FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}" >> "$ENV_FILE"
+          sed -i "s|BACKEND_IMAGE=.*|BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}|" "$ENV_FILE" 2>/dev/null || echo "BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}" >> "$ENV_FILE"
           
           # Update network configuration
           sed -i "s|NGINX_PORT=.*|NGINX_PORT=${PORT}|" "$ENV_FILE" 2>/dev/null || echo "NGINX_PORT=${PORT}" >> "$ENV_FILE"
@@ -256,9 +268,12 @@ runs:
           echo "   - Database: ${{ inputs.postgres_db }}"
           echo "   - Environment: ${{ inputs.environment }}"
 
+          # Convert repository name to lowercase for Docker
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          
           echo "🐳 Pulling Docker images..."
-          docker pull ghcr.io/${{ github.repository }}/backend:${{ inputs.image_tag }}
-          docker pull ghcr.io/${{ github.repository }}/frontend:${{ inputs.image_tag }}
+          docker pull ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}
+          docker pull ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}
 
           echo "🗄️  Running database migrations..."
           docker exec ${CONTAINER_PREFIX}-backend sh -c 'cd /app/db && pnpm run migrate:deploy' || echo "⚠️  Migration failed or already up to date"
