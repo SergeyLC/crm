@@ -66,95 +66,95 @@ jobs:
       version: ${{ steps.setup.outputs.version }}
       is_release: ${{ steps.setup.outputs.is_release }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # - name: Checkout code
+      #   uses: actions/checkout@v4
 
       - name: Setup deployment
         id: setup
-        # uses: ./.github/actions/setup-deployment
-        # with:
-        #   deployment_type_override: ${{ github.event.inputs.deployment_type }}
-        #   deployment_type_default: ${{ vars.DEPLOYMENT_TYPE || 'docker' }}
-        run: |
-          echo "🔍 Debug: GitHub Event Name: ${GITHUB_EVENT_NAME}"
-          echo "🔍 Debug: Force deploy input: '${{ github.event.inputs.force_deploy }}'"
-          echo "🔍 Debug: Version input: '${{ github.event.inputs.version }}'"
+        uses: ./.github/actions/setup-deployment
+        with:
+          deployment_type_override: ${{ github.event.inputs.deployment_type }}
+          deployment_type_default: ${{ vars.DEPLOYMENT_TYPE || 'docker' }}
+        # run: |
+        #   echo "🔍 Debug: GitHub Event Name: ${GITHUB_EVENT_NAME}"
+        #   echo "🔍 Debug: Force deploy input: '${{ github.event.inputs.force_deploy }}'"
+        #   echo "🔍 Debug: Version input: '${{ github.event.inputs.version }}'"
 
-          # Call the setup-deployment action logic inline
-          # This is a workaround since we cannot use 'uses' in composite actions to set outputs for the job
+        #   # Call the setup-deployment action logic inline
+        #   # This is a workaround since we cannot use 'uses' in composite actions to set outputs for the job
           
-          # Step 1: Get current version
-          VERSION=$(node -p "require('./frontend/package.json').version")
-          echo "📦 Current version: ${VERSION}"
+        #   # Step 1: Get current version
+        #   VERSION=$(node -p "require('./frontend/package.json').version")
+        #   echo "📦 Current version: ${VERSION}"
 
-          # Step 2: Determine environment and deployment type
-          IS_RELEASE=false
-          if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            IS_RELEASE=true
-            ENVIRONMENT="production"
-            echo "🏷️  Release tag detected: ${GITHUB_REF#refs/tags/}"
-          else
-            if [ -n "${{ github.event.inputs.environment }}" ] && [ "${{ github.event.inputs.environment }}" != "auto" ]; then
-              ENVIRONMENT="${{ github.event.inputs.environment }}"
-            else
-              case "${GITHUB_REF#refs/heads/}" in
-                main)
-                  ENVIRONMENT="staging"
-                  echo "📌 Push to main branch → staging deployment"
-                  ;;
-                develop)
-                  ENVIRONMENT="staging"
-                  echo "📌 Push to develop branch → staging deployment"
-                  ;;
-                *)
-                  echo "⚠️  Unsupported branch: ${GITHUB_REF#refs/heads/}"
-                  echo "should_deploy=false" >> $GITHUB_OUTPUT
-                  exit 0
-                  ;;
-              esac
-            fi
-          fi
+        #   # Step 2: Determine environment and deployment type
+        #   IS_RELEASE=false
+        #   if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        #     IS_RELEASE=true
+        #     ENVIRONMENT="production"
+        #     echo "🏷️  Release tag detected: ${GITHUB_REF#refs/tags/}"
+        #   else
+        #     if [ -n "${{ github.event.inputs.environment }}" ] && [ "${{ github.event.inputs.environment }}" != "auto" ]; then
+        #       ENVIRONMENT="${{ github.event.inputs.environment }}"
+        #     else
+        #       case "${GITHUB_REF#refs/heads/}" in
+        #         main)
+        #           ENVIRONMENT="staging"
+        #           echo "📌 Push to main branch → staging deployment"
+        #           ;;
+        #         develop)
+        #           ENVIRONMENT="staging"
+        #           echo "📌 Push to develop branch → staging deployment"
+        #           ;;
+        #         *)
+        #           echo "⚠️  Unsupported branch: ${GITHUB_REF#refs/heads/}"
+        #           echo "should_deploy=false" >> $GITHUB_OUTPUT
+        #           exit 0
+        #           ;;
+        #       esac
+        #     fi
+        #   fi
 
-          if [ -n "${{ github.event.inputs.deployment_type }}" ]; then
-            DEPLOYMENT_TYPE="${{ github.event.inputs.deployment_type }}"
-            echo "🔧 Using manual override: $DEPLOYMENT_TYPE"
-          else
-            DEPLOYMENT_TYPE="${{ vars.DEPLOYMENT_TYPE || 'docker' }}"
-            echo "🔧 Using default deployment type from repository variable or default: $DEPLOYMENT_TYPE"
-          fi
+        #   if [ -n "${{ github.event.inputs.deployment_type }}" ]; then
+        #     DEPLOYMENT_TYPE="${{ github.event.inputs.deployment_type }}"
+        #     echo "🔧 Using manual override: $DEPLOYMENT_TYPE"
+        #   else
+        #     DEPLOYMENT_TYPE="${{ vars.DEPLOYMENT_TYPE || 'docker' }}"
+        #     echo "🔧 Using default deployment type from repository variable or default: $DEPLOYMENT_TYPE"
+        #   fi
 
-          # Step 3: Determine if we should deploy
-          SHOULD_DEPLOY="true"
-          if [ "${IS_RELEASE}" = false ] && [ "${{ github.event.inputs.force_deploy }}" != "true" ]; then
-            # Additional checks can be added here
-            SHOULD_DEPLOY="true"
-          fi
+        #   # Step 3: Determine if we should deploy
+        #   SHOULD_DEPLOY="true"
+        #   if [ "${IS_RELEASE}" = false ] && [ "${{ github.event.inputs.force_deploy }}" != "true" ]; then
+        #     # Additional checks can be added here
+        #     SHOULD_DEPLOY="true"
+        #   fi
 
-          # Step 4: Generate image tag
-          IMAGE_TAG=""
-          if [[ "$DEPLOYMENT_TYPE" == "docker" ]]; then
-            if [[ "$IS_RELEASE" == "true" ]]; then
-              VERSION="${GITHUB_REF#refs/tags/v}"
-              IMAGE_TAG="v${VERSION}"
-            elif [[ "$ENVIRONMENT" == "production" ]]; then
-              IMAGE_TAG="latest"
-            else
-              COMMIT_SHORT=$(git rev-parse --short HEAD)
-              TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-              IMAGE_TAG="staging-${COMMIT_SHORT}-${TIMESTAMP}"
-            fi
-          fi
+        #   # Step 4: Generate image tag
+        #   IMAGE_TAG=""
+        #   if [[ "$DEPLOYMENT_TYPE" == "docker" ]]; then
+        #     if [[ "$IS_RELEASE" == "true" ]]; then
+        #       VERSION="${GITHUB_REF#refs/tags/v}"
+        #       IMAGE_TAG="v${VERSION}"
+        #     elif [[ "$ENVIRONMENT" == "production" ]]; then
+        #       IMAGE_TAG="latest"
+        #     else
+        #       COMMIT_SHORT=$(git rev-parse --short HEAD)
+        #       TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        #       IMAGE_TAG="staging-${COMMIT_SHORT}-${TIMESTAMP}"
+        #     fi
+        #   fi
 
-          # CRITICAL: Set outputs for the job
-          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
-          echo "deployment_type=$DEPLOYMENT_TYPE" >> $GITHUB_OUTPUT
-          echo "should_deploy=$SHOULD_DEPLOY" >> $GITHUB_OUTPUT
-          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
+        #   # CRITICAL: Set outputs for the job
+        #   echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+        #   echo "deployment_type=$DEPLOYMENT_TYPE" >> $GITHUB_OUTPUT
+        #   echo "should_deploy=$SHOULD_DEPLOY" >> $GITHUB_OUTPUT
+        #   echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        #   echo "version=$VERSION" >> $GITHUB_OUTPUT
+        #   echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
 
-          echo ""
-          echo "✅ Outputs set successfully"
+        #   echo ""
+        #   echo "✅ Outputs set successfully"
       - name: Output deployment configuration
         run: |
           echo "🚀 Deployment Configuration:"
