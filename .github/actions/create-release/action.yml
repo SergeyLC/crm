@@ -32,9 +32,10 @@ runs:
     - name: Extract version from tag
       id: get_version
       run: |
-        # Remove 'v' prefix from tag (v1.4.2 -> 1.4.2)
-        VERSION=${{ inputs.tag_name }}
-        VERSION=${VERSION#v}
+        # Remove 'refs/tags/' and 'v' prefix from tag
+        VERSION="${{ inputs.tag_name }}"
+        VERSION="${VERSION#refs/tags/}"  # Remove refs/tags/
+        VERSION="${VERSION#v}"            # Remove v prefix
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
         echo "📦 Release version: ${VERSION}"
       shell: bash
