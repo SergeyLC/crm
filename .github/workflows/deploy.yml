@@ -66,8 +66,8 @@ jobs:
       version: ${{ steps.setup.outputs.version }}
       is_release: ${{ steps.setup.outputs.is_release }}
     steps:
-      # - name: Checkout code
-      #   uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup deployment
         id: setup
