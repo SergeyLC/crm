@@ -51,6 +51,7 @@ jobs:
         uses: ./.github/actions/create-release
         with:
           tag_name: ${{ github.ref }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   # ==================== Determine Environment & Type ====================
   setup:
