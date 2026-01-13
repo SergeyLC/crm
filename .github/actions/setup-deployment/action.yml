@@ -23,9 +23,16 @@ runs:
     - name: Get current version
       id: get_version
       run: |
-        VERSION=$(node -p "require('./frontend/package.json').version")
+        # For release tags - extract version from tag
+        if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "🏷️  Version from release tag: ${VERSION}"
+        else
+          # For regular commits - read from package.json
+          VERSION=$(node -p "require('./frontend/package.json').version")
+          echo "📦 Version from package.json: ${VERSION}"
+        fi
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
-        echo "📦 Current version: ${VERSION}"
       shell: bash
 
     - name: Configure deployment
