@@ -120,13 +120,19 @@ runs:
         echo "📦 Repository: ${REPO_LOWER}"
       shell: bash
 
-    - name: Extract metadata for Docker images
-      id: meta
+    - name: Extract metadata for frontend Docker image
+      id: meta-frontend
       uses: docker/metadata-action@v5
       with:
-        images: |
-          ghcr.io/${{ steps.repo.outputs.name }}/frontend
-          ghcr.io/${{ steps.repo.outputs.name }}/backend
+        images: ghcr.io/${{ steps.repo.outputs.name }}/frontend
+        tags: |
+          type=raw,value=${{ inputs.image_tag }}
+
+    - name: Extract metadata for backend Docker image
+      id: meta-backend
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ steps.repo.outputs.name }}/backend
         tags: |
           type=raw,value=${{ inputs.image_tag }}
 
@@ -136,8 +142,8 @@ runs:
         context: .
         file: ./docker/frontend/Dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: ${{ steps.meta-frontend.outputs.tags }}
+        labels: ${{ steps.meta-frontend.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: |
@@ -149,8 +155,8 @@ runs:
         context: .
         file: ./docker/backend/Dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: ${{ steps.meta-backend.outputs.tags }}
+        labels: ${{ steps.meta-backend.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: |
