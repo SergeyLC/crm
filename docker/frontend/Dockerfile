@@ -29,6 +29,10 @@ COPY ../db/ ./db/
 # Генерируйте Prisma клиент для frontend
 RUN cd db && pnpm run generate
 
+# Build args для Next.js
+ARG NEXT_PUBLIC_APP_VERSION
+ENV NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION}
+
 # Соберите Next.js приложение
 RUN cd frontend && pnpm run build
 

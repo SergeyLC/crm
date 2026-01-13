@@ -148,6 +148,7 @@ runs:
         cache-to: type=gha,mode=max
         build-args: |
           BUILD_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
+          NEXT_PUBLIC_APP_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
 
     - name: Build and push backend Docker image
       uses: docker/build-push-action@v5
