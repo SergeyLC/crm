@@ -13,11 +13,27 @@ services:
       - backend
     networks: [loyacrm-staging-network]
 
+  # ==================== Autoheal ====================
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: loyacrm-staging-autoheal
+    restart: unless-stopped
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+      - AUTOHEAL_INTERVAL=10
+      - AUTOHEAL_START_PERIOD=120
+      - AUTOHEAL_DEFAULT_STOP_TIMEOUT=10
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks: [loyacrm-staging-network]
+
   # ==================== Frontend ====================
   frontend:
     image: ${FRONTEND_IMAGE:-loyacrm-frontend:staging}
     container_name: loyacrm-staging-frontend
     restart: unless-stopped
+    labels:
+      - "autoheal=true"
     environment:
       - PORT=${FRONTEND_PORT:-3000}
       - NODE_ENV=${NODE_ENV:-production}
@@ -37,6 +53,8 @@ services:
     image: ${BACKEND_IMAGE:-loyacrm-backend:staging}
     container_name: loyacrm-staging-backend
     restart: unless-stopped
+    labels:
+      - "autoheal=true"
     environment:
       - PORT=${BACKEND_PORT:-4000}
       - NODE_ENV=${NODE_ENV:-production}
