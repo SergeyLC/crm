@@ -7,11 +7,12 @@ This project uses GitHub Actions for automated deployment to production and stag
 ## Workflow
 
 ### Staging Deployment
-- **Trigger**: Push to `main` or `develop` branch
+- **Trigger**: Push to `main` or `develop` branch (except release commits with `[skip ci]`)
 - **Environment**: Staging server
 - **Docker Images**: Tagged with `staging-{commit}-{timestamp}`
 - **Port**: 8080
 - **Database**: `loyacrm_staging`
+- **Note**: Release commits automatically skip staging deployment to avoid redundant builds
 
 ### Production Deployment
 - **Trigger**: Push git tag `v*` (e.g., `v1.4.2`)
@@ -19,6 +20,7 @@ This project uses GitHub Actions for automated deployment to production and stag
 - **Docker Images**: Tagged with version (e.g., `v1.4.2`)
 - **Port**: 80
 - **Database**: `loyacrm`
+- **Note**: Release commits include `[skip ci]` to prevent staging deployment
 
 ## Required GitHub Secrets
 
