@@ -275,10 +275,14 @@ runs:
           # Update database configuration
           sed -i "s|POSTGRES_DB=.*|POSTGRES_DB=${{ inputs.postgres_db }}|" "$ENV_FILE" 2>/dev/null || echo "POSTGRES_DB=${{ inputs.postgres_db }}" >> "$ENV_FILE"
           sed -i "s|POSTGRES_USER=.*|POSTGRES_USER=${{ inputs.postgres_user }}|" "$ENV_FILE" 2>/dev/null || echo "POSTGRES_USER=${{ inputs.postgres_user }}" >> "$ENV_FILE"
-          sed -i "s|POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${{ inputs.postgres_password }}|" "$ENV_FILE" 2>/dev/null || echo "POSTGRES_PASSWORD=${{ inputs.postgres_password }}" >> "$ENV_FILE"
           
-          # Update JWT secret
-          sed -i "s|JWT_SECRET=.*|JWT_SECRET=${{ inputs.jwt_secret }}|" "$ENV_FILE" 2>/dev/null || echo "JWT_SECRET=${{ inputs.jwt_secret }}" >> "$ENV_FILE"
+          # Update POSTGRES_PASSWORD with proper escaping (remove and re-add to avoid sed issues with special chars)
+          sed -i '/^POSTGRES_PASSWORD=/d' "$ENV_FILE"
+          echo "POSTGRES_PASSWORD=${{ inputs.postgres_password }}" >> "$ENV_FILE"
+          
+          # Update JWT_SECRET with proper escaping (remove and re-add to avoid sed issues with special chars)
+          sed -i '/^JWT_SECRET=/d' "$ENV_FILE"
+          echo "JWT_SECRET=${{ inputs.jwt_secret }}" >> "$ENV_FILE"
 
           echo "✅ Environment configured with:"
           echo "   - Server: ${{ inputs.server_host }}:${PORT}"
