@@ -246,51 +246,39 @@ runs:
           # Update or create environment file with secrets
           echo "⚙️  Configuring environment file..."
           
-          # Create base file if doesn't exist
+          # Recreate the env file from scratch to avoid issues with existing corrupted data
+          rm -f "$ENV_FILE"
           touch "$ENV_FILE"
           
           # Convert repository name to lowercase for Docker
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           
-          # Update Docker images (delete and re-add to avoid sed issues with / in URLs)
-          sed -i '/^FRONTEND_IMAGE=/d' "$ENV_FILE"
+          # Add Docker images
           echo "FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}" >> "$ENV_FILE"
-          sed -i '/^BACKEND_IMAGE=/d' "$ENV_FILE"
           echo "BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}" >> "$ENV_FILE"
           
-          # Update network configuration
-          sed -i "s|NGINX_PORT=.*|NGINX_PORT=${PORT}|" "$ENV_FILE" 2>/dev/null || echo "NGINX_PORT=${PORT}" >> "$ENV_FILE"
-          sed -i "s|DOMAIN=.*|DOMAIN=${{ inputs.server_host }}|" "$ENV_FILE" 2>/dev/null || echo "DOMAIN=${{ inputs.server_host }}" >> "$ENV_FILE"
+          # Add network configuration
+          echo "NGINX_PORT=${PORT}" >> "$ENV_FILE"
+          echo "DOMAIN=${{ inputs.server_host }}" >> "$ENV_FILE"
           
-          # Update frontend configuration  
-          sed -i "s|FRONTEND_PORT=.*|FRONTEND_PORT=3000|" "$ENV_FILE" 2>/dev/null || echo "FRONTEND_PORT=3000" >> "$ENV_FILE"
-          sed -i "s|NEXT_PUBLIC_API_URL=.*|NEXT_PUBLIC_API_URL=/api|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_API_URL=/api" >> "$ENV_FILE"
-          
-          # Update NEXT_PUBLIC_BACKEND_API_URL (delete and re-add to avoid sed issues with :// in URL)
-          sed -i '/^NEXT_PUBLIC_BACKEND_API_URL=/d' "$ENV_FILE"
+          # Add frontend configuration  
+          echo "FRONTEND_PORT=3000" >> "$ENV_FILE"
+          echo "NEXT_PUBLIC_API_URL=/api" >> "$ENV_FILE"
           echo "NEXT_PUBLIC_BACKEND_API_URL=${BACKEND_URL}" >> "$ENV_FILE"
+          echo "NEXT_PUBLIC_APP_VERSION=${{ inputs.version }}" >> "$ENV_FILE"
           
-          sed -i "s|NEXT_PUBLIC_APP_VERSION=.*|NEXT_PUBLIC_APP_VERSION=${{ inputs.version }}|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_APP_VERSION=${{ inputs.version }}" >> "$ENV_FILE"
-          
-          # Update backend configuration
-          sed -i "s|BACKEND_PORT=.*|BACKEND_PORT=4000|" "$ENV_FILE" 2>/dev/null || echo "BACKEND_PORT=4000" >> "$ENV_FILE"
-          sed -i "s|NODE_ENV=.*|NODE_ENV=production|" "$ENV_FILE" 2>/dev/null || echo "NODE_ENV=production" >> "$ENV_FILE"
-          sed -i "s|LOG_LEVEL=.*|LOG_LEVEL=info|" "$ENV_FILE" 2>/dev/null || echo "LOG_LEVEL=info" >> "$ENV_FILE"
-          
-          # Update CORS_ORIGIN (delete and re-add to avoid sed issues with :// in URL)
-          sed -i '/^CORS_ORIGIN=/d' "$ENV_FILE"
+          # Add backend configuration
+          echo "BACKEND_PORT=4000" >> "$ENV_FILE"
+          echo "NODE_ENV=production" >> "$ENV_FILE"
+          echo "LOG_LEVEL=info" >> "$ENV_FILE"
           echo "CORS_ORIGIN=${CORS_ORIGIN}" >> "$ENV_FILE"
           
-          # Update database configuration
-          sed -i "s|POSTGRES_DB=.*|POSTGRES_DB=${{ inputs.postgres_db }}|" "$ENV_FILE" 2>/dev/null || echo "POSTGRES_DB=${{ inputs.postgres_db }}" >> "$ENV_FILE"
-          sed -i "s|POSTGRES_USER=.*|POSTGRES_USER=${{ inputs.postgres_user }}|" "$ENV_FILE" 2>/dev/null || echo "POSTGRES_USER=${{ inputs.postgres_user }}" >> "$ENV_FILE"
-          
-          # Update POSTGRES_PASSWORD with proper escaping (remove and re-add to avoid sed issues with special chars)
-          sed -i '/^POSTGRES_PASSWORD=/d' "$ENV_FILE"
+          # Add database configuration
+          echo "POSTGRES_DB=${{ inputs.postgres_db }}" >> "$ENV_FILE"
+          echo "POSTGRES_USER=${{ inputs.postgres_user }}" >> "$ENV_FILE"
           echo "POSTGRES_PASSWORD=${{ inputs.postgres_password }}" >> "$ENV_FILE"
           
-          # Update JWT_SECRET with proper escaping (remove and re-add to avoid sed issues with special chars)
-          sed -i '/^JWT_SECRET=/d' "$ENV_FILE"
+          # Add JWT secret
           echo "JWT_SECRET=${{ inputs.jwt_secret }}" >> "$ENV_FILE"
 
           echo "✅ Environment configured with:"
