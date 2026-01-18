@@ -230,18 +230,19 @@ runs:
 
           # Determine port based on environment
           if [[ "${{ inputs.environment }}" == "production" ]]; then
-            PORT="8080"
-            BACKEND_URL="http://${{ inputs.server_host }}:8080/api"
-            CORS_ORIGIN="http://${{ inputs.server_host }}:8080"
+            # Production uses port 80
+            PORT="80"
+            BACKEND_URL="http://${{ inputs.server_host }}/api"
+            CORS_ORIGIN="http://${{ inputs.server_host }}"
           elif [[ "${{ inputs.environment }}" == "stage-develop" ]]; then
             PORT="8081"
             BACKEND_URL="http://${{ inputs.server_host }}:8081/api"
             CORS_ORIGIN="http://${{ inputs.server_host }}:8081"
           else
-            # stage-main uses port 80
-            PORT="80"
-            BACKEND_URL="http://${{ inputs.server_host }}/api"
-            CORS_ORIGIN="http://${{ inputs.server_host }}"
+            # stage-main uses port 8080
+            PORT="8080"
+            BACKEND_URL="http://${{ inputs.server_host }}:8080/api"
+            CORS_ORIGIN="http://${{ inputs.server_host }}:8080"
           fi
 
           # Update or create environment file with secrets
