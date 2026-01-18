@@ -252,9 +252,11 @@ runs:
           # Convert repository name to lowercase for Docker
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           
-          # Update Docker images
-          sed -i "s|FRONTEND_IMAGE=.*|FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}|" "$ENV_FILE" 2>/dev/null || echo "FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}" >> "$ENV_FILE"
-          sed -i "s|BACKEND_IMAGE=.*|BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}|" "$ENV_FILE" 2>/dev/null || echo "BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}" >> "$ENV_FILE"
+          # Update Docker images (delete and re-add to avoid sed issues with / in URLs)
+          sed -i '/^FRONTEND_IMAGE=/d' "$ENV_FILE"
+          echo "FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}" >> "$ENV_FILE"
+          sed -i '/^BACKEND_IMAGE=/d' "$ENV_FILE"
+          echo "BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}" >> "$ENV_FILE"
           
           # Update network configuration
           sed -i "s|NGINX_PORT=.*|NGINX_PORT=${PORT}|" "$ENV_FILE" 2>/dev/null || echo "NGINX_PORT=${PORT}" >> "$ENV_FILE"
@@ -263,14 +265,21 @@ runs:
           # Update frontend configuration  
           sed -i "s|FRONTEND_PORT=.*|FRONTEND_PORT=3000|" "$ENV_FILE" 2>/dev/null || echo "FRONTEND_PORT=3000" >> "$ENV_FILE"
           sed -i "s|NEXT_PUBLIC_API_URL=.*|NEXT_PUBLIC_API_URL=/api|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_API_URL=/api" >> "$ENV_FILE"
-          sed -i "s|NEXT_PUBLIC_BACKEND_API_URL=.*|NEXT_PUBLIC_BACKEND_API_URL=${BACKEND_URL}|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_BACKEND_API_URL=${BACKEND_URL}" >> "$ENV_FILE"
+          
+          # Update NEXT_PUBLIC_BACKEND_API_URL (delete and re-add to avoid sed issues with :// in URL)
+          sed -i '/^NEXT_PUBLIC_BACKEND_API_URL=/d' "$ENV_FILE"
+          echo "NEXT_PUBLIC_BACKEND_API_URL=${BACKEND_URL}" >> "$ENV_FILE"
+          
           sed -i "s|NEXT_PUBLIC_APP_VERSION=.*|NEXT_PUBLIC_APP_VERSION=${{ inputs.version }}|" "$ENV_FILE" 2>/dev/null || echo "NEXT_PUBLIC_APP_VERSION=${{ inputs.version }}" >> "$ENV_FILE"
           
           # Update backend configuration
           sed -i "s|BACKEND_PORT=.*|BACKEND_PORT=4000|" "$ENV_FILE" 2>/dev/null || echo "BACKEND_PORT=4000" >> "$ENV_FILE"
           sed -i "s|NODE_ENV=.*|NODE_ENV=production|" "$ENV_FILE" 2>/dev/null || echo "NODE_ENV=production" >> "$ENV_FILE"
           sed -i "s|LOG_LEVEL=.*|LOG_LEVEL=info|" "$ENV_FILE" 2>/dev/null || echo "LOG_LEVEL=info" >> "$ENV_FILE"
-          sed -i "s|CORS_ORIGIN=.*|CORS_ORIGIN=${CORS_ORIGIN}|" "$ENV_FILE" 2>/dev/null || echo "CORS_ORIGIN=${CORS_ORIGIN}" >> "$ENV_FILE"
+          
+          # Update CORS_ORIGIN (delete and re-add to avoid sed issues with :// in URL)
+          sed -i '/^CORS_ORIGIN=/d' "$ENV_FILE"
+          echo "CORS_ORIGIN=${CORS_ORIGIN}" >> "$ENV_FILE"
           
           # Update database configuration
           sed -i "s|POSTGRES_DB=.*|POSTGRES_DB=${{ inputs.postgres_db }}|" "$ENV_FILE" 2>/dev/null || echo "POSTGRES_DB=${{ inputs.postgres_db }}" >> "$ENV_FILE"
