@@ -2,21 +2,21 @@ services:
   # ==================== Nginx ====================
   nginx:
     image: nginx:alpine
-    container_name: loyacrm-stage-main-nginx
+    container_name: loyacrm-production-nginx
     restart: unless-stopped
     ports:
-      - "${NGINX_PORT:-8080}:80"
+      - "${NGINX_PORT:-80}:80"
     volumes:
-      - ./nginx.stage-main.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - frontend
       - backend
-    networks: [loyacrm-stage-main-network]
+    networks: [loyacrm-production-network]
 
   # ==================== Autoheal ====================
   autoheal:
     image: willfarrell/autoheal:latest
-    container_name: loyacrm-stage-main-autoheal
+    container_name: loyacrm-production-autoheal
     restart: unless-stopped
     environment:
       - AUTOHEAL_CONTAINER_LABEL=all
@@ -25,12 +25,12 @@ services:
       - AUTOHEAL_DEFAULT_STOP_TIMEOUT=10
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    networks: [loyacrm-stage-main-network]
+    networks: [loyacrm-production-network]
 
   # ==================== Frontend ====================
   frontend:
-    image: ${FRONTEND_IMAGE:-loyacrm-frontend:stage-main}
-    container_name: loyacrm-stage-main-frontend
+    image: ${FRONTEND_IMAGE:-loyacrm-frontend:production}
+    container_name: loyacrm-production-frontend
     restart: unless-stopped
     labels:
       - "autoheal=true"
@@ -39,19 +39,19 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
       - NEXT_PUBLIC_BACKEND_API_URL=${NEXT_PUBLIC_BACKEND_API_URL}
-      - NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION:-staging}
+      - NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION:-production}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${FRONTEND_PORT:-3000} || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks: [loyacrm-stage-main-network]
+    networks: [loyacrm-production-network]
 
   # ==================== Backend ====================
   backend:
-    image: ${BACKEND_IMAGE:-loyacrm-backend:stage-main}
-    container_name: loyacrm-stage-main-backend
+    image: ${BACKEND_IMAGE:-loyacrm-backend:production}
+    container_name: loyacrm-production-backend
     restart: unless-stopped
     labels:
       - "autoheal=true"
@@ -60,7 +60,7 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - CORS_ORIGIN=${CORS_ORIGIN}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-loyacrm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-loyacrm_staging}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-loyacrm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-loyacrm}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
       postgres:
@@ -71,19 +71,19 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
-    networks: [loyacrm-stage-main-network]
+    networks: [loyacrm-production-network]
 
   # ==================== PostgreSQL ====================
   postgres:
     image: postgres:16-alpine
-    container_name: loyacrm-stage-main-postgres
+    container_name: loyacrm-production-postgres
     restart: unless-stopped
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_USER=${POSTGRES_USER:-loyacrm}
-      - POSTGRES_DB=${POSTGRES_DB:-loyacrm_staging}
+      - POSTGRES_DB=${POSTGRES_DB:-loyacrm}
     volumes:
-      - pg_data_staging:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
       - ./backups:/backups
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-loyacrm}"]
@@ -91,13 +91,20 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
-    networks: [loyacrm-stage-main-network]
+    networks: [loyacrm-production-network]
 
 # ==================== Volumes & Networks ====================
 volumes:
-  pg_data_staging:
-    name: loyacrm_pg_data_staging
+  pg_data:
+    name: loyacrm_pg_data
 
 networks:
-  loyacrm-stage-main-network:
+  loyacrm-production-network:
     driver: bridge
+
+# ==================== Secrets ====================
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt

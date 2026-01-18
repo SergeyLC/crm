@@ -169,7 +169,7 @@ runs:
         host: ${{ inputs.server_host }}
         username: ${{ inputs.server_user }}
         key: ${{ inputs.server_ssh_key }}
-        source: "docker-compose.yml,docker-compose.stage.yml,docker-compose.stage-develop.yml,nginx.conf,nginx.stage.conf,nginx.prod.conf,nginx.stage-develop.conf"
+        source: "docker-compose.yml,docker-compose.production.yml,docker-compose.stage.yml,docker-compose.stage-main.yml,docker-compose.stage-develop.yml,nginx.conf,nginx.stage.conf,nginx.stage-main.conf,nginx.prod.conf,nginx.stage-develop.conf"
         target: "/tmp/loyacrm-deploy-${{ github.run_id }}/"
         strip_components: 0
 
@@ -189,10 +189,10 @@ runs:
           # Determine deployment directory and compose file
           if [[ "${{ inputs.environment }}" == "production" ]]; then
             DEPLOY_DIR="/var/www/loyacrm-production"
-            COMPOSE_FILE="docker-compose.yml"
+            COMPOSE_FILE="docker-compose.production.yml"
             NGINX_CONF="nginx.prod.conf"
-            ENV_FILE=".env"
-            CONTAINER_PREFIX="loyacrm"
+            ENV_FILE=".env.production"
+            CONTAINER_PREFIX="loyacrm-production"
           elif [[ "${{ inputs.environment }}" == "stage-develop" ]]; then
             DEPLOY_DIR="/var/www/loyacrm-stage-develop"
             COMPOSE_FILE="docker-compose.stage-develop.yml"
