@@ -286,6 +286,7 @@ runs:
           echo "POSTGRES_DB=${{ inputs.postgres_db }}" >> "$ENV_FILE"
           echo "POSTGRES_USER=${{ inputs.postgres_user }}" >> "$ENV_FILE"
           echo "POSTGRES_PASSWORD=${{ inputs.postgres_password }}" >> "$ENV_FILE"
+          echo "DATABASE_URL=postgresql://${{ inputs.postgres_user }}:${{ inputs.postgres_password }}@${CONTAINER_PREFIX}-postgres:5432/${{ inputs.postgres_db }}" >> "$ENV_FILE"
           
           # Add JWT secret
           echo "JWT_SECRET=${{ inputs.jwt_secret }}" >> "$ENV_FILE"
