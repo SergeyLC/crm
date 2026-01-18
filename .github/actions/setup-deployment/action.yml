@@ -55,12 +55,12 @@ runs:
           else
             case "${GITHUB_REF#refs/heads/}" in
               main)
-                ENVIRONMENT="staging"
-                echo "📌 Push to main branch → staging deployment (port 8080)"
+                ENVIRONMENT="stage-main"
+                echo "📌 Push to main branch → stage-main deployment (port 8080)"
                 ;;
               develop)
                 ENVIRONMENT="stage-develop"
-                echo "📌 Push to develop branch → stage-develop staging deployment (port 8081)"
+                echo "📌 Push to develop branch → stage-develop deployment (port 8081)"
                 ;;
               *)
                 echo "⚠️  Unsupported branch: ${GITHUB_REF#refs/heads/}"

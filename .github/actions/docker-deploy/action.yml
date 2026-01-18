@@ -199,7 +199,14 @@ runs:
             NGINX_CONF="nginx.stage-develop.conf"
             ENV_FILE=".env.stage-develop"
             CONTAINER_PREFIX="loyacrm-stage-develop"
+          elif [[ "${{ inputs.environment }}" == "stage-main" ]]; then
+            DEPLOY_DIR="/var/www/loyacrm-stage-main"
+            COMPOSE_FILE="docker-compose.stage-main.yml"
+            NGINX_CONF="nginx.stage-main.conf"
+            ENV_FILE=".env.stage-main"
+            CONTAINER_PREFIX="loyacrm-stage-main"
           else
+            # Fallback for old 'staging' environment name
             DEPLOY_DIR="/var/www/loyacrm-staging"
             COMPOSE_FILE="docker-compose.stage.yml"
             NGINX_CONF="nginx.stage.conf"
