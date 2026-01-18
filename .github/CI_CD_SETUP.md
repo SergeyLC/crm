@@ -2,16 +2,26 @@
 
 ## Overview
 
-This project uses GitHub Actions for automated deployment to production and staging environments via Docker containers.
+This project uses GitHub Actions for automated deployment to three environments via Docker containers.
 
 ## Workflow
 
-### Staging Deployment
+### Develop Staging Deployment
+- **Trigger**: Push to `develop` branch
+- **Environment**: Develop staging server
+- **Docker Images**: Tagged with `develop-{commit}-{timestamp}`
+- **Port**: 8081
+- **Database**: `loyacrm_stage_develop`
+- **Purpose**: Testing features before merging to main
+- **Note**: Use `deploy.sh -m "message" -s` on develop branch (releases not allowed)
+
+### Main Staging Deployment
 - **Trigger**: Push to `main` branch (except release commits with `[skip ci]`)
 - **Environment**: Staging server
 - **Docker Images**: Tagged with `staging-{commit}-{timestamp}`
 - **Port**: 8080
 - **Database**: `loyacrm_staging`
+- **Purpose**: Pre-production testing
 - **Note**: Release commits automatically skip staging deployment to avoid redundant builds
 
 ### Production Deployment
@@ -30,7 +40,7 @@ Configure secrets in your repository following this structure for better securit
 
 **GitHub → Repository → Settings → Environments**
 
-Create two environments:
+Create three environments:
 
 #### **Production Environment**
 - **Name**: `production`
@@ -54,6 +64,16 @@ Create two environments:
   | `POSTGRES_USER` | Staging database user | `loyacrm` or `loyacrm_staging` |
   | `POSTGRES_PASSWORD` | Staging database password | Generated with `openssl rand -base64 32` |
   | `JWT_SECRET` | Staging JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
+
+#### **Develop Environment**
+- **Name**: `stage-develop`
+- **Environment secrets**:
+  | Secret | Description | Example |
+  |-----------|-------------|---------|
+  | `POSTGRES_DB` | Develop database name | `loyacrm_stage_develop` |
+  | `POSTGRES_USER` | Develop database user | `loyacrm` or `loyacrm_stage_develop` |
+  | `POSTGRES_PASSWORD` | Develop database password | Generated with `openssl rand -base64 32` |
+  | `JWT_SECRET` | Develop JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
 
 ### Step 2: Repository Secrets (Shared)
 
@@ -85,12 +105,22 @@ GitHub Repository
 │   └── SERVER_SSH_KEY = (SSH private key)
 │
 ├── Environment: production
+│   ├── POSTGRES_DB = loyacrm
+│   ├── POSTGRES_USER = loyacrm
 │   ├── POSTGRES_PASSWORD = (prod password)
 │   └── JWT_SECRET = (prod secret)
 │
-└── Environment: staging
-    ├── POSTGRES_PASSWORD = (staging password)
-    └── JWT_SECRET = (staging secret)
+├── Environment: staging
+│   ├── POSTGRES_DB = loyacrm_staging
+│   ├── POSTGRES_USER = loyacrm
+│   ├── POSTGRES_PASSWORD = (staging password)
+│   └── JWT_SECRET = (staging secret)
+│
+└── Environment: stage-develop
+    ├── POSTGRES_DB = loyacrm_stage_develop
+    ├── POSTGRES_USER = loyacrm
+    ├── POSTGRES_PASSWORD = (stage-develop password)
+    └── JWT_SECRET = (stage-develop secret)
 ```
 
 ### Quick Setup Commands
@@ -133,7 +163,17 @@ cat ~/.ssh/id_ed25519
    - Name: `POSTGRES_PASSWORD`, Value: `openssl rand -base64 32`
    - Name: `JWT_SECRET`, Value: `openssl rand -base64 64`
 
-#### 3. Add Repository Secrets
+#### 3. Create Develop Environment
+
+1. **New environment**
+2. Name: `stage-develop`
+3. **Add secret** for each (different values from production and staging!):
+   - Name: `POSTGRES_DB`, Value: `loyacrm_stage_develop`
+   - Name: `POSTGRES_USER`, Value: `loyacrm`
+   - Name: `POSTGRES_PASSWORD`, Value: `openssl rand -base64 32`
+   - Name: `JWT_SECRET`, Value: `openssl rand -base64 64`
+
+#### 4. Add Repository Secrets
 
 1. **Settings → Secrets and variables → Actions → Repository secrets**
 2. **New repository secret**:
@@ -146,7 +186,7 @@ cat ~/.ssh/id_ed25519
    - Name: `SERVER_SSH_KEY`
    - Value: Copy your entire private key including `-----BEGIN` and `-----END` lines
 
-#### 4. Configure Repository Variables (Optional)
+#### 5. Configure Repository Variables (Optional)
 
 Control deployment type centrally without code changes:
 
@@ -170,6 +210,7 @@ After setup, verify you have:
 **Environments:**
 - [ ] Environment `production` created
 - [ ] Environment `staging` created
+- [ ] Environment `develop` created
 
 **Environment Secrets (production):**  
 - [ ] `production` has `POSTGRES_DB` secret
@@ -183,6 +224,12 @@ After setup, verify you have:
 - [ ] `staging` has `POSTGRES_PASSWORD` secret
 - [ ] `staging` has `JWT_SECRET` secret
 
+**Environment Secrets (develop):**
+- [ ] `stage-develop` has `POSTGRES_DB` secret
+- [ ] `stage-develop` has `POSTGRES_USER` secret
+- [ ] `stage-develop` has `POSTGRES_PASSWORD` secret
+- [ ] `stage-develop` has `JWT_SECRET` secret
+
 **Repository Secrets:**
 - [ ] Repository has `SERVER_HOST` secret
 - [ ] Repository has `SERVER_USER` secret
@@ -195,7 +242,7 @@ After setup, verify you have:
 
 После настройки GitHub Secrets нужно подготовить сервер.
 
-**Important**: Environment files (.env, .env.stage) are now **automatically created** by GitHub Actions using Environment Secrets. You only need to:
+**Important**: Environment files (.env, .env.stage, .env.stage-develop) are now **automatically created** by GitHub Actions using Environment Secrets. You only need to:
 1. Create deployment directories
 2. Install Docker and Docker Compose
 3. Login to GitHub Container Registry
@@ -219,8 +266,18 @@ echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
 ### 2. Staging Server Setup
 
 ```bash
-# Create deployment directory
+# Create deployment directory for main staging
 mkdir -p /var/www/loyacrm-staging
+
+# Login to GitHub Container Registry if not done already
+echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
+```
+
+### 3. Develop Staging Server Setup
+
+```bash
+# Create deployment directory for develop staging
+mkdir -p /var/www/loyacrm-stage-develop
 
 # Login to GitHub Container Registry if not done already
 echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
@@ -228,17 +285,37 @@ echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
 
 **Note**: All configuration files (docker-compose, nginx.conf, .env) will be automatically managed by GitHub Actions. No manual file creation needed!
 
-### 3. Initial Deployment
+### 4. Initial Deployment
 
 After server setup, trigger the first deployment:
 
+**For Develop Staging:**
 ```bash
-# For staging: Push to main branch
+# Push to develop branch
+git checkout develop
+git push origin develop
+
+# Access develop staging
+open http://217.154.173.36:8081
+```
+
+**For Main Staging:**
+```bash
+# Push to main branch
 git push origin main
 
-# For production: Create and push a release tag
+# Access main staging
+open http://217.154.173.36:8080
+```
+
+**For Production:**
+```bash
+# Create and push a release tag
 git tag v1.0.0
 git push origin v1.0.0
+
+# Access production
+open http://217.154.173.36
 ```
 
 GitHub Actions will:
@@ -249,36 +326,68 @@ GitHub Actions will:
 5. Run database migrations
 6. Start containers
 
-# Staging
-cd /var/www/loyacrm-staging
+### Manual Database Setup (First Time Only)
 
-# Start postgres
+If you need to start the database manually before first deployment:
+
+```bash
+# Production
+cd /var/www/loyacrm-production
+docker compose up -d postgres
+
+# Main Staging
+cd /var/www/loyacrm-staging
 docker compose -f docker-compose.stage.yml up -d postgres
+
+# Develop Staging
+cd /var/www/loyacrm-stage-develop
+docker compose -f docker-compose.stage-develop.yml up -d postgres
 
 # Wait and check status
 sleep 10
-docker compose -f docker-compose.stage.yml ps postgres
+docker ps
 ```
 
 **Note:** 
 - Frontend and backend containers will be started automatically by GitHub Actions during first deployment
 - The deployment script will copy all necessary Docker Compose and Nginx configuration files
-- You only need to create the `.env` or `.env.stage` file manually
+- You only need to ensure deployment directories exist
 
 ## Deployment Process
 
-### Staging Deployment
+### Develop Staging Deployment
 
-1. **Commit changes** to `main` branch:
+1. **Work on develop branch**:
    ```bash
+   git checkout develop
    git add .
-   git commit -m "feat: add new feature"
-   git push origin main
+   # Must use -s flag on develop branch
+   ./deploy.sh -m "feat: add new feature" -s
    ```
 
 2. **GitHub Actions** will automatically:
    - Run tests
    - Build Docker images
+   - Deploy to develop staging (port 8081)
+
+### Main Staging Deployment
+
+### Main Staging Deployment
+
+1. **Commit changes** to `main` branch:
+   ```bash
+   git checkout main
+   git add .
+   git commit -m "feat: add new feature"
+   git push origin main
+   # Or use deploy.sh without -s flag
+   ./deploy.sh -m "feat: add new feature"
+   ```
+
+2. **GitHub Actions** will automatically:
+   - Run tests
+   - Build Docker images
+   - Deploy to main staging (port 8080)
    - Push to GitHub Container Registry
    - Deploy to staging server
    - Run database migrations

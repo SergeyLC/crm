@@ -169,7 +169,7 @@ runs:
         host: ${{ inputs.server_host }}
         username: ${{ inputs.server_user }}
         key: ${{ inputs.server_ssh_key }}
-        source: "docker-compose.yml,docker-compose.stage.yml,nginx.conf,nginx.stage.conf,nginx.prod.conf"
+        source: "docker-compose.yml,docker-compose.stage.yml,docker-compose.stage-develop.yml,nginx.conf,nginx.stage.conf,nginx.prod.conf,nginx.stage-develop.conf"
         target: "/tmp/loyacrm-deploy-${{ github.run_id }}/"
         strip_components: 0
 
@@ -193,6 +193,12 @@ runs:
             NGINX_CONF="nginx.prod.conf"
             ENV_FILE=".env"
             CONTAINER_PREFIX="loyacrm"
+          elif [[ "${{ inputs.environment }}" == "develop" ]]; then
+            DEPLOY_DIR="/var/www/loyacrm-develop"
+            COMPOSE_FILE="docker-compose.develop.yml"
+            NGINX_CONF="nginx.develop.conf"
+            ENV_FILE=".env.develop"
+            CONTAINER_PREFIX="loyacrm-develop"
           else
             DEPLOY_DIR="/var/www/loyacrm-staging"
             COMPOSE_FILE="docker-compose.stage.yml"
@@ -227,6 +233,10 @@ runs:
             PORT="80"
             BACKEND_URL="http://${{ inputs.server_host }}/api"
             CORS_ORIGIN="http://${{ inputs.server_host }}"
+          elif [[ "${{ inputs.environment }}" == "develop" ]]; then
+            PORT="8081"
+            BACKEND_URL="http://${{ inputs.server_host }}:8081/api"
+            CORS_ORIGIN="http://${{ inputs.server_host }}:8081"
           else
             PORT="8080"
             BACKEND_URL="http://${{ inputs.server_host }}:8080/api"

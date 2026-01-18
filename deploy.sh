@@ -8,46 +8,81 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# Detect current branch
+CURRENT_BRANCH=$(git branch --show-current)
+
 # Function to display usage information
 show_help() {
-  echo -e "${CYAN}╔════════════════════════════════════════════════════════════════════════════╗${NC}"
-  echo -e "${CYAN}║                     LoyaCare CRM Deployment Script                         ║${NC}"
-  echo -e "${CYAN}╚════════════════════════════════════════════════════════════════════════════╝${NC}"
-  echo -e ""
-  echo -e "${GREEN}USAGE:${NC}"
-  echo -e "  $0 [OPTIONS]"
-  echo -e ""
-  echo -e "${GREEN}OPTIONS:${NC}"
-  echo -e "  ${YELLOW}-m MESSAGE${NC}    Add custom commit message"
-  echo -e "  ${YELLOW}-v VERSION${NC}    Create release tag with specified version (e.g., 1.4.2)"
-  echo -e "  ${YELLOW}-t${NC}            Create release tag with auto-incremented patch version"
-  echo -e "  ${YELLOW}-s${NC}            Skip deployment (push to main without triggering CI/CD)"
-  echo -e "  ${YELLOW}-h, --help${NC}    Show this help message"
-  echo -e ""
-  echo -e "${GREEN}EXAMPLES:${NC}"
-  echo -e "  ${CYAN}# Regular commit and deploy to staging${NC}"
-  echo -e "  $0 -m \"fix: update user validation\""
-  echo -e ""
-  echo -e "  ${CYAN}# Create release with specific version${NC}"
-  echo -e "  $0 -m \"feat: add new dashboard\" -v 1.4.2"
-  echo -e ""
-  echo -e "  ${CYAN}# Create release with auto-incremented version${NC}"
-  echo -e "  $0 -m \"fix: resolve database connection issue\" -t"
-  echo -e ""
-  echo -e "  ${CYAN}# Push documentation changes without deployment${NC}"
-  echo -e "  $0 -m \"docs: update API documentation\" -s"
-  echo -e ""
-  echo -e "${GREEN}WORKFLOW:${NC}"
-  echo -e "  ${YELLOW}Without -v or -t:${NC}  Push to main → Deploy to staging"
-  echo -e "  ${YELLOW}With -v or -t:${NC}    Create release tag → Deploy to production"
-  echo -e "  ${YELLOW}With -s:${NC}          Push to main without triggering deployment"
-  echo -e ""
-  echo -e "${GREEN}NOTES:${NC}"
-  echo -e "  • Version format: X.Y.Z (e.g., 1.4.2)"
-  echo -e "  • Release tags trigger production deployment via GitHub Actions"
-  echo -e "  • Use -s flag for documentation-only changes"
-  echo -e "  • Auto-increment uses current version from package.json or latest git tag"
-  echo -e ""
+  if [ "$CURRENT_BRANCH" = "develop" ]; then
+    # Help for develop branch - restricted options
+    echo -e "${CYAN}╔════════════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║                LoyaCare CRM Deployment Script (develop)                    ║${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════════════════════════════════════╝${NC}"
+    echo -e ""
+    echo -e "${YELLOW}⚠️  You are on the 'develop' branch${NC}"
+    echo -e "${YELLOW}⚠️  Only push without deployment is allowed${NC}"
+    echo -e ""
+    echo -e "${GREEN}USAGE:${NC}"
+    echo -e "  $0 -m MESSAGE -s"
+    echo -e ""
+    echo -e "${GREEN}OPTIONS:${NC}"
+    echo -e "  ${YELLOW}-m MESSAGE${NC}    Commit message (required)"
+    echo -e "  ${YELLOW}-s${NC}            Push without triggering deployment (required on develop)"
+    echo -e "  ${YELLOW}-h, --help${NC}    Show this help message"
+    echo -e ""
+    echo -e "${GREEN}EXAMPLES:${NC}"
+    echo -e "  ${CYAN}# Push changes to develop staging (port 8081)${NC}"
+    echo -e "  $0 -m \"feat: add new feature\" -s"
+    echo -e ""
+    echo -e "${RED}RESTRICTIONS:${NC}"
+    echo -e "  • Cannot create release tags (-t or -v) on develop branch"
+    echo -e "  • Must use -s flag to push to develop staging"
+    echo -e "  • Deployment happens automatically via GitHub Actions when pushing to develop"
+    echo -e ""
+    echo -e "${GREEN}WORKFLOW:${NC}"
+    echo -e "  ${YELLOW}Push to develop:${NC}  Changes deployed to develop staging (port 8081)"
+    echo -e ""
+  else
+    # Help for main branch - full options
+    echo -e "${CYAN}╔════════════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║                     LoyaCare CRM Deployment Script                         ║${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════════════════════════════════════╝${NC}"
+    echo -e ""
+    echo -e "${GREEN}USAGE:${NC}"
+    echo -e "  $0 [OPTIONS]"
+    echo -e ""
+    echo -e "${GREEN}OPTIONS:${NC}"
+    echo -e "  ${YELLOW}-m MESSAGE${NC}    Add custom commit message"
+    echo -e "  ${YELLOW}-v VERSION${NC}    Create release tag with specified version (e.g., 1.4.2)"
+    echo -e "  ${YELLOW}-t${NC}            Create release tag with auto-incremented patch version"
+    echo -e "  ${YELLOW}-s${NC}            Skip deployment (push to main without triggering CI/CD)"
+    echo -e "  ${YELLOW}-h, --help${NC}    Show this help message"
+    echo -e ""
+    echo -e "${GREEN}EXAMPLES:${NC}"
+    echo -e "  ${CYAN}# Regular commit and deploy to staging${NC}"
+    echo -e "  $0 -m \"fix: update user validation\""
+    echo -e ""
+    echo -e "  ${CYAN}# Create release with specific version${NC}"
+    echo -e "  $0 -m \"feat: add new dashboard\" -v 1.4.2"
+    echo -e ""
+    echo -e "  ${CYAN}# Create release with auto-incremented version${NC}"
+    echo -e "  $0 -m \"fix: resolve database connection issue\" -t"
+    echo -e ""
+    echo -e "  ${CYAN}# Push documentation changes without deployment${NC}"
+    echo -e "  $0 -m \"docs: update API documentation\" -s"
+    echo -e ""
+    echo -e "${GREEN}WORKFLOW:${NC}"
+    echo -e "  ${YELLOW}Without -v or -t:${NC}  Push to main → Deploy to staging (port 8080)"
+    echo -e "  ${YELLOW}With -v or -t:${NC}    Create release tag → Deploy to production (port 80)"
+    echo -e "  ${YELLOW}With -s:${NC}          Push to main without triggering deployment"
+    echo -e ""
+    echo -e "${GREEN}NOTES:${NC}"
+    echo -e "  • Version format: X.Y.Z (e.g., 1.4.2)"
+    echo -e "  • Release tags trigger production deployment via GitHub Actions"
+    echo -e "  • Use -s flag for documentation-only changes"
+    echo -e "  • Auto-increment uses current version from package.json or latest git tag"
+    echo -e ""
+  fi
 }
 
 # Parse command line arguments
@@ -72,9 +107,23 @@ while getopts "m:v:tsh" opt; do
       ADDITIONAL_MESSAGE="$OPTARG"
       ;;
     v)
+      # Restrict -v flag on develop branch
+      if [ "$CURRENT_BRANCH" = "develop" ]; then
+        echo -e "${RED}❌ Error: Cannot create release tags on develop branch${NC}"
+        echo -e "${YELLOW}Release tags can only be created on main branch${NC}"
+        echo -e "${YELLOW}Use: $0 -m \"message\" -s${NC}"
+        exit 1
+      fi
       VERSION="$OPTARG"
       ;;
     t)
+      # Restrict -t flag on develop branch
+      if [ "$CURRENT_BRANCH" = "develop" ]; then
+        echo -e "${RED}❌ Error: Cannot create release tags on develop branch${NC}"
+        echo -e "${YELLOW}Release tags can only be created on main branch${NC}"
+        echo -e "${YELLOW}Use: $0 -m \"message\" -s${NC}"
+        exit 1
+      fi
       # -t flag triggers auto-increment
       AUTO_INCREMENT=true
       ;;
@@ -98,6 +147,17 @@ done
 CREATING_RELEASE=false
 if [ -n "$VERSION" ] || [ "$AUTO_INCREMENT" = true ]; then
   CREATING_RELEASE=true
+fi
+
+# Additional validation for develop branch
+if [ "$CURRENT_BRANCH" = "develop" ]; then
+  # On develop branch, -s flag is mandatory
+  if [ "$SKIP_DEPLOY" = false ]; then
+    echo -e "${RED}❌ Error: On develop branch, you must use -s flag${NC}"
+    echo -e "${YELLOW}Usage: $0 -m \"message\" -s${NC}"
+    echo -e "${YELLOW}Deployment will happen automatically via GitHub Actions when pushing to develop${NC}"
+    exit 1
+  fi
 fi
 
 # Check if there are unstaged changes
@@ -261,7 +321,11 @@ fi
 
 
 echo -e "${CYAN}🚀 Pushing to remote...${NC}"
-git push
+if [ "$CURRENT_BRANCH" = "develop" ]; then
+  git push origin develop
+else
+  git push
+fi
 
 # Create and push release tag if version is specified
 if [ -n "$VERSION" ]; then
@@ -301,14 +365,20 @@ if [ -n "$VERSION" ]; then
   echo -e "${GREEN}   git pull --rebase${NC}"
   echo -e "${YELLOW}to sync the updated package.json to your local repository!${NC}"
 else
-  echo -e "\n${GREEN}✅ Changes pushed to main successfully!${NC}"
+  echo -e "\n${GREEN}✅ Changes pushed to $CURRENT_BRANCH successfully!${NC}"
   if [ "$SKIP_DEPLOY" = true ]; then
-    echo -e "${YELLOW}⏭️  Deployment skipped (skip ci flag used)${NC}"
-    echo -e "${YELLOW}ℹ️  Changes are in main branch but no deployment triggered${NC}"
+    if [ "$CURRENT_BRANCH" = "develop" ]; then
+      echo -e "${GREEN}🚀 GitHub Actions will deploy to develop staging (port 8081)${NC}"
+    else
+      echo -e "${YELLOW}⏭️  Deployment skipped (skip ci flag used)${NC}"
+      echo -e "${YELLOW}ℹ️  Changes are in main branch but no deployment triggered${NC}"
+    fi
   else
     echo -e "${YELLOW}ℹ️  No release tag created${NC}"
     echo -e "${YELLOW}ℹ️  To create a release tag, use: $0 -t or $0 -v VERSION${NC}"
     echo -e "${YELLOW}ℹ️  GitHub Actions will build and deploy to staging with build metadata${NC}"
   fi
-  echo -e "${YELLOW}ℹ️  To push without deployment, use: $0 -m \"message\" -s${NC}"
+  if [ "$CURRENT_BRANCH" = "main" ]; then
+    echo -e "${YELLOW}ℹ️  To push without deployment, use: $0 -m \"message\" -s${NC}"
+  fi
 fi

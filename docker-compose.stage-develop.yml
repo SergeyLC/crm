@@ -1,0 +1,103 @@
+services:
+  # ==================== Nginx ====================
+  nginx:
+    image: nginx:alpine
+    container_name: loyacrm-stage-develop-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-8081}:80"
+    volumes:
+      - ./nginx.stage-develop.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks: [loyacrm-stage-develop-network]
+
+  # ==================== Autoheal ====================
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: loyacrm-stage-develop-autoheal
+    restart: unless-stopped
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+      - AUTOHEAL_INTERVAL=10
+      - AUTOHEAL_START_PERIOD=120
+      - AUTOHEAL_DEFAULT_STOP_TIMEOUT=10
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks: [loyacrm-stage-develop-network]
+
+  # ==================== Frontend ====================
+  frontend:
+    image: ${FRONTEND_IMAGE:-loyacrm-frontend:develop}
+    container_name: loyacrm-stage-develop-frontend
+    restart: unless-stopped
+    labels:
+      - "autoheal=true"
+    environment:
+      - PORT=${FRONTEND_PORT:-3000}
+      - NODE_ENV=${NODE_ENV:-production}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_BACKEND_API_URL=${NEXT_PUBLIC_BACKEND_API_URL}
+      - NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION:-develop}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${FRONTEND_PORT:-3000} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks: [loyacrm-stage-develop-network]
+
+  # ==================== Backend ====================
+  backend:
+    image: ${BACKEND_IMAGE:-loyacrm-backend:develop}
+    container_name: loyacrm-stage-develop-backend
+    restart: unless-stopped
+    labels:
+      - "autoheal=true"
+    environment:
+      - PORT=${BACKEND_PORT:-4000}
+      - NODE_ENV=${NODE_ENV:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-loyacrm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-loyacrm_stage_develop}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:${BACKEND_PORT:-4000}/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks: [loyacrm-stage-develop-network]
+
+  # ==================== PostgreSQL ====================
+  postgres:
+    image: postgres:16-alpine
+    container_name: loyacrm-stage-develop-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER:-loyacrm}
+      - POSTGRES_DB=${POSTGRES_DB:-loyacrm_stage_develop}
+    volumes:
+      - pg_data_stage_develop:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-loyacrm}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks: [loyacrm-stage-develop-network]
+
+# ==================== Volumes & Networks ====================
+volumes:
+  pg_data_stage_develop:
+
+networks:
+  loyacrm-stage-develop-network:
+    name: loyacrm-stage-develop-network
+    driver: bridge
