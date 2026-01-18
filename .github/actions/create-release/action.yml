@@ -59,11 +59,10 @@ runs:
 
     - name: Commit version update
       run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add frontend/package.json
-        git commit -m "chore: bump version to ${{ steps.get_version.outputs.version }}"
-        git push origin HEAD:main
+        # For tag-based releases, we don't commit back to main
+        # The version in package.json is just for the release artifact
+        echo "ℹ️  Skipping commit for tag-based release"
+        echo "Version update is for release artifacts only"
       shell: bash
 
     - name: Create GitHub Release
