@@ -43,7 +43,6 @@ After:
 
 Staging will still deploy for:
 - ✅ Regular commits to `main` (non-release)
-- ✅ Commits to `develop` branch
 - ✅ Manual workflow_dispatch triggers
 
 Staging will **NOT** deploy for:

@@ -30,7 +30,7 @@ name: Deploy Application
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
 
 permissions:
   contents: read

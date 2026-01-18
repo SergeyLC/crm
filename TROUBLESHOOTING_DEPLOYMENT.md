@@ -27,7 +27,7 @@ name: Deploy Application
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
 
 permissions:
   contents: read
@@ -256,7 +256,7 @@ permissions:
 ### Условия для деплоя:
 
 **Staging deployment:**
-- Push в ветку `main` или `develop`
+- Push в ветку `main` (кроме release коммитов с `[skip ci]`)
 - `DEPLOYMENT_TYPE` = `docker` (или не установлен)
 - Все тесты прошли успешно
 

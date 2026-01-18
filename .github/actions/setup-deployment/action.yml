@@ -58,10 +58,6 @@ runs:
                 ENVIRONMENT="staging"
                 echo "📌 Push to main branch → staging deployment"
                 ;;
-              develop)
-                ENVIRONMENT="staging"
-                echo "📌 Push to develop branch → staging deployment"
-                ;;
               *)
                 echo "⚠️  Unsupported branch: ${GITHUB_REF#refs/heads/}"
                 echo "should_deploy=false" >> $GITHUB_OUTPUT

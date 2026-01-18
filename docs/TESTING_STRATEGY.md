@@ -16,7 +16,7 @@ Our project uses a **multi-level testing strategy** to ensure code quality while
 **Where they run:**
 - ✅ Pre-push hook (locally)
 - ✅ Pull Request checks
-- ✅ Push to main/develop
+- ✅ Push to main (except release commits)
 - ✅ **Deployment** (fast, ~30s)
 
 **Commands:**
@@ -36,7 +36,7 @@ cd backend && npm test
 **Where they run:**
 - ✅ Pre-push hook (locally) - **primary protection**
 - ✅ Pull Request checks
-- ❌ Push to main/develop (skipped for speed)
+- ❌ Push to main (skipped for speed)
 - ❌ **NOT in Deployment** (too slow, ~5-8 min)
 
 **Commands:**
@@ -56,7 +56,7 @@ cd frontend && npm run playwright:headed   # Headed mode
 **Where it runs:**
 - ✅ Pre-push hook
 - ✅ Pull Request checks
-- ✅ Push to main/develop
+- ✅ Push to main (except release commits)
 - ✅ **Deployment** (fast, ~2 min)
 
 **Commands:**
@@ -76,7 +76,7 @@ cd db && npm run type-check
 **Where it runs:**
 - ✅ Pre-push hook
 - ✅ Pull Request checks
-- ✅ Push to main/develop
+- ✅ Push to main (except release commits)
 - ✅ **Deployment** (fast, ~1 min)
 
 **Commands:**
@@ -121,7 +121,7 @@ Total: ~6-8 minutes
 
 **Goal:** Fast validation before merging to main/develop (E2E already tested in pre-push)
 
-### Push to main/develop
+### Push to main
 
 ```yaml
 .github/workflows/test.yml
@@ -268,7 +268,7 @@ npx playwright test --debug
 
 - **Pre-push hook** - all checks including E2E (comprehensive)
 - **PR checks** - all checks including E2E (before merge)
-- **Push to main/develop** - fast checks only (E2E already validated)
+- **Push to main** - fast checks only (E2E already validated, except for release commits with `[skip ci]`)
 - **Deployment** - fast checks only (E2E already validated)
 
 ### 🏃 On demand (manual)

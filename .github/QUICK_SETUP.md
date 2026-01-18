@@ -64,7 +64,7 @@ Settings → Secrets and variables → Actions → Variables → New repository 
 
 ## ✅ Готово!
 
-Теперь при push в `main` или `develop` автоматически запустится деплой на staging.
+Теперь при push в `main` автоматически запустится деплой на staging (кроме release коммитов с `[skip ci]`).
 
 ### Как проверить
 

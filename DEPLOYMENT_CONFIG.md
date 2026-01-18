@@ -5,7 +5,7 @@ This guide explains how to configure the unified deployment system for LoyaCare 
 ## 📋 Deployment Strategy
 
 The deployment system uses two dimensions:
-- **Environment:** Determined by branch (`main` → production, `develop` → staging)
+- **Environment:** Determined by trigger (`main` branch → staging, release tag → production)
 - **Deployment Type:** Determined by configuration priority (default: `docker`)
 
 ### Supported Combinations
@@ -131,8 +131,8 @@ DEPLOYMENT_TYPE=traditional
 # Push to main → Production deployment (type from config)
 git push origin main
 
-# Push to develop → Staging deployment (type from config)
-git push origin develop
+# Push to main → Staging deployment (type from config, except release commits)
+git push origin main
 ```
 
 ### Release Creation (Version Increment)
@@ -153,7 +153,7 @@ Use **workflow_dispatch** to override deployment type for specific runs:
 
 1. Go to **Actions → Deploy Application**
 2. Click **Run workflow**
-3. **Choose branch:** `main` (production) or `develop` (staging)
+3. **Choose branch:** `main` (for staging or testing)
 4. **Set inputs:**
    - **Deployment type:** Choose `docker` or `traditional` (leave empty to use default)
    - **Force deploy:** Check to bypass normal conditions
@@ -279,7 +279,7 @@ feature)
 ## 🚨 Troubleshooting
 
 ### Deployment Not Triggering
-- Check branch name matches (`main`/`develop`)
+- Check branch name is `main`
 - Verify workflow file is in `.github/workflows/deploy.yml`
 - Check GitHub Actions permissions
 

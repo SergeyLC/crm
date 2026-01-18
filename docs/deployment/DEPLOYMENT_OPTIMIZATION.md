@@ -24,7 +24,7 @@
 - **Time saved:** ~5 minutes
 - **Reason:** 
   - E2E tests already run in pre-push hooks
-  - E2E tests run on PR only (removed from push to main/develop)
+  - E2E tests run on PR only (removed from push to main)
   - Production deployment should be fast
   - E2E tests require browser installation (~2 min) + test execution (~3-5 min)
 
@@ -74,7 +74,7 @@ Playwright E2E tests are executed in:
    - Validates changes before merge
 
 **NOT in:**
-- Push to main/develop - for speed (already tested in pre-push)
+- Push to main - for speed (already tested in pre-push)
 - Deployment - for speed and efficiency
 
 ## Further Optimization Ideas

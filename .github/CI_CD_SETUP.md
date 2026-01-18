@@ -7,7 +7,7 @@ This project uses GitHub Actions for automated deployment to production and stag
 ## Workflow
 
 ### Staging Deployment
-- **Trigger**: Push to `main` or `develop` branch (except release commits with `[skip ci]`)
+- **Trigger**: Push to `main` branch (except release commits with `[skip ci]`)
 - **Environment**: Staging server
 - **Docker Images**: Tagged with `staging-{commit}-{timestamp}`
 - **Port**: 8080
@@ -269,7 +269,7 @@ docker compose -f docker-compose.stage.yml ps postgres
 
 ### Staging Deployment
 
-1. **Commit changes** to `main` or `develop` branch:
+1. **Commit changes** to `main` branch:
    ```bash
    git add .
    git commit -m "feat: add new feature"
