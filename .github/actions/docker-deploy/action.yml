@@ -39,6 +39,15 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Debug inputs
+      run: |
+        echo "🔍 Docker Deploy Inputs:"
+        echo "Environment: ${{ inputs.environment }}"
+        echo "Image tag: ${{ inputs.image_tag }}"
+        echo "Version: ${{ inputs.version }}"
+        echo "Server host: ${{ inputs.server_host }}"
+      shell: bash
+
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -127,6 +136,14 @@ runs:
         images: ghcr.io/${{ steps.repo.outputs.name }}/frontend
         tags: |
           type=raw,value=${{ inputs.image_tag }}
+
+    - name: Debug metadata outputs
+      run: |
+        echo "🔍 Metadata Debug:"
+        echo "Frontend tags: ${{ steps.meta-frontend.outputs.tags }}"
+        echo "Frontend version: ${{ steps.meta-frontend.outputs.version }}"
+        echo "Input image_tag: ${{ inputs.image_tag }}"
+      shell: bash
 
     - name: Extract metadata for backend Docker image
       id: meta-backend
