@@ -91,9 +91,11 @@ runs:
         IMAGE_TAG=""
         if [[ "$DEPLOYMENT_TYPE" == "docker" ]]; then
           if [[ "$IS_RELEASE" == "true" ]]; then
-            # Production release
+            # Production release - use production-v1.0.0 format
             VERSION="${GITHUB_REF#refs/tags/v}"
-            IMAGE_TAG="v${VERSION}"
+            COMMIT_SHORT=$(git rev-parse --short HEAD)
+            TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+            IMAGE_TAG="production-${COMMIT_SHORT}-${TIMESTAMP}"
           elif [[ "$ENVIRONMENT" == "production" ]]; then
             # Production (manual)
             IMAGE_TAG="latest"
