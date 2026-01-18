@@ -193,12 +193,12 @@ runs:
             NGINX_CONF="nginx.prod.conf"
             ENV_FILE=".env"
             CONTAINER_PREFIX="loyacrm"
-          elif [[ "${{ inputs.environment }}" == "develop" ]]; then
-            DEPLOY_DIR="/var/www/loyacrm-develop"
-            COMPOSE_FILE="docker-compose.develop.yml"
-            NGINX_CONF="nginx.develop.conf"
-            ENV_FILE=".env.develop"
-            CONTAINER_PREFIX="loyacrm-develop"
+          elif [[ "${{ inputs.environment }}" == "stage-develop" ]]; then
+            DEPLOY_DIR="/var/www/loyacrm-stage-develop"
+            COMPOSE_FILE="docker-compose.stage-develop.yml"
+            NGINX_CONF="nginx.stage-develop.conf"
+            ENV_FILE=".env.stage-develop"
+            CONTAINER_PREFIX="loyacrm-stage-develop"
           else
             DEPLOY_DIR="/var/www/loyacrm-staging"
             COMPOSE_FILE="docker-compose.stage.yml"
@@ -233,7 +233,7 @@ runs:
             PORT="80"
             BACKEND_URL="http://${{ inputs.server_host }}/api"
             CORS_ORIGIN="http://${{ inputs.server_host }}"
-          elif [[ "${{ inputs.environment }}" == "develop" ]]; then
+          elif [[ "${{ inputs.environment }}" == "stage-develop" ]]; then
             PORT="8081"
             BACKEND_URL="http://${{ inputs.server_host }}:8081/api"
             CORS_ORIGIN="http://${{ inputs.server_host }}:8081"
