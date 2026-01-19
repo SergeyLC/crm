@@ -37,22 +37,20 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-# Установите pnpm
-RUN npm install -g pnpm
+# Создаем пользователя для безопасности
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# Копируем только необходимые файлы для production
-COPY --from=builder /app/frontend/.next ./frontend/.next
-COPY --from=builder /app/frontend/public ./frontend/public
-COPY --from=builder /app/frontend/package.json ./frontend/package.json
-COPY --from=builder /app/frontend/next.config.js ./frontend/next.config.js
-COPY --from=builder /app/pnpm-workspace.yaml ./
-COPY --from=builder /app/pnpm-lock.yaml ./
+# Копируем standalone build (включает все необходимые зависимости)
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/public ./frontend/public
 
-# Установите только production зависимости
-RUN cd frontend && pnpm install --prod --frozen-lockfile
+# Переключаемся на пользователя nextjs
+USER nextjs
 
 # Экспонируйте порт
 EXPOSE 3000
 
-# Команда запуска
-CMD ["sh", "-c", "cd frontend && PORT=${PORT:-3000} pnpm run start"]
+# Запуск standalone сервера Next.js
+CMD ["node", "frontend/server.js"]

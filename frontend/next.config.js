@@ -12,6 +12,8 @@ const nextConfig = () => {
     i18n: null,
     // Set the workspace root for proper file tracing in monorepo
     outputFileTracingRoot: path.join(__dirname, '..'),
+    // Enable standalone output for Docker deployment
+    output: isProduction ? 'standalone' : undefined,
     // Environment variables to be exposed to the client
     env: {
       NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
