@@ -1,32 +1,28 @@
-FROM node:24-alpine
+# ==================== Build Stage ====================
+FROM node:24-alpine AS builder
 
 # Установите рабочую директорию
 WORKDIR /app
 
-# Скопируйте workspace файлы
-COPY ../pnpm-workspace.yaml ./
-COPY ../pnpm-lock.yaml ./
-
-# Скопируйте package.json frontend
-COPY ../frontend/package.json ./frontend/package.json
-
-# Скопируйте db файлы для генерации Prisma клиента
-COPY ../db/package.json ./db/package.json
-COPY ../db/prisma/ ./db/prisma/
-
 # Установите pnpm глобально
-RUN npm install -g pnpm prisma
+RUN npm install -g pnpm
 
-# Установите все зависимости для workspace (включая devDependencies для генерации Prisma клиента)
-RUN pnpm install --no-frozen-lockfile
+# Скопируйте workspace файлы
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
 
-# Скопируйте исходный код frontend
-COPY ../frontend/ ./frontend/
+# Скопируйте package.json файлы
+COPY frontend/package.json ./frontend/package.json
+COPY db/package.json ./db/package.json
 
-# Скопируйте db исходный код
-COPY ../db/ ./db/
+# Установите зависимости
+RUN pnpm install --frozen-lockfile
 
-# Генерируйте Prisma клиент для frontend
+# Скопируйте исходный код
+COPY db/ ./db/
+COPY frontend/ ./frontend/
+
+# Генерируйте Prisma клиент
 RUN cd db && pnpm run generate
 
 # Build args для Next.js
@@ -36,8 +32,27 @@ ENV NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION}
 # Соберите Next.js приложение
 RUN cd frontend && pnpm run build
 
-# Экспонируйте порт
-EXPOSE 3002 3003 3004
+# ==================== Production Stage ====================
+FROM node:24-alpine
 
-# Команда запуска (будет переопределена в docker-compose для dev режима)
-CMD ["sh", "-c", "cd frontend && PORT=${PORT:-3002} pnpm run start"]
+WORKDIR /app
+
+# Установите pnpm
+RUN npm install -g pnpm
+
+# Копируем только необходимые файлы для production
+COPY --from=builder /app/frontend/.next ./frontend/.next
+COPY --from=builder /app/frontend/public ./frontend/public
+COPY --from=builder /app/frontend/package.json ./frontend/package.json
+COPY --from=builder /app/frontend/next.config.js ./frontend/next.config.js
+COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/pnpm-lock.yaml ./
+
+# Установите только production зависимости
+RUN cd frontend && pnpm install --prod --frozen-lockfile
+
+# Экспонируйте порт
+EXPOSE 3000
+
+# Команда запуска
+CMD ["sh", "-c", "cd frontend && PORT=${PORT:-3000} pnpm run start"]
