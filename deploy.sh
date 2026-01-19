@@ -234,16 +234,16 @@ if [ "$CREATING_RELEASE" = true ]; then
   fi
 
   # Build commit message BEFORE committing
-  # Release message - add [skip ci] to avoid staging deployment
+  # Release message - removed [skip ci] to allow GitHub Actions to trigger on tag push
   if [ -n "$ADDITIONAL_MESSAGE" ]; then
-    COMMIT_MESSAGE="[skip ci] chore(release): v$VERSION - $ADDITIONAL_MESSAGE"
+    COMMIT_MESSAGE="chore(release): v$VERSION - $ADDITIONAL_MESSAGE"
   else
-    COMMIT_MESSAGE="[skip ci] chore(release): v$VERSION"
+    COMMIT_MESSAGE="chore(release): v$VERSION"
   fi
   
   echo -e "${CYAN}🏷️  Preparing release: $VERSION${NC}"
   echo -e "${CYAN}📝 Commit and tag message: \"$COMMIT_MESSAGE\"${NC}"
-  echo -e "${YELLOW}ℹ️  Staging deployment will be skipped (release commits only trigger production)${NC}"
+  echo -e "${YELLOW}ℹ️  Production deployment will be triggered by GitHub Actions on tag push${NC}"
 else
   # Regular commit message
   if [ -n "$ADDITIONAL_MESSAGE" ]; then
