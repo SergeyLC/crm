@@ -34,42 +34,41 @@ RUN cd backend && prisma generate --schema ../db/prisma/schema.prisma
 # Build TypeScript code
 RUN cd backend && pnpm run build
 
-# Remove devDependencies after build
-RUN cd backend && pnpm prune --prod
-
 # ============================================================
-# Stage 2: Production - minimal runtime image
+# Stage 2: Production - only runtime dependencies
 # ============================================================
 FROM node:24-alpine
 
 WORKDIR /app
 
-# Copy workspace structure (needed for pnpm workspace resolution)
+# Copy workspace files
 COPY ../pnpm-workspace.yaml ./
+COPY ../pnpm-lock.yaml ./
+
+# Copy package.json for backend and db
 COPY ../backend/package.json ./backend/package.json
 COPY ../db/package.json ./db/package.json
 
-# Copy db prisma schema
+# Copy db prisma files (needed for Prisma client)
 COPY ../db/prisma/ ./db/prisma/
 
-# Copy pruned node_modules from builder
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/backend/node_modules ./backend/node_modules
+# Install pnpm and prisma globally
+RUN npm install -g pnpm prisma
 
-# Copy built backend
+# Install ONLY production dependencies
+RUN pnpm install --prod --no-frozen-lockfile
+
+# Copy built backend from builder stage
 COPY --from=builder /app/backend/dist ./backend/dist
 
-# Copy generated Prisma client
+# Copy generated Prisma client from builder stage
 COPY --from=builder /app/backend/generated ./backend/generated
 
-# Install prisma CLI for runtime migrations (optional)
-RUN npm install -g prisma
+# Generate Prisma client in production (needed for runtime)
+RUN cd backend && prisma generate --schema ../db/prisma/schema.prisma
 
 # Expose ports
 EXPOSE 4002 4003 4004
 
 # Start command
 CMD ["sh", "-c", "cd backend && PORT=${PORT:-4002} node dist/server.js"]
-
-# Start command - running directly from deployed bundle
-CMD ["sh", "-c", "PORT=${PORT:-4002} node dist/server.js"]
