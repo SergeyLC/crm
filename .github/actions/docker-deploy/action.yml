@@ -316,7 +316,10 @@ runs:
           # Convert repository name to lowercase for Docker
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           
-          echo "🐳 Pulling Docker images..."
+          echo "� Logging in to GitHub Container Registry..."
+          echo "${{ inputs.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          echo "�🐳 Pulling Docker images..."
           docker pull ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}
           docker pull ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}
 
