@@ -61,3 +61,5 @@ ecosystem.config.js
 **/.nvmrc
 
 db/temp/
+# session summaries - private notes and debugging info
+.session-summaries/
