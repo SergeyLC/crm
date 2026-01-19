@@ -34,35 +34,34 @@ RUN cd backend && prisma generate --schema ../db/prisma/schema.prisma
 # Build TypeScript code
 RUN cd backend && pnpm run build
 
-# Use pnpm deploy to create isolated production bundle
-# This extracts only production dependencies into /app/deploy
-RUN pnpm deploy --filter=loya-crm-backend --prod /app/deploy
-
-# Copy built files and generated Prisma client to deploy folder
-RUN cp -r /app/backend/dist /app/deploy/dist && \
-    cp -r /app/backend/generated /app/deploy/generated 2>/dev/null || true
-
 # ============================================================
-# Stage 2: Production - minimal runtime image
+# Stage 2: Production - minimal runtime image  
 # ============================================================
-FROM node:24-alpine
-
-# Install only what's needed for Prisma
-RUN apk add --no-cache openssl
+FROM node:24-alpine AS production
 
 WORKDIR /app
 
-# Copy the deployed bundle (includes only production node_modules)
-COPY --from=builder /app/deploy ./
+# Copy only necessary files from builder
+COPY --from=builder /app/backend/package.json ./package.json
+COPY --from=builder /app/backend/dist ./dist
 
-# Copy Prisma schema for runtime
+# Copy Prisma schema
 COPY ../db/prisma/schema.prisma ./prisma/schema.prisma
 
-# Regenerate Prisma client for Alpine (different binary)
-RUN npx prisma generate --schema ./prisma/schema.prisma
+# Install pnpm for production dependencies
+RUN npm install -g pnpm prisma
+
+# Install only production dependencies (no devDeps)
+RUN pnpm install --prod --ignore-scripts
+
+# Generate Prisma client (needs to be regenerated for Alpine)
+RUN prisma generate --schema ./prisma/schema.prisma
 
 # Expose ports
 EXPOSE 4002 4003 4004
+
+# Start command
+CMD ["sh", "-c", "PORT=${PORT:-4002} node dist/server.js"]
 
 # Start command - running directly from deployed bundle
 CMD ["sh", "-c", "PORT=${PORT:-4002} node dist/server.js"]
