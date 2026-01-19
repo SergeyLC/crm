@@ -37,6 +37,9 @@ FROM node:24-alpine
 
 WORKDIR /app
 
+# Установим curl для healthcheck
+RUN apk add --no-cache curl
+
 # Создаем пользователя для безопасности
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
