@@ -34,34 +34,42 @@ RUN cd backend && prisma generate --schema ../db/prisma/schema.prisma
 # Build TypeScript code
 RUN cd backend && pnpm run build
 
+# Remove devDependencies after build
+RUN cd backend && pnpm prune --prod
+
 # ============================================================
-# Stage 2: Production - minimal runtime image  
+# Stage 2: Production - minimal runtime image
 # ============================================================
-FROM node:24-alpine AS production
+FROM node:24-alpine
 
 WORKDIR /app
 
-# Copy only necessary files from builder
-COPY --from=builder /app/backend/package.json ./package.json
-COPY --from=builder /app/backend/dist ./dist
+# Copy workspace structure (needed for pnpm workspace resolution)
+COPY ../pnpm-workspace.yaml ./
+COPY ../backend/package.json ./backend/package.json
+COPY ../db/package.json ./db/package.json
 
-# Copy Prisma schema
-COPY ../db/prisma/schema.prisma ./prisma/schema.prisma
+# Copy db prisma schema
+COPY ../db/prisma/ ./db/prisma/
 
-# Install pnpm for production dependencies
-RUN npm install -g pnpm prisma
+# Copy pruned node_modules from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/backend/node_modules ./backend/node_modules
 
-# Install only production dependencies (no devDeps)
-RUN pnpm install --prod --ignore-scripts
+# Copy built backend
+COPY --from=builder /app/backend/dist ./backend/dist
 
-# Generate Prisma client (needs to be regenerated for Alpine)
-RUN prisma generate --schema ./prisma/schema.prisma
+# Copy generated Prisma client
+COPY --from=builder /app/backend/generated ./backend/generated
+
+# Install prisma CLI for runtime migrations (optional)
+RUN npm install -g prisma
 
 # Expose ports
 EXPOSE 4002 4003 4004
 
 # Start command
-CMD ["sh", "-c", "PORT=${PORT:-4002} node dist/server.js"]
+CMD ["sh", "-c", "cd backend && PORT=${PORT:-4002} node dist/server.js"]
 
 # Start command - running directly from deployed bundle
 CMD ["sh", "-c", "PORT=${PORT:-4002} node dist/server.js"]
