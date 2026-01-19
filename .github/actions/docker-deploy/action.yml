@@ -187,7 +187,7 @@ runs:
         username: ${{ inputs.server_user }}
         key: ${{ inputs.server_ssh_key }}
         source: "docker-compose.yml,docker-compose.production.yml,docker-compose.stage.yml,docker-compose.stage-main.yml,docker-compose.stage-develop.yml,nginx.conf,nginx.stage.conf,nginx.stage-main.conf,nginx.prod.conf,nginx.stage-develop.conf"
-        target: "/tmp/loyacrm-deploy-${{ github.run_id }}/"
+        target: "/tmp/loyacrm-deploy-${{ github.run_id }}"
         strip_components: 0
 
     - name: Deploy to ${{ inputs.environment }} server
