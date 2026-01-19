@@ -124,11 +124,11 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
       sensors={sensors}
       collisionDetection={customCollisionDetection}
       onDragOver={onDragOver}
-      onDragEnd={(e) => {
+      onDragEnd={(e: any) => {
         setActiveId(null);
         onDragEndInternal(e);
       }}
-      onDragStart={(e) => {
+      onDragStart={(e: any) => {
         setActiveId(String(e.active.id));
       }}
     >
@@ -207,7 +207,7 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
           style={{ zIndex: 1400 }}
           modifiers={[
             // Switch off automatic scaling
-            ({ transform }) => ({
+            ({ transform }: any) => ({
               ...transform,
               scaleX: 1,
               scaleY: 1,

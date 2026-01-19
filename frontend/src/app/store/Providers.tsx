@@ -13,6 +13,7 @@ interface ProvidersProps { children: ReactNode }
 export function Providers({ children }: ProvidersProps) {
   return (
     <QueryProvider>
+      {/* @ts-ignore - notistack compatibility with React 19 */}
       <SnackbarProvider
         maxSnack={3}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
