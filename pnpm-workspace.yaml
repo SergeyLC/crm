@@ -2,3 +2,11 @@ packages:
   - 'frontend'
   - 'backend'
   - 'db'
+allowBuilds:
+  '@prisma/engines': true
+  bcrypt: true
+  cypress: true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
