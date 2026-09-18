@@ -21,7 +21,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: docker/backend/Dockerfile
+      dockerfile: docker/backend/Dockerfile.dev
     container_name: loyacrm-backend-dev
     env_file:
       - .env.dev
@@ -37,8 +37,8 @@ services:
       retries: 3
     networks:
       - loyacrm-dev-network
-    # Override the production CMD to enable hot reload
-    command: sh -c "cd backend && pnpm run dev"
+    # Hot reload (WORKDIR is already /app/backend in Dockerfile.dev)
+    command: sh -c "pnpm run dev"
     volumes:
       # Mount source code for hot reload
       - ./backend/src:/app/backend/src
@@ -52,21 +52,23 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: docker/frontend/Dockerfile
+      dockerfile: docker/frontend/Dockerfile.dev
     container_name: loyacrm-frontend-dev
     env_file:
       - .env.dev
     environment:
       - PORT=3000
       - TURBO_FORCE=false
+      - CYPRESS_INSTALL_BINARY=0
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
     expose:
       - "3000"
     depends_on:
       - backend
     networks:
       - loyacrm-dev-network
-    # Override for development
-    command: sh -c "cd frontend && TURBO_FORCE=false pnpm run dev"
+    # Hot reload (WORKDIR is already /app/frontend in Dockerfile.dev)
+    command: sh -c "TURBO_FORCE=false pnpm run dev"
     volumes:
       # Mount source code for hot reload
       - ./frontend/src:/app/frontend/src

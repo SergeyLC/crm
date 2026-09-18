@@ -1,0 +1,23 @@
+# Dev image: deps + hot-reload via compose volumes
+FROM node:24-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache curl \
+  && npm install -g pnpm@10
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY backend/package.json ./backend/package.json
+COPY db/package.json ./db/package.json
+
+ENV NODE_ENV=development
+RUN pnpm install --no-frozen-lockfile
+
+COPY db ./db
+COPY backend ./backend
+# Use pre-generated Prisma client (includes linux-musl binaries)
+COPY db/generated/prisma-client/ ./backend/generated/prisma/
+
+WORKDIR /app/backend
+EXPOSE 4000
+CMD ["pnpm", "run", "dev"]

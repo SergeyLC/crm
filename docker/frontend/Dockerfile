@@ -15,6 +15,10 @@ COPY pnpm-lock.yaml ./
 COPY frontend/package.json ./frontend/package.json
 COPY db/package.json ./db/package.json
 
+# Skip Cypress binary download in Docker builds (not needed for app runtime)
+ENV CYPRESS_INSTALL_BINARY=0
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
 # Установите зависимости
 RUN pnpm install --frozen-lockfile
 

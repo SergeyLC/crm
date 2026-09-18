@@ -28,13 +28,26 @@ Write-Host "==> Waiting for containers..."
 Start-Sleep -Seconds 15
 docker compose -f docker-compose.dev.yml ps
 
-Write-Host "==> Applying migrations (if backend is up)..."
-docker compose -f docker-compose.dev.yml exec -T backend sh -c "cd /app/db && pnpm run migrate:deploy" 2>$null
+Write-Host "==> Applying migrations from host (Docker Postgres on :5435)..."
+$env:DATABASE_URL = "postgresql://${env:POSTGRES_USER}:${env:POSTGRES_PASSWORD}@localhost:5435/${env:POSTGRES_DB}"
+if (-not $env:POSTGRES_USER) {
+  # Fallback from .env.dev defaults used in this repo
+  Get-Content .env.dev | ForEach-Object {
+    if ($_ -match '^\s*([^#][^=]+)=(.*)$') {
+      Set-Item -Path "Env:$($matches[1].Trim())" -Value $matches[2].Trim()
+    }
+  }
+  $env:DATABASE_URL = "postgresql://${env:POSTGRES_USER}:${env:POSTGRES_PASSWORD}@localhost:5435/${env:POSTGRES_DB}"
+}
+Push-Location db
+pnpm exec prisma migrate deploy
+Pop-Location
 
 Write-Host ""
 Write-Host "App (Nginx):  http://localhost:3003"
 Write-Host "API health:   http://localhost:3003/api/health"
 Write-Host "DB (host):    localhost:5435"
+Write-Host "Login seed:   admin@loya.care / 1"
 Write-Host ""
 Write-Host "Logs: docker compose -f docker-compose.dev.yml logs -f"
 Write-Host "Stop: docker compose -f docker-compose.dev.yml down"

@@ -1,0 +1,25 @@
+# Dev image: deps + hot-reload via compose volumes
+FROM node:24-alpine
+
+WORKDIR /app
+
+RUN npm install -g pnpm@10
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY frontend/package.json ./frontend/package.json
+COPY db/package.json ./db/package.json
+
+ENV CYPRESS_INSTALL_BINARY=0
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV NODE_ENV=development
+
+RUN pnpm install --frozen-lockfile
+
+COPY db ./db
+COPY frontend ./frontend
+# Use pre-generated Prisma client (includes linux-musl binaries)
+COPY db/generated/prisma-client/ ./frontend/src/shared/generated/prisma/
+
+WORKDIR /app/frontend
+EXPOSE 3000
+CMD ["pnpm", "run", "dev"]

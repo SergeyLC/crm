@@ -16,8 +16,8 @@ COPY ../db/package.json ./db/package.json
 # Copy db prisma files for client generation
 COPY ../db/prisma/ ./db/prisma/
 
-# Install pnpm and prisma globally
-RUN npm install -g pnpm prisma
+# Install pnpm and prisma globally (pin to project Prisma major)
+RUN npm install -g pnpm prisma@7.0.1
 
 # Install ALL dependencies (including devDependencies for build)
 RUN pnpm install --no-frozen-lockfile
@@ -52,8 +52,8 @@ COPY ../db/package.json ./db/package.json
 # Copy db prisma files (needed for Prisma client)
 COPY ../db/prisma/ ./db/prisma/
 
-# Install pnpm and prisma globally
-RUN npm install -g pnpm prisma
+# Install pnpm and prisma globally (pin to project Prisma major)
+RUN npm install -g pnpm prisma@7.0.1
 
 # Install ONLY production dependencies
 RUN pnpm install --prod --no-frozen-lockfile
