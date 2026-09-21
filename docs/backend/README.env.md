@@ -48,7 +48,7 @@ Backend supports loading environment variables from multiple `.env.*` files with
 ### Store secrets in `.local` files:
 ```bash
 # .env.development.local (not committed)
-DATABASE_URL="postgresql://postgres:my_real_password@localhost:5432/loya_care_crm"
+DATABASE_URL="postgresql://postgres:my_real_password@localhost:5432/crm"
 JWT_SECRET="my-super-secret-key-min-32-chars-long"
 ```
 
@@ -84,7 +84,7 @@ JWT_SECRET="my-super-secret-key-min-32-chars-long"
 
 2. Edit `.env.development.local` and add your secrets:
    ```bash
-   DATABASE_URL="postgresql://postgres:your_password@localhost:5432/loya_care_crm"
+   DATABASE_URL="postgresql://postgres:your_password@localhost:5432/crm"
    JWT_SECRET="your-secret-key-min-32-characters-long"
    ```
 

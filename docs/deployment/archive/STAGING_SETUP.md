@@ -10,13 +10,13 @@ Two independent environments will run on one server:
 Production:
   - Frontend: localhost:3000
   - Backend: localhost:4000
-  - Database: loya_care_crm_prod
+  - Database: crm_prod_prod
   - Directory: /var/www/crm
 
 Staging:
   - Frontend: localhost:3001
   - Backend: localhost:4001
-  - Database: loya_care_crm_staging
+  - Database: crm_prod_staging
   - Directory: /var/www/crm-staging
 ```
 
@@ -31,7 +31,7 @@ cd /var/www/crm-staging
 ## Step 2: Clone repository
 
 ```bash
-git clone https://github.com/Betreut-zu-Hause/LoyaCareCRM.git .
+git clone git@github.com:SergeyLC/crm.git .
 git checkout main
 ```
 
@@ -47,10 +47,10 @@ In PostgreSQL shell:
 CREATE USER loyacare_staging WITH PASSWORD 'staging_password_here';
 
 -- Create database
-CREATE DATABASE loya_care_crm_staging OWNER loyacare_staging;
+CREATE DATABASE crm_prod_staging OWNER loyacare_staging;
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_staging TO loyacare_staging;
+GRANT ALL PRIVILEGES ON DATABASE crm_prod_staging TO loyacare_staging;
 
 -- Exit
 \q
@@ -58,7 +58,7 @@ GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_staging TO loyacare_staging;
 
 Test connection:
 ```bash
-psql "postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging"
+psql "postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging"
 ```
 
 ## Step 4: Create environment files for staging
@@ -72,7 +72,7 @@ nano .env.production.local
 
 Content:
 ```bash
-DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging"
+DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging"
 JWT_SECRET="staging-jwt-secret-generate-with-openssl-rand-hex-32"
 CORS_ORIGIN="https://staging.your-domain.com"
 PRISMA_LOG_LEVEL=warn
@@ -116,7 +116,7 @@ nano .env.production.local
 
 Content:
 ```bash
-DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging"
+DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging"
 PRISMA_LOG_LEVEL=warn
 ```
 
@@ -483,7 +483,7 @@ nano .env.production.local
 
 Update:
 ```bash
-DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging"
+DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging"
 JWT_SECRET="staging-jwt-secret-generate-with-openssl-rand-hex-32"
 CORS_ORIGIN="http://161.97.67.253:8001"
 PRISMA_LOG_LEVEL=warn
@@ -509,7 +509,7 @@ STAGING_SERVER_HOST=161.97.67.253
 STAGING_SERVER_USER=your-ssh-user
 STAGING_SERVER_SSH_KEY=<same-as-production-or-new-key>
 
-STAGING_DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging
+STAGING_DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging
 STAGING_JWT_SECRET=staging-jwt-secret-here
 STAGING_CORS_ORIGIN=https://staging.your-domain.com
 STAGING_NEXT_PUBLIC_API_URL=https://staging.your-domain.com
@@ -523,7 +523,7 @@ STAGING_SERVER_HOST=161.97.67.253
 STAGING_SERVER_USER=your-ssh-user
 STAGING_SERVER_SSH_KEY=<same-as-production-or-new-key>
 
-STAGING_DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging
+STAGING_DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging
 STAGING_JWT_SECRET=staging-jwt-secret-here
 STAGING_CORS_ORIGIN=http://161.97.67.253:8001
 STAGING_NEXT_PUBLIC_API_URL=http://161.97.67.253:8002/api
@@ -647,7 +647,7 @@ pnpm run seed
 ### Backup staging database
 
 ```bash
-pg_dump -U loyacare_staging -d loya_care_crm_staging > staging_backup_$(date +%Y%m%d).sql
+pg_dump -U loyacare_staging -d crm_prod_staging > staging_backup_$(date +%Y%m%d).sql
 ```
 
 ## Troubleshooting
@@ -694,7 +694,7 @@ cat .env.production.local | grep DATABASE_URL
 
 Direct connection test:
 ```bash
-psql "postgresql://loyacare_staging:password@localhost:5432/loya_care_crm_staging"
+psql "postgresql://loyacare_staging:password@localhost:5432/crm_prod_staging"
 ```
 
 ### CORS errors

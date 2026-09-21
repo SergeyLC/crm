@@ -21,7 +21,7 @@ cd /var/www/crm
 ## Step 2: Clone Repository
 
 ```bash
-git clone https://github.com/Betreut-zu-Hause/LoyaCareCRM.git .
+git clone git@github.com:SergeyLC/crm.git .
 git checkout main
 ```
 
@@ -37,7 +37,7 @@ nano .env.production.local
 
 Fill in:
 ```bash
-DATABASE_URL="postgresql://your_db_user:your_db_password@localhost:5432/loya_care_crm_prod"
+DATABASE_URL="postgresql://your_db_user:your_db_password@localhost:5432/crm_prod_prod"
 JWT_SECRET="your-32-char-secret-generate-with-openssl-rand-hex-32"
 CORS_ORIGIN="https://your-domain.com"
 ```
@@ -76,7 +76,7 @@ nano .env.production.local
 
 Fill in:
 ```bash
-DATABASE_URL="postgresql://your_db_user:your_db_password@localhost:5432/loya_care_crm_prod"
+DATABASE_URL="postgresql://your_db_user:your_db_password@localhost:5432/crm_prod_prod"
 ```
 
 Secure the file:
@@ -105,10 +105,10 @@ In PostgreSQL shell:
 CREATE USER loyacare_prod WITH PASSWORD 'your_strong_password_here';
 
 -- Create database
-CREATE DATABASE loya_care_crm_prod OWNER loyacare_prod;
+CREATE DATABASE crm_prod_prod OWNER loyacare_prod;
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_prod TO loyacare_prod;
+GRANT ALL PRIVILEGES ON DATABASE crm_prod_prod TO loyacare_prod;
 
 -- Exit
 \q
@@ -117,7 +117,7 @@ GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_prod TO loyacare_prod;
 ### Test Connection
 
 ```bash
-psql "postgresql://loyacare_prod:your_password@localhost:5432/loya_care_crm_prod"
+psql "postgresql://loyacare_prod:your_password@localhost:5432/crm_prod_prod"
 ```
 
 ## Step 6: Initial Build (Manual First Time)
@@ -258,7 +258,7 @@ pm2 env 0
 
 ```bash
 # Test connection manually
-psql "postgresql://loyacare_prod:password@localhost:5432/loya_care_crm_prod"
+psql "postgresql://loyacare_prod:password@localhost:5432/crm_prod_prod"
 
 # Check if PostgreSQL is running
 sudo systemctl status postgresql

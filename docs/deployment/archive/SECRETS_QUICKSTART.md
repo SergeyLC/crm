@@ -17,7 +17,7 @@ SERVER_SSH_KEY=<content of private SSH key>
 
 ### 2. Database
 ```
-DATABASE_URL=postgresql://loyacare_prod:password@localhost:5432/loya_care_crm_prod
+DATABASE_URL=postgresql://loyacare_prod:password@localhost:5432/crm_prod_prod
 ```
 
 ### 3. Security
@@ -41,7 +41,7 @@ NEXT_PUBLIC_BACKEND_API_URL=https://api.your-domain.com/api
 
 ### Quick way:
 
-1. Open: `https://github.com/Betreut-zu-Hause/LoyaCareCRM/settings/secrets/actions`
+1. Open: `https://github.com/SergeyLC/crm/settings/secrets/actions`
 2. Click **"New repository secret"**
 3. Add each secret from the list above
 4. **Important:** secret names must match exactly!

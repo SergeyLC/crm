@@ -16,7 +16,7 @@ After setup, staging will be available at:
 # Backend
 cd /var/www/crm-staging/backend
 cat > .env.production.local << 'EOF'
-DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging"
+DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging"
 JWT_SECRET="staging-jwt-secret-generate-with-openssl-rand-hex-32"
 CORS_ORIGIN="http://161.97.67.253:8001"
 PRISMA_LOG_LEVEL=warn
@@ -40,7 +40,7 @@ chmod 600 .env.production.local
 # Database
 cd /var/www/crm-staging/db
 cat > .env.production.local << 'EOF'
-DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging"
+DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging"
 PRISMA_LOG_LEVEL=warn
 EOF
 chmod 600 .env.production.local
@@ -117,7 +117,7 @@ SERVER_HOST=161.97.67.253
 SERVER_USER=root  # or your user
 SERVER_SSH_KEY=<your-ssh-key>
 
-DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging
+DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging
 JWT_SECRET=<generate with: openssl rand -hex 32>
 CORS_ORIGIN=http://161.97.67.253:8001
 NEXT_PUBLIC_API_URL=http://161.97.67.253:8002/api
@@ -133,7 +133,7 @@ STAGING_SERVER_HOST=161.97.67.253
 STAGING_SERVER_USER=root  # or your user
 STAGING_SERVER_SSH_KEY=<your-ssh-key>
 
-STAGING_DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging
+STAGING_DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging
 STAGING_JWT_SECRET=<generate with: openssl rand -hex 32>
 STAGING_CORS_ORIGIN=http://161.97.67.253:8001
 STAGING_NEXT_PUBLIC_API_URL=http://161.97.67.253:8002/api

@@ -532,7 +532,7 @@ Create `.env.docker.prod` (NOT in git):
 # Database
 DB_USER=loyacare_prod
 DB_PASSWORD=STRONG_PASSWORD_HERE
-DB_NAME=loya_care_crm_prod
+DB_NAME=crm_prod_prod
 
 # Backend
 JWT_SECRET=YOUR_32_CHAR_SECRET_HERE
@@ -707,10 +707,10 @@ psql -U postgres
 CREATE USER loyacare_prod WITH PASSWORD 'your-strong-password';
 
 -- Create database
-CREATE DATABASE loya_care_crm_prod OWNER loyacare_prod;
+CREATE DATABASE crm_prod_prod OWNER loyacare_prod;
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_prod TO loyacare_prod;
+GRANT ALL PRIVILEGES ON DATABASE crm_prod_prod TO loyacare_prod;
 ```
 
 ### 2. Run Migrations

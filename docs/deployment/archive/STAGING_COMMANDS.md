@@ -19,8 +19,8 @@ echo -e "${BLUE}🚀 Starting staging setup...${NC}"
 echo -e "${BLUE}📦 Creating staging database...${NC}"
 sudo -u postgres psql << 'EOF'
 CREATE USER loyacare_staging WITH PASSWORD 'StAgInG_PaSsWoRd_2024!';
-CREATE DATABASE loya_care_crm_staging OWNER loyacare_staging;
-GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_staging TO loyacare_staging;
+CREATE DATABASE crm_prod_staging OWNER loyacare_staging;
+GRANT ALL PRIVILEGES ON DATABASE crm_prod_staging TO loyacare_staging;
 \q
 EOF
 
@@ -29,7 +29,7 @@ echo -e "${BLUE}📥 Cloning repository...${NC}"
 sudo mkdir -p /var/www/crm-staging
 sudo chown $USER:$USER /var/www/crm-staging
 cd /var/www/crm-staging
-git clone https://github.com/Betreut-zu-Hause/LoyaCareCRM.git .
+git clone git@github.com:SergeyLC/crm.git .
 git checkout main
 
 # 3. Create environment files
@@ -37,7 +37,7 @@ echo -e "${BLUE}🔧 Creating environment files...${NC}"
 
 # Backend .env
 cat > backend/.env.production.local << 'EOF'
-DATABASE_URL="postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/loya_care_crm_staging"
+DATABASE_URL="postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/crm_prod_staging"
 JWT_SECRET="staging-jwt-secret-32-chars-long-min"
 CORS_ORIGIN="http://161.97.67.253:8001"
 PRISMA_LOG_LEVEL=warn
@@ -59,7 +59,7 @@ chmod 600 frontend/.env.production.local
 
 # Database .env
 cat > db/.env.production.local << 'EOF'
-DATABASE_URL="postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/loya_care_crm_staging"
+DATABASE_URL="postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/crm_prod_staging"
 PRISMA_LOG_LEVEL=warn
 EOF
 chmod 600 db/.env.production.local
@@ -248,8 +248,8 @@ sudo -u postgres psql
 In PostgreSQL:
 ```sql
 CREATE USER loyacare_staging WITH PASSWORD 'StAgInG_PaSsWoRd_2024!';
-CREATE DATABASE loya_care_crm_staging OWNER loyacare_staging;
-GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_staging TO loyacare_staging;
+CREATE DATABASE crm_prod_staging OWNER loyacare_staging;
+GRANT ALL PRIVILEGES ON DATABASE crm_prod_staging TO loyacare_staging;
 \q
 ```
 
@@ -259,7 +259,7 @@ GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_staging TO loyacare_staging;
 sudo mkdir -p /var/www/crm-staging
 sudo chown $USER:$USER /var/www/crm-staging
 cd /var/www/crm-staging
-git clone https://github.com/Betreut-zu-Hause/LoyaCareCRM.git .
+git clone git@github.com:SergeyLC/crm.git .
 ```
 
 ### 3. Environment files
@@ -314,7 +314,7 @@ SERVER_HOST=161.97.67.253
 SERVER_USER=root  # or your user
 SERVER_SSH_KEY=<output from cat ~/.ssh/id_rsa>
 
-DATABASE_URL=postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/loya_care_crm_staging
+DATABASE_URL=postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/crm_prod_staging
 JWT_SECRET=<output from openssl rand -hex 32>
 CORS_ORIGIN=http://161.97.67.253:8001
 NEXT_PUBLIC_API_URL=http://161.97.67.253:8002/api
