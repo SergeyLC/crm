@@ -71,7 +71,7 @@ For testing Docker deployment without changing secrets:
 
 **Purpose:** Automatic build and deploy of every change in main to staging for testing in containerized environment.
 
-**Important:** Staging database is populated with test data via `seed.ts` on every deploy. This creates users (`admin@loya.care`, `v1@loya.care`, etc.) with password `1` for testing.
+**Important:** Staging database is populated with test data via `seed.ts` on every deploy. This creates users (`admin@example.com`, `v1@example.com`, etc.) with password `1` for testing.
 
 **Docker Services (Staging):**
 - **PostgreSQL:** Database container
@@ -479,4 +479,4 @@ The Docker CI/CD workflow provides:
 - ✅ Build metadata for tracking versions in staging
 - ✅ Isolated, portable, and scalable containerized deployments
 - ✅ Consistent environments across development, staging, and production</content>
-<parameter name="filePath">/Users/sergeydaub/work/BZH/LoyaCareCRM/docs/deployment/DOCKER_CI_CD_WORKFLOW.md
+<parameter name="filePath">/Users/sergeydaub/work/BZH/CRM/docs/deployment/DOCKER_CI_CD_WORKFLOW.md

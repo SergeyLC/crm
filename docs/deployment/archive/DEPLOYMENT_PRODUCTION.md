@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-This guide covers deploying the LoyaCare CRM to production with proper security practices for environment variables and secrets.
+This guide covers deploying the CRM to production with proper security practices for environment variables and secrets.
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
@@ -57,7 +57,7 @@ Update `ecosystem.config.js` in the project root:
 module.exports = {
   apps: [
     {
-      name: 'loyacare-backend',
+      name: 'crm-backend',
       script: './backend/dist/server.js',
       instances: 2,
       exec_mode: 'cluster',
@@ -74,7 +74,7 @@ module.exports = {
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     },
     {
-      name: 'loyacare-frontend',
+      name: 'crm-frontend',
       script: 'node_modules/next/dist/bin/next',
       args: 'start',
       cwd: './frontend',
@@ -188,7 +188,7 @@ Updated `ecosystem.config.js` configuration:
 module.exports = {
   apps: [
     {
-      name: 'loyacare-backend',
+      name: 'crm-backend',
       script: './backend/dist/server.js',
       instances: 2,
       exec_mode: 'cluster',
@@ -205,7 +205,7 @@ module.exports = {
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     },
     {
-      name: 'loyacare-frontend',
+      name: 'crm-frontend',
       script: 'node_modules/next/dist/bin/next',
       args: 'start',
       cwd: './frontend',
@@ -270,7 +270,7 @@ pm2 env 0  # 0 is the application ID from pm2 status
 
 ```bash
 # View all variables for a specific process
-pm2 env loyacare-backend
+pm2 env crm-backend
 
 # Or by ID
 pm2 env 0
@@ -315,8 +315,8 @@ pm2 stop all
 pm2 delete all
 
 # View logs
-pm2 logs loyacare-backend
-pm2 logs loyacare-frontend
+pm2 logs crm-backend
+pm2 logs crm-frontend
 
 # Monitor
 pm2 monit
@@ -530,7 +530,7 @@ Create `.env.docker.prod` (NOT in git):
 
 ```bash
 # Database
-DB_USER=loyacare_prod
+DB_USER=crm_prod
 DB_PASSWORD=STRONG_PASSWORD_HERE
 DB_NAME=crm_prod_prod
 
@@ -571,8 +571,8 @@ docker compose -f docker-compose.yml up -d
 
 ```bash
 cd /var/www
-git clone https://github.com/your-org/LoyaCareCRM.git
-cd LoyaCareCRM
+git clone https://github.com/your-org/CRM.git
+cd CRM
 ```
 
 #### 2. Install Dependencies
@@ -644,14 +644,14 @@ pnpm run migrate:deploy
 # Using systemd (recommended)
 # Create service files:
 
-# /etc/systemd/system/loyacare-backend.service
-# /etc/systemd/system/loyacare-frontend.service
+# /etc/systemd/system/crm-backend.service
+# /etc/systemd/system/crm-frontend.service
 
 # Enable and start
-sudo systemctl enable loyacare-backend
-sudo systemctl enable loyacare-frontend
-sudo systemctl start loyacare-backend
-sudo systemctl start loyacare-frontend
+sudo systemctl enable crm-backend
+sudo systemctl enable crm-frontend
+sudo systemctl start crm-backend
+sudo systemctl start crm-frontend
 
 # Or use PM2 (see Method 1)
 ```
@@ -704,13 +704,13 @@ chmod 600 .env.production.local
 psql -U postgres
 
 -- Create user
-CREATE USER loyacare_prod WITH PASSWORD 'your-strong-password';
+CREATE USER crm_prod WITH PASSWORD 'your-strong-password';
 
 -- Create database
-CREATE DATABASE crm_prod_prod OWNER loyacare_prod;
+CREATE DATABASE crm_prod_prod OWNER crm_prod;
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE crm_prod_prod TO loyacare_prod;
+GRANT ALL PRIVILEGES ON DATABASE crm_prod_prod TO crm_prod;
 ```
 
 ### 2. Run Migrations
@@ -732,7 +732,7 @@ pnpm run seed
 
 ### 1. Setup Nginx Reverse Proxy
 
-`/etc/nginx/sites-available/loyacare`:
+`/etc/nginx/sites-available/crm`:
 
 ```nginx
 # Backend API
@@ -771,7 +771,7 @@ server {
 
 Enable and restart:
 ```bash
-sudo ln -s /etc/nginx/sites-available/loyacare /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/crm /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 ```
@@ -842,7 +842,7 @@ sudo systemctl status postgresql
 ### Backend Won't Start
 ```bash
 # Check logs
-pm2 logs loyacare-backend
+pm2 logs crm-backend
 
 # Verify environment variables
 pm2 env 0

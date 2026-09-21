@@ -18,9 +18,9 @@ echo -e "${BLUE}🚀 Starting staging setup...${NC}"
 # 1. Create staging database
 echo -e "${BLUE}📦 Creating staging database...${NC}"
 sudo -u postgres psql << 'EOF'
-CREATE USER loyacare_staging WITH PASSWORD 'StAgInG_PaSsWoRd_2024!';
-CREATE DATABASE crm_prod_staging OWNER loyacare_staging;
-GRANT ALL PRIVILEGES ON DATABASE crm_prod_staging TO loyacare_staging;
+CREATE USER crm_staging WITH PASSWORD 'StAgInG_PaSsWoRd_2024!';
+CREATE DATABASE crm_prod_staging OWNER crm_staging;
+GRANT ALL PRIVILEGES ON DATABASE crm_prod_staging TO crm_staging;
 \q
 EOF
 
@@ -37,7 +37,7 @@ echo -e "${BLUE}🔧 Creating environment files...${NC}"
 
 # Backend .env
 cat > backend/.env.production.local << 'EOF'
-DATABASE_URL="postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/crm_prod_staging"
+DATABASE_URL="postgresql://crm_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/crm_prod_staging"
 JWT_SECRET="staging-jwt-secret-32-chars-long-min"
 CORS_ORIGIN="http://161.97.67.253:8001"
 PRISMA_LOG_LEVEL=warn
@@ -59,7 +59,7 @@ chmod 600 frontend/.env.production.local
 
 # Database .env
 cat > db/.env.production.local << 'EOF'
-DATABASE_URL="postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/crm_prod_staging"
+DATABASE_URL="postgresql://crm_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/crm_prod_staging"
 PRISMA_LOG_LEVEL=warn
 EOF
 chmod 600 db/.env.production.local
@@ -226,7 +226,7 @@ echo "   Frontend: http://161.97.67.253:8001"
 echo "   Backend:  http://161.97.67.253:8002/api"
 echo ""
 echo "👤 Test login:"
-echo "   Email: admin@loya.care"
+echo "   Email: admin@example.com"
 echo "   Password: 1"
 echo ""
 echo "📝 Next steps:"
@@ -247,9 +247,9 @@ sudo -u postgres psql
 
 In PostgreSQL:
 ```sql
-CREATE USER loyacare_staging WITH PASSWORD 'StAgInG_PaSsWoRd_2024!';
-CREATE DATABASE crm_prod_staging OWNER loyacare_staging;
-GRANT ALL PRIVILEGES ON DATABASE crm_prod_staging TO loyacare_staging;
+CREATE USER crm_staging WITH PASSWORD 'StAgInG_PaSsWoRd_2024!';
+CREATE DATABASE crm_prod_staging OWNER crm_staging;
+GRANT ALL PRIVILEGES ON DATABASE crm_prod_staging TO crm_staging;
 \q
 ```
 
@@ -314,7 +314,7 @@ SERVER_HOST=161.97.67.253
 SERVER_USER=root  # or your user
 SERVER_SSH_KEY=<output from cat ~/.ssh/id_rsa>
 
-DATABASE_URL=postgresql://loyacare_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/crm_prod_staging
+DATABASE_URL=postgresql://crm_staging:StAgInG_PaSsWoRd_2024!@localhost:5432/crm_prod_staging
 JWT_SECRET=<output from openssl rand -hex 32>
 CORS_ORIGIN=http://161.97.67.253:8001
 NEXT_PUBLIC_API_URL=http://161.97.67.253:8002/api

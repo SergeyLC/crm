@@ -1,6 +1,6 @@
 # 🚀 Deployment Configuration Guide
 
-This guide explains how to configure the unified deployment system for LoyaCare CRM.
+This guide explains how to configure the unified deployment system for CRM.
 
 ## 📋 Deployment Strategy
 

@@ -102,13 +102,13 @@ sudo -u postgres psql
 In PostgreSQL shell:
 ```sql
 -- Create user
-CREATE USER loyacare_prod WITH PASSWORD 'your_strong_password_here';
+CREATE USER crm_prod WITH PASSWORD 'your_strong_password_here';
 
 -- Create database
-CREATE DATABASE crm_prod_prod OWNER loyacare_prod;
+CREATE DATABASE crm_prod_prod OWNER crm_prod;
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE crm_prod_prod TO loyacare_prod;
+GRANT ALL PRIVILEGES ON DATABASE crm_prod_prod TO crm_prod;
 
 -- Exit
 \q
@@ -117,7 +117,7 @@ GRANT ALL PRIVILEGES ON DATABASE crm_prod_prod TO loyacare_prod;
 ### Test Connection
 
 ```bash
-psql "postgresql://loyacare_prod:your_password@localhost:5432/crm_prod_prod"
+psql "postgresql://crm_prod:your_password@localhost:5432/crm_prod_prod"
 ```
 
 ## Step 6: Initial Build (Manual First Time)
@@ -258,7 +258,7 @@ pm2 env 0
 
 ```bash
 # Test connection manually
-psql "postgresql://loyacare_prod:password@localhost:5432/crm_prod_prod"
+psql "postgresql://crm_prod:password@localhost:5432/crm_prod_prod"
 
 # Check if PostgreSQL is running
 sudo systemctl status postgresql

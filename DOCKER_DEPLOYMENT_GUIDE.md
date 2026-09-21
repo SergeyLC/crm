@@ -1,4 +1,4 @@
-# LoyaCareCRM - Docker Deployment Guide
+# CRM - Docker Deployment Guide
 
 Complete guide for deploying the project on a clean Ubuntu server using Docker.
 
@@ -112,7 +112,7 @@ There are three deployment methods:
 
 2. **On the local machine, create a deployment package:**
 ```bash
-cd /path/to/LoyaCareCRM
+cd /path/to/CRM
 
 # Create directory for deployment files
 mkdir -p deployment-package
@@ -182,7 +182,7 @@ echo YOUR_GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password
 
 1. **On the local machine, build the images:**
 ```bash
-cd /path/to/LoyaCareCRM
+cd /path/to/CRM
 
 # Build Backend
 docker build -f docker/backend/Dockerfile -t crm-backend:latest .
@@ -268,7 +268,7 @@ mkdir -p /var/www/crm-source
 
 2. **On the local machine:**
 ```bash
-cd /path/to/LoyaCareCRM
+cd /path/to/CRM
 
 # Sync the project (excluding unnecessary files)
 rsync -avz \
@@ -563,7 +563,7 @@ curl http://YOUR_SERVER_IP/api/health
 # Auth test
 curl -X POST http://YOUR_SERVER_IP/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@loya.care","password":"1"}'
+  -d '{"email":"admin@example.com","password":"1"}'
 # Should return JSON with a token and user data
 ```
 
@@ -586,7 +586,7 @@ Open in a browser:
 - **Login**: `http://YOUR_SERVER_IP/de/login`
 
 **Test credentials:**
-- Email: `admin@loya.care`
+- Email: `admin@example.com`
 - Password: `1`
 
 After a successful login you should see the CRM dashboard.
@@ -675,7 +675,7 @@ docker compose ps
 
 ```bash
 # 1. On the local machine, rebuild images
-cd /path/to/LoyaCareCRM
+cd /path/to/CRM
 docker build -f docker/backend/Dockerfile -t crm-backend:latest .
 docker build --no-cache -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_API_URL=/api \
@@ -821,7 +821,7 @@ Ready-made files already exist on the local machine:
 ### Step 2: Build images for Staging
 
 ```bash
-cd /path/to/LoyaCareCRM
+cd /path/to/CRM
 
 # Build Backend image (same for prod and staging)
 docker build --platform linux/amd64 \
@@ -908,7 +908,7 @@ docker exec crm-staging-postgres psql -U crm -d crm_staging \
 ```
 
 **Seed will create:**
-- 13 users (including admin@loya.care with password "1")
+- 13 users (including admin@example.com with password "1")
 - 110 contacts
 - 110 deals in various stages
 - Test groups and notes
@@ -940,7 +940,7 @@ Configure production nginx to proxy `/staging/` to staging.
 # API test (on the server)
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@loya.care","password":"1"}'
+  -d '{"email":"admin@example.com","password":"1"}'
 
 # Should return: {"success":true,"user":{...},"token":"..."}
 
@@ -951,7 +951,7 @@ curl -I http://localhost:8080/de
 
 **Staging access:**
 - URL: `http://YOUR_SERVER_IP:8080/de`
-- Email: `admin@loya.care`
+- Email: `admin@example.com`
 - Password: `1`
 
 ### Managing Staging
@@ -1174,5 +1174,5 @@ If you encounter problems, check:
 
 **Created:** 2025-12-19  
 **Version:** 1.0  
-**Project:** LoyaCareCRM  
+**Project:** CRM  
 **Deployment:** Docker Production

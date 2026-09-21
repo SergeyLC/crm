@@ -16,7 +16,7 @@ show_help() {
   if [ "$CURRENT_BRANCH" = "develop" ]; then
     # Help for develop branch - restricted options
     echo -e "${CYAN}╔════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║                LoyaCare CRM Deployment Script (develop)                    ║${NC}"
+    echo -e "${CYAN}║                CRM Deployment Script (develop)                    ║${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo -e ""
     echo -e "${YELLOW}⚠️  You are on the 'develop' branch${NC}"
@@ -45,7 +45,7 @@ show_help() {
   else
     # Help for main branch - full options
     echo -e "${CYAN}╔════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║                     LoyaCare CRM Deployment Script                         ║${NC}"
+    echo -e "${CYAN}║                     CRM Deployment Script                         ║${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo -e ""
     echo -e "${GREEN}USAGE:${NC}"

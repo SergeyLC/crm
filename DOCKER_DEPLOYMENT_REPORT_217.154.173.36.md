@@ -7,7 +7,7 @@
 
 ## 📋 Deployment Summary
 
-Successfully deployed LoyaCare CRM on production server using Docker containers. The application is fully functional and accessible at http://217.154.173.36
+Successfully deployed CRM on production server using Docker containers. The application is fully functional and accessible at http://217.154.173.36
 
 ## 🏗️ Architecture
 
@@ -108,7 +108,7 @@ curl http://217.154.173.36/api/health
 ```bash
 curl -X POST http://217.154.173.36/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "admin@loya.care", "password": "1"}'
+  -d '{"email": "admin@example.com", "password": "1"}'
 # Response: {"success":true, "user":{...}, "token":"..."}
 ```
 
@@ -120,7 +120,7 @@ curl -X POST http://217.154.173.36/api/auth/login \
 ## 👥 User Credentials
 
 ### Admin Users
-- **Email:** admin@loya.care  
+- **Email:** admin@example.com  
   **Password:** 1  
   **Role:** ADMIN
 
@@ -133,7 +133,7 @@ curl -X POST http://217.154.173.36/api/auth/login \
   **Role:** ADMIN
 
 ### Employee Users
-- v1@loya.care - v10@loya.care (Password: 1, Role: EMPLOYEE)
+- v1@example.com - v10@example.com (Password: 1, Role: EMPLOYEE)
 
 ## 📂 Directory Structure on Server
 

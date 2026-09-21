@@ -1,10 +1,10 @@
-# 🚀 LoyaCareCRM Docker Development Guide
+# 🚀 CRM Docker Development Guide
 
 *Local development with Docker: nginx proxy, health checks, volumes, seeding*
 
 ## 📋 Overview
 
-This document describes setting up the local development environment for LoyaCareCRM using Docker. Docker provides isolation, consistency, and convenience for development with hot-reload, health checks, and automatic database seeding.
+This document describes setting up the local development environment for CRM using Docker. Docker provides isolation, consistency, and convenience for development with hot-reload, health checks, and automatic database seeding.
 
 ### Development Setup Architecture
 
@@ -172,7 +172,7 @@ On first startup of the development environment, database seeding is performed a
 docker compose -f docker-compose.dev.yml down
 
 # Remove volume to reset DB
-docker volume rm loyacarecrm_crm_pg_data
+docker volume rm crm_pg_data
 
 # Restart
 docker compose -f docker-compose.dev.yml up -d
@@ -279,7 +279,7 @@ docker compose -f docker-compose.dev.yml logs postgres
 docker compose -f docker-compose.dev.yml logs backend
 docker compose -f docker-compose.dev.yml logs frontend
 docker compose -f docker-compose.dev.yml logs nginx
-docker network inspect loyacarecrm_crm-dev-network
+docker network inspect crm-dev-network
 ```
 
 ### Hot Module Replacement (HMR) issues

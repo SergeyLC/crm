@@ -1,6 +1,6 @@
-# LoyaCareCRM - Docker Deployment Documentation
+# CRM - Docker Deployment Documentation
 
-Complete guide for deploying LoyaCareCRM on Ubuntu server using Docker.
+Complete guide for deploying CRM on Ubuntu server using Docker.
 
 ## 📋 Documentation Structure
 
@@ -99,10 +99,10 @@ Old deployment documentation has been moved to the [archive/](archive/) director
 
 ## 📝 License
 
-LoyaCareCRM - Internal Documentation
+CRM - Internal Documentation
 
 ---
 
 **Last Updated**: December 20, 2025  
 **Version**: 2.0  
-**Project**: LoyaCareCRM
+**Project**: CRM

@@ -149,7 +149,7 @@ export function SidebarDrawer() {
         >
           {!collapsed && (
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              {t("companyName", "Loya Care")}
+              {t("companyName", "CRM")}
             </Typography>
           )}
           <IconButton

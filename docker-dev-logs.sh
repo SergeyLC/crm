@@ -11,7 +11,7 @@ PROJECT_DIR="$SCRIPT_DIR"
 # Change to project directory (already there, but just in case)
 cd "$PROJECT_DIR"
 
-echo "📝 Showing LoyaCareCRM Docker development logs..."
+echo "📝 Showing CRM Docker development logs..."
 
 # Check if we're in the right directory
 if [ ! -f "docker-compose.dev.yml" ]; then

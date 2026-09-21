@@ -77,7 +77,7 @@ For testing different deployment types without changing secrets:
 
 **Purpose:** Automatic build and deploy of every change in main to staging for testing.
 
-**Important:** Staging database is populated with test data via `seed.ts` on every deploy. This creates users (`admin@loya.care`, `v1@loya.care`, etc.) with password `1` for testing.
+**Important:** Staging database is populated with test data via `seed.ts` on every deploy. This creates users (`admin@example.com`, `v1@example.com`, etc.) with password `1` for testing.
 
 **Secrets (staging):**
 - `STAGING_SERVER_HOST`

@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🐳 Starting LoyaCare CRM Stage Environment..."
+echo "🐳 Starting CRM Stage Environment..."
 
 # Check if .env files exist
 if [ ! -f ".env.backend.stage" ]; then

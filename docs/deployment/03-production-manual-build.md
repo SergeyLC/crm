@@ -42,8 +42,8 @@ docker compose version
 
 ```bash
 cd ~/work
-git clone YOUR_REPOSITORY_URL LoyaCareCRM
-cd LoyaCareCRM
+git clone YOUR_REPOSITORY_URL CRM
+cd CRM
 ```
 
 ## Step 2: Build Docker Images
@@ -171,7 +171,7 @@ rm /tmp/crm-frontend.tar.gz /tmp/crm-backend.tar.gz
 On **local machine**:
 
 ```bash
-cd /path/to/LoyaCareCRM
+cd /path/to/CRM
 
 # Create deployment package
 mkdir -p deployment-package
@@ -311,7 +311,7 @@ docker exec crm-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 **Seed creates:**
-- 13 users (including admin@loya.care / password: 1)
+- 13 users (including admin@example.com / password: 1)
 - 110 contacts
 - 110 deals
 - Test groups and notes
@@ -341,7 +341,7 @@ curl http://localhost/api/health
 # Login test
 curl -X POST http://localhost/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@loya.care","password":"1"}'
+  -d '{"email":"admin@example.com","password":"1"}'
 # Should return: {"success":true,"token":"..."}
 ```
 
@@ -358,7 +358,7 @@ curl -I http://localhost/de
 Open browser: `http://YOUR_SERVER_IP/de`
 
 **Login credentials:**
-- Email: `admin@loya.care`
+- Email: `admin@example.com`
 - Password: `1`
 
 ## Updating Application
@@ -367,7 +367,7 @@ Open browser: `http://YOUR_SERVER_IP/de`
 
 1. **Pull latest code** (local machine):
    ```bash
-   cd /path/to/LoyaCareCRM
+   cd /path/to/CRM
    git pull origin main
    ```
 

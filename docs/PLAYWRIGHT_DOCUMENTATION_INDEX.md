@@ -2,7 +2,7 @@
 
 ## 📚 Documentation
 
-Comprehensive Playwright test documentation for the LoyaCare CRM project.
+Comprehensive Playwright test documentation for the CRM project.
 
 ### 🔧 Technical Documentation
 

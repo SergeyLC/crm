@@ -1,6 +1,6 @@
 # 🚀 Quick Docker Deployment Guide
 
-This is a short guide for deploying LoyaCare CRM with Docker on a new server.
+This is a short guide for deploying CRM with Docker on a new server.
 
 ## ✅ Prerequisites
 
@@ -32,7 +32,7 @@ rsync -avz --progress \
   --exclude='node_modules' \
   --exclude='.git' \
   --exclude='*.log' \
-  ./LoyaCareCRM/ root@YOUR_SERVER_IP:/var/www/crm-source/
+  ./CRM/ root@YOUR_SERVER_IP:/var/www/crm-source/
 ```
 
 ### 2.2 Create the deployment directory
@@ -228,7 +228,7 @@ curl http://localhost/api/health
 # Check login
 curl -X POST http://localhost/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "admin@loya.care", "password": "1"}'
+  -d '{"email": "admin@example.com", "password": "1"}'
 ```
 
 ## 🌐 Accessing the application
@@ -236,7 +236,7 @@ curl -X POST http://localhost/api/auth/login \
 Open in a browser: `http://YOUR_SERVER_IP`
 
 ### Login credentials:
-- **Email:** admin@loya.care
+- **Email:** admin@example.com
 - **Password:** 1
 
 ## 🔧 Management

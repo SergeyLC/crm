@@ -90,7 +90,7 @@ The workflow file should already exist at `.github/workflows/docker-publish.yml`
 On your **local machine**:
 
 ```bash
-cd /path/to/LoyaCareCRM
+cd /path/to/CRM
 
 # Create deployment package directory
 mkdir -p deployment-package
@@ -254,7 +254,7 @@ docker exec crm-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 **Seed creates**:
-- 13 users (admin@loya.care / password: 1)
+- 13 users (admin@example.com / password: 1)
 - 110 contacts
 - 110 deals
 - Test groups and notes
@@ -281,7 +281,7 @@ curl http://localhost/api/health
 # Login test
 curl -X POST http://localhost/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@loya.care","password":"1"}'
+  -d '{"email":"admin@example.com","password":"1"}'
 
 # Should return: {"success":true, ...}
 ```
@@ -300,7 +300,7 @@ curl -I http://localhost/de
 Open in browser: `http://YOUR_SERVER_IP/de`
 
 **Default credentials:**
-- Email: `admin@loya.care`
+- Email: `admin@example.com`
 - Password: `1`
 
 ## Updating Application

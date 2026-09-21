@@ -1,6 +1,6 @@
 # Playwright End-to-End Tests
 
-Comprehensive end-to-end test suite for the LoyaCareCRM application using Playwright Test framework.
+Comprehensive end-to-end test suite for the CRM application using Playwright Test framework.
 
 This directory contains automated tests for critical user workflows including Deal management, Lead management, form validation, and accessibility features.
 

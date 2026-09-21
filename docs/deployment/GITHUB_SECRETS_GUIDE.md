@@ -57,7 +57,7 @@ Format: `postgresql://USERNAME:PASSWORD@HOST:PORT/DATABASE`
 
 Example:
 ```
-postgresql://loyacare_prod:MyStr0ngP@ssw0rd@localhost:5432/crm_prod_prod
+postgresql://crm_prod:MyStr0ngP@ssw0rd@localhost:5432/crm_prod_prod
 ```
 
 **⚠️ Important:**

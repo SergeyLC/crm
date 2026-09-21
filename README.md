@@ -1,10 +1,10 @@
-# LoyaCareCRM
+# CRM
 
 *🇺🇸 English  | [🇩🇪 Deutsch](docs/README.de.md)*
 
 ## 📋 Project Description
 
-LoyaCareCRM is a modern Customer Relationship Management (CRM) system built with modular architecture. The system is designed for managing leads, deals, contacts, and users with an intuitive interface based on Kanban boards and tables.
+CRM is a modern Customer Relationship Management (CRM) system built with modular architecture. The system is designed for managing leads, deals, contacts, and users with an intuitive interface based on Kanban boards and tables.
 
 ## 🚀 Quick Start
 
@@ -79,7 +79,7 @@ For Docker production deployment, see [DEPLOYMENT_DOCKER.md](docs/deployment/DEP
 The project consists of three main parts:
 
 ```
-LoyaCareCRM/
+CRM/
 ├── frontend/     # Next.js 16 + React 19 application
 ├── backend/      # Node.js + Express API server
 ├── db/           # Prisma ORM database schema and migrations

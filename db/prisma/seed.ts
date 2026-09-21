@@ -46,7 +46,7 @@ async function main() {
 
     // Create admins user
     const admins: any[] = [];
-    ["admin@loya.care", "admin@beispiel.de", "admin@example.com"].forEach(
+    ["admin@example.com", "admin@beispiel.de"].forEach(
       async (email, index) => {
         const admin = await prisma.user.upsert({
           where: { email },
@@ -68,10 +68,10 @@ async function main() {
     const employees: any[] = [];
     for (let i = 1; i <= 10; i++) {
       const employee = await prisma.user.upsert({
-        where: { email: `v${i}@loya.care` },
+        where: { email: `v${i}@example.com` },
         update: {},
         create: {
-          email: `v${i}@loya.care`,
+          email: `v${i}@example.com`,
           name: `Mitarbeiter ${i}`,
           role: 'EMPLOYEE',
           password: hashedPassword,

@@ -1,6 +1,6 @@
 # Server Setup Guide
 
-Initial server preparation for LoyaCareCRM deployment.
+Initial server preparation for CRM deployment.
 
 ## Prerequisites
 

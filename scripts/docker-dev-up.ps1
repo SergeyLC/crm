@@ -1,4 +1,4 @@
-# LoyaCareCRM - Docker Dev Start (Windows)
+# CRM - Docker Dev Start (Windows)
 # Run AFTER reboot, once Docker Desktop shows "Engine running".
 
 $ErrorActionPreference = "Stop"
@@ -47,7 +47,7 @@ Write-Host ""
 Write-Host "App (Nginx):  http://localhost:3003"
 Write-Host "API health:   http://localhost:3003/api/health"
 Write-Host "DB (host):    localhost:5435"
-Write-Host "Login seed:   admin@loya.care / 1"
+Write-Host "Login seed:   admin@example.com / 1"
 Write-Host ""
 Write-Host "Logs: docker compose -f docker-compose.dev.yml logs -f"
 Write-Host "Stop: docker compose -f docker-compose.dev.yml down"

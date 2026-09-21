@@ -44,13 +44,13 @@ sudo -u postgres psql
 In PostgreSQL shell:
 ```sql
 -- Create user for staging
-CREATE USER loyacare_staging WITH PASSWORD 'staging_password_here';
+CREATE USER crm_staging WITH PASSWORD 'staging_password_here';
 
 -- Create database
-CREATE DATABASE crm_prod_staging OWNER loyacare_staging;
+CREATE DATABASE crm_prod_staging OWNER crm_staging;
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE crm_prod_staging TO loyacare_staging;
+GRANT ALL PRIVILEGES ON DATABASE crm_prod_staging TO crm_staging;
 
 -- Exit
 \q
@@ -58,7 +58,7 @@ GRANT ALL PRIVILEGES ON DATABASE crm_prod_staging TO loyacare_staging;
 
 Test connection:
 ```bash
-psql "postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging"
+psql "postgresql://crm_staging:staging_password@localhost:5432/crm_prod_staging"
 ```
 
 ## Step 4: Create environment files for staging
@@ -72,7 +72,7 @@ nano .env.production.local
 
 Content:
 ```bash
-DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging"
+DATABASE_URL="postgresql://crm_staging:staging_password@localhost:5432/crm_prod_staging"
 JWT_SECRET="staging-jwt-secret-generate-with-openssl-rand-hex-32"
 CORS_ORIGIN="https://staging.your-domain.com"
 PRISMA_LOG_LEVEL=warn
@@ -116,7 +116,7 @@ nano .env.production.local
 
 Content:
 ```bash
-DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging"
+DATABASE_URL="postgresql://crm_staging:staging_password@localhost:5432/crm_prod_staging"
 PRISMA_LOG_LEVEL=warn
 ```
 
@@ -483,7 +483,7 @@ nano .env.production.local
 
 Update:
 ```bash
-DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging"
+DATABASE_URL="postgresql://crm_staging:staging_password@localhost:5432/crm_prod_staging"
 JWT_SECRET="staging-jwt-secret-generate-with-openssl-rand-hex-32"
 CORS_ORIGIN="http://161.97.67.253:8001"
 PRISMA_LOG_LEVEL=warn
@@ -509,7 +509,7 @@ STAGING_SERVER_HOST=161.97.67.253
 STAGING_SERVER_USER=your-ssh-user
 STAGING_SERVER_SSH_KEY=<same-as-production-or-new-key>
 
-STAGING_DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging
+STAGING_DATABASE_URL=postgresql://crm_staging:staging_password@localhost:5432/crm_prod_staging
 STAGING_JWT_SECRET=staging-jwt-secret-here
 STAGING_CORS_ORIGIN=https://staging.your-domain.com
 STAGING_NEXT_PUBLIC_API_URL=https://staging.your-domain.com
@@ -523,7 +523,7 @@ STAGING_SERVER_HOST=161.97.67.253
 STAGING_SERVER_USER=your-ssh-user
 STAGING_SERVER_SSH_KEY=<same-as-production-or-new-key>
 
-STAGING_DATABASE_URL=postgresql://loyacare_staging:staging_password@localhost:5432/crm_prod_staging
+STAGING_DATABASE_URL=postgresql://crm_staging:staging_password@localhost:5432/crm_prod_staging
 STAGING_JWT_SECRET=staging-jwt-secret-here
 STAGING_CORS_ORIGIN=http://161.97.67.253:8001
 STAGING_NEXT_PUBLIC_API_URL=http://161.97.67.253:8002/api
@@ -647,7 +647,7 @@ pnpm run seed
 ### Backup staging database
 
 ```bash
-pg_dump -U loyacare_staging -d crm_prod_staging > staging_backup_$(date +%Y%m%d).sql
+pg_dump -U crm_staging -d crm_prod_staging > staging_backup_$(date +%Y%m%d).sql
 ```
 
 ## Troubleshooting
@@ -694,7 +694,7 @@ cat .env.production.local | grep DATABASE_URL
 
 Direct connection test:
 ```bash
-psql "postgresql://loyacare_staging:password@localhost:5432/crm_prod_staging"
+psql "postgresql://crm_staging:password@localhost:5432/crm_prod_staging"
 ```
 
 ### CORS errors
@@ -754,13 +754,13 @@ After initial setup, staging database will be populated with test data via `pnpm
 Script `db/prisma/seed.ts` creates:
 
 1. **Administrators:**
-   - `admin@loya.care`
+   - `admin@example.com`
    - `admin@beispiel.de`
    - `admin@example.com`
    - Password: `1` (for all)
 
 2. **10 employees:**
-   - `v1@loya.care` to `v10@loya.care`
+   - `v1@example.com` to `v10@example.com`
    - Password: `1` (for all)
 
 3. **Test data:**

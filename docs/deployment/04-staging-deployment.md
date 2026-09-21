@@ -61,7 +61,7 @@ cp /var/www/crm-production/nginx.conf nginx.stage.conf
 On **local machine**:
 
 ```bash
-cd /path/to/LoyaCareCRM
+cd /path/to/CRM
 
 # Create staging deployment package
 mkdir -p staging-package
@@ -203,7 +203,7 @@ NEXT_PUBLIC_ENABLE_DEVTOOLS=true
 On **local machine**:
 
 ```bash
-cd /path/to/LoyaCareCRM
+cd /path/to/CRM
 
 # Build staging images with correct API URL
 docker buildx build --platform linux/amd64 \
@@ -342,7 +342,7 @@ docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 **Seed creates:**
-- 13 users (admin@loya.care / password: 1)
+- 13 users (admin@example.com / password: 1)
 - 110 contacts
 - 110 deals  
 - Test groups and notes
@@ -388,13 +388,13 @@ curl http://localhost:8080/api/health
 # Login test
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@loya.care","password":"1"}'
+  -d '{"email":"admin@example.com","password":"1"}'
 # Should return: {"success":true,"token":"..."}
 
 # Get users
 curl http://localhost:8080/api/users \
   -H "Authorization: Bearer YOUR_TOKEN"
-# Should return: [{"id":1,"email":"admin@loya.care",...}]
+# Should return: [{"id":1,"email":"admin@example.com",...}]
 ```
 
 ### Test Frontend
@@ -414,7 +414,7 @@ curl -I http://localhost:8080/api/health
 Open browser: `http://YOUR_SERVER_IP:8080/de`
 
 **Login credentials:**
-- Email: `admin@loya.care`
+- Email: `admin@example.com`
 - Password: `1`
 
 **Verify:**

@@ -96,8 +96,8 @@ pnpm run seed            # Fill with test data
 ```
 
 **What seed.ts creates:**
-- **3 admin users:** `admin@loya.care`, `admin@beispiel.de`, `admin@example.com`
-- **10 employee users:** `v1@loya.care` through `v10@loya.care`
+- **2 admin users:** `admin@example.com`, `admin@beispiel.de`
+- **10 employee users:** `v1@example.com` through `v10@example.com`
 - **Password for all:** `1`
 - **110 contacts** (11 per employee)
 - **110 deals** (11 per employee with various stages)
@@ -302,9 +302,9 @@ docker exec crm-staging-postgres psql -U crm -d crm_staging \
   -c "SELECT email, role FROM \"User\" LIMIT 5;"
 
 # Should show:
-# admin@loya.care | ADMIN
-# v1@loya.care    | EMPLOYEE
-# v2@loya.care    | EMPLOYEE
+# admin@example.com | ADMIN
+# v1@example.com    | EMPLOYEE
+# v2@example.com    | EMPLOYEE
 # ...
 ```
 
@@ -320,19 +320,19 @@ After running seed, you can login with test accounts:
 
 **Admin Account:**
 ```
-Email: admin@loya.care
+Email: admin@example.com
 Password: 1
 ```
 
 **Employee Accounts:**
 ```
-Email: v1@loya.care
+Email: v1@example.com
 Password: 1
 
-Email: v2@loya.care
+Email: v2@example.com
 Password: 1
 
-... through v10@loya.care
+... through v10@example.com
 ```
 
 **Access URLs:**

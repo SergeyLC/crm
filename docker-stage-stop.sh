@@ -11,7 +11,7 @@ PROJECT_DIR="$SCRIPT_DIR"
 # Change to project directory (already there, but just in case)
 cd "$PROJECT_DIR"
 
-echo "🛑 Stopping LoyaCareCRM Docker stage services..."
+echo "🛑 Stopping CRM Docker stage services..."
 
 # Check if we're in the right directory
 if [ ! -f "docker-compose.stage.yml" ]; then

@@ -1,6 +1,6 @@
-# LoyaCare CRM Database
+# CRM Database
 
-This directory contains the Prisma ORM database schema and configuration for the LoyaCare CRM system.
+This directory contains the Prisma ORM database schema and configuration for the CRM system.
 
 ## 📋 Overview
 

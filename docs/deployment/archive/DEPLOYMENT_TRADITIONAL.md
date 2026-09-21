@@ -260,7 +260,7 @@ sudo nano /etc/nginx/sites-available/crm
 
 **Configuration contents:**
 ```nginx
-# Optimized Nginx Configuration for LoyaCare CRM
+# Optimized Nginx Configuration for CRM
 # Rate limiting zone (protect against DDoS)
 limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
 limit_req_zone $binary_remote_addr zone=general_limit:10m rate=30r/s;
@@ -899,7 +899,7 @@ GRANT ALL PRIVILEGES ON DATABASE crm TO crm_user;
 ```bash
 sudo mkdir -p /var/www
 cd /var/www
-git clone https://github.com/your-username/LoyaCareCRM.git crm
+git clone https://github.com/your-username/CRM.git crm
 cd crm
 ```
 
@@ -1094,7 +1094,7 @@ free -h
 pg_dump crm > backup_$(date +%Y%m%d).sql
 ```
 
-This setup provides a complete CI/CD pipeline for automated deployment of your LoyaCareCRM application! 🎉
+This setup provides a complete CI/CD pipeline for automated deployment of your CRM application! 🎉
 
 ---
 

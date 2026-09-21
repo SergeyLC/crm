@@ -1,4 +1,4 @@
-# 🚀 LoyaCareCRM Deployment Guide
+# 🚀 CRM Deployment Guide
 
 *Complete deployment instructions for CRM system*
 
@@ -6,7 +6,7 @@
 
 ## 📋 Deployment Options
 
-LoyaCareCRM supports multiple deployment methods:
+CRM supports multiple deployment methods:
 
 ### 🐳 **Docker Deployment (Recommended)**
 - **Development**: Local development with hot reload

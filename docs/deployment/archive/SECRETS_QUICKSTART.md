@@ -17,7 +17,7 @@ SERVER_SSH_KEY=<content of private SSH key>
 
 ### 2. Database
 ```
-DATABASE_URL=postgresql://loyacare_prod:password@localhost:5432/crm_prod_prod
+DATABASE_URL=postgresql://crm_prod:password@localhost:5432/crm_prod_prod
 ```
 
 ### 3. Security

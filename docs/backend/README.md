@@ -1,4 +1,4 @@
-# Backend – LoyaCare CRM
+# Backend – CRM
 
 **API:** REST  
 **ORM:** Prisma  

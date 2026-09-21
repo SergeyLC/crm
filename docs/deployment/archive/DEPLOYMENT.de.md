@@ -1,4 +1,4 @@
-# 🚀 LoyaCareCRM Deployment-Leitfaden
+# 🚀 CRM Deployment-Leitfaden
 
 *Vollständige Deployment-Anleitung für CRM-System*
 
@@ -6,7 +6,7 @@
 
 ## 📋 Deployment-Optionen
 
-LoyaCareCRM unterstützt mehrere Deployment-Methoden:
+CRM unterstützt mehrere Deployment-Methoden:
 
 ### 🐳 **Docker Deployment (Empfohlen)**
 - **Entwicklung**: Lokale Entwicklung mit Hot Reload
@@ -921,7 +921,7 @@ GRANT ALL PRIVILEGES ON DATABASE crm TO crm_user;
 ```bash
 sudo mkdir -p /var/www
 cd /var/www
-git clone https://github.com/your-username/LoyaCareCRM.git crm
+git clone https://github.com/your-username/CRM.git crm
 cd crm
 ```
 
@@ -1036,7 +1036,7 @@ free -h
 pg_dump crm > backup_$(date +%Y%m%d).sql
 ```
 
-Diese Einrichtung bietet eine vollständige CI/CD-Pipeline für die automatisierte Bereitstellung Ihrer LoyaCareCRM-Anwendung! 🎉
+Diese Einrichtung bietet eine vollständige CI/CD-Pipeline für die automatisierte Bereitstellung Ihrer CRM-Anwendung! 🎉
 
 ---
 

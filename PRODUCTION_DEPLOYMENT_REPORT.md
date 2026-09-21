@@ -1,4 +1,4 @@
-# Production Deployment Report — LoyaCare CRM
+# Production Deployment Report — CRM
 
 ## Server Information
 
@@ -112,7 +112,7 @@ NEXT_PUBLIC_BACKEND_API_URL=http://217.160.74.128/api
 
 ### Seed Data
 Database seeded with test data:
-- Users: admin@example.com, admin@beispiel.de, v1-v10@loya.care
+- Users: admin@example.com, admin@beispiel.de, v1-v10@example.com
 - Leads: ~50 records
 - Deals: ~40 records in various statuses
 
@@ -339,7 +339,7 @@ docker compose -f docker-compose.simple.yml restart postgres nginx
 ### Update code
 ```bash
 # On the local machine:
-cd /Users/sergeydaub/work/BZH/LoyaCareCRM
+cd /Users/sergeydaub/work/BZH/CRM
 pnpm run build  # backend + frontend build
 rsync -avz --exclude='node_modules' --exclude='.git' . root@217.160.74.128:/var/www/crm/
 

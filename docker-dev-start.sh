@@ -9,7 +9,7 @@ PROJECT_DIR="$SCRIPT_DIR"
 # Change to project directory (already there, but just in case)
 cd "$PROJECT_DIR"
 
-echo "🚀 Starting LoyaCareCRM in Docker (Development Mode)"
+echo "🚀 Starting CRM in Docker (Development Mode)"
 echo "📍 Project directory: $PROJECT_DIR"
 echo "📍 Frontend: http://localhost:3003"
 echo "📍 Backend API: http://localhost:4003"

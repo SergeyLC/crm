@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document explains how Prisma finds and uses `DATABASE_URL` in the LoyaCareCRM project. The project now uses **Docker-based deployment** with environment variables managed through Docker Compose.
+This document explains how Prisma finds and uses `DATABASE_URL` in the CRM project. The project now uses **Docker-based deployment** with environment variables managed through Docker Compose.
 
 ## Project Structure
 
@@ -167,11 +167,10 @@ npm run seed
 ### What Seed Creates
 
 The seed script (`db/prisma/seed.ts`) creates:
-- **3 admin users:**
-  - `admin@loya.care`
-  - `admin@beispiel.de`
+- **2 admin users:**
   - `admin@example.com`
-- **10 employee users:** `v1@loya.care` through `v10@loya.care`
+  - `admin@beispiel.de`
+- **10 employee users:** `v1@example.com` through `v10@example.com`
 - **Password for all users:** `1`
 - **110 contacts** (11 per employee)
 - **110 deals** (11 per employee with various stages)
