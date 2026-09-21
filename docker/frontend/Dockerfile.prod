@@ -3,18 +3,18 @@ FROM node:24-alpine AS deps
 
 WORKDIR /app
 
-# Скопировать workspace файлы
+# Copy workspace files
 COPY pnpm-workspace.yaml ./
 COPY pnpm-lock.yaml ./
 
-# Скопировать package.json
+# Copy package.json files
 COPY frontend/package.json ./frontend/package.json
 COPY db/package.json ./db/package.json
 
-# Установить pnpm
+# Install pnpm
 RUN npm install -g pnpm
 
-# Установить зависимости
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
 # ==================== Stage 2: Builder ====================
@@ -22,31 +22,31 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-# Скопировать зависимости из предыдущего stage
+# Copy dependencies from previous stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/frontend/node_modules ./frontend/node_modules
 COPY --from=deps /app/db/node_modules ./db/node_modules
 
-# Скопировать workspace файлы
+# Copy workspace files
 COPY pnpm-workspace.yaml ./
 COPY pnpm-lock.yaml ./
 
-# Скопировать db для генерации Prisma клиента
+# Copy db for Prisma client generation
 COPY db/ ./db/
 
-# Установить pnpm и prisma глобально
+# Install pnpm and prisma globally
 RUN npm install -g pnpm prisma
 
-# Генерировать Prisma клиент
+# Generate Prisma client
 RUN cd db && pnpm run generate
 
-# Скопировать frontend код
+# Copy frontend source
 COPY frontend/ ./frontend/
 
-# Скопировать .env.production для build-time переменных
+# Copy .env.production for build-time variables
 COPY frontend/.env.production ./frontend/.env.production
 
-# Build args для Next.js
+# Build args for Next.js
 ARG NEXT_PUBLIC_API_URL=/api
 ARG NEXT_PUBLIC_BACKEND_API_URL
 ARG NEXT_PUBLIC_APP_VERSION=production
@@ -55,7 +55,7 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_BACKEND_API_URL=${NEXT_PUBLIC_BACKEND_API_URL}
 ENV NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION}
 
-# Собрать Next.js приложение
+# Build the Next.js application
 RUN cd frontend && pnpm run build
 
 # ==================== Stage 3: Runner ====================
@@ -66,38 +66,38 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Создать пользователя для запуска приложения
+# Create user to run the application
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Установить pnpm глобально
+# Install pnpm globally
 RUN npm install -g pnpm
 
-# Скопировать workspace файлы
+# Copy workspace files
 COPY --from=builder /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/pnpm-lock.yaml ./
 
-# Скопировать package.json файлы
+# Copy package.json files
 COPY --from=builder /app/frontend/package.json ./frontend/package.json
 COPY --from=builder /app/db/package.json ./db/package.json
 
-# Скопировать все node_modules
+# Copy all node_modules
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/frontend/node_modules ./frontend/node_modules
 COPY --from=builder /app/db/node_modules ./db/node_modules
 
-# Скопировать необходимые файлы
+# Copy required files
 COPY --from=builder /app/frontend/public ./frontend/public
 
-# Скопировать built приложение
+# Copy built application
 COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next ./frontend/.next
 
-# Скопировать db и generated Prisma client
+# Copy db and generated Prisma client
 COPY --from=builder /app/db ./db
 
 USER nextjs
 
 EXPOSE 3000
 
-# Запустить приложение используя pnpm
+# Start the application using pnpm
 CMD ["sh", "-c", "cd frontend && pnpm start -p ${PORT}"]

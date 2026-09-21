@@ -45,7 +45,7 @@ Create three environments:
 #### **Production Environment**
 - **Name**: `production`
 - **Protection rules** (optional):
-  - ✅ Required reviewers (добавьте себя для подтверждения prod деплоя)
+  - ✅ Required reviewers (add yourself to approve prod deploys)
   - ✅ Wait timer: 0 minutes
 - **Environment secrets**:
   | Secret | Description | Example |
@@ -240,7 +240,7 @@ After setup, verify you have:
 
 ## Server Setup
 
-После настройки GitHub Secrets нужно подготовить сервер.
+After configuring GitHub Secrets, prepare the server.
 
 **Important**: Environment files (.env, .env.stage, .env.stage-develop) are now **automatically created** by GitHub Actions using Environment Secrets. You only need to:
 1. Create deployment directories

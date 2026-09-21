@@ -1,17 +1,17 @@
 # ==================== Build Stage ====================
 FROM node:24-alpine AS builder
 
-# Установите рабочую директорию
+# Set working directory
 WORKDIR /app
 
-# Установите pnpm глобально
+# Install pnpm globally
 RUN npm install -g pnpm
 
-# Скопируйте workspace файлы
+# Copy workspace files
 COPY pnpm-workspace.yaml ./
 COPY pnpm-lock.yaml ./
 
-# Скопируйте package.json файлы
+# Copy package.json files
 COPY frontend/package.json ./frontend/package.json
 COPY db/package.json ./db/package.json
 
@@ -19,21 +19,21 @@ COPY db/package.json ./db/package.json
 ENV CYPRESS_INSTALL_BINARY=0
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
-# Установите зависимости
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Скопируйте исходный код
+# Copy source code
 COPY db/ ./db/
 COPY frontend/ ./frontend/
 
-# Генерируйте Prisma клиент
+# Generate Prisma client
 RUN cd db && pnpm run generate
 
-# Build args для Next.js
+# Build args for Next.js
 ARG NEXT_PUBLIC_APP_VERSION
 ENV NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION}
 
-# Соберите Next.js приложение
+# Build the Next.js application
 RUN cd frontend && pnpm run build
 
 # ==================== Production Stage ====================
@@ -41,20 +41,20 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-# Создаем пользователя для безопасности
+# Create a non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Копируем standalone build (включает все необходимые зависимости)
+# Copy standalone build (includes all required dependencies)
 COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/frontend/public ./frontend/public
 
-# Переключаемся на пользователя nextjs
+# Switch to nextjs user
 USER nextjs
 
-# Экспонируйте порт
+# Expose port
 EXPOSE 3000
 
-# Запуск standalone сервера Next.js
+# Start the Next.js standalone server
 CMD ["node", "frontend/server.js"]

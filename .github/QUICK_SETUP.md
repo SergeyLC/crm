@@ -1,59 +1,59 @@
-# 🚀 Быстрая настройка CI/CD
+# 🚀 Quick CI/CD Setup
 
-## Проблема: Deploy with Docker - skipped?
+## Problem: Deploy with Docker - skipped?
 
-Следуйте этим шагам по порядку:
+Follow these steps in order:
 
-### 1️⃣ Создайте Environments (2 минуты)
+### 1️⃣ Create Environments (2 minutes)
 
 ```
 GitHub Repo → Settings → Environments → New environment
 ```
 
-Создайте два окружения:
+Create two environments:
 - ✅ **staging**
 - ✅ **production**
 
-### 2️⃣ Настройте Environment Secrets (5 минут)
+### 2️⃣ Configure Environment Secrets (5 minutes)
 
-Для **КАЖДОГО** окружения (staging и production):
+For **EACH** environment (staging and production):
 
 ```
-Settings → Environments → [выберите staging] → Add Secret
+Settings → Environments → [select staging] → Add Secret
 ```
 
-Добавьте 4 секрета:
+Add 4 secrets:
 
 | Secret Name | Example Value | How to Generate |
 |-------------|---------------|-----------------|
-| `POSTGRES_DB` | `crm_staging` или `crm` | Придумайте имя БД |
-| `POSTGRES_USER` | `crm` | Придумайте username |
+| `POSTGRES_DB` | `crm_staging` or `crm` | Choose a database name |
+| `POSTGRES_USER` | `crm` | Choose a username |
 | `POSTGRES_PASSWORD` | `x7K9mP2qR...` | `openssl rand -base64 32` |
 | `JWT_SECRET` | `L8nQ5tV9w...` | `openssl rand -base64 64` |
 
-Повторите для **production** окружения с другими значениями!
+Repeat for the **production** environment with different values!
 
-### 3️⃣ Настройте Repository Secrets (3 минуты)
+### 3️⃣ Configure Repository Secrets (3 minutes)
 
 ```
 Settings → Secrets and variables → Actions → Secrets → New repository secret
 ```
 
-Добавьте 3 секрета:
+Add 3 secrets:
 
 | Secret Name | Example | Description |
 |-------------|---------|-------------|
-| `SERVER_HOST` | `217.160.74.128` | IP или домен вашего сервера |
-| `SERVER_USER` | `root` | SSH пользователь |
-| `SERVER_SSH_KEY` | `-----BEGIN...` | Полный SSH приватный ключ |
+| `SERVER_HOST` | `217.160.74.128` | Your server IP or domain |
+| `SERVER_USER` | `root` | SSH user |
+| `SERVER_SSH_KEY` | `-----BEGIN...` | Full SSH private key |
 
-**Как получить SSH ключ:**
+**How to get the SSH key:**
 ```bash
-cat ~/.ssh/id_rsa  # или другой путь к вашему ключу
-# Скопируйте ВСЁ, включая -----BEGIN и -----END строки
+cat ~/.ssh/id_rsa  # or another path to your key
+# Copy EVERYTHING, including the -----BEGIN and -----END lines
 ```
 
-### 4️⃣ (Опционально) Установите Repository Variable
+### 4️⃣ (Optional) Set a Repository Variable
 
 ```
 Settings → Secrets and variables → Actions → Variables → New repository variable
@@ -62,36 +62,36 @@ Settings → Secrets and variables → Actions → Variables → New repository 
 - **Name**: `DEPLOYMENT_TYPE`
 - **Value**: `docker`
 
-## ✅ Готово!
+## ✅ Done!
 
-Теперь при push в `main` автоматически запустится деплой на staging (кроме release коммитов с `[skip ci]`).
+Now a push to `main` will automatically start a staging deploy (except release commits with `[skip ci]`).
 
-### Как проверить
+### How to verify
 
-1. Сделайте коммит и push в main:
+1. Commit and push to main:
    ```bash
    git push origin main
    ```
 
-2. Откройте Actions и проверьте логи:
+2. Open Actions and check the logs:
    ```
    Actions → Deploy Application → Setup Deployment Configuration
    ```
 
-3. Должны увидеть:
+3. You should see:
    ```
    ✅ deployment_type: docker
    ✅ should_deploy: true
    ✅ environment: staging
    ```
 
-4. Job "Deploy with Docker" должен запуститься (не skipped)
+4. The "Deploy with Docker" job should run (not skipped)
 
-## ❌ Всё ещё не работает?
+## ❌ Still not working?
 
-См. подробное руководство: [TROUBLESHOOTING_DEPLOYMENT.md](../TROUBLESHOOTING_DEPLOYMENT.md)
+See the detailed guide: [TROUBLESHOOTING_DEPLOYMENT.md](../TROUBLESHOOTING_DEPLOYMENT.md)
 
-## 📚 Дополнительная документация
+## 📚 Additional documentation
 
-- [Полная инструкция CI/CD](CI_CD_SETUP.md)
-- [Конфигурация деплоя](../DEPLOYMENT_CONFIG.md)
+- [Full CI/CD instructions](CI_CD_SETUP.md)
+- [Deployment configuration](../DEPLOYMENT_CONFIG.md)

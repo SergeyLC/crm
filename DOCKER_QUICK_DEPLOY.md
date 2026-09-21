@@ -1,33 +1,33 @@
 # 🚀 Quick Docker Deployment Guide
 
-Это краткое руководство по развертыванию LoyaCare CRM с использованием Docker на новом сервере.
+This is a short guide for deploying LoyaCare CRM with Docker on a new server.
 
-## ✅ Предварительные требования
+## ✅ Prerequisites
 
-- Ubuntu 22.04+ или аналогичная ОС
-- SSH доступ с правами root
-- Минимум 2GB RAM и 10GB свободного места на диске
+- Ubuntu 22.04+ or a similar OS
+- SSH access with root privileges
+- At least 2GB RAM and 10GB free disk space
 
-## 📝 Шаг 1: Установка Docker
+## 📝 Step 1: Install Docker
 
 ```bash
-# Обновление системы
+# Update the system
 sudo apt update && sudo apt upgrade -y
 
-# Установка Docker
+# Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 
-# Проверка установки
+# Verify installation
 docker --version
 docker compose version
 ```
 
-## 📁 Шаг 2: Подготовка файлов
+## 📁 Step 2: Prepare files
 
-### 2.1 Скопировать исходный код на сервер
+### 2.1 Copy source code to the server
 ```bash
-# На локальной машине
+# On the local machine
 rsync -avz --progress \
   --exclude='node_modules' \
   --exclude='.git' \
@@ -35,14 +35,14 @@ rsync -avz --progress \
   ./LoyaCareCRM/ root@YOUR_SERVER_IP:/var/www/crm-source/
 ```
 
-### 2.2 Создать директорию для развертывания
+### 2.2 Create the deployment directory
 ```bash
-# На сервере
+# On the server
 mkdir -p /var/www/crm-production/{nginx/conf.d,backups}
 cd /var/www/crm-production
 ```
 
-### 2.3 Создать конфигурацию nginx
+### 2.3 Create the nginx configuration
 ```bash
 cat > nginx/conf.d/crm.conf << 'EOF'
 upstream backend {
@@ -107,7 +107,7 @@ server {
 EOF
 ```
 
-### 2.4 Создать docker-compose.yml
+### 2.4 Create docker-compose.yml
 ```bash
 cat > docker-compose.yml << 'EOF'
 services:
@@ -179,150 +179,150 @@ networks:
 EOF
 ```
 
-**⚠️ ВАЖНО:** Замените в docker-compose.yml:
-- `YOUR_SERVER_IP` на IP адрес вашего сервера
-- `CHANGE_THIS_PASSWORD` на надежный пароль для базы данных
-- `CHANGE_THIS_SECRET` на случайную строку для JWT (можно сгенерировать: `openssl rand -base64 32`)
+**⚠️ IMPORTANT:** In docker-compose.yml replace:
+- `YOUR_SERVER_IP` with your server IP address
+- `CHANGE_THIS_PASSWORD` with a strong database password
+- `CHANGE_THIS_SECRET` with a random JWT string (you can generate one with: `openssl rand -base64 32`)
 
-## 🏗️ Шаг 3: Сборка Docker образов
+## 🏗️ Step 3: Build Docker images
 
 ```bash
 cd /var/www/crm-source
 
-# Сборка backend образа
+# Build backend image
 docker build -f docker/backend/Dockerfile -t crm-backend:latest .
 
-# Сборка frontend образа
+# Build frontend image
 docker build -f docker/frontend/Dockerfile -t crm-frontend:latest .
 ```
 
-**Примечание:** Сборка может занять 5-10 минут.
+**Note:** The build may take 5–10 minutes.
 
-## 🗄️ Шаг 4: Запуск и настройка базы данных
+## 🗄️ Step 4: Start and configure the database
 
 ```bash
 cd /var/www/crm-production
 
-# Запуск контейнеров
+# Start containers
 docker compose up -d
 
-# Ожидание запуска контейнеров
+# Wait for containers to start
 sleep 30
 
-# Применение миграций
+# Apply migrations
 docker exec crm-backend sh -c 'cd db && npx prisma migrate deploy'
 
-# Создание начальных данных
+# Create initial data
 docker exec crm-backend sh -c 'cd db && npx ts-node prisma/seed.ts'
 ```
 
-## ✅ Шаг 5: Проверка развертывания
+## ✅ Step 5: Verify the deployment
 
 ```bash
-# Проверка статуса контейнеров
+# Check container status
 docker compose ps
 
-# Проверка работы API
+# Check API health
 curl http://localhost/api/health
 
-# Проверка логина
+# Check login
 curl -X POST http://localhost/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "admin@loya.care", "password": "1"}'
 ```
 
-## 🌐 Доступ к приложению
+## 🌐 Accessing the application
 
-Откройте в браузере: `http://YOUR_SERVER_IP`
+Open in a browser: `http://YOUR_SERVER_IP`
 
-### Учетные данные для входа:
+### Login credentials:
 - **Email:** admin@loya.care
 - **Password:** 1
 
-## 🔧 Управление
+## 🔧 Management
 
-### Просмотр логов
+### View logs
 ```bash
 cd /var/www/crm-production
 docker compose logs -f
 ```
 
-### Перезапуск сервисов
+### Restart services
 ```bash
 docker compose restart
 ```
 
-### Остановка
+### Stop
 ```bash
 docker compose down
 ```
 
-### Полная переустановка (с удалением данных)
+### Full reinstall (deletes data)
 ```bash
 docker compose down -v
 docker volume rm crm_pg_data
-# Затем повторить шаги 4-5
+# Then repeat steps 4–5
 ```
 
-## 🐛 Устранение неполадок
+## 🐛 Troubleshooting
 
-### Nginx не запускается
+### Nginx does not start
 ```bash
-# Проверить конфигурацию
+# Check configuration
 docker exec crm-nginx nginx -t
 
-# Посмотреть логи
+# View logs
 docker logs crm-nginx
 ```
 
-### Backend не может подключиться к базе
+### Backend cannot connect to the database
 ```bash
-# Проверить, что postgres запущен и healthy
+# Check that postgres is running and healthy
 docker compose ps
 
-# Проверить логи postgres
+# Check postgres logs
 docker logs crm-postgres
 
-# Проверить переменную DATABASE_URL
+# Check DATABASE_URL
 docker exec crm-backend sh -c 'echo $DATABASE_URL'
 ```
 
-### Страницы не загружаются
+### Pages do not load
 ```bash
-# Проверить логи frontend
+# Check frontend logs
 docker logs crm-frontend
 
-# Проверить логи nginx
+# Check nginx logs
 docker logs crm-nginx
 
-# Проверить сетевое подключение
+# Check network connectivity
 docker network inspect crm-production_crm-network
 ```
 
-## 📋 Требования к серверу
+## 📋 Server requirements
 
-| Параметр | Минимум | Рекомендуется |
+| Parameter | Minimum | Recommended |
 |----------|---------|---------------|
 | CPU | 2 cores | 4 cores |
 | RAM | 2 GB | 4 GB |
 | Disk | 10 GB | 20 GB |
 | OS | Ubuntu 22.04+ | Ubuntu 24.04 LTS |
 
-## 🔒 Безопасность
+## 🔒 Security
 
-⚠️ **Важно для production:**
-1. Измените все пароли и секреты
-2. Настройте SSL/TLS (Let's Encrypt)
-3. Настройте firewall (UFW)
-4. Настройте регулярные бэкапы базы данных
-5. Используйте Docker secrets вместо переменных окружения
+⚠️ **Important for production:**
+1. Change all passwords and secrets
+2. Configure SSL/TLS (Let's Encrypt)
+3. Configure the firewall (UFW)
+4. Set up regular database backups
+5. Prefer Docker secrets over plain environment variables
 
-## 📚 Дополнительная документация
+## 📚 Additional documentation
 
-- Полная документация: `DOCKER_DEPLOYMENT.md`
-- Отчет о развертывании: `DOCKER_DEPLOYMENT_REPORT_217.154.173.36.md`
-- Оптимизация: `docs/deployment/DEPLOYMENT_OPTIMIZATION.md`
+- Full documentation: `DOCKER_DEPLOYMENT.md`
+- Deployment report: `DOCKER_DEPLOYMENT_REPORT_217.154.173.36.md`
+- Optimization: `docs/deployment/DEPLOYMENT_OPTIMIZATION.md`
 
 ---
 
-**Последнее обновление:** 18 декабря 2025
+**Last updated:** December 18, 2025

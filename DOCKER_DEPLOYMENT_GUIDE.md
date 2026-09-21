@@ -97,40 +97,40 @@ There are three deployment methods:
 
 ---
 
-### Способ 1: GitHub Actions + Container Registry (РЕКОМЕНДУЕТСЯ)
+### Method 1: GitHub Actions + Container Registry (RECOMMENDED)
 
-**Преимущества:**
-- ✅ Автоматическая сборка при push/merge
-- ✅ Версионирование образов
-- ✅ Образы хранятся в GitHub Container Registry
-- ✅ Не нужно вручную собирать образы
-- ✅ На сервере только конфигурация
+**Advantages:**
+- ✅ Automatic builds on push/merge
+- ✅ Image versioning
+- ✅ Images stored in GitHub Container Registry
+- ✅ No need to build images manually
+- ✅ Server holds configuration only
 
-**Шаги:**
+**Steps:**
 
-1. **Настройте GitHub Actions** (файл уже должен быть в `.github/workflows/docker-publish.yml`)
+1. **Configure GitHub Actions** (the file should already exist at `.github/workflows/docker-publish.yml`)
 
-2. **На локальной машине создайте deployment пакет:**
+2. **On the local machine, create a deployment package:**
 ```bash
 cd /path/to/LoyaCareCRM
 
-# Создать директорию для deployment файлов
+# Create directory for deployment files
 mkdir -p deployment-package
 
-# Скопировать только необходимые файлы
+# Copy only the required files
 cp docker-compose.yml deployment-package/
 cp .env.example deployment-package/
 cp nginx.conf deployment-package/
 cp -r nginx deployment-package/ 2>/dev/null || true
 
-# Создать архив
+# Create archive
 tar -czf crm-deployment.tar.gz deployment-package/
 
-# Скопировать на сервер
+# Copy to server
 scp crm-deployment.tar.gz root@YOUR_SERVER_IP:/var/www/
 ```
 
-3. **На сервере распаковать и настроить:**
+3. **On the server, extract and configure:**
 ```bash
 cd /var/www
 tar -xzf crm-deployment.tar.gz
@@ -139,138 +139,138 @@ rm -rf deployment-package crm-deployment.tar.gz
 
 cd /var/www/crm-production
 
-# Создать .env из примера
+# Create .env from the example
 cp .env.example .env
-nano .env  # Заполнить значения
+nano .env  # Fill in the values
 ```
 
-4. **В docker-compose.yml использовать образы из Registry:**
+4. **In docker-compose.yml, use images from the Registry:**
 ```yaml
 services:
   frontend:
     image: ghcr.io/sergeylc/crm/frontend:latest
-    # или конкретная версия:
+    # or a specific version:
     # image: ghcr.io/sergeylc/crm/frontend:v1.0.0
   
   backend:
     image: ghcr.io/sergeylc/crm/backend:latest
-    # или конкретная версия:
+    # or a specific version:
     # image: ghcr.io/sergeylc/crm/backend:v1.0.0
 ```
 
-5. **При первом запуске может потребоваться авторизация в GitHub Registry:**
+5. **On first run you may need to authenticate with GitHub Registry:**
 ```bash
-# Создать Personal Access Token в GitHub с правами read:packages
+# Create a Personal Access Token in GitHub with read:packages permission
 # Settings → Developer settings → Personal access tokens → Tokens (classic)
 
-# Авторизоваться
+# Authenticate
 echo YOUR_GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
 ```
 
-6. **Запустить контейнеры** (см. Шаг 11)
+6. **Start the containers** (see Step 11)
 
 ---
 
-### Способ 2: Ручная сборка на локальной машине
+### Method 2: Manual build on the local machine
 
-**Преимущества:**
-- ✅ Полный контроль над процессом сборки
-- ✅ Не требует настройки CI/CD
-- ✅ На сервере только конфигурация
+**Advantages:**
+- ✅ Full control over the build process
+- ✅ No CI/CD setup required
+- ✅ Server holds configuration only
 
-**Шаги:**
+**Steps:**
 
-1. **На локальной машине собрать образы:**
+1. **On the local machine, build the images:**
 ```bash
 cd /path/to/LoyaCareCRM
 
-# Собрать Backend
+# Build Backend
 docker build -f docker/backend/Dockerfile -t crm-backend:latest .
 
-# Собрать Frontend
+# Build Frontend
 docker build --no-cache \
   -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_API_URL=/api \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
   -t crm-frontend:latest .
 
-# Проверить образы
+# Verify images
 docker images | grep crm
 ```
 
-2. **Сохранить образы в файлы:**
+2. **Save images to files:**
 ```bash
-# Создать директорию для образов
+# Create directory for images
 mkdir -p docker-images
 
-# Экспортировать образы
+# Export images
 docker save crm-backend:latest | gzip > docker-images/backend.tar.gz
 docker save crm-frontend:latest | gzip > docker-images/frontend.tar.gz
 
-# Создать deployment пакет
+# Create deployment package
 mkdir -p deployment-package
 cp docker-compose.yml deployment-package/
 cp .env.example deployment-package/
 cp nginx.conf deployment-package/
 cp -r nginx deployment-package/ 2>/dev/null || true
 
-# Создать архив со всем необходимым
+# Create archive with everything needed
 tar -czf crm-full-deployment.tar.gz deployment-package/ docker-images/
 ```
 
-3. **Скопировать на сервер:**
+3. **Copy to the server:**
 ```bash
-# Скопировать архив (может занять время, ~500MB-1GB)
+# Copy archive (may take time, ~500MB-1GB)
 scp crm-full-deployment.tar.gz root@YOUR_SERVER_IP:/var/www/
 ```
 
-4. **На сервере распаковать и загрузить образы:**
+4. **On the server, extract and load images:**
 ```bash
 cd /var/www
 tar -xzf crm-full-deployment.tar.gz
 
-# Загрузить образы в Docker
+# Load images into Docker
 docker load < docker-images/backend.tar.gz
 docker load < docker-images/frontend.tar.gz
 
-# Переместить конфигурацию
+# Move configuration
 mv deployment-package/* crm-production/
 
-# Очистить
+# Clean up
 rm -rf deployment-package docker-images crm-full-deployment.tar.gz
 
-# Настроить .env
+# Configure .env
 cd /var/www/crm-production
 cp .env.example .env
-nano .env  # Заполнить значения
+nano .env  # Fill in the values
 ```
 
-5. **Запустить контейнеры** (см. Шаг 11)
+5. **Start the containers** (see Step 11)
 
 ---
 
-### Способ 3: Сборка на сервере (НЕ рекомендуется для production)
+### Method 3: Build on the server (NOT recommended for production)
 
-**Использовать только для тестирования!**
+**Use for testing only!**
 
-**Недостатки:**
-- ❌ Требует исходники на сервере
-- ❌ Нагрузка на production сервер при сборке
-- ❌ Дольше время развертывания
-- ❌ Требует больше места на диске
+**Drawbacks:**
+- ❌ Requires source code on the server
+- ❌ Puts load on the production server during builds
+- ❌ Longer deployment time
+- ❌ Requires more disk space
 
-**Шаги:**
+**Steps:**
 
-1. **Создать директорию для исходников:**
+1. **Create a directory for source code:**
 ```bash
 mkdir -p /var/www/crm-source
 ```
 
-2. **На локальной машине:**
+2. **On the local machine:**
 ```bash
 cd /path/to/LoyaCareCRM
 
-# Синхронизировать проект (исключая лишнее)
+# Sync the project (excluding unnecessary files)
 rsync -avz \
   --exclude='node_modules' \
   --exclude='.next' \
@@ -283,85 +283,85 @@ rsync -avz \
   ./ root@YOUR_SERVER_IP:/var/www/crm-source/
 ```
 
-3. **На сервере собрать образы:**
+3. **On the server, build the images:**
 ```bash
 cd /var/www/crm-source
 
-# Собрать Backend
+# Build Backend
 docker build -f docker/backend/Dockerfile -t crm-backend:latest .
 
-# Собрать Frontend
+# Build Frontend
 docker build --no-cache \
   -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_API_URL=/api \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
   -t crm-frontend:latest .
 
-# Скопировать конфигурацию
+# Copy configuration
 cp docker-compose.yml /var/www/crm-production/
 cp .env.example /var/www/crm-production/
 cp nginx.conf /var/www/crm-production/
 
-# Настроить .env
+# Configure .env
 cd /var/www/crm-production
 cp .env.example .env
 nano .env
 ```
 
-4. **Запустить контейнеры** (см. Шаг 11)
+4. **Start the containers** (see Step 11)
 
 ---
 
-## Шаг 7: Настройка environment переменных
+## Step 7: Configure environment variables
 
-**На сервере:**
+**On the server:**
 
 ```bash
-# Перейти в директорию production
+# Go to the production directory
 cd /var/www/crm-production
 
-# Создать .env файл для Docker Compose
+# Create .env file for Docker Compose
 cat > .env << 'EOF'
-# Общие настройки
+# General settings
 DOMAIN=YOUR_SERVER_IP
 NODE_ENV=production
 NEXT_PUBLIC_APP_VERSION=production
 
-# Frontend настройки
+# Frontend settings
 FRONTEND_PORT=3000
 NEXT_PUBLIC_API_URL=/api
 NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api
 
-# Backend настройки
+# Backend settings
 BACKEND_PORT=4000
 LOG_LEVEL=info
 CORS_ORIGIN=http://YOUR_SERVER_IP
 
-# База данных
+# Database
 POSTGRES_DB=crm
 POSTGRES_USER=crm
 POSTGRES_PASSWORD=crm2024secure
 
-# Безопасность
+# Security
 JWT_SECRET=dGhpc2lzYXNlY3JldGp3dHNlY3JldGtleQ==
 
-# Docker образы
+# Docker images
 FRONTEND_IMAGE=crm-frontend:latest
 BACKEND_IMAGE=crm-backend:latest
 
-# Порты
+# Ports
 NGINX_PORT=80
 EOF
 
-# ВАЖНО: Замените YOUR_SERVER_IP на реальный IP сервера
+# IMPORTANT: Replace YOUR_SERVER_IP with the real server IP
 nano .env
 
-# Для production рекомендуется сгенерировать новые значения:
+# For production it is recommended to generate new values:
 # JWT_SECRET: openssl rand -base64 32
 # POSTGRES_PASSWORD: openssl rand -base64 16
 ```
 
-## Шаг 8: Настройка docker-compose.yml
+## Step 8: Configure docker-compose.yml
 
 ```bash
 cd /var/www/crm-production
@@ -458,7 +458,7 @@ networks:
 EOF
 ```
 
-## Шаг 9: Настройка Nginx
+## Step 9: Configure Nginx
 
 ```bash
 cd /var/www/crm-production
@@ -517,166 +517,164 @@ http {
 EOF
 ```
 
-## Шаг 10: Запуск контейнеров
+## Step 10: Start containers
 
 ```bash
 cd /var/www/crm-production
 
-# Запустить все сервисы
+# Start all services
 docker compose up -d
 
-# Проверить статус контейнеров
+# Check container status
 docker compose ps
 
-# Должно показать все 4 контейнера в статусе "Up (healthy)"
+# Should show all 4 containers with status "Up (healthy)"
 ```
 
-## Шаг 11: Применение миграций базы данных
+## Step 11: Apply database migrations
 
 ```bash
-# Подождать, пока PostgreSQL полностью запустится (30-60 секунд)
+# Wait until PostgreSQL is fully started (30-60 seconds)
 sleep 60
 
-# Применить миграции
+# Apply migrations
 docker exec crm-backend sh -c "cd /app/db && npx prisma migrate deploy"
 
-# Проверить применённые миграции
+# Check applied migrations
 docker exec crm-backend sh -c "cd /app/db && npx prisma migrate status"
 ```
 
-## Шаг 12: Заполнение базы данных (Seeding)
+## Step 12: Seed the database
 
 ```bash
-# Создать seed данные (администраторы, тестовые лиды/сделки)
+# Create seed data (administrators, test leads/deals)
 docker exec crm-backend sh -c "cd /app/db && node prisma/seed.ts"
 ```
 
-## Шаг 13: Проверка работоспособности
+## Step 13: Verify the system is working
 
-### 13.1 Проверка Backend API
+### 13.1 Backend API check
 
 ```bash
 # Health check
 curl http://YOUR_SERVER_IP/api/health
-# Должно вернуть: {"status":"ok"}
+# Should return: {"status":"ok"}
 
-# Тест авторизации
+# Auth test
 curl -X POST http://YOUR_SERVER_IP/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@loya.care","password":"1"}'
-# Должно вернуть JSON с токеном и данными пользователя
+# Should return JSON with a token and user data
 ```
 
-### 14.2 Проверка Frontend
-
-### 13.2 Проверка Frontend
+### 13.2 Frontend check
 
 ```bash
-# Проверить главную страницу
+# Check the home page
 curl -I http://YOUR_SERVER_IP/de
-# Должно вернуть: HTTP/1.1 200 OK
+# Should return: HTTP/1.1 200 OK
 
-# Проверить страницу логина
+# Check the login page
 curl -I http://YOUR_SERVER_IP/de/login
-# Должно вернуть: HTTP/1.1 200 OK
+# Should return: HTTP/1.1 200 OK
 ```
 
-### 13.3 Проверка в браузере
+### 13.3 Browser check
 
-Откройте в браузере:
-- **Главная**: `http://YOUR_SERVER_IP/de`
-- **Логин**: `http://YOUR_SERVER_IP/de/login`
+Open in a browser:
+- **Home**: `http://YOUR_SERVER_IP/de`
+- **Login**: `http://YOUR_SERVER_IP/de/login`
 
-**Тестовые учетные данные:**
+**Test credentials:**
 - Email: `admin@loya.care`
 - Password: `1`
 
-После успешного логина вы должны увидеть дашборд CRM.
+After a successful login you should see the CRM dashboard.
 
-## Шаг 14: Настройка автозапуска
+## Step 14: Configure autostart
 
-Docker контейнеры уже настроены с `restart: unless-stopped`, поэтому они автоматически запустятся после перезагрузки сервера.
+Docker containers are already configured with `restart: unless-stopped`, so they will start automatically after a server reboot.
 
-Проверить:
+Verify:
 ```bash
-# Перезагрузить сервер
+# Reboot the server
 reboot
 
-# После перезагрузки подключиться и проверить
+# After reboot, connect and check
 ssh root@YOUR_SERVER_IP
 cd /var/www/crm-production
 docker compose ps
 ```
 
-## Управление контейнерами
+## Container Management
 
-### Просмотр логов
+### Viewing logs
 
 ```bash
-# Все сервисы
+# All services
 docker compose logs -f
 
-# Конкретный сервис
+# Specific service
 docker compose logs -f backend
 docker compose logs -f frontend
 docker compose logs -f postgres
 docker compose logs -f nginx
 
-# Последние 50 строк
+# Last 50 lines
 docker compose logs --tail 50 backend
 ```
 
-### Перезапуск сервисов
+### Restarting services
 
 ```bash
-# Перезапустить все
+# Restart all
 docker compose restart
 
-# Перезапустить конкретный сервис
+# Restart a specific service
 docker compose restart backend
 docker compose restart frontend
 ```
 
-### Остановка и удаление
+### Stopping and removing
 
 ```bash
-# Остановить все сервисы
+# Stop all services
 docker compose stop
 
-# Остановить и удалить контейнеры (БД сохранится)
+# Stop and remove containers (DB is preserved)
 docker compose down
 
-# Удалить всё включая БД (ОСТОРОЖНО!)
+# Remove everything including the DB (CAUTION!)
 docker compose down -v
 ```
 
-### Обновление после изменений кода
+### Updating after code changes
 
-**Способ 1: Через GitHub Actions (рекомендуется)**
+**Method 1: Via GitHub Actions (recommended)**
 
 ```bash
-# 1. На локальной машине: push код в репозиторий
+# 1. On the local machine: push code to the repository
 git push origin main
 
-# 2. GitHub Actions автоматически соберёт и опубликует новые образы
+# 2. GitHub Actions will automatically build and publish new images
 
-# 3. На сервере: обновить образы и перезапустить
+# 3. On the server: update images and restart
 cd /var/www/crm-production
 
-# Скачать новые версии образов
+# Pull new image versions
 docker compose pull
 
-# Пересоздать контейнеры с новыми образами
+# Recreate containers with the new images
 docker compose up -d
 
-# Проверить
+# Verify
 docker compose ps
 ```
 
-**Способ 2: Ручная сборка и загрузка**
+**Method 2: Manual build and upload**
 
 ```bash
-# 1. На локальной машине пересобрать образы
+# 1. On the local machine, rebuild images
 cd /path/to/LoyaCareCRM
 docker build -f docker/backend/Dockerfile -t crm-backend:latest .
 docker build --no-cache -f docker/frontend/Dockerfile.prod \
@@ -684,12 +682,12 @@ docker build --no-cache -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
   -t crm-frontend:latest .
 
-# 2. Сохранить и скопировать на сервер
+# 2. Save and copy to the server
 docker save crm-backend:latest | gzip > backend.tar.gz
 docker save crm-frontend:latest | gzip > frontend.tar.gz
 scp backend.tar.gz frontend.tar.gz root@YOUR_SERVER_IP:/tmp/
 
-# 3. На сервере загрузить и обновить
+# 3. On the server, load and update
 ssh root@YOUR_SERVER_IP
 cd /tmp
 docker load < backend.tar.gz
@@ -699,18 +697,18 @@ rm backend.tar.gz frontend.tar.gz
 cd /var/www/crm-production
 docker compose up -d --force-recreate backend frontend
 
-# 4. Проверить
+# 4. Verify
 docker compose ps
 ```
 
-**Способ 3: Сборка на сервере (не рекомендуется)**
+**Method 3: Build on the server (not recommended)**
 
 ```bash
-# 1. Синхронизировать новый код
+# 1. Sync the new code
 rsync -avz --exclude='node_modules' --exclude='.next' \
   ./ root@YOUR_SERVER_IP:/var/www/crm-source/
 
-# 2. На сервере пересобрать образы
+# 2. On the server, rebuild images
 ssh root@YOUR_SERVER_IP
 cd /var/www/crm-source
 docker build -f docker/backend/Dockerfile -t crm-backend:latest .
@@ -719,118 +717,118 @@ docker build --no-cache -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
   -t crm-frontend:latest .
 
-# 3. Пересоздать контейнеры
+# 3. Recreate containers
 cd /var/www/crm-production
 docker compose up -d --force-recreate backend frontend
 
-# 4. Проверить
+# 4. Verify
 docker compose ps
 ```
 
-## Бэкапы базы данных
+## Database backups
 
-### Создание бэкапа
+### Creating a backup
 
 ```bash
-# Создать директорию для бэкапов
+# Create directory for backups
 mkdir -p /var/www/crm-backups
 
-# Создать бэкап
+# Create a backup
 docker exec crm-postgres pg_dump \
   -U crm crm > /var/www/crm-backups/backup_$(date +%Y%m%d_%H%M%S).sql
 
-# Или использовать custom format (сжатый)
+# Or use custom format (compressed)
 docker exec crm-postgres pg_dump \
   -U crm -Fc crm > /var/www/crm-backups/backup_$(date +%Y%m%d_%H%M%S).dump
 ```
 
-### Восстановление из бэкапа
+### Restoring from a backup
 
 ```bash
-# Из SQL файла
+# From an SQL file
 cat /var/www/crm-backups/backup_YYYYMMDD_HHMMSS.sql | \
   docker exec -i crm-postgres psql -U crm -d crm
 
-# Из custom format
+# From custom format
 docker exec -i crm-postgres pg_restore \
   -U crm -d crm < /var/www/crm-backups/backup_YYYYMMDD_HHMMSS.dump
 ```
 
-### Автоматические бэкапы (cron)
+### Automatic backups (cron)
 
 ```bash
-# Создать скрипт бэкапа
+# Create backup script
 cat > /usr/local/bin/crm-backup.sh << 'EOF'
 #!/bin/bash
 BACKUP_DIR=/var/www/crm-backups
 DATE=$(date +%Y%m%d_%H%M%S)
 docker exec crm-postgres pg_dump -U crm -Fc crm > $BACKUP_DIR/backup_$DATE.dump
-# Удалять бэкапы старше 30 дней
+# Delete backups older than 30 days
 find $BACKUP_DIR -name "backup_*.dump" -mtime +30 -delete
 EOF
 
-# Сделать исполняемым
+# Make executable
 chmod +x /usr/local/bin/crm-backup.sh
 
-# Добавить в cron (каждый день в 3:00 ночи)
+# Add to cron (every day at 3:00 AM)
 crontab -e
-# Добавить строку:
+# Add the line:
 # 0 3 * * * /usr/local/bin/crm-backup.sh
 ```
 
-## Мониторинг
+## Monitoring
 
-### Проверка здоровья системы
+### System health checks
 
 ```bash
-# Использование диска
+# Disk usage
 df -h
 
-# Использование памяти
+# Memory usage
 free -h
 
-# Docker статистика
+# Docker stats
 docker stats
 
-# Проверка логов на ошибки
+# Check logs for errors
 docker compose logs --tail 100 | grep -i error
 ```
 
-## Развертывание Staging окружения
+## Staging Environment Deployment
 
-Staging окружение позволяет тестировать изменения перед деплоем в production. Staging использует отдельные контейнеры, базу данных и порты.
+A staging environment lets you test changes before deploying to production. Staging uses separate containers, database, and ports.
 
-### Отличия Staging от Production
+### Differences between Staging and Production
 
-| Параметр | Production | Staging |
+| Parameter | Production | Staging |
 |----------|-----------|---------|
-| HTTP порт | 80 | 8080 |
-| База данных | `crm` | `crm_staging` |
+| HTTP port | 80 | 8080 |
+| Database | `crm` | `crm_staging` |
 | Docker volume | `crm_pg_data` | `crm_pg_data_staging` |
-| Имена контейнеров | `crm-*` | `crm-staging-*` |
-| Docker образы | `:latest` | `:staging` |
-| Сеть | `crm-network` | `crm-staging-network` |
-| Директория | `/var/www/crm-production` | `/var/www/crm-staging` |
+| Container names | `crm-*` | `crm-staging-*` |
+| Docker images | `:latest` | `:staging` |
+| Network | `crm-network` | `crm-staging-network` |
+| Directory | `/var/www/crm-production` | `/var/www/crm-staging` |
 
-### Шаг 1: Подготовка конфигурации Staging
+### Step 1: Prepare Staging configuration
 
-На локальной машине уже есть готовые файлы:
-- `docker-compose.stage.yml` - конфигурация для staging
-- `.env.stage` - шаблон переменных окружения для staging
-- `nginx.stage.conf` - nginx конфигурация для staging
-- `frontend/.env.staging` - переменные сборки frontend для staging
+Ready-made files already exist on the local machine:
+- `docker-compose.stage.yml` - staging configuration
+- `.env.stage` - environment variable template for staging
+- `nginx.stage.conf` - nginx configuration for staging
+- `frontend/.env.staging` - frontend build variables for staging
 
-### Шаг 2: Сборка образов для Staging
+### Step 2: Build images for Staging
 
 ```bash
 cd /path/to/LoyaCareCRM
 
-# Собрать Backend образ (одинаковый для prod и staging)
+# Build Backend image (same for prod and staging)
 docker build --platform linux/amd64 \
   -t crm-backend:staging \
   -f docker/backend/Dockerfile .
 
-# Собрать Frontend образ с staging переменными
+# Build Frontend image with staging variables
 docker build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
   --build-arg NEXT_PUBLIC_APP_VERSION=staging \
@@ -838,343 +836,343 @@ docker build --platform linux/amd64 \
   -f docker/frontend/Dockerfile.prod .
 ```
 
-**⚠️ Важно:** Используйте `--platform linux/amd64` если собираете на Mac (ARM64) для сервера AMD64.
+**⚠️ Important:** Use `--platform linux/amd64` if you build on Mac (ARM64) for an AMD64 server.
 
-### Шаг 3: Экспорт и копирование образов
+### Step 3: Export and copy images
 
 ```bash
-# Экспортировать образы
+# Export images
 docker save crm-backend:staging | gzip > crm-backend-staging.tar.gz
 docker save crm-frontend:staging | gzip > crm-frontend-staging.tar.gz
 
-# Скопировать на сервер
+# Copy to the server
 scp crm-backend-staging.tar.gz crm-frontend-staging.tar.gz \
     docker-compose.stage.yml nginx.stage.conf .env.stage \
     root@YOUR_SERVER_IP:/var/www/crm-staging/
 ```
 
-### Шаг 4: Настройка на сервере
+### Step 4: Configure on the server
 
 ```bash
 ssh root@YOUR_SERVER_IP
 cd /var/www/crm-staging
 
-# Создать директорию для бэкапов
+# Create directory for backups
 mkdir -p backups
 
-# Загрузить Docker образы
+# Load Docker images
 docker load < crm-backend-staging.tar.gz
 docker load < crm-frontend-staging.tar.gz
 
-# Настроить .env
+# Configure .env
 cp .env.stage .env
 
-# Сгенерировать безопасные пароли
+# Generate secure passwords
 DB_PASS=$(openssl rand -base64 32)
 JWT_SECRET=$(openssl rand -base64 64)
 
-# Обновить .env с паролями (используйте текстовый редактор)
+# Update .env with passwords (use a text editor)
 nano .env
-# Замените:
-# POSTGRES_PASSWORD=CHANGE_ME_STAGING_PASSWORD  ->  на сгенерированный пароль
-# JWT_SECRET=CHANGE_ME_STAGING_JWT_SECRET       ->  на сгенерированный секрет
+# Replace:
+# POSTGRES_PASSWORD=CHANGE_ME_STAGING_PASSWORD  ->  with the generated password
+# JWT_SECRET=CHANGE_ME_STAGING_JWT_SECRET       ->  with the generated secret
 ```
 
-### Шаг 5: Запуск Staging контейнеров
+### Step 5: Start Staging containers
 
 ```bash
 cd /var/www/crm-staging
 
-# Запустить контейнеры
+# Start containers
 docker compose -f docker-compose.stage.yml up -d
 
-# Проверить статус
+# Check status
 docker ps --filter name=crm-staging
 
-# Проверить логи
+# Check logs
 docker compose -f docker-compose.stage.yml logs -f
 ```
 
-### Шаг 6: Применение миграций и Seed данных
+### Step 6: Apply migrations and seed data
 
 ```bash
-# Применить миграции базы данных
+# Apply database migrations
 docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
-# **ВАЖНО:** Запустить seed для создания тестовых данных
+# **IMPORTANT:** Run seed to create test data
 docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 
-# Проверить созданные данные
+# Verify created data
 docker exec crm-staging-postgres psql -U crm -d crm_staging \
   -c 'SELECT COUNT(*) as users FROM "User"; SELECT COUNT(*) as contacts FROM "Contact";'
 ```
 
-**Seed создаст:**
-- 13 пользователей (включая admin@loya.care с паролем "1")
-- 110 контактов
-- 110 сделок в различных стадиях
-- Тестовые группы и заметки
+**Seed will create:**
+- 13 users (including admin@loya.care with password "1")
+- 110 contacts
+- 110 deals in various stages
+- Test groups and notes
 
-### Шаг 7: Открытие порта 8080 (если требуется)
+### Step 7: Open port 8080 (if required)
 
-По умолчанию многие хостинг-провайдеры блокируют нестандартные порты. Staging доступен локально на сервере, для доступа извне:
+By default many hosting providers block non-standard ports. Staging is available locally on the server; for external access:
 
-**Вариант 1: Открыть порт у хостинг-провайдера**
+**Option 1: Open the port with the hosting provider**
 
-Обратитесь в поддержку хостинга для открытия порта 8080.
+Contact hosting support to open port 8080.
 
-**Вариант 2: SSH туннель (для разработчиков)**
+**Option 2: SSH tunnel (for developers)**
 
 ```bash
-# На локальной машине создать туннель
+# On the local machine, create a tunnel
 ssh -L 8080:localhost:8080 root@YOUR_SERVER_IP -N
 
-# Затем открыть в браузере: http://localhost:8080/de
+# Then open in a browser: http://localhost:8080/de
 ```
 
-**Вариант 3: Path-based routing через production nginx**
+**Option 3: Path-based routing via production nginx**
 
-Настроить production nginx для проксирования `/staging/` на staging.
+Configure production nginx to proxy `/staging/` to staging.
 
-### Шаг 8: Проверка Staging
+### Step 8: Verify Staging
 
 ```bash
-# Тест API (на сервере)
+# API test (on the server)
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@loya.care","password":"1"}'
 
-# Должен вернуть: {"success":true,"user":{...},"token":"..."}
+# Should return: {"success":true,"user":{...},"token":"..."}
 
-# Тест Frontend
+# Frontend test
 curl -I http://localhost:8080/de
-# Должен вернуть: HTTP/1.1 200 OK
+# Should return: HTTP/1.1 200 OK
 ```
 
-**Доступ к Staging:**
+**Staging access:**
 - URL: `http://YOUR_SERVER_IP:8080/de`
 - Email: `admin@loya.care`
 - Password: `1`
 
-### Управление Staging
+### Managing Staging
 
 ```bash
 cd /var/www/crm-staging
 
-# Просмотр логов
+# View logs
 docker compose -f docker-compose.stage.yml logs -f
 
-# Перезапуск сервисов
+# Restart services
 docker compose -f docker-compose.stage.yml restart
 
-# Остановка
+# Stop
 docker compose -f docker-compose.stage.yml stop
 
-# Полная очистка (включая БД)
+# Full cleanup (including DB)
 docker compose -f docker-compose.stage.yml down -v
 ```
 
-### Обновление Staging образов
+### Updating Staging images
 
 ```bash
-# 1. На локальной машине пересобрать
+# 1. On the local machine, rebuild
 docker build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
   -t crm-frontend:staging \
   -f docker/frontend/Dockerfile.prod .
 
-# 2. Экспортировать и скопировать
+# 2. Export and copy
 docker save crm-frontend:staging | gzip > crm-frontend-staging.tar.gz
 scp crm-frontend-staging.tar.gz root@YOUR_SERVER_IP:/var/www/crm-staging/
 
-# 3. На сервере загрузить и перезапустить
+# 3. On the server, load and restart
 ssh root@YOUR_SERVER_IP
 cd /var/www/crm-staging
 docker load < crm-frontend-staging.tar.gz
 docker compose -f docker-compose.stage.yml restart frontend
 ```
 
-### Очистка временных файлов
+### Cleaning up temporary files
 
-После успешного развертывания удалите архивы образов:
+After a successful deployment, delete the image archives:
 
 ```bash
-# На сервере
+# On the server
 cd /var/www/crm-staging
 rm -f *.tar.gz
 
-# На локальной машине
+# On the local machine
 rm -f crm-*-staging.tar.gz
 ```
 
 ---
 
-## Устранение неполадок
+## Troubleshooting
 
-### Контейнер не запускается
+### Container does not start
 
 ```bash
-# Проверить логи
+# Check logs
 docker compose logs backend
 
-# Проверить конфигурацию
+# Check configuration
 docker compose config
 
-# Пересоздать контейнер
+# Recreate the container
 docker compose up -d --force-recreate backend
 ```
 
-### База данных недоступна
+### Database is unavailable
 
 ```bash
-# Проверить статус
+# Check status
 docker compose ps postgres
 
-# Проверить логи
+# Check logs
 docker compose logs postgres
 
-# Проверить подключение
+# Check connection
 docker exec crm-backend sh -c "cd /app/db && npx prisma db pull"
 ```
 
-### Frontend показывает ошибки
+### Frontend shows errors
 
 ```bash
-# Проверить переменные окружения
+# Check environment variables
 docker exec crm-frontend env | grep NEXT_PUBLIC
 
-# Проверить, что .env.production скопирован
+# Verify that .env.production was copied
 docker exec crm-frontend cat /app/frontend/.env.production
 
-# Пересобрать с --no-cache
+# Rebuild with --no-cache
 docker build --no-cache -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_API_URL=/api \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
   -t crm-frontend:latest /var/www/crm-source
 ```
 
-### Nginx ошибки 502/504
+### Nginx 502/504 errors
 
 ```bash
-# Проверить upstream сервисы
+# Check upstream services
 docker compose ps
 
-# Проверить конфигурацию nginx
+# Check nginx configuration
 docker exec crm-nginx nginx -t
 
-# Перезагрузить nginx
+# Reload nginx
 docker compose restart nginx
 ```
 
-## Безопасность
+## Security
 
-### Изменить пароли
+### Change passwords
 
-**ВАЖНО:** При первом деплое рекомендуется сгенерировать новые значения:
+**IMPORTANT:** On first deploy it is recommended to generate new values:
 
 ```bash
 cd /var/www/crm-production
 
-# Сгенерировать новый пароль БД
+# Generate a new DB password
 NEW_DB_PASSWORD=$(openssl rand -base64 16)
-echo "Новый пароль БД: $NEW_DB_PASSWORD"
+echo "New DB password: $NEW_DB_PASSWORD"
 
-# Сгенерировать новый JWT секрет
+# Generate a new JWT secret
 NEW_JWT_SECRET=$(openssl rand -base64 32)
-echo "Новый JWT секрет: $NEW_JWT_SECRET"
+echo "New JWT secret: $NEW_JWT_SECRET"
 
-# Обновить .env файл
+# Update the .env file
 nano .env
-# Измените:
-# POSTGRES_PASSWORD=новый_пароль
-# JWT_SECRET=новый_секрет
+# Change:
+# POSTGRES_PASSWORD=new_password
+# JWT_SECRET=new_secret
 
-# Пересоздать контейнеры с новыми значениями
+# Recreate containers with the new values
 docker compose down
 docker compose up -d
 
-# Проверить подключение
+# Verify connection
 docker compose ps
 ```
 
-**Для смены паролей на существующей системе:**
+**To change passwords on an existing system:**
 
-1. **PostgreSQL пароль:**
+1. **PostgreSQL password:**
 ```bash
-# Остановить сервисы
+# Stop services
 cd /var/www/crm-production
 docker compose stop backend frontend
 
-# Изменить пароль в .env
+# Change the password in .env
 nano .env
-# POSTGRES_PASSWORD=новый_пароль
+# POSTGRES_PASSWORD=new_password
 
-# Изменить пароль в PostgreSQL
+# Change the password in PostgreSQL
 docker exec -it crm-postgres psql -U crm -d crm \
-  -c "ALTER USER crm WITH PASSWORD 'новый_пароль';"
+  -c "ALTER USER crm WITH PASSWORD 'new_password';"
 
-# Перезапустить сервисы
+# Restart services
 docker compose up -d
 ```
 
-2. **JWT Secret (потребует переавторизации всех пользователей):**
+2. **JWT Secret (will require all users to re-authenticate):**
 ```bash
-# Изменить в .env
+# Change in .env
 nano .env
-# JWT_SECRET=новый_секрет
+# JWT_SECRET=new_secret
 
-# Перезапустить backend
+# Restart backend
 docker compose restart backend
 ```
 
-### Настройка Firewall
+### Firewall configuration
 
 ```bash
-# Установить ufw
+# Install ufw
 apt install -y ufw
 
-# Разрешить SSH
+# Allow SSH
 ufw allow 22/tcp
 
-# Разрешить HTTP
+# Allow HTTP
 ufw allow 80/tcp
 
-# Разрешить HTTPS (если используете SSL)
+# Allow HTTPS (if using SSL)
 ufw allow 443/tcp
 
-# Включить firewall
+# Enable firewall
 ufw enable
 
-# Проверить статус
+# Check status
 ufw status
 ```
 
-## SSL/HTTPS (опционально)
+## SSL/HTTPS (optional)
 
-Для production рекомендуется использовать SSL сертификат (Let's Encrypt + Certbot).
+For production it is recommended to use an SSL certificate (Let's Encrypt + Certbot).
 
 ```bash
-# Установить Certbot
+# Install Certbot
 apt install -y certbot python3-certbot-nginx
 
-# Получить сертификат (замените на ваш домен)
+# Obtain a certificate (replace with your domain)
 certbot --nginx -d your-domain.com
 
-# Автообновление сертификата (уже настроено автоматически)
-# Проверить: certbot renew --dry-run
+# Certificate auto-renewal (already configured automatically)
+# Verify: certbot renew --dry-run
 ```
 
-## Контакты и поддержка
+## Contacts and support
 
-При возникновении проблем проверьте:
-1. Логи контейнеров: `docker compose logs`
-2. Статус сервисов: `docker compose ps`
-3. Доступность портов: `netstat -tulpn | grep LISTEN`
-4. Использование ресурсов: `docker stats`
+If you encounter problems, check:
+1. Container logs: `docker compose logs`
+2. Service status: `docker compose ps`
+3. Port availability: `netstat -tulpn | grep LISTEN`
+4. Resource usage: `docker stats`
 
 ---
 
-**Дата создания:** 2025-12-19  
-**Версия:** 1.0  
-**Проект:** LoyaCareCRM  
+**Created:** 2025-12-19  
+**Version:** 1.0  
+**Project:** LoyaCareCRM  
 **Deployment:** Docker Production

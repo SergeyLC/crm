@@ -1,41 +1,41 @@
-# Отчет о Развертывании Production LoyaCare CRM
+# Production Deployment Report — LoyaCare CRM
 
-## Информация о Сервере
+## Server Information
 
-- **IP адрес**: 217.160.74.128
-- **ОС**: Ubuntu 24.04 LTS
-- **Память**: 848 MB RAM + 2 GB Swap
-- **Диск**: 8.7 GB (используется 86%, доступно 1.3GB)
+- **IP address**: 217.160.74.128
+- **OS**: Ubuntu 24.04 LTS
+- **Memory**: 848 MB RAM + 2 GB Swap
+- **Disk**: 8.7 GB (86% used, 1.3GB available)
 - **Docker**: 29.1.2
 - **Docker Compose**: v5.0.0
 - **Node.js**: 24.12.0
 - **pnpm**: 10.26.0
 - **PM2**: 6.0.14
 
-## Архитектура Развертывания
+## Deployment Architecture
 
-### Гибридный Подход
-Из-за ограничений по ресурсам сервера (848MB RAM, 8.7GB disk) был выбран гибридный подход:
+### Hybrid Approach
+Because of server resource limits (848MB RAM, 8.7GB disk), a hybrid approach was used:
 
-**Docker контейнеры** (инфраструктура):
+**Docker containers** (infrastructure):
 - PostgreSQL 16-alpine (port 5432)
 - Nginx alpine (port 80)
 
-**PM2 процессы** (приложения):
+**PM2 processes** (applications):
 - Backend Node.js (port 4000)
 - Frontend Next.js (port 3000)
 
-### Причины Выбора
-1. Docker образы frontend (771MB) и backend (310MB) слишком велики для сервера с 8.7GB диска
-2. Next.js сборка требует ~2GB RAM, сервер имеет только 848MB
-3. Гибридный подход позволяет:
-   - Изолировать базу данных в Docker с persistent volume
-   - Минимизировать использование диска
-   - Собирать frontend локально и переносить .next директорию
+### Why this approach
+1. Frontend (771MB) and backend (310MB) Docker images are too large for an 8.7GB disk
+2. Next.js builds need ~2GB RAM; the server only has 848MB
+3. The hybrid approach allows:
+   - Isolating the database in Docker with a persistent volume
+   - Minimizing disk usage
+   - Building the frontend locally and transferring only the `.next` directory
 
-## Развернутые Компоненты
+## Deployed Components
 
-### 1. Docker Контейнеры
+### 1. Docker Containers
 
 #### PostgreSQL
 ```
@@ -46,11 +46,11 @@ Ports: 0.0.0.0:5432->5432/tcp
 Volume: crm_pg_data
 ```
 
-Конфигурация:
+Configuration:
 - Database: crm
 - User: crm
 - Password: crm2024
-- Health check: pg_isready каждые 5 секунд
+- Health check: pg_isready every 5 seconds
 
 #### Nginx
 ```
@@ -60,13 +60,13 @@ Status: Up 6 minutes
 Ports: 0.0.0.0:80->80/tcp
 ```
 
-Конфигурация:
-- Прокси к backend: 172.18.0.1:4000 (Docker gateway IP)
-- Прокси к frontend: 172.18.0.1:3000 (Docker gateway IP)
-- HTTP only (без SSL)
-- Gzip compression включен
+Configuration:
+- Proxy to backend: 172.18.0.1:4000 (Docker gateway IP)
+- Proxy to frontend: 172.18.0.1:3000 (Docker gateway IP)
+- HTTP only (no SSL)
+- Gzip compression enabled
 
-### 2. PM2 Процессы
+### 2. PM2 Processes
 
 #### Backend
 ```
@@ -77,7 +77,7 @@ Memory: ~96 MB
 CPU: 0%
 ```
 
-Переменные окружения:
+Environment variables:
 ```
 NODE_ENV=production
 PORT=4000
@@ -94,7 +94,7 @@ Memory: ~103 MB
 CPU: 0%
 ```
 
-Переменные окружения:
+Environment variables:
 ```
 NODE_ENV=production
 PORT=3000
@@ -102,26 +102,26 @@ DATABASE_URL=postgresql://crm:crm2024@localhost:5432/crm
 NEXT_PUBLIC_BACKEND_API_URL=http://217.160.74.128/api
 ```
 
-## База Данных
+## Database
 
-### Миграции
-Применено 3 миграции:
-1. `20250905201112_init` - Инициализация схемы
-2. `20250908084121_pipelines` - Добавление пайплайнов
-3. `20250908140148_group_description` - Описания групп
+### Migrations
+3 migrations applied:
+1. `20250905201112_init` — schema initialization
+2. `20250908084121_pipelines` — pipelines added
+3. `20250908140148_group_description` — group descriptions
 
 ### Seed Data
-База заполнена тестовыми данными:
-- Пользователи: admin@example.com, admin@beispiel.de, v1-v10@loya.care
-- Leads: ~50 записей
-- Deals: ~40 записей в разных статусах
+Database seeded with test data:
+- Users: admin@example.com, admin@beispiel.de, v1-v10@loya.care
+- Leads: ~50 records
+- Deals: ~40 records in various statuses
 
-## Доступ к Приложению
+## Application Access
 
 ### Web Interface
 ```
 URL: http://217.160.74.128
-Redirect: http://217.160.74.128/de (German locale по умолчанию)
+Redirect: http://217.160.74.128/de (German locale by default)
 ```
 
 ### API Endpoint
@@ -130,7 +130,7 @@ Base URL: http://217.160.74.128/api
 Auth: http://217.160.74.128/api/auth/login
 ```
 
-### Тестовый Вход
+### Test Login
 ```
 Email: admin@example.com
 Password: 1
@@ -151,7 +151,7 @@ API Response:
 }
 ```
 
-## Структура Файлов на Сервере
+## Server File Structure
 
 ```
 /var/www/crm-production/
@@ -182,17 +182,17 @@ API Response:
 └── node_modules/                # 1.2GB (all workspace dependencies)
 ```
 
-## Автозапуск
+## Autostart
 
 ### PM2 Systemd Service
-Настроен автозапуск PM2 при перезагрузке:
+PM2 autostart on reboot is configured:
 ```
 Service: pm2-root.service
 Status: enabled
 Location: /etc/systemd/system/pm2-root.service
 ```
 
-Команды управления:
+Management commands:
 ```bash
 systemctl status pm2-root
 systemctl restart pm2-root
@@ -202,54 +202,54 @@ pm2 restart all
 ```
 
 ### Docker Compose
-Контейнеры с политикой `restart: unless-stopped` автоматически запускаются при перезагрузке.
+Containers with `restart: unless-stopped` start automatically after reboot.
 
-## Проблемы и Решения
+## Problems and Solutions
 
-### 1. Нехватка Места на Диске
-**Проблема**: Docker образы (1GB+) не помещаются на диске 8.7GB
+### 1. Insufficient Disk Space
+**Problem**: Docker images (1GB+) do not fit on an 8.7GB disk
 
-**Решение**:
-- Использование гибридного подхода
-- Docker только для инфраструктуры (postgres, nginx)
-- Приложения запускаются через PM2 из исходников
-- Frontend собирается локально, переносится только .next директория
+**Solution**:
+- Use the hybrid approach
+- Docker only for infrastructure (postgres, nginx)
+- Applications run via PM2 from source
+- Frontend is built locally; only the `.next` directory is transferred
 
-### 2. Нехватка RAM для Next.js Build
-**Проблема**: Сборка Next.js требует >1GB RAM, сервер имеет 848MB
+### 2. Insufficient RAM for Next.js Build
+**Problem**: Next.js build needs >1GB RAM; server has 848MB
 
-**Решение**:
-- Сборка frontend производится локально на машине с большим объемом RAM
-- Перенос готовой .next директории на сервер через rsync
-- NODE_OPTIONS='--max-old-space-size=2048' для локальной сборки
+**Solution**:
+- Build frontend locally on a machine with more RAM
+- Transfer the ready `.next` directory to the server via rsync
+- Use `NODE_OPTIONS='--max-old-space-size=2048'` for the local build
 
 ### 3. Port 3000 Already in Use
-**Проблема**: Старый процесс next-server занимал порт 3000
+**Problem**: An old next-server process occupied port 3000
 
-**Решение**:
+**Solution**:
 ```bash
 kill -9 $(ss -tulpn | grep :3000 | awk '{print $7}' | cut -d',' -f2 | cut -d'=' -f2)
 pm2 restart crm-frontend
 ```
 
 ### 4. Nginx host.docker.internal
-**Проблема**: host.docker.internal не работает на Linux
+**Problem**: `host.docker.internal` does not work on Linux
 
-**Решение**:
-- Использование IP адреса Docker gateway: 172.18.0.1
-- Получение через: `docker network inspect <network> | grep Gateway`
+**Solution**:
+- Use the Docker gateway IP: 172.18.0.1
+- Obtain via: `docker network inspect <network> | grep Gateway`
 
 ### 5. Frontend Crashes (45 restarts)
-**Проблема**: Frontend перезапускался из-за ошибок EADDRINUSE
+**Problem**: Frontend restarted due to EADDRINUSE errors
 
-**Решение**:
-- Остановка PM2: `pm2 kill`
-- Очистка всех node процессов: `killall -9 node`
-- Перезапуск с чистого состояния: `pm2 start ecosystem.config.js`
+**Solution**:
+- Stop PM2: `pm2 kill`
+- Clear all node processes: `killall -9 node`
+- Restart cleanly: `pm2 start ecosystem.config.js`
 
-## Мониторинг
+## Monitoring
 
-### Логи Docker
+### Docker logs
 ```bash
 cd /var/www/crm-production
 docker compose -f docker-compose.simple.yml logs -f
@@ -257,106 +257,106 @@ docker compose -f docker-compose.simple.yml logs postgres
 docker compose -f docker-compose.simple.yml logs nginx
 ```
 
-### Логи PM2
+### PM2 logs
 ```bash
-pm2 logs                    # Все процессы
-pm2 logs crm-backend    # Backend only
-pm2 logs crm-frontend   # Frontend only
-pm2 logs --lines 100        # Последние 100 строк
-pm2 logs --err              # Только ошибки
+pm2 logs                    # All processes
+pm2 logs crm-backend        # Backend only
+pm2 logs crm-frontend       # Frontend only
+pm2 logs --lines 100        # Last 100 lines
+pm2 logs --err              # Errors only
 ```
 
-### Статус Системы
+### System status
 ```bash
-pm2 list                    # Статус процессов PM2
-pm2 monit                   # Интерактивный мониторинг
-docker ps                   # Статус контейнеров
-df -h                       # Использование диска
-free -h                     # Использование памяти
+pm2 list                    # PM2 process status
+pm2 monit                   # Interactive monitoring
+docker ps                   # Container status
+df -h                       # Disk usage
+free -h                     # Memory usage
 ```
 
-## Рекомендации по Улучшению
+## Improvement Recommendations
 
-### Критические
-1. **Увеличить диск до 20GB+**
-   - Текущее использование: 86%
+### Critical
+1. **Increase disk to 20GB+**
+   - Current usage: 86%
    - node_modules: 1.2GB
-   - Рекомендуемый минимум: 20GB
+   - Recommended minimum: 20GB
 
-2. **Увеличить RAM до 2GB+**
-   - Текущая: 848MB + 2GB swap
-   - Рекомендуемая: 2GB RAM для стабильной работы
-   - Идеальная: 4GB RAM
+2. **Increase RAM to 2GB+**
+   - Current: 848MB + 2GB swap
+   - Recommended: 2GB RAM for stable operation
+   - Ideal: 4GB RAM
 
-3. **Настроить SSL/HTTPS**
-   - Использовать Let's Encrypt
-   - Настроить автообновление сертификатов
-   - Добавить редирект HTTP → HTTPS
+3. **Configure SSL/HTTPS**
+   - Use Let's Encrypt
+   - Configure certificate auto-renewal
+   - Add HTTP → HTTPS redirect
 
-### Дополнительные
-4. **Перейти на полный Docker**
-   - После увеличения ресурсов
-   - Использовать docker-compose.yml из репозитория
-   - Оптимизировать размеры образов (multi-stage builds)
+### Additional
+4. **Move to full Docker**
+   - After increasing resources
+   - Use docker-compose.yml from the repository
+   - Optimize image sizes (multi-stage builds)
 
-5. **Настроить Backup**
-   - Регулярный бэкап PostgreSQL
-   - Использовать предоставленный скрипт /var/www/crm-production/backups/
-   - Настроить cron job для автоматического бэкапа
+5. **Configure backups**
+   - Regular PostgreSQL backups
+   - Use `/var/www/crm-production/backups/`
+   - Set up a cron job for automatic backups
 
-6. **Мониторинг и Alerts**
-   - Настроить Prometheus + Grafana
-   - Alerts при high memory/disk usage
+6. **Monitoring and alerts**
+   - Configure Prometheus + Grafana
+   - Alerts on high memory/disk usage
    - Uptime monitoring
 
-7. **Security Hardening**
-   - Изменить JWT_SECRET на production value
-   - Настроить firewall (UFW)
-   - Ограничить SSH доступ
-   - Использовать SSH keys вместо паролей
+7. **Security hardening**
+   - Change JWT_SECRET to a production value
+   - Configure firewall (UFW)
+   - Restrict SSH access
+   - Prefer SSH keys over passwords
 
 8. **Performance**
-   - Настроить Redis для кэширования
-   - Оптимизировать Prisma queries
-   - Добавить CDN для статических ресурсов
+   - Configure Redis for caching
+   - Optimize Prisma queries
+   - Add a CDN for static assets
 
-## Команды Быстрого Доступа
+## Quick Access Commands
 
-### Перезапуск Приложений
+### Restart applications
 ```bash
-# Перезапуск всех компонентов
+# Restart all components
 cd /var/www/crm-production
 docker compose -f docker-compose.simple.yml restart
 pm2 restart all
 
-# Перезапуск только приложений
+# Restart applications only
 pm2 restart crm-backend crm-frontend
 
-# Перезапуск только инфраструктуры
+# Restart infrastructure only
 docker compose -f docker-compose.simple.yml restart postgres nginx
 ```
 
-### Обновление Кода
+### Update code
 ```bash
-# На локальной машине:
+# On the local machine:
 cd /Users/sergeydaub/work/BZH/LoyaCareCRM
 pnpm run build  # backend + frontend build
 rsync -avz --exclude='node_modules' --exclude='.git' . root@217.160.74.128:/var/www/crm/
 
-# На сервере:
+# On the server:
 cd /var/www/crm
 pm2 restart all
 ```
 
-### Database Operations
+### Database operations
 ```bash
 cd /var/www/crm/db
 export DATABASE_URL='postgresql://crm:crm2024@localhost:5432/crm'
 
-# Миграции
+# Migrations
 pnpm run migrate:deploy
 
-# Откат миграции
+# Rollback migration
 pnpm run migrate:rollback
 
 # Seed
@@ -366,33 +366,33 @@ pnpm run seed
 docker exec crm-postgres pg_dump -U crm crm > backup_$(date +%Y%m%d).sql
 ```
 
-## Результат Развертывания
+## Deployment Result
 
-✅ **Успешно развернуто**:
-- PostgreSQL база данных с persistent storage
-- Backend API на порту 4000
-- Frontend Next.js на порту 3000
-- Nginx reverse proxy на порту 80
-- Автозапуск всех компонентов при перезагрузке
-- Seed данные загружены
-- Аутентификация работает
+✅ **Successfully deployed**:
+- PostgreSQL database with persistent storage
+- Backend API on port 4000
+- Frontend Next.js on port 3000
+- Nginx reverse proxy on port 80
+- Autostart of all components on reboot
+- Seed data loaded
+- Authentication works
 
-✅ **Протестировано**:
-- Web interface доступен: http://217.160.74.128
-- API endpoint работает: http://217.160.74.128/api
-- Вход с admin@example.com / password: 1 успешен
-- База данных принимает подключения
-- Все процессы стабильны
+✅ **Verified**:
+- Web interface available: http://217.160.74.128
+- API endpoint works: http://217.160.74.128/api
+- Login with admin@example.com / password: 1 succeeds
+- Database accepts connections
+- All processes are stable
 
-⚠️ **Требует внимания**:
-- Диск заполнен на 86% (осталось 1.3GB)
-- Памяти мало для production нагрузки
-- Отсутствует SSL/HTTPS
-- JWT_SECRET использует дефолтное значение
+⚠️ **Needs attention**:
+- Disk is 86% full (1.3GB remaining)
+- Memory is low for production load
+- SSL/HTTPS is missing
+- JWT_SECRET still uses a default value
 
 ---
 
-**Дата развертывания**: 18 декабря 2025  
-**Развернул**: GitHub Copilot AI Agent  
-**Время развертывания**: ~2 часа  
-**Статус**: Production Ready (с ограничениями по ресурсам)
+**Deployment date**: December 18, 2025  
+**Deployed by**: GitHub Copilot AI Agent  
+**Deployment time**: ~2 hours  
+**Status**: Production Ready (with resource limitations)

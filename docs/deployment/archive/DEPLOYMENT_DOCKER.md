@@ -672,215 +672,215 @@ docker compose build --pull
 
 ## 🏗️ Server Directory Structure After Deployment
 
-После выполнения Docker deployment на сервере создается следующая структура директорий. Обратите внимание, что копируется **весь репозиторий**, а не только Docker файлы.
+After a Docker deployment completes, the following directory structure is created on the server. Note that the **entire repository** is copied, not only Docker files.
 
 ### Production Docker (`/var/www/docker/crm`)
 
 ```
 /var/www/docker/crm/
-├── .env.docker                    # Создается workflow'ом из секретов GitHub
-├── .git/                         # Полный git репозиторий
-├── .github/                      # Все workflow файлы
-├── backend/                      # Исходный код backend
-│   ├── dist/                     # Собранный backend (создается при build)
+├── .env.docker                    # Created by the workflow from GitHub secrets
+├── .git/                         # Full git repository
+├── .github/                      # All workflow files
+├── backend/                      # Backend source code
+│   ├── dist/                     # Built backend (created during build)
 │   ├── src/
 │   ├── package.json
 │   └── ...
-├── db/                           # База данных и миграции
+├── db/                           # Database and migrations
 │   ├── prisma/
 │   ├── migrations/
 │   └── ...
-├── docker/                       # Docker файлы
+├── docker/                       # Docker files
 │   ├── backend/
 │   │   └── Dockerfile
 │   └── frontend/
 │       └── Dockerfile
-├── docker-compose.yml            # Production compose файл
-├── docker-compose.dev.yml        # Development compose файл
-├── docker-compose.stage.yml      # Stage compose файл
-├── frontend/                     # Исходный код frontend
-│   ├── .next/                    # Собранный frontend (создается при build)
+├── docker-compose.yml            # Production compose file
+├── docker-compose.dev.yml        # Development compose file
+├── docker-compose.stage.yml      # Stage compose file
+├── frontend/                     # Frontend source code
+│   ├── .next/                    # Built frontend (created during build)
 │   ├── src/
 │   ├── public/
 │   ├── package.json
 │   └── ...
-├── scripts/                      # Скрипты развертывания
-├── docs/                         # Документация
-├── pnpm-lock.yaml               # Lock файл
+├── scripts/                      # Deployment scripts
+├── docs/                         # Documentation
+├── pnpm-lock.yaml               # Lock file
 ├── package.json                 # Root package.json
-└── ...                          # Все остальные файлы репозитория
+└── ...                          # All other repository files
 ```
 
 ### Staging Docker (`/var/www/docker/crm-staging`)
 
 ```
 /var/www/docker/crm-staging/
-├── .env.backend.stage           # Создается workflow'ом
-├── .env.frontend.stage          # Создается workflow'ом
-├── .git/                        # Полный git репозиторий
-├── .github/                     # Все workflow файлы
-├── backend/                     # Исходный код backend
-│   ├── dist/                    # Собранный backend
+├── .env.backend.stage           # Created by the workflow
+├── .env.frontend.stage          # Created by the workflow
+├── .git/                        # Full git repository
+├── .github/                     # All workflow files
+├── backend/                     # Backend source code
+│   ├── dist/                    # Built backend
 │   └── ...
-├── db/                          # База данных и миграции
-├── docker/                      # Docker файлы
-├── docker-compose.yml           # Production compose файл
-├── docker-compose.dev.yml       # Development compose файл
-├── docker-compose.stage.yml     # Stage compose файл (используется для staging)
-├── frontend/                    # Исходный код frontend
-│   ├── .next/                   # Собранный frontend
+├── db/                          # Database and migrations
+├── docker/                      # Docker files
+├── docker-compose.yml           # Production compose file
+├── docker-compose.dev.yml       # Development compose file
+├── docker-compose.stage.yml     # Stage compose file (used for staging)
+├── frontend/                    # Frontend source code
+│   ├── .next/                   # Built frontend
 │   └── ...
-├── scripts/                     # Скрипты развертывания
-├── docs/                        # Документация
-└── ...                         # Все остальные файлы репозитория
+├── scripts/                     # Deployment scripts
+├── docs/                        # Documentation
+└── ...                         # All other repository files
 ```
 
-### 🔄 Процесс развертывания (ULTRA-ОПТИМИЗИРОВАННЫЙ)
+### 🔄 Deployment process (ULTRA-OPTIMIZED)
 
-**Что происходит при deployment (новая ultra-оптимизированная версия):**
+**What happens during deployment (new ultra-optimized version):**
 
-1. **Клонирование/обновление кода:** *(GitHub Actions)*
+1. **Clone/update code:** *(GitHub Actions)*
    ```bash
    git fetch origin
    git reset --hard origin/main
    ```
 
-2. **Кэширование и установка зависимостей:** *(GitHub Actions)*
+2. **Cache and install dependencies:** *(GitHub Actions)*
    ```bash
-   # Кэширование pnpm store
-   # Установка всех зависимостей с кэшем
+   # Cache pnpm store
+   # Install all dependencies with cache
    pnpm install --frozen-lockfile
    ```
 
-3. **Генерация Prisma клиента:** *(GitHub Actions)*
+3. **Generate Prisma client:** *(GitHub Actions)*
    ```bash
    cd db && pnpm run generate
    ```
 
-4. **Сборка приложений:** *(GitHub Actions)*
+4. **Build applications:** *(GitHub Actions)*
    ```bash
-   cd frontend && pnpm run build  # Создает .next/
-   cd ../backend && pnpm run build  # Создает dist/
+   cd frontend && pnpm run build  # Creates .next/
+   cd ../backend && pnpm run build  # Creates dist/
    ```
 
-5. **Сборка и отправка Docker образов:** *(GitHub Actions)*
+5. **Build and push Docker images:** *(GitHub Actions)*
    ```bash
-   # Сборка образов с pre-built приложениями
+   # Build images with pre-built applications
    docker build -t ghcr.io/repo/frontend:v1.0.0 ./docker/frontend/
    docker build -t ghcr.io/repo/backend:v1.0.0 ./docker/backend/
    
-   # Отправка в GitHub Container Registry
+   # Push to GitHub Container Registry
    docker push ghcr.io/repo/frontend:v1.0.0
    docker push ghcr.io/repo/backend:v1.0.0
    ```
 
-6. **Создание environment файлов на сервере:** *(GitHub Actions → Server)*
+6. **Create environment files on the server:** *(GitHub Actions → Server)*
    ```bash
-   # Создание только .env файлов из GitHub Secrets
-   # Никакого копирования исходного кода!
+   # Create only .env files from GitHub Secrets
+   # No source code copying!
    ```
 
-7. **Скачивание готовых образов:** *(GitHub Actions → Server)*
+7. **Pull ready images:** *(GitHub Actions → Server)*
    ```bash
    docker pull ghcr.io/repo/frontend:v1.0.0
    docker pull ghcr.io/repo/backend:v1.0.0
    ```
 
-8. **Запуск контейнеров:** *(GitHub Actions → Server)*
+8. **Start containers:** *(GitHub Actions → Server)*
    ```bash
-   # Docker Compose использует pre-built образы
-   docker-compose up -d  # Никакой сборки на сервере!
+   # Docker Compose uses pre-built images
+   docker-compose up -d  # No build on the server!
    ```
 
-### 📁 Итоговая структура на сервере
+### 📁 Final structure on the server
 
 ```
 /var/www/docker/
-├── crm/                    # Production - полный репозиторий
+├── crm/                    # Production - full repository
 │   ├── .env.docker            # Production env
-│   ├── backend/dist/          # Собранный backend
-│   ├── frontend/.next/        # Собранный frontend
+│   ├── backend/dist/          # Built backend
+│   ├── frontend/.next/        # Built frontend
 │   ├── docker-compose.yml     # Production compose
-│   └── ...                    # Весь остальной код
+│   └── ...                    # All remaining code
 │
-└── crm-staging/           # Staging - полный репозиторий
+└── crm-staging/           # Staging - full repository
     ├── .env.backend.stage     # Staging backend env
     ├── .env.frontend.stage    # Staging frontend env
-    ├── backend/dist/          # Собранный backend
-    ├── frontend/.next/        # Собранный frontend
+    ├── backend/dist/          # Built backend
+    ├── frontend/.next/        # Built frontend
     ├── docker-compose.stage.yml  # Staging compose
-    └── ...                    # Весь остальной код
+    └── ...                    # All remaining code
 ```
 
-### 🎯 Ключевые особенности (ULTRA-ОПТИМИЗИРОВАННОЙ ВЕРСИИ)
+### 🎯 Key features (ULTRA-OPTIMIZED VERSION)
 
-- **⚡ Молниеносное развертывание:** Pre-built Docker образы сокращают время деплоя до 1-2 мин
-- **🔄 Кэширование зависимостей:** pnpm store кэшируется между сборками на GitHub Actions
-- **📦 Готовые образы:** Приложения собираются один раз на CI/CD, запускаются многократно
-- **🏷️ Версионирование образов:** Каждый релиз имеет tagged Docker образы в GitHub Container Registry
-- **🚫 Ноль исходного кода на сервере:** Только .env файлы и docker-compose
-- **🛡️ Максимальная изоляция:** Production и staging полностью независимы
-- **📊 Полная воспроизводимость:** Каждый деплой использует точную версию образов
+- **⚡ Lightning-fast deployment:** Pre-built Docker images cut deploy time to 1–2 min
+- **🔄 Dependency caching:** pnpm store is cached between builds on GitHub Actions
+- **📦 Ready images:** Applications are built once on CI/CD and run many times
+- **🏷️ Image versioning:** Each release has tagged Docker images in GitHub Container Registry
+- **🚫 Zero source code on the server:** Only .env files and docker-compose
+- **🛡️ Maximum isolation:** Production and staging are fully independent
+- **📊 Full reproducibility:** Each deploy uses the exact image versions
 
-### ⚡ **Производительность сборки: Docker vs Традиционный деплой**
+### ⚡ **Build performance: Docker vs Traditional deploy**
 
-**❌ Текущая проблема:** Docker развертывание действительно **медленнее** традиционного деплоя из-за двойной сборки:
+**❌ Current problem:** Docker deployment is actually **slower** than traditional deploy due to double builds:
 
-#### 🔄 **Процесс в Docker развертывании:**
-1. **GitHub Actions** *(CI/CD серверы)*: Установка зависимостей + сборка → ~3-5 мин
-2. **Копирование кода** на production сервер → ~10-30 сек
-3. **Production сервер**: Повторная установка зависимостей + повторная сборка → ~3-5 мин
-4. **Итого**: ~6-10 минут на деплой
+#### 🔄 **Process in Docker deployment:**
+1. **GitHub Actions** *(CI/CD servers)*: Install dependencies + build → ~3–5 min
+2. **Copy code** to the production server → ~10–30 sec
+3. **Production server**: Reinstall dependencies + rebuild → ~3–5 min
+4. **Total**: ~6–10 minutes per deploy
 
-#### 🚀 **Процесс в традиционном деплое:**
-1. **Production сервер**: Установка зависимостей + сборка → ~3-5 мин
-2. **Итого**: ~3-5 минут на деплой
+#### 🚀 **Process in traditional deploy:**
+1. **Production server**: Install dependencies + build → ~3–5 min
+2. **Total**: ~3–5 minutes per deploy
 
-**Результат:** Docker деплой в **2 раза медленнее** из-за дублирования шагов сборки.
+**Result:** Docker deploy is **2× slower** due to duplicated build steps.
 
-#### 🛠️ **Возможные оптимизации:**
+#### 🛠️ **Possible optimizations:**
 
-#### 🏆 **Опция 1: Сборка образов на GitHub Actions (РЕАЛИЗОВАНА - ULTRA MODE)**
-- ✅ Собрать Docker образы на CI/CD серверах с кэшированием зависимостей
-- ✅ Отправить готовые образы в GitHub Container Registry
-- ✅ **На сервере ТОЛЬКО готовые контейнеры** - никакого исходного кода!
-- **Результат:** Максимальная оптимизация, время деплоя ~1-2 мин
+#### 🏆 **Option 1: Build images on GitHub Actions (IMPLEMENTED - ULTRA MODE)**
+- ✅ Build Docker images on CI/CD servers with dependency caching
+- ✅ Push ready images to GitHub Container Registry
+- ✅ **On the server ONLY ready containers** — no source code!
+- **Result:** Maximum optimization, deploy time ~1–2 min
 
-**Ultra-режим (текущая реализация):**
+**Ultra mode (current implementation):**
 
 1. **GitHub Actions (CI/CD):**
-   - Кэширование pnpm зависимостей
-   - Сборка frontend/backend приложений
-   - Сборка Docker образов с pre-built приложениями
-   - Отправка в GitHub Container Registry
+   - Cache pnpm dependencies
+   - Build frontend/backend applications
+   - Build Docker images with pre-built applications
+   - Push to GitHub Container Registry
 
-2. **Production сервер:**
-   - Создание только .env файлов
-   - Скачивание готовых образов из registry
-   - Запуск контейнеров без какой-либо сборки
-   - Миграции базы данных (пока пропускаются, нужно доработать)
+2. **Production server:**
+   - Create only .env files
+   - Pull ready images from the registry
+   - Start containers with no build at all
+   - Database migrations (currently skipped; needs further work)
 
-**Время выполнения:**
-- **До оптимизации:** ~6-10 мин (сборка на сервере)
-- **После оптимизации:** ~1-2 мин (только скачивание и запуск)
-- **Ускорение:** ~80-90%
+**Execution time:**
+- **Before optimization:** ~6–10 min (build on the server)
+- **After optimization:** ~1–2 min (pull and start only)
+- **Speedup:** ~80–90%
 
-##### **Опция 2: Multi-stage сборка с кэшированием**
-- Использовать Docker layer caching
-- Кэшировать node_modules между сборками
-- **Результат:** Ускорение на 30-50%
+##### **Option 2: Multi-stage build with caching**
+- Use Docker layer caching
+- Cache node_modules between builds
+- **Result:** 30–50% speedup
 
-##### **Опция 3: Гибридный подход**
-- Критические обновления: сборка на сервере (быстрее для мелких изменений)
-- Релизы: сборка образов на CI/CD (лучше для крупных обновлений)
+##### **Option 3: Hybrid approach**
+- Critical updates: build on the server (faster for small changes)
+- Releases: build images on CI/CD (better for large updates)
 
-##### **Опция 4: Предварительная сборка зависимостей**
-- Кэшировать pnpm store на сервере
-- Использовать Docker volumes для зависимостей
-- **Результат:** Ускорение повторных сборок на 60-80%
+##### **Option 4: Pre-build dependencies**
+- Cache pnpm store on the server
+- Use Docker volumes for dependencies
+- **Result:** 60–80% speedup on repeat builds
 
-#### 💡 **Рекомендация:**
-Для текущего проекта с частыми мелкими обновлениями рекомендуется **гибридный подход** или **оптимизация кэширования зависимостей**, чтобы сохранить преимущества Docker без значительной потери производительности.
+#### 💡 **Recommendation:**
+For the current project with frequent small updates, a **hybrid approach** or **dependency-cache optimization** is recommended to keep Docker benefits without a large performance penalty.
 
 ---
 

@@ -1,22 +1,22 @@
 # Deployment Session Summary - 13 Jan 2026
 
-## Проблема: Неправильная версия на сайте
+## Problem: Incorrect version on the site
 
-### Исходная ситуация
-- GitHub Actions успешно деплоил приложение
-- Production сайт работал на http://217.154.173.36
-- Проблема: на сайте отображалась версия **0.1.42** вместо актуальной **0.1.43**
+### Initial situation
+- GitHub Actions successfully deployed the application
+- Production site was running at http://217.154.173.36
+- Problem: the site showed version **0.1.42** instead of the current **0.1.43**
 
-### Корневая причина
-Next.js встраивает переменные окружения `NEXT_PUBLIC_*` **во время сборки** (build time), а не во время выполнения (runtime). Переменная `NEXT_PUBLIC_APP_VERSION` должна передаваться как **build argument** в Docker, но это не было настроено.
+### Root cause
+Next.js embeds `NEXT_PUBLIC_*` environment variables at **build time**, not at **runtime**. The `NEXT_PUBLIC_APP_VERSION` variable must be passed as a **build argument** in Docker, but that was not configured.
 
-## Исправления
+## Fixes
 
-### 1. Передача версии в Docker build
+### 1. Passing the version into the Docker build
 
-**Файл:** `.github/actions/docker-deploy/action.yml`
+**File:** `.github/actions/docker-deploy/action.yml`
 
-Добавлен `NEXT_PUBLIC_APP_VERSION` в build args для frontend:
+Added `NEXT_PUBLIC_APP_VERSION` to build args for frontend:
 
 ```yaml
 - name: Build and push frontend Docker image
@@ -31,32 +31,32 @@ Next.js встраивает переменные окружения `NEXT_PUBLI
     cache-to: type=gha,mode=max
     build-args: |
       BUILD_VERSION=${{ steps.version.outputs.BUILD_VERSION }}
-      NEXT_PUBLIC_APP_VERSION=${{ steps.version.outputs.BUILD_VERSION }}  # ← Добавлено
+      NEXT_PUBLIC_APP_VERSION=${{ steps.version.outputs.BUILD_VERSION }}  # ← Added
 ```
 
-### 2. Обработка ARG в Dockerfile
+### 2. Handling ARG in the Dockerfile
 
-**Файл:** `docker/frontend/Dockerfile`
+**File:** `docker/frontend/Dockerfile`
 
-Добавлены ARG и ENV для передачи версии в Next.js build:
+Added ARG and ENV to pass the version into the Next.js build:
 
 ```dockerfile
-# Генерируйте Prisma клиент для frontend
+# Generate Prisma client for frontend
 RUN cd db && pnpm run generate
 
-# Build args для Next.js
+# Build args for Next.js
 ARG NEXT_PUBLIC_APP_VERSION
 ENV NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION}
 
-# Соберите Next.js приложение
+# Build the Next.js application
 RUN cd frontend && pnpm run build
 ```
 
-### 3. DATABASE_URL на Production
+### 3. DATABASE_URL on Production
 
-**Проблема:** В production `.env` была явно указана `DATABASE_URL`, что усложняло поддержку.
+**Problem:** Production `.env` had an explicit `DATABASE_URL`, which made maintenance harder.
 
-**Решение:** Удалили явную `DATABASE_URL` из `.env`. Теперь она автоматически формируется в `docker-compose.yml`:
+**Solution:** Removed the explicit `DATABASE_URL` from `.env`. It is now formed automatically in `docker-compose.yml`:
 
 ```yaml
 backend:
@@ -64,49 +64,49 @@ backend:
     - DATABASE_URL=postgresql://${POSTGRES_USER:-crm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-crm}
 ```
 
-Переменные берутся из `.env`:
+Variables are taken from `.env`:
 ```env
 POSTGRES_DB=crm
 POSTGRES_USER=crm
 POSTGRES_PASSWORD=crm2024secure
 ```
 
-## История проблем и их решения
+## Problem history and solutions
 
-### Проблемы с GitHub Actions (решены ранее)
+### GitHub Actions issues (resolved earlier)
 
-1. **Composite actions не могут использовать `secrets.*` контекст**
-   - Решение: Передавать secrets как inputs в composite actions
+1. **Composite actions cannot use the `secrets.*` context**
+   - Solution: Pass secrets as inputs to composite actions
 
 2. **Missing GHCR permissions**
-   - Решение: Добавить `permissions: packages: write` в workflow
+   - Solution: Add `permissions: packages: write` to the workflow
 
-3. **Lowercase repository names в Docker**
-   - Решение: `REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')`
+3. **Lowercase repository names in Docker**
+   - Solution: `REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')`
 
-4. **Идентичные Docker images для frontend и backend**
-   - Корневая причина: `metadata-action` генерировал одинаковые tags для обоих образов
-   - Решение: Разделить metadata на `meta-frontend` и `meta-backend`
+4. **Identical Docker images for frontend and backend**
+   - Root cause: `metadata-action` generated the same tags for both images
+   - Solution: Split metadata into `meta-frontend` and `meta-backend`
 
-5. **Frontend container restarting на production**
-   - Причина: Отсутствовала `DATABASE_URL` (требуется для Prisma в Next.js)
-   - Решение: Автоматическое формирование через docker-compose
+5. **Frontend container restarting on production**
+   - Cause: Missing `DATABASE_URL` (required for Prisma in Next.js)
+   - Solution: Automatic formation via docker-compose
 
-## Текущее состояние систем
+## Current system state
 
 ### Production (http://217.154.173.36)
-- ✅ Все контейнеры healthy
-- ✅ DATABASE_URL формируется автоматически
-- ✅ Сайт работает корректно
-- ⏳ После деплоя v0.1.45 будет показывать правильную версию
+- ✅ All containers healthy
+- ✅ DATABASE_URL is formed automatically
+- ✅ Site works correctly
+- ⏳ After deploying v0.1.45 it will show the correct version
 
 ### Staging (http://217.154.173.36:8080)
-- ✅ Все контейнеры healthy
-- ✅ DATABASE_URL формируется автоматически (всегда работало)
-- ✅ Сайт работает корректно
-- ℹ️ Иногда требуется `docker compose restart nginx` после изменения IP контейнеров
+- ✅ All containers healthy
+- ✅ DATABASE_URL is formed automatically (always worked)
+- ✅ Site works correctly
+- ℹ️ Sometimes `docker compose restart nginx` is needed after container IP changes
 
-### Контейнеры
+### Containers
 
 **Production:**
 ```
@@ -126,82 +126,82 @@ crm-staging-nginx      Up
 
 ## Deployment Process
 
-### Создание релиза
+### Creating a release
 
-Используйте скрипт `deploy.sh`:
+Use the `deploy.sh` script:
 
 ```bash
-# Автоматический инкремент patch версии
+# Automatic patch version increment
 ./deploy.sh -m "fix: description" -t
 
-# Или указать версию явно
+# Or specify the version explicitly
 ./deploy.sh -m "feat: new feature" -v 1.4.2
 ```
 
-Скрипт автоматически:
-1. Создаёт коммит с правильным сообщением
-2. Создаёт git tag (например, `v0.1.45`)
-3. Пушит в GitHub
-4. GitHub Actions запускается и:
-   - Обновляет `frontend/package.json` до новой версии
-   - Создаёт GitHub Release
-   - Собирает Docker образы **с правильной версией**
-   - Деплоит на production
+The script automatically:
+1. Creates a commit with the correct message
+2. Creates a git tag (e.g. `v0.1.45`)
+3. Pushes to GitHub
+4. GitHub Actions starts and:
+   - Updates `frontend/package.json` to the new version
+   - Creates a GitHub Release
+   - Builds Docker images **with the correct version**
+   - Deploys to production
 
-### После завершения деплоя
+### After the deploy completes
 
-**Обязательно** синхронизировать локальный репозиторий:
+**Required:** sync the local repository:
 
 ```bash
 git pull --rebase
 ```
 
-Это обновит `package.json` с версией, которую GitHub Actions изменил.
+This updates `package.json` with the version that GitHub Actions changed.
 
-## Важные файлы конфигурации
+## Important configuration files
 
 ### GitHub Actions
-- `.github/workflows/deploy.yml` - главный workflow
-- `.github/actions/docker-deploy/action.yml` - сборка и деплой Docker
-- `.github/actions/create-release/action.yml` - создание релиза
-- `.github/actions/setup-deployment/action.yml` - определение окружения
+- `.github/workflows/deploy.yml` - main workflow
+- `.github/actions/docker-deploy/action.yml` - Docker build and deploy
+- `.github/actions/create-release/action.yml` - release creation
+- `.github/actions/setup-deployment/action.yml` - environment detection
 
 ### Docker
 - `docker-compose.yml` - production
 - `docker-compose.stage.yml` - staging
-- `docker/frontend/Dockerfile` - frontend образ (dev)
-- `docker/frontend/Dockerfile.prod` - frontend образ (production, не используется)
-- `docker/backend/Dockerfile` - backend образ
+- `docker/frontend/Dockerfile` - frontend image (dev)
+- `docker/frontend/Dockerfile.prod` - frontend image (production, unused)
+- `docker/backend/Dockerfile` - backend image
 
 ### Environment
-- `/var/www/crm-production/.env` - production на сервере
-- `/var/www/crm-staging/.env.stage` - staging на сервере
+- `/var/www/crm-production/.env` - production on the server
+- `/var/www/crm-staging/.env.stage` - staging on the server
 
 ## Lessons Learned
 
 ### Next.js Environment Variables
 
 **Build-time vs Runtime:**
-- `NEXT_PUBLIC_*` переменные встраиваются в код во время `next build`
-- Изменение `.env` после сборки **не влияет** на эти переменные
-- Нужно передавать как `ARG` в Dockerfile и пересобирать образ
+- `NEXT_PUBLIC_*` variables are embedded into the code during `next build`
+- Changing `.env` after the build **does not affect** these variables
+- They must be passed as `ARG` in the Dockerfile and the image rebuilt
 
 ### Docker Compose Environment Variables
 
-**Автоформирование vs Явное указание:**
-- ✅ **Лучше:** Формировать `DATABASE_URL` из `POSTGRES_*` переменных в compose
-- ❌ **Хуже:** Дублировать значение в `.env` файле явно
+**Auto-formation vs Explicit value:**
+- ✅ **Better:** Form `DATABASE_URL` from `POSTGRES_*` variables in compose
+- ❌ **Worse:** Duplicate the value explicitly in the `.env` file
 
-Преимущества автоформирования:
-- Единый источник правды (POSTGRES_* переменные)
-- Меньше дублирования
-- Проще поддержка
+Advantages of auto-formation:
+- Single source of truth (POSTGRES_* variables)
+- Less duplication
+- Easier maintenance
 
 ### Docker Metadata Action
 
-**Проблема с множественными образами:**
+**Problem with multiple images:**
 ```yaml
-# ❌ Неправильно - генерирует одинаковые tags
+# ❌ Incorrect - generates identical tags
 - name: Extract metadata
   uses: docker/metadata-action@v5
   with:
@@ -211,7 +211,7 @@ git pull --rebase
 ```
 
 ```yaml
-# ✅ Правильно - отдельные шаги
+# ✅ Correct - separate steps
 - name: Extract metadata for frontend
   id: meta-frontend
   uses: docker/metadata-action@v5
@@ -225,102 +225,102 @@ git pull --rebase
     images: ghcr.io/owner/backend
 ```
 
-### Nginx в Docker
+### Nginx in Docker
 
-**DNS кеширование:**
-- Nginx может кешировать IP адреса upstream сервисов
-- При перезапуске контейнеров IP могут измениться
-- Решение: `docker compose restart nginx` или использовать resolver в nginx.conf
+**DNS caching:**
+- Nginx can cache IP addresses of upstream services
+- When containers restart, IPs may change
+- Solution: `docker compose restart nginx` or use a resolver in nginx.conf
 
-## Следующие шаги (опционально)
+## Next steps (optional)
 
-### Оптимизации
+### Optimizations
 
-1. **Использовать resolver в nginx.conf**
+1. **Use a resolver in nginx.conf**
    ```nginx
    resolver 127.0.0.11 valid=10s;
    set $backend_upstream http://backend:4000;
    proxy_pass $backend_upstream;
    ```
 
-2. **Добавить healthcheck для nginx**
+2. **Add a healthcheck for nginx**
    ```yaml
    nginx:
      healthcheck:
        test: ["CMD", "curl", "-f", "http://localhost/api/health"]
    ```
 
-3. **Автоматизировать обновление NEXT_PUBLIC_APP_VERSION**
-   - Текущая ситуация: нужно обновлять `package.json` вручную или через GitHub Actions
-   - Возможное улучшение: Извлекать версию из git tag автоматически
+3. **Automate NEXT_PUBLIC_APP_VERSION updates**
+   - Current situation: `package.json` must be updated manually or via GitHub Actions
+   - Possible improvement: Extract the version from the git tag automatically
 
-### Мониторинг
+### Monitoring
 
-1. **Логирование версий**
-   - Добавить endpoint `/api/version` который возвращает версию backend
-   - Сравнивать с `NEXT_PUBLIC_APP_VERSION` на frontend
+1. **Version logging**
+   - Add an `/api/version` endpoint that returns the backend version
+   - Compare with `NEXT_PUBLIC_APP_VERSION` on the frontend
 
 2. **Alerting**
-   - Уведомления при падении контейнеров
-   - Мониторинг использования ресурсов
+   - Notifications when containers go down
+   - Resource usage monitoring
 
-## Полезные команды
+## Useful commands
 
-### Проверка состояния
+### Status checks
 
 ```bash
-# Статус всех контейнеров
+# Status of all containers
 ssh root@217.154.173.36 "docker ps --format 'table {{.Names}}\t{{.Status}}'"
 
-# Версия в production
+# Version in production
 ssh root@217.154.173.36 "docker exec crm-frontend env | grep NEXT_PUBLIC_APP_VERSION"
 
-# Версия образа
+# Image version
 ssh root@217.154.173.36 "docker images | grep ghcr.io/sergeylc/crm/frontend"
 
-# Логи контейнера
+# Container logs
 ssh root@217.154.173.36 "docker logs crm-frontend --tail 50"
 ```
 
 ### Deployment
 
 ```bash
-# Создать релиз (автоинкремент)
+# Create a release (auto-increment)
 ./deploy.sh -m "fix: description" -t
 
-# Пуш без деплоя (для документации)
+# Push without deploy (for documentation)
 ./deploy.sh -m "docs: update" -s
 
-# После деплоя - синхронизация
+# After deploy - sync
 git pull --rebase
 ```
 
 ### Troubleshooting
 
 ```bash
-# Перезапустить контейнеры
+# Restart containers
 ssh root@217.154.173.36 "cd /var/www/crm-production && docker compose restart"
 
-# Пересоздать контейнер с новым .env
+# Recreate container with new .env
 ssh root@217.154.173.36 "cd /var/www/crm-production && docker compose up -d --force-recreate frontend"
 
-# Проверить переменные окружения
+# Check environment variables
 ssh root@217.154.173.36 "cd /var/www/crm-production && cat .env"
 ```
 
-## Контакты и ссылки
+## Contacts and links
 
 - **Production:** http://217.154.173.36
 - **Staging:** http://217.154.173.36:8080
 - **GitHub Repo:** https://github.com/SergeyLC/crm
 - **GHCR:** ghcr.io/sergeylc/crm/frontend, ghcr.io/sergeylc/crm/backend
 
-## Заключение
+## Conclusion
 
-Все основные проблемы с деплоем и отображением версии решены:
-1. ✅ GitHub Actions корректно собирает образы с версией
-2. ✅ Production и Staging работают стабильно
-3. ✅ DATABASE_URL формируется автоматически
-4. ✅ Версия передаётся в Docker build и встраивается в Next.js
+All major deploy and version-display issues are resolved:
+1. ✅ GitHub Actions correctly builds images with the version
+2. ✅ Production and Staging run stably
+3. ✅ DATABASE_URL is formed automatically
+4. ✅ Version is passed into the Docker build and embedded in Next.js
 
-После завершения деплоя v0.1.45 на сайте будет отображаться правильная версия приложения.
+After deploying v0.1.45, the site will show the correct application version.
