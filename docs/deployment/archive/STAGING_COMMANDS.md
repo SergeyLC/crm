@@ -26,9 +26,9 @@ EOF
 
 # 2. Clone repository
 echo -e "${BLUE}📥 Cloning repository...${NC}"
-sudo mkdir -p /var/www/loyacrm-staging
-sudo chown $USER:$USER /var/www/loyacrm-staging
-cd /var/www/loyacrm-staging
+sudo mkdir -p /var/www/crm-staging
+sudo chown $USER:$USER /var/www/crm-staging
+cd /var/www/crm-staging
 git clone https://github.com/Betreut-zu-Hause/LoyaCareCRM.git .
 git checkout main
 
@@ -111,9 +111,9 @@ cat > ecosystem.staging.config.js << 'EOF'
 module.exports = {
   apps: [
     {
-      name: 'loyacrm-staging-backend',
+      name: 'crm-staging-backend',
       script: './dist/server.js',
-      cwd: '/var/www/loyacrm-staging/backend',
+      cwd: '/var/www/crm-staging/backend',
       instances: 1,
       exec_mode: 'cluster',
       env: {
@@ -121,8 +121,8 @@ module.exports = {
         PORT: 4001
       },
       env_file: './.env.production.local',
-      error_file: '/var/log/pm2/loyacrm-staging-backend-error.log',
-      out_file: '/var/log/pm2/loyacrm-staging-backend-out.log',
+      error_file: '/var/log/pm2/crm-staging-backend-error.log',
+      out_file: '/var/log/pm2/crm-staging-backend-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
       max_memory_restart: '500M',
@@ -132,10 +132,10 @@ module.exports = {
       min_uptime: '10s'
     },
     {
-      name: 'loyacrm-staging-frontend',
+      name: 'crm-staging-frontend',
       script: 'node_modules/next/dist/bin/next',
       args: 'start -p 3001',
-      cwd: '/var/www/loyacrm-staging/frontend',
+      cwd: '/var/www/crm-staging/frontend',
       instances: 1,
       exec_mode: 'cluster',
       env: {
@@ -143,8 +143,8 @@ module.exports = {
         PORT: 3001
       },
       env_file: './.env.production.local',
-      error_file: '/var/log/pm2/loyacrm-staging-frontend-error.log',
-      out_file: '/var/log/pm2/loyacrm-staging-frontend-out.log',
+      error_file: '/var/log/pm2/crm-staging-frontend-error.log',
+      out_file: '/var/log/pm2/crm-staging-frontend-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
       max_memory_restart: '1G',
@@ -164,7 +164,7 @@ pm2 save
 
 # 8. Configure Nginx
 echo -e "${BLUE}🌐 Configuring Nginx...${NC}"
-sudo tee /etc/nginx/sites-available/loyacrm-staging > /dev/null << 'EOF'
+sudo tee /etc/nginx/sites-available/crm-staging > /dev/null << 'EOF'
 # Staging Frontend on port 8001
 server {
     listen 8001;
@@ -205,7 +205,7 @@ server {
 }
 EOF
 
-sudo ln -s /etc/nginx/sites-available/loyacrm-staging /etc/nginx/sites-enabled/ 2>/dev/null || echo "Symlink already exists"
+sudo ln -s /etc/nginx/sites-available/crm-staging /etc/nginx/sites-enabled/ 2>/dev/null || echo "Symlink already exists"
 sudo nginx -t
 sudo systemctl reload nginx
 
@@ -256,9 +256,9 @@ GRANT ALL PRIVILEGES ON DATABASE loya_care_crm_staging TO loyacare_staging;
 ### 2. Clone repository
 
 ```bash
-sudo mkdir -p /var/www/loyacrm-staging
-sudo chown $USER:$USER /var/www/loyacrm-staging
-cd /var/www/loyacrm-staging
+sudo mkdir -p /var/www/crm-staging
+sudo chown $USER:$USER /var/www/crm-staging
+cd /var/www/crm-staging
 git clone https://github.com/Betreut-zu-Hause/LoyaCareCRM.git .
 ```
 
@@ -269,7 +269,7 @@ See section 3 in the automatic script above.
 ### 4. Install and build
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 
 # pnpm
 npm install -g pnpm@10
@@ -345,8 +345,8 @@ STAGING_NEXT_PUBLIC_BACKEND_API_URL=http://161.97.67.253:8002/api
 pm2 status
 
 # Logs
-pm2 logs loyacrm-staging-backend --lines 20
-pm2 logs loyacrm-staging-frontend --lines 20
+pm2 logs crm-staging-backend --lines 20
+pm2 logs crm-staging-frontend --lines 20
 
 # Backend health
 curl http://localhost:4001/api/health
@@ -368,13 +368,13 @@ sudo ufw status | grep -E '8001|8002'
 ## 🔄 Updating Staging
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 git pull origin main
 cd db && pnpm install && pnpm run generate && cd ..
 cd frontend && pnpm run build && cd ..
 cd backend && pnpm run build && cd ..
 cd db && pnpm run migrate:deploy && cd ..
-pm2 restart loyacrm-staging-backend loyacrm-staging-frontend
+pm2 restart crm-staging-backend crm-staging-frontend
 ```
 
 ## 🆘 Problems
@@ -387,10 +387,10 @@ pm2 logs
 
 ### "CORS error"
 ```bash
-cd /var/www/loyacrm-staging/backend
+cd /var/www/crm-staging/backend
 grep CORS_ORIGIN .env.production.local
 # Should be: http://161.97.67.253:8001
-pm2 restart loyacrm-staging-backend
+pm2 restart crm-staging-backend
 ```
 
 ### "Port already in use"

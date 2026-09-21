@@ -14,7 +14,7 @@ After setup, staging will be available at:
 
 ```bash
 # Backend
-cd /var/www/loyacrm-staging/backend
+cd /var/www/crm-staging/backend
 cat > .env.production.local << 'EOF'
 DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging"
 JWT_SECRET="staging-jwt-secret-generate-with-openssl-rand-hex-32"
@@ -27,7 +27,7 @@ EOF
 chmod 600 .env.production.local
 
 # Frontend
-cd /var/www/loyacrm-staging/frontend
+cd /var/www/crm-staging/frontend
 cat > .env.production.local << 'EOF'
 NEXT_PUBLIC_API_URL="http://161.97.67.253:8002/api"
 NEXT_PUBLIC_BACKEND_API_URL="http://161.97.67.253:8002/api"
@@ -38,7 +38,7 @@ EOF
 chmod 600 .env.production.local
 
 # Database
-cd /var/www/loyacrm-staging/db
+cd /var/www/crm-staging/db
 cat > .env.production.local << 'EOF'
 DATABASE_URL="postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_crm_staging"
 PRISMA_LOG_LEVEL=warn
@@ -49,7 +49,7 @@ chmod 600 .env.production.local
 ### 2. Nginx Configuration
 
 ```bash
-sudo tee /etc/nginx/sites-available/loyacrm-staging > /dev/null << 'EOF'
+sudo tee /etc/nginx/sites-available/crm-staging > /dev/null << 'EOF'
 # Staging Frontend on port 8001
 server {
     listen 8001;
@@ -93,7 +93,7 @@ server {
 EOF
 
 # Activate
-sudo ln -s /etc/nginx/sites-available/loyacrm-staging /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/crm-staging /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -163,8 +163,8 @@ sudo lsof -i :8001 -i :8002
 ```bash
 pm2 status
 # Should be running:
-# loyacrm-staging-frontend (port 3001)
-# loyacrm-staging-backend (port 4001)
+# crm-staging-frontend (port 3001)
+# crm-staging-backend (port 4001)
 ```
 
 ### Check Availability
@@ -200,8 +200,8 @@ This must be the **exact frontend URL** (with http://, no trailing slash).
 ### Restart After .env Changes
 
 ```bash
-pm2 restart loyacrm-staging-backend
-pm2 restart loyacrm-staging-frontend
+pm2 restart crm-staging-backend
+pm2 restart crm-staging-frontend
 ```
 
 ## 🚀 Automatic Deploy
@@ -228,8 +228,8 @@ After setting up GitHub Secrets, every push to `main` will:
 pm2 status
 
 # Check logs
-pm2 logs loyacrm-staging-frontend --lines 50
-pm2 logs loyacrm-staging-backend --lines 50
+pm2 logs crm-staging-frontend --lines 50
+pm2 logs crm-staging-backend --lines 50
 
 # Restart
 pm2 restart all
@@ -239,11 +239,11 @@ pm2 restart all
 
 Check CORS_ORIGIN in backend:
 ```bash
-cd /var/www/loyacrm-staging/backend
+cd /var/www/crm-staging/backend
 grep CORS_ORIGIN .env.production.local
 # Should be: CORS_ORIGIN="http://161.97.67.253:8001"
 
-pm2 restart loyacrm-staging-backend
+pm2 restart crm-staging-backend
 ```
 
 ### Ports Not Open

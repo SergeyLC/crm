@@ -13,9 +13,9 @@ This guide covers the initial setup required on the production server **before**
 ## Step 1: Create Project Directory
 
 ```bash
-sudo mkdir -p /var/www/loyacrm
-sudo chown $USER:$USER /var/www/loyacrm
-cd /var/www/loyacrm
+sudo mkdir -p /var/www/crm
+sudo chown $USER:$USER /var/www/crm
+cd /var/www/crm
 ```
 
 ## Step 2: Clone Repository
@@ -30,7 +30,7 @@ git checkout main
 ### Backend Secrets
 
 ```bash
-cd /var/www/loyacrm/backend
+cd /var/www/crm/backend
 cp .env.production.local.example .env.production.local
 nano .env.production.local
 ```
@@ -50,7 +50,7 @@ chmod 600 .env.production.local
 ### Frontend Secrets
 
 ```bash
-cd /var/www/loyacrm/frontend
+cd /var/www/crm/frontend
 cp .env.production.local.example .env.production.local
 nano .env.production.local
 ```
@@ -69,7 +69,7 @@ chmod 600 .env.production.local
 ### Database Secrets
 
 ```bash
-cd /var/www/loyacrm/db
+cd /var/www/crm/db
 cp .env.production.local.example .env.production.local
 nano .env.production.local
 ```
@@ -123,7 +123,7 @@ psql "postgresql://loyacare_prod:your_password@localhost:5432/loya_care_crm_prod
 ## Step 6: Initial Build (Manual First Time)
 
 ```bash
-cd /var/www/loyacrm
+cd /var/www/crm
 
 # Generate Prisma client
 cd db
@@ -156,7 +156,7 @@ The deployment script will check if `ecosystem.config.js` exists. If not, it wil
 For the initial setup, you can manually create it:
 
 ```bash
-cd /var/www/loyacrm
+cd /var/www/crm
 cp .github/ecosystem.config.template.js ecosystem.config.js
 ```
 
@@ -165,7 +165,7 @@ The template already includes `env_file: "./.env.production.local"` for both app
 ## Step 8: Start Services with PM2
 
 ```bash
-cd /var/www/loyacrm
+cd /var/www/crm
 pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
@@ -178,11 +178,11 @@ Check that PM2 processes can see the environment variables:
 
 ```bash
 # Check backend environment
-pm2 env loyacrm-backend | grep DATABASE_URL
-pm2 env loyacrm-backend | grep JWT_SECRET
+pm2 env crm-backend | grep DATABASE_URL
+pm2 env crm-backend | grep JWT_SECRET
 
 # Check frontend environment
-pm2 env loyacrm-frontend | grep NEXT_PUBLIC_BACKEND_API_URL
+pm2 env crm-frontend | grep NEXT_PUBLIC_BACKEND_API_URL
 ```
 
 If variables are not showing, check:
@@ -242,12 +242,12 @@ After setup and first deployment, verify:
 
 ```bash
 # Check if files exist
-ls -la /var/www/loyacrm/backend/.env.production.local
-ls -la /var/www/loyacrm/frontend/.env.production.local
+ls -la /var/www/crm/backend/.env.production.local
+ls -la /var/www/crm/frontend/.env.production.local
 
 # Check permissions
-chmod 600 /var/www/loyacrm/backend/.env.production.local
-chmod 600 /var/www/loyacrm/frontend/.env.production.local
+chmod 600 /var/www/crm/backend/.env.production.local
+chmod 600 /var/www/crm/frontend/.env.production.local
 
 # Restart PM2
 pm2 restart all
@@ -264,15 +264,15 @@ psql "postgresql://loyacare_prod:password@localhost:5432/loya_care_crm_prod"
 sudo systemctl status postgresql
 
 # Check logs
-pm2 logs loyacrm-backend
+pm2 logs crm-backend
 ```
 
 ### Frontend Can't Connect to Backend
 
 Check CORS settings and URLs:
 ```bash
-pm2 env loyacrm-backend | grep CORS_ORIGIN
-pm2 env loyacrm-frontend | grep NEXT_PUBLIC_BACKEND_API_URL
+pm2 env crm-backend | grep CORS_ORIGIN
+pm2 env crm-frontend | grep NEXT_PUBLIC_BACKEND_API_URL
 ```
 
 ## Security Notes
@@ -291,18 +291,18 @@ pm2 env loyacrm-frontend | grep NEXT_PUBLIC_BACKEND_API_URL
 To update secrets:
 
 ```bash
-cd /var/www/loyacrm/backend
+cd /var/www/crm/backend
 nano .env.production.local
 # Update values
-pm2 restart loyacrm-backend
+pm2 restart crm-backend
 ```
 
 ### Check Logs
 
 ```bash
 pm2 logs
-pm2 logs loyacrm-backend
-pm2 logs loyacrm-frontend
+pm2 logs crm-backend
+pm2 logs crm-frontend
 ```
 
 ### Monitor

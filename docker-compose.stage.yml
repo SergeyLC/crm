@@ -2,7 +2,7 @@ services:
   # ==================== Nginx ====================
   nginx:
     image: nginx:alpine
-    container_name: loyacrm-staging-nginx
+    container_name: crm-staging-nginx
     restart: unless-stopped
     ports:
       - "${NGINX_PORT:-8080}:80"
@@ -11,12 +11,12 @@ services:
     depends_on:
       - frontend
       - backend
-    networks: [loyacrm-staging-network]
+    networks: [crm-staging-network]
 
   # ==================== Autoheal ====================
   autoheal:
     image: willfarrell/autoheal:latest
-    container_name: loyacrm-staging-autoheal
+    container_name: crm-staging-autoheal
     restart: unless-stopped
     environment:
       - AUTOHEAL_CONTAINER_LABEL=all
@@ -25,12 +25,12 @@ services:
       - AUTOHEAL_DEFAULT_STOP_TIMEOUT=10
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    networks: [loyacrm-staging-network]
+    networks: [crm-staging-network]
 
   # ==================== Frontend ====================
   frontend:
-    image: ${FRONTEND_IMAGE:-loyacrm-frontend:staging}
-    container_name: loyacrm-staging-frontend
+    image: ${FRONTEND_IMAGE:-crm-frontend:staging}
+    container_name: crm-staging-frontend
     restart: unless-stopped
     labels:
       - "autoheal=true"
@@ -46,12 +46,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks: [loyacrm-staging-network]
+    networks: [crm-staging-network]
 
   # ==================== Backend ====================
   backend:
-    image: ${BACKEND_IMAGE:-loyacrm-backend:staging}
-    container_name: loyacrm-staging-backend
+    image: ${BACKEND_IMAGE:-crm-backend:staging}
+    container_name: crm-staging-backend
     restart: unless-stopped
     labels:
       - "autoheal=true"
@@ -60,7 +60,7 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - CORS_ORIGIN=${CORS_ORIGIN}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-loyacrm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-loyacrm_staging}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-crm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-crm_staging}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
       postgres:
@@ -71,33 +71,33 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
-    networks: [loyacrm-staging-network]
+    networks: [crm-staging-network]
 
   # ==================== PostgreSQL ====================
   postgres:
     image: postgres:16-alpine
-    container_name: loyacrm-staging-postgres
+    container_name: crm-staging-postgres
     restart: unless-stopped
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_USER=${POSTGRES_USER:-loyacrm}
-      - POSTGRES_DB=${POSTGRES_DB:-loyacrm_staging}
+      - POSTGRES_USER=${POSTGRES_USER:-crm}
+      - POSTGRES_DB=${POSTGRES_DB:-crm_staging}
     volumes:
       - pg_data_staging:/var/lib/postgresql/data
       - ./backups:/backups
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-loyacrm}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-crm}"]
       interval: 5s
       timeout: 3s
       retries: 5
       start_period: 10s
-    networks: [loyacrm-staging-network]
+    networks: [crm-staging-network]
 
 # ==================== Volumes & Networks ====================
 volumes:
   pg_data_staging:
-    name: loyacrm_pg_data_staging
+    name: crm_pg_data_staging
 
 networks:
-  loyacrm-staging-network:
+  crm-staging-network:
     driver: bridge

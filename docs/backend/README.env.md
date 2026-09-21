@@ -101,16 +101,16 @@ Environment variables are configured in root `.env` or `.env.stage` files:
 
 ```bash
 # Production (.env)
-POSTGRES_USER=loyacrm
+POSTGRES_USER=crm
 POSTGRES_PASSWORD=secure_password
-POSTGRES_DB=loyacrm
+POSTGRES_DB=crm
 JWT_SECRET=your-production-jwt-secret-min-32-chars
 NODE_ENV=production
 
 # Staging (.env.stage)
-POSTGRES_USER=loyacrm
+POSTGRES_USER=crm
 POSTGRES_PASSWORD=secure_password
-POSTGRES_DB=loyacrm_staging
+POSTGRES_DB=crm_staging
 JWT_SECRET=your-staging-jwt-secret-min-32-chars
 NODE_ENV=production
 ```
@@ -173,7 +173,7 @@ If required variables are missing:
 
 ```bash
 # Check DATABASE_URL in container
-docker exec loyacrm-backend env | grep DATABASE_URL
+docker exec crm-backend env | grep DATABASE_URL
 
 # Check if postgres container is running
 docker compose ps postgres

@@ -53,8 +53,8 @@ docker compose version
 
 #### 1. Clone Repository
 ```bash
-git clone <your-repository-url> loyacrm
-cd loyacrm
+git clone <your-repository-url> crm
+cd crm
 ```
 
 #### 2. Development Environment Setup
@@ -121,7 +121,7 @@ docker compose -f docker-compose.yml logs -f
 
 ### Understanding Persistent Storage (Production)
 
-**Important:** PostgreSQL data is stored in a Docker named volume `loyacrm_prod_pg_data`. This volume persists data between container restarts, deployments, and even container recreation. The volume is automatically created by Docker Compose and survives `docker compose down` commands.
+**Important:** PostgreSQL data is stored in a Docker named volume `crm_prod_pg_data`. This volume persists data between container restarts, deployments, and even container recreation. The volume is automatically created by Docker Compose and survives `docker compose down` commands.
 
 **Volume location:** Docker manages the volume storage location automatically. To inspect:
 ```bash
@@ -129,7 +129,7 @@ docker compose -f docker-compose.yml logs -f
 docker volume ls
 
 # Inspect volume details
-docker volume inspect loyacrm_prod_pg_data
+docker volume inspect crm_prod_pg_data
 
 # Check volume usage
 docker system df -v
@@ -153,10 +153,10 @@ docker compose -f docker-compose.yml exec backend sh -c "cd db && pnpm run migra
 If migrating from existing database:
 ```bash
 # Create dump of current database
-pg_dump -h localhost -U loyacrm loyacrm > current_db_backup.sql
+pg_dump -h localhost -U crm crm > current_db_backup.sql
 
 # Restore to Docker database
-docker compose -f docker-compose.yml exec -T postgres psql -U loyacrm loyacrm < current_db_backup.sql
+docker compose -f docker-compose.yml exec -T postgres psql -U crm crm < current_db_backup.sql
 ```
 
 ### 🌐 Access URLs
@@ -455,26 +455,26 @@ In addition to Docker management scripts, the project includes several utility s
 docker ps -a
 
 # Check container logs
-docker logs loyacrm-backend-dev
-docker logs loyacrm-frontend-dev
+docker logs crm-backend-dev
+docker logs crm-frontend-dev
 
 # Check resource usage
 docker stats
 
 # Inspect container
-docker inspect loyacrm-postgres-dev
+docker inspect crm-postgres-dev
 ```
 
 #### Database Operations
 ```bash
 # Access PostgreSQL in development
-docker compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
+docker compose -f docker-compose.dev.yml exec postgres psql -U crm -d crm
 
 # Access PostgreSQL in stage
-docker compose -f docker-compose.stage.yml exec postgres psql -U loyacrm -d loyacrm
+docker compose -f docker-compose.stage.yml exec postgres psql -U crm -d crm
 
 # Access PostgreSQL in production
-docker compose -f docker-compose.yml exec postgres psql -U loyacrm -d loyacrm
+docker compose -f docker-compose.yml exec postgres psql -U crm -d crm
 
 # Run database migrations in development
 docker compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
@@ -551,10 +551,10 @@ docker compose -f docker-compose.yml up -d
 #### Backup Database (Development)
 ```bash
 # Create backup
-docker compose -f docker-compose.dev.yml exec postgres pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
+docker compose -f docker-compose.dev.yml exec postgres pg_dump -U crm crm > backup_$(date +%Y%m%d).sql
 
 # Restore backup
-docker compose -f docker-compose.dev.yml exec -T postgres psql -U loyacrm loyacrm < backup_20241201.sql
+docker compose -f docker-compose.dev.yml exec -T postgres psql -U crm crm < backup_20241201.sql
 ```
 
 ### 🔄 Migration from Traditional Deployment
@@ -574,7 +574,7 @@ sudo systemctl stop postgresql
 If you have host Nginx, update configuration to use Docker ports:
 
 ```bash
-sudo nano /etc/nginx/sites-available/loyacrm
+sudo nano /etc/nginx/sites-available/crm
 ```
 
 Change proxy_pass directives:
@@ -674,10 +674,10 @@ docker compose build --pull
 
 После выполнения Docker deployment на сервере создается следующая структура директорий. Обратите внимание, что копируется **весь репозиторий**, а не только Docker файлы.
 
-### Production Docker (`/var/www/docker/loyacrm`)
+### Production Docker (`/var/www/docker/crm`)
 
 ```
-/var/www/docker/loyacrm/
+/var/www/docker/crm/
 ├── .env.docker                    # Создается workflow'ом из секретов GitHub
 ├── .git/                         # Полный git репозиторий
 ├── .github/                      # Все workflow файлы
@@ -711,10 +711,10 @@ docker compose build --pull
 └── ...                          # Все остальные файлы репозитория
 ```
 
-### Staging Docker (`/var/www/docker/loyacrm-staging`)
+### Staging Docker (`/var/www/docker/crm-staging`)
 
 ```
-/var/www/docker/loyacrm-staging/
+/var/www/docker/crm-staging/
 ├── .env.backend.stage           # Создается workflow'ом
 ├── .env.frontend.stage          # Создается workflow'ом
 ├── .git/                        # Полный git репозиторий
@@ -796,14 +796,14 @@ docker compose build --pull
 
 ```
 /var/www/docker/
-├── loyacrm/                    # Production - полный репозиторий
+├── crm/                    # Production - полный репозиторий
 │   ├── .env.docker            # Production env
 │   ├── backend/dist/          # Собранный backend
 │   ├── frontend/.next/        # Собранный frontend
 │   ├── docker-compose.yml     # Production compose
 │   └── ...                    # Весь остальной код
 │
-└── loyacrm-staging/           # Staging - полный репозиторий
+└── crm-staging/           # Staging - полный репозиторий
     ├── .env.backend.stage     # Staging backend env
     ├── .env.frontend.stage    # Staging frontend env
     ├── backend/dist/          # Собранный backend
@@ -935,9 +935,9 @@ sudo apt install postgresql postgresql-contrib -y
 
 # Create database and user
 sudo -u postgres psql
-CREATE DATABASE loyacrm;
-CREATE USER loyacrm_user WITH PASSWORD 'your_secure_password';
-GRANT ALL PRIVILEGES ON DATABASE loyacrm TO loyacrm_user;
+CREATE DATABASE crm;
+CREATE USER crm_user WITH PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE crm TO crm_user;
 \q
 ```
 
@@ -945,22 +945,22 @@ GRANT ALL PRIVILEGES ON DATABASE loyacrm TO loyacrm_user;
 ```bash
 sudo mkdir -p /var/www
 cd /var/www
-git clone https://github.com/your-username/LoyaCareCRM.git loyacrm
-cd loyacrm
+git clone https://github.com/your-username/LoyaCareCRM.git crm
+cd crm
 ```
 
 #### 4. Configure Environment Variables *(Server)*
 Create `.env` files on the server:
 
-**`/var/www/loyacrm/.env.backend`:**
+**`/var/www/crm/.env.backend`:**
 ```bash
 PORT=4000
-DATABASE_URL="postgresql://loyacrm_user:your_secure_password@postgres:5432/loyacrm"
+DATABASE_URL="postgresql://crm_user:your_secure_password@postgres:5432/crm"
 JWT_SECRET="your_jwt_secret_here"
 USE_MOCK=false
 ```
 
-**`/var/www/loyacrm/.env.frontend`:**
+**`/var/www/crm/.env.frontend`:**
 ```bash
 NEXT_PUBLIC_BACKEND_API_URL="https://your-domain.com/api"
 ```
@@ -981,7 +981,7 @@ The workflow file `.github/workflows/deploy-production.yml` is already configure
 
 #### File Structure After Deployment:
 ```
-/var/www/loyacrm/
+/var/www/crm/
 ├── docker-compose.yml    # Docker services configuration
 ├── .env.backend         # Backend environment variables
 ├── .env.frontend        # Frontend environment variables
@@ -1083,7 +1083,7 @@ chore(release): v0.1.34 - new features release
 #### Check Deployment Status:
 ```bash
 # On server
-cd /var/www/loyacrm
+cd /var/www/crm
 docker compose ps
 docker compose logs
 ```
@@ -1134,7 +1134,7 @@ df -h
 free -h
 
 # Backup database
-docker compose exec postgres pg_dump loyacrm > backup_$(date +%Y%m%d).sql
+docker compose exec postgres pg_dump crm > backup_$(date +%Y%m%d).sql
 ```
 
 This setup provides a complete CI/CD pipeline for automated Docker deployment of your LoyaCareCRM application! 🎉

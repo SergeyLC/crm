@@ -144,17 +144,17 @@ docker compose -f docker-compose.dev.yml ps
 
 ### Check Environment Variables
 ```bash
-docker exec loyacrm-backend-dev env | grep PORT
-docker exec loyacrm-frontend-dev env | grep PORT
+docker exec crm-backend-dev env | grep PORT
+docker exec crm-frontend-dev env | grep PORT
 ```
 
 ### Test Directly (Bypassing Nginx)
 ```bash
 # Backend (inside Docker network)
-docker exec loyacrm-backend-dev curl http://localhost:4000/api/health
+docker exec crm-backend-dev curl http://localhost:4000/api/health
 
 # Frontend (inside Docker network)
-docker exec loyacrm-frontend-dev curl http://localhost:3000
+docker exec crm-frontend-dev curl http://localhost:3000
 ```
 
 ### Check Nginx Logs

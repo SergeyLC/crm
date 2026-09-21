@@ -11,7 +11,7 @@ This project uses GitHub Actions for automated deployment to three environments 
 - **Environment**: Develop staging server
 - **Docker Images**: Tagged with `develop-{commit}-{timestamp}`
 - **Port**: 8081
-- **Database**: `loyacrm_stage_develop`
+- **Database**: `crm_stage_develop`
 - **Purpose**: Testing features before merging to main
 - **Note**: Use `deploy.sh -m "message" -s` on develop branch (releases not allowed)
 
@@ -20,7 +20,7 @@ This project uses GitHub Actions for automated deployment to three environments 
 - **Environment**: Staging server
 - **Docker Images**: Tagged with `staging-{commit}-{timestamp}`
 - **Port**: 8080
-- **Database**: `loyacrm_staging`
+- **Database**: `crm_staging`
 - **Purpose**: Pre-production testing
 - **Note**: Release commits automatically skip staging deployment to avoid redundant builds
 
@@ -29,7 +29,7 @@ This project uses GitHub Actions for automated deployment to three environments 
 - **Environment**: Production server
 - **Docker Images**: Tagged with version (e.g., `v1.4.2`)
 - **Port**: 80
-- **Database**: `loyacrm`
+- **Database**: `crm`
 - **Note**: Release commits include `[skip ci]` to prevent staging deployment
 
 ## Required GitHub Secrets
@@ -50,8 +50,8 @@ Create three environments:
 - **Environment secrets**:
   | Secret | Description | Example |
   |--------|-------------|---------|
-  | `POSTGRES_DB` | Production database name | `loyacrm` |
-  | `POSTGRES_USER` | Production database user | `loyacrm` |
+  | `POSTGRES_DB` | Production database name | `crm` |
+  | `POSTGRES_USER` | Production database user | `crm` |
   | `POSTGRES_PASSWORD` | Production database password | Generated with `openssl rand -base64 32` |
   | `JWT_SECRET` | Production JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
 
@@ -60,8 +60,8 @@ Create three environments:
 - **Environment secrets**:
   | Secret | Description | Example |
   |--------|-------------|---------|
-  | `POSTGRES_DB` | Staging database name | `loyacrm_staging` |
-  | `POSTGRES_USER` | Staging database user | `loyacrm` or `loyacrm_staging` |
+  | `POSTGRES_DB` | Staging database name | `crm_staging` |
+  | `POSTGRES_USER` | Staging database user | `crm` or `crm_staging` |
   | `POSTGRES_PASSWORD` | Staging database password | Generated with `openssl rand -base64 32` |
   | `JWT_SECRET` | Staging JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
 
@@ -70,8 +70,8 @@ Create three environments:
 - **Environment secrets**:
   | Secret | Description | Example |
   |-----------|-------------|---------|
-  | `POSTGRES_DB` | Develop database name | `loyacrm_stage_develop` |
-  | `POSTGRES_USER` | Develop database user | `loyacrm` or `loyacrm_stage_develop` |
+  | `POSTGRES_DB` | Develop database name | `crm_stage_develop` |
+  | `POSTGRES_USER` | Develop database user | `crm` or `crm_stage_develop` |
   | `POSTGRES_PASSWORD` | Develop database password | Generated with `openssl rand -base64 32` |
   | `JWT_SECRET` | Develop JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
 
@@ -105,20 +105,20 @@ GitHub Repository
 │   └── SERVER_SSH_KEY = (SSH private key)
 │
 ├── Environment: production
-│   ├── POSTGRES_DB = loyacrm
-│   ├── POSTGRES_USER = loyacrm
+│   ├── POSTGRES_DB = crm
+│   ├── POSTGRES_USER = crm
 │   ├── POSTGRES_PASSWORD = (prod password)
 │   └── JWT_SECRET = (prod secret)
 │
 ├── Environment: staging
-│   ├── POSTGRES_DB = loyacrm_staging
-│   ├── POSTGRES_USER = loyacrm
+│   ├── POSTGRES_DB = crm_staging
+│   ├── POSTGRES_USER = crm
 │   ├── POSTGRES_PASSWORD = (staging password)
 │   └── JWT_SECRET = (staging secret)
 │
 └── Environment: stage-develop
-    ├── POSTGRES_DB = loyacrm_stage_develop
-    ├── POSTGRES_USER = loyacrm
+    ├── POSTGRES_DB = crm_stage_develop
+    ├── POSTGRES_USER = crm
     ├── POSTGRES_PASSWORD = (stage-develop password)
     └── JWT_SECRET = (stage-develop secret)
 ```
@@ -147,8 +147,8 @@ cat ~/.ssh/id_ed25519
 1. Go to: **Settings → Environments → New environment**
 2. Name: `production`
 3. Click **Add secret** for each:
-   - Name: `POSTGRES_DB`, Value: `loyacrm`
-   - Name: `POSTGRES_USER`, Value: `loyacrm`
+   - Name: `POSTGRES_DB`, Value: `crm`
+   - Name: `POSTGRES_USER`, Value: `crm`
    - Name: `POSTGRES_PASSWORD`, Value: `openssl rand -base64 32`
    - Name: `JWT_SECRET`, Value: `openssl rand -base64 64`
 4. (Optional) Add **Required reviewers** for deployment approval
@@ -158,8 +158,8 @@ cat ~/.ssh/id_ed25519
 1. **New environment**
 2. Name: `staging`
 3. **Add secret** for each (different values from production!):
-   - Name: `POSTGRES_DB`, Value: `loyacrm_staging`
-   - Name: `POSTGRES_USER`, Value: `loyacrm`
+   - Name: `POSTGRES_DB`, Value: `crm_staging`
+   - Name: `POSTGRES_USER`, Value: `crm`
    - Name: `POSTGRES_PASSWORD`, Value: `openssl rand -base64 32`
    - Name: `JWT_SECRET`, Value: `openssl rand -base64 64`
 
@@ -168,8 +168,8 @@ cat ~/.ssh/id_ed25519
 1. **New environment**
 2. Name: `stage-develop`
 3. **Add secret** for each (different values from production and staging!):
-   - Name: `POSTGRES_DB`, Value: `loyacrm_stage_develop`
-   - Name: `POSTGRES_USER`, Value: `loyacrm`
+   - Name: `POSTGRES_DB`, Value: `crm_stage_develop`
+   - Name: `POSTGRES_USER`, Value: `crm`
    - Name: `POSTGRES_PASSWORD`, Value: `openssl rand -base64 32`
    - Name: `JWT_SECRET`, Value: `openssl rand -base64 64`
 
@@ -251,7 +251,7 @@ After setup, verify you have:
 
 ```bash
 # Create deployment directory
-mkdir -p /var/www/loyacrm-production
+mkdir -p /var/www/crm-production
 
 # Ensure Docker and Docker Compose are installed
 docker --version
@@ -267,7 +267,7 @@ echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
 
 ```bash
 # Create deployment directory for main staging
-mkdir -p /var/www/loyacrm-staging
+mkdir -p /var/www/crm-staging
 
 # Login to GitHub Container Registry if not done already
 echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
@@ -277,7 +277,7 @@ echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
 
 ```bash
 # Create deployment directory for develop staging
-mkdir -p /var/www/loyacrm-stage-develop
+mkdir -p /var/www/crm-stage-develop
 
 # Login to GitHub Container Registry if not done already
 echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
@@ -332,15 +332,15 @@ If you need to start the database manually before first deployment:
 
 ```bash
 # Production
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose up -d postgres
 
 # Main Staging
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 docker compose -f docker-compose.stage.yml up -d postgres
 
 # Develop Staging
-cd /var/www/loyacrm-stage-develop
+cd /var/www/crm-stage-develop
 docker compose -f docker-compose.stage-develop.yml up -d postgres
 
 # Wait and check status
@@ -464,8 +464,8 @@ docker compose logs -f backend
 docker compose logs -f frontend
 
 # Check specific container
-docker logs loyacrm-backend
-docker logs loyacrm-staging-backend
+docker logs crm-backend
+docker logs crm-staging-backend
 ```
 
 ## Troubleshooting
@@ -487,10 +487,10 @@ echo "YOUR_GITHUB_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --passwo
 **Solution**:
 ```bash
 # Check database connection
-docker exec loyacrm-backend sh -c 'cd /app/db && pnpm run migrate:status'
+docker exec crm-backend sh -c 'cd /app/db && pnpm run migrate:status'
 
 # Manually run migrations
-docker exec loyacrm-backend sh -c 'cd /app/db && pnpm run migrate:deploy'
+docker exec crm-backend sh -c 'cd /app/db && pnpm run migrate:deploy'
 ```
 
 ### Containers Not Starting
@@ -503,7 +503,7 @@ docker exec loyacrm-backend sh -c 'cd /app/db && pnpm run migrate:deploy'
 docker compose logs backend frontend
 
 # Verify environment variables
-docker exec loyacrm-backend env | grep DATABASE_URL
+docker exec crm-backend env | grep DATABASE_URL
 
 # Restart services
 docker compose restart backend frontend
@@ -529,16 +529,16 @@ If you need to deploy manually:
 ```bash
 # On your local machine
 # 1. Build images
-docker buildx build --platform linux/amd64 -t loyacrm-backend:latest -f docker/backend/Dockerfile .
-docker buildx build --platform linux/amd64 -t loyacrm-frontend:latest -f docker/frontend/Dockerfile .
+docker buildx build --platform linux/amd64 -t crm-backend:latest -f docker/backend/Dockerfile .
+docker buildx build --platform linux/amd64 -t crm-frontend:latest -f docker/frontend/Dockerfile .
 
 # 2. Save images
-docker save loyacrm-backend:latest | gzip > backend.tar.gz
-docker save loyacrm-frontend:latest | gzip > frontend.tar.gz
+docker save crm-backend:latest | gzip > backend.tar.gz
+docker save crm-frontend:latest | gzip > frontend.tar.gz
 
 # 3. Transfer to server
-scp backend.tar.gz root@YOUR_SERVER_IP:/var/www/loyacrm-production/
-scp frontend.tar.gz root@YOUR_SERVER_IP:/var/www/loyacrm-production/
+scp backend.tar.gz root@YOUR_SERVER_IP:/var/www/crm-production/
+scp frontend.tar.gz root@YOUR_SERVER_IP:/var/www/crm-production/
 
 # On the server
 # 4. Load images
@@ -546,7 +546,7 @@ docker load < backend.tar.gz
 docker load < frontend.tar.gz
 
 # 5. Update containers
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose up -d --force-recreate
 ```
 

@@ -35,7 +35,7 @@ This document describes setting up the local development environment for LoyaCar
 
 - **Nginx Reverse Proxy:** Combines frontend and backend under a single port 80
 - **Health Checks:** Automatic service readiness verification
-- **Named Volumes:** Persistent PostgreSQL data storage (`loyacrm_pg_data`)
+- **Named Volumes:** Persistent PostgreSQL data storage (`crm_pg_data`)
 - **Database Seeding:** Automatic database population with test data
 - **Hot Module Replacement (HMR):** WebSocket support for live reloading
 - **API Health Endpoint:** `/api/health` for backend status checking
@@ -72,8 +72,8 @@ docker compose version
 ### 1. Cloning the repository
 
 ```bash
-git clone <your-repository-url> loyacrm
-cd loyacrm
+git clone <your-repository-url> crm
+cd crm
 ```
 
 ### 2. Setting up environment variables
@@ -87,12 +87,12 @@ cp .env.dev.example .env.dev
 Contents of `.env.dev`:
 ```bash
 # Database
-POSTGRES_DB=loyacrm
-POSTGRES_USER=loyacrm
+POSTGRES_DB=crm
+POSTGRES_USER=crm
 POSTGRES_PASSWORD=password123
 
 # Backend
-DATABASE_URL="postgresql://loyacrm:password123@postgres:5432/loyacrm"
+DATABASE_URL="postgresql://crm:password123@postgres:5432/crm"
 JWT_SECRET="your_dev_jwt_secret_here"
 PORT=4003
 NODE_ENV=development
@@ -142,7 +142,7 @@ curl http://localhost:4003/api/health
 curl http://localhost:3003
 
 # Database
-psql -h localhost -p 5435 -U loyacrm loyacrm -c "SELECT version();"
+psql -h localhost -p 5435 -U crm crm -c "SELECT version();"
 ```
 
 ### Functional testing
@@ -172,7 +172,7 @@ On first startup of the development environment, database seeding is performed a
 docker compose -f docker-compose.dev.yml down
 
 # Remove volume to reset DB
-docker volume rm loyacarecrm_loyacrm_pg_data
+docker volume rm loyacarecrm_crm_pg_data
 
 # Restart
 docker compose -f docker-compose.dev.yml up -d
@@ -211,13 +211,13 @@ docker stats
 
 ```bash
 # Connect to PostgreSQL
-psql -h localhost -p 5435 -U loyacrm loyacrm
+psql -h localhost -p 5435 -U crm crm
 
 # View tables
 \dt
 
 # Execute commands in container
-docker compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
+docker compose -f docker-compose.dev.yml exec postgres psql -U crm -d crm
 ```
 
 ### Service logs
@@ -279,7 +279,7 @@ docker compose -f docker-compose.dev.yml logs postgres
 docker compose -f docker-compose.dev.yml logs backend
 docker compose -f docker-compose.dev.yml logs frontend
 docker compose -f docker-compose.dev.yml logs nginx
-docker network inspect loyacarecrm_loyacrm-dev-network
+docker network inspect loyacarecrm_crm-dev-network
 ```
 
 ### Hot Module Replacement (HMR) issues
@@ -323,7 +323,7 @@ docker compose -f docker-compose.dev.yml exec backend sh -c "cd db && pnpm run s
 **Users not created:**
 ```bash
 # Connect to DB
-psql -h localhost -p 5435 -U loyacrm loyacrm
+psql -h localhost -p 5435 -U crm crm
 
 # Check users
 SELECT * FROM "User";

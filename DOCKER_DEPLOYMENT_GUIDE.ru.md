@@ -84,11 +84,11 @@ docker compose version
 
 ```bash
 # Create project directories
-mkdir -p /var/www/loyacrm-production
-mkdir -p /var/www/loyacrm-production/backups
+mkdir -p /var/www/crm-production
+mkdir -p /var/www/crm-production/backups
 
 # Set permissions
-chmod -R 755 /var/www/loyacrm-production
+chmod -R 755 /var/www/crm-production
 ```
 
 ## Step 6: Prepare Configuration Files
@@ -124,20 +124,20 @@ cp nginx.conf deployment-package/
 cp -r nginx deployment-package/ 2>/dev/null || true
 
 # Создать архив
-tar -czf loyacrm-deployment.tar.gz deployment-package/
+tar -czf crm-deployment.tar.gz deployment-package/
 
 # Скопировать на сервер
-scp loyacrm-deployment.tar.gz root@YOUR_SERVER_IP:/var/www/
+scp crm-deployment.tar.gz root@YOUR_SERVER_IP:/var/www/
 ```
 
 3. **На сервере распаковать и настроить:**
 ```bash
 cd /var/www
-tar -xzf loyacrm-deployment.tar.gz
-mv deployment-package/* loyacrm-production/
-rm -rf deployment-package loyacrm-deployment.tar.gz
+tar -xzf crm-deployment.tar.gz
+mv deployment-package/* crm-production/
+rm -rf deployment-package crm-deployment.tar.gz
 
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Создать .env из примера
 cp .env.example .env
@@ -185,17 +185,17 @@ echo YOUR_GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password
 cd /path/to/LoyaCareCRM
 
 # Собрать Backend
-docker build -f docker/backend/Dockerfile -t loyacrm-backend:latest .
+docker build -f docker/backend/Dockerfile -t crm-backend:latest .
 
 # Собрать Frontend
 docker build --no-cache \
   -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_API_URL=/api \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
-  -t loyacrm-frontend:latest .
+  -t crm-frontend:latest .
 
 # Проверить образы
-docker images | grep loyacrm
+docker images | grep crm
 ```
 
 2. **Сохранить образы в файлы:**
@@ -204,8 +204,8 @@ docker images | grep loyacrm
 mkdir -p docker-images
 
 # Экспортировать образы
-docker save loyacrm-backend:latest | gzip > docker-images/backend.tar.gz
-docker save loyacrm-frontend:latest | gzip > docker-images/frontend.tar.gz
+docker save crm-backend:latest | gzip > docker-images/backend.tar.gz
+docker save crm-frontend:latest | gzip > docker-images/frontend.tar.gz
 
 # Создать deployment пакет
 mkdir -p deployment-package
@@ -215,32 +215,32 @@ cp nginx.conf deployment-package/
 cp -r nginx deployment-package/ 2>/dev/null || true
 
 # Создать архив со всем необходимым
-tar -czf loyacrm-full-deployment.tar.gz deployment-package/ docker-images/
+tar -czf crm-full-deployment.tar.gz deployment-package/ docker-images/
 ```
 
 3. **Скопировать на сервер:**
 ```bash
 # Скопировать архив (может занять время, ~500MB-1GB)
-scp loyacrm-full-deployment.tar.gz root@YOUR_SERVER_IP:/var/www/
+scp crm-full-deployment.tar.gz root@YOUR_SERVER_IP:/var/www/
 ```
 
 4. **На сервере распаковать и загрузить образы:**
 ```bash
 cd /var/www
-tar -xzf loyacrm-full-deployment.tar.gz
+tar -xzf crm-full-deployment.tar.gz
 
 # Загрузить образы в Docker
 docker load < docker-images/backend.tar.gz
 docker load < docker-images/frontend.tar.gz
 
 # Переместить конфигурацию
-mv deployment-package/* loyacrm-production/
+mv deployment-package/* crm-production/
 
 # Очистить
-rm -rf deployment-package docker-images loyacrm-full-deployment.tar.gz
+rm -rf deployment-package docker-images crm-full-deployment.tar.gz
 
 # Настроить .env
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 cp .env.example .env
 nano .env  # Заполнить значения
 ```
@@ -263,7 +263,7 @@ nano .env  # Заполнить значения
 
 1. **Создать директорию для исходников:**
 ```bash
-mkdir -p /var/www/loyacrm-source
+mkdir -p /var/www/crm-source
 ```
 
 2. **На локальной машине:**
@@ -280,30 +280,30 @@ rsync -avz \
   --exclude='coverage' \
   --exclude='test-results' \
   --exclude='playwright-report' \
-  ./ root@YOUR_SERVER_IP:/var/www/loyacrm-source/
+  ./ root@YOUR_SERVER_IP:/var/www/crm-source/
 ```
 
 3. **На сервере собрать образы:**
 ```bash
-cd /var/www/loyacrm-source
+cd /var/www/crm-source
 
 # Собрать Backend
-docker build -f docker/backend/Dockerfile -t loyacrm-backend:latest .
+docker build -f docker/backend/Dockerfile -t crm-backend:latest .
 
 # Собрать Frontend
 docker build --no-cache \
   -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_API_URL=/api \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
-  -t loyacrm-frontend:latest .
+  -t crm-frontend:latest .
 
 # Скопировать конфигурацию
-cp docker-compose.yml /var/www/loyacrm-production/
-cp .env.example /var/www/loyacrm-production/
-cp nginx.conf /var/www/loyacrm-production/
+cp docker-compose.yml /var/www/crm-production/
+cp .env.example /var/www/crm-production/
+cp nginx.conf /var/www/crm-production/
 
 # Настроить .env
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 cp .env.example .env
 nano .env
 ```
@@ -318,7 +318,7 @@ nano .env
 
 ```bash
 # Перейти в директорию production
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Создать .env файл для Docker Compose
 cat > .env << 'EOF'
@@ -338,16 +338,16 @@ LOG_LEVEL=info
 CORS_ORIGIN=http://YOUR_SERVER_IP
 
 # База данных
-POSTGRES_DB=loyacrm
-POSTGRES_USER=loyacrm
-POSTGRES_PASSWORD=loyacrm2024secure
+POSTGRES_DB=crm
+POSTGRES_USER=crm
+POSTGRES_PASSWORD=crm2024secure
 
 # Безопасность
 JWT_SECRET=dGhpc2lzYXNlY3JldGp3dHNlY3JldGtleQ==
 
 # Docker образы
-FRONTEND_IMAGE=loyacrm-frontend:latest
-BACKEND_IMAGE=loyacrm-backend:latest
+FRONTEND_IMAGE=crm-frontend:latest
+BACKEND_IMAGE=crm-backend:latest
 
 # Порты
 NGINX_PORT=80
@@ -364,7 +364,7 @@ nano .env
 ## Шаг 8: Настройка docker-compose.yml
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 cat > docker-compose.yml << 'EOF'
 version: '3.9'
@@ -372,34 +372,34 @@ version: '3.9'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: loyacrm-postgres
+    container_name: crm-postgres
     restart: unless-stopped
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_USER=${POSTGRES_USER:-loyacrm}
-      - POSTGRES_DB=${POSTGRES_DB:-loyacrm}
+      - POSTGRES_USER=${POSTGRES_USER:-crm}
+      - POSTGRES_DB=${POSTGRES_DB:-crm}
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./backups:/backups
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-loyacrm}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-crm}"]
       interval: 5s
       timeout: 3s
       retries: 5
       start_period: 10s
     networks:
-      - loyacrm-network
+      - crm-network
 
   backend:
-    image: ${BACKEND_IMAGE:-loyacrm-backend:latest}
-    container_name: loyacrm-backend
+    image: ${BACKEND_IMAGE:-crm-backend:latest}
+    container_name: crm-backend
     restart: unless-stopped
     environment:
       - PORT=${BACKEND_PORT:-4000}
       - NODE_ENV=${NODE_ENV:-production}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - CORS_ORIGIN=${CORS_ORIGIN}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-loyacrm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-loyacrm}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-crm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-crm}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
       postgres:
@@ -411,11 +411,11 @@ services:
       retries: 3
       start_period: 20s
     networks:
-      - loyacrm-network
+      - crm-network
 
   frontend:
-    image: ${FRONTEND_IMAGE:-loyacrm-frontend:latest}
-    container_name: loyacrm-frontend
+    image: ${FRONTEND_IMAGE:-crm-frontend:latest}
+    container_name: crm-frontend
     restart: unless-stopped
     environment:
       - PORT=${FRONTEND_PORT:-3000}
@@ -432,11 +432,11 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - loyacrm-network
+      - crm-network
 
   nginx:
     image: nginx:alpine
-    container_name: loyacrm-nginx
+    container_name: crm-nginx
     restart: unless-stopped
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
@@ -446,14 +446,14 @@ services:
     ports:
       - "${NGINX_PORT:-80}:80"
     networks:
-      - loyacrm-network
+      - crm-network
 
 volumes:
   pg_data:
-    name: loyacrm_pg_data
+    name: crm_pg_data
 
 networks:
-  loyacrm-network:
+  crm-network:
     driver: bridge
 EOF
 ```
@@ -461,7 +461,7 @@ EOF
 ## Шаг 9: Настройка Nginx
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 cat > nginx.conf << 'EOF'
 events {
@@ -520,7 +520,7 @@ EOF
 ## Шаг 10: Запуск контейнеров
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Запустить все сервисы
 docker compose up -d
@@ -538,17 +538,17 @@ docker compose ps
 sleep 60
 
 # Применить миграции
-docker exec loyacrm-backend sh -c "cd /app/db && npx prisma migrate deploy"
+docker exec crm-backend sh -c "cd /app/db && npx prisma migrate deploy"
 
 # Проверить применённые миграции
-docker exec loyacrm-backend sh -c "cd /app/db && npx prisma migrate status"
+docker exec crm-backend sh -c "cd /app/db && npx prisma migrate status"
 ```
 
 ## Шаг 12: Заполнение базы данных (Seeding)
 
 ```bash
 # Создать seed данные (администраторы, тестовые лиды/сделки)
-docker exec loyacrm-backend sh -c "cd /app/db && node prisma/seed.ts"
+docker exec crm-backend sh -c "cd /app/db && node prisma/seed.ts"
 ```
 
 ## Шаг 13: Проверка работоспособности
@@ -604,7 +604,7 @@ reboot
 
 # После перезагрузки подключиться и проверить
 ssh root@YOUR_SERVER_IP
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose ps
 ```
 
@@ -661,7 +661,7 @@ git push origin main
 # 2. GitHub Actions автоматически соберёт и опубликует новые образы
 
 # 3. На сервере: обновить образы и перезапустить
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Скачать новые версии образов
 docker compose pull
@@ -678,15 +678,15 @@ docker compose ps
 ```bash
 # 1. На локальной машине пересобрать образы
 cd /path/to/LoyaCareCRM
-docker build -f docker/backend/Dockerfile -t loyacrm-backend:latest .
+docker build -f docker/backend/Dockerfile -t crm-backend:latest .
 docker build --no-cache -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_API_URL=/api \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
-  -t loyacrm-frontend:latest .
+  -t crm-frontend:latest .
 
 # 2. Сохранить и скопировать на сервер
-docker save loyacrm-backend:latest | gzip > backend.tar.gz
-docker save loyacrm-frontend:latest | gzip > frontend.tar.gz
+docker save crm-backend:latest | gzip > backend.tar.gz
+docker save crm-frontend:latest | gzip > frontend.tar.gz
 scp backend.tar.gz frontend.tar.gz root@YOUR_SERVER_IP:/tmp/
 
 # 3. На сервере загрузить и обновить
@@ -696,7 +696,7 @@ docker load < backend.tar.gz
 docker load < frontend.tar.gz
 rm backend.tar.gz frontend.tar.gz
 
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose up -d --force-recreate backend frontend
 
 # 4. Проверить
@@ -708,19 +708,19 @@ docker compose ps
 ```bash
 # 1. Синхронизировать новый код
 rsync -avz --exclude='node_modules' --exclude='.next' \
-  ./ root@YOUR_SERVER_IP:/var/www/loyacrm-source/
+  ./ root@YOUR_SERVER_IP:/var/www/crm-source/
 
 # 2. На сервере пересобрать образы
 ssh root@YOUR_SERVER_IP
-cd /var/www/loyacrm-source
-docker build -f docker/backend/Dockerfile -t loyacrm-backend:latest .
+cd /var/www/crm-source
+docker build -f docker/backend/Dockerfile -t crm-backend:latest .
 docker build --no-cache -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_API_URL=/api \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
-  -t loyacrm-frontend:latest .
+  -t crm-frontend:latest .
 
 # 3. Пересоздать контейнеры
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose up -d --force-recreate backend frontend
 
 # 4. Проверить
@@ -733,49 +733,49 @@ docker compose ps
 
 ```bash
 # Создать директорию для бэкапов
-mkdir -p /var/www/loyacrm-backups
+mkdir -p /var/www/crm-backups
 
 # Создать бэкап
-docker exec loyacrm-postgres pg_dump \
-  -U loyacrm loyacrm > /var/www/loyacrm-backups/backup_$(date +%Y%m%d_%H%M%S).sql
+docker exec crm-postgres pg_dump \
+  -U crm crm > /var/www/crm-backups/backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Или использовать custom format (сжатый)
-docker exec loyacrm-postgres pg_dump \
-  -U loyacrm -Fc loyacrm > /var/www/loyacrm-backups/backup_$(date +%Y%m%d_%H%M%S).dump
+docker exec crm-postgres pg_dump \
+  -U crm -Fc crm > /var/www/crm-backups/backup_$(date +%Y%m%d_%H%M%S).dump
 ```
 
 ### Восстановление из бэкапа
 
 ```bash
 # Из SQL файла
-cat /var/www/loyacrm-backups/backup_YYYYMMDD_HHMMSS.sql | \
-  docker exec -i loyacrm-postgres psql -U loyacrm -d loyacrm
+cat /var/www/crm-backups/backup_YYYYMMDD_HHMMSS.sql | \
+  docker exec -i crm-postgres psql -U crm -d crm
 
 # Из custom format
-docker exec -i loyacrm-postgres pg_restore \
-  -U loyacrm -d loyacrm < /var/www/loyacrm-backups/backup_YYYYMMDD_HHMMSS.dump
+docker exec -i crm-postgres pg_restore \
+  -U crm -d crm < /var/www/crm-backups/backup_YYYYMMDD_HHMMSS.dump
 ```
 
 ### Автоматические бэкапы (cron)
 
 ```bash
 # Создать скрипт бэкапа
-cat > /usr/local/bin/loyacrm-backup.sh << 'EOF'
+cat > /usr/local/bin/crm-backup.sh << 'EOF'
 #!/bin/bash
-BACKUP_DIR=/var/www/loyacrm-backups
+BACKUP_DIR=/var/www/crm-backups
 DATE=$(date +%Y%m%d_%H%M%S)
-docker exec loyacrm-postgres pg_dump -U loyacrm -Fc loyacrm > $BACKUP_DIR/backup_$DATE.dump
+docker exec crm-postgres pg_dump -U crm -Fc crm > $BACKUP_DIR/backup_$DATE.dump
 # Удалять бэкапы старше 30 дней
 find $BACKUP_DIR -name "backup_*.dump" -mtime +30 -delete
 EOF
 
 # Сделать исполняемым
-chmod +x /usr/local/bin/loyacrm-backup.sh
+chmod +x /usr/local/bin/crm-backup.sh
 
 # Добавить в cron (каждый день в 3:00 ночи)
 crontab -e
 # Добавить строку:
-# 0 3 * * * /usr/local/bin/loyacrm-backup.sh
+# 0 3 * * * /usr/local/bin/crm-backup.sh
 ```
 
 ## Мониторинг
@@ -805,12 +805,12 @@ Staging окружение позволяет тестировать измен�
 | Параметр | Production | Staging |
 |----------|-----------|---------|
 | HTTP порт | 80 | 8080 |
-| База данных | `loyacrm` | `loyacrm_staging` |
-| Docker volume | `loyacrm_pg_data` | `loyacrm_pg_data_staging` |
-| Имена контейнеров | `loyacrm-*` | `loyacrm-staging-*` |
+| База данных | `crm` | `crm_staging` |
+| Docker volume | `crm_pg_data` | `crm_pg_data_staging` |
+| Имена контейнеров | `crm-*` | `crm-staging-*` |
 | Docker образы | `:latest` | `:staging` |
-| Сеть | `loyacrm-network` | `loyacrm-staging-network` |
-| Директория | `/var/www/loyacrm-production` | `/var/www/loyacrm-staging` |
+| Сеть | `crm-network` | `crm-staging-network` |
+| Директория | `/var/www/crm-production` | `/var/www/crm-staging` |
 
 ### Шаг 1: Подготовка конфигурации Staging
 
@@ -827,14 +827,14 @@ cd /path/to/LoyaCareCRM
 
 # Собрать Backend образ (одинаковый для prod и staging)
 docker build --platform linux/amd64 \
-  -t loyacrm-backend:staging \
+  -t crm-backend:staging \
   -f docker/backend/Dockerfile .
 
 # Собрать Frontend образ с staging переменными
 docker build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
   --build-arg NEXT_PUBLIC_APP_VERSION=staging \
-  -t loyacrm-frontend:staging \
+  -t crm-frontend:staging \
   -f docker/frontend/Dockerfile.prod .
 ```
 
@@ -844,27 +844,27 @@ docker build --platform linux/amd64 \
 
 ```bash
 # Экспортировать образы
-docker save loyacrm-backend:staging | gzip > loyacrm-backend-staging.tar.gz
-docker save loyacrm-frontend:staging | gzip > loyacrm-frontend-staging.tar.gz
+docker save crm-backend:staging | gzip > crm-backend-staging.tar.gz
+docker save crm-frontend:staging | gzip > crm-frontend-staging.tar.gz
 
 # Скопировать на сервер
-scp loyacrm-backend-staging.tar.gz loyacrm-frontend-staging.tar.gz \
+scp crm-backend-staging.tar.gz crm-frontend-staging.tar.gz \
     docker-compose.stage.yml nginx.stage.conf .env.stage \
-    root@YOUR_SERVER_IP:/var/www/loyacrm-staging/
+    root@YOUR_SERVER_IP:/var/www/crm-staging/
 ```
 
 ### Шаг 4: Настройка на сервере
 
 ```bash
 ssh root@YOUR_SERVER_IP
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 
 # Создать директорию для бэкапов
 mkdir -p backups
 
 # Загрузить Docker образы
-docker load < loyacrm-backend-staging.tar.gz
-docker load < loyacrm-frontend-staging.tar.gz
+docker load < crm-backend-staging.tar.gz
+docker load < crm-frontend-staging.tar.gz
 
 # Настроить .env
 cp .env.stage .env
@@ -883,13 +883,13 @@ nano .env
 ### Шаг 5: Запуск Staging контейнеров
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 
 # Запустить контейнеры
 docker compose -f docker-compose.stage.yml up -d
 
 # Проверить статус
-docker ps --filter name=loyacrm-staging
+docker ps --filter name=crm-staging
 
 # Проверить логи
 docker compose -f docker-compose.stage.yml logs -f
@@ -899,13 +899,13 @@ docker compose -f docker-compose.stage.yml logs -f
 
 ```bash
 # Применить миграции базы данных
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # **ВАЖНО:** Запустить seed для создания тестовых данных
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 
 # Проверить созданные данные
-docker exec loyacrm-staging-postgres psql -U loyacrm -d loyacrm_staging \
+docker exec crm-staging-postgres psql -U crm -d crm_staging \
   -c 'SELECT COUNT(*) as users FROM "User"; SELECT COUNT(*) as contacts FROM "Contact";'
 ```
 
@@ -959,7 +959,7 @@ curl -I http://localhost:8080/de
 ### Управление Staging
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 
 # Просмотр логов
 docker compose -f docker-compose.stage.yml logs -f
@@ -980,17 +980,17 @@ docker compose -f docker-compose.stage.yml down -v
 # 1. На локальной машине пересобрать
 docker build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
-  -t loyacrm-frontend:staging \
+  -t crm-frontend:staging \
   -f docker/frontend/Dockerfile.prod .
 
 # 2. Экспортировать и скопировать
-docker save loyacrm-frontend:staging | gzip > loyacrm-frontend-staging.tar.gz
-scp loyacrm-frontend-staging.tar.gz root@YOUR_SERVER_IP:/var/www/loyacrm-staging/
+docker save crm-frontend:staging | gzip > crm-frontend-staging.tar.gz
+scp crm-frontend-staging.tar.gz root@YOUR_SERVER_IP:/var/www/crm-staging/
 
 # 3. На сервере загрузить и перезапустить
 ssh root@YOUR_SERVER_IP
-cd /var/www/loyacrm-staging
-docker load < loyacrm-frontend-staging.tar.gz
+cd /var/www/crm-staging
+docker load < crm-frontend-staging.tar.gz
 docker compose -f docker-compose.stage.yml restart frontend
 ```
 
@@ -1000,11 +1000,11 @@ docker compose -f docker-compose.stage.yml restart frontend
 
 ```bash
 # На сервере
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 rm -f *.tar.gz
 
 # На локальной машине
-rm -f loyacrm-*-staging.tar.gz
+rm -f crm-*-staging.tar.gz
 ```
 
 ---
@@ -1034,23 +1034,23 @@ docker compose ps postgres
 docker compose logs postgres
 
 # Проверить подключение
-docker exec loyacrm-backend sh -c "cd /app/db && npx prisma db pull"
+docker exec crm-backend sh -c "cd /app/db && npx prisma db pull"
 ```
 
 ### Frontend показывает ошибки
 
 ```bash
 # Проверить переменные окружения
-docker exec loyacrm-frontend env | grep NEXT_PUBLIC
+docker exec crm-frontend env | grep NEXT_PUBLIC
 
 # Проверить, что .env.production скопирован
-docker exec loyacrm-frontend cat /app/frontend/.env.production
+docker exec crm-frontend cat /app/frontend/.env.production
 
 # Пересобрать с --no-cache
 docker build --no-cache -f docker/frontend/Dockerfile.prod \
   --build-arg NEXT_PUBLIC_API_URL=/api \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
-  -t loyacrm-frontend:latest /var/www/loyacrm-source
+  -t crm-frontend:latest /var/www/crm-source
 ```
 
 ### Nginx ошибки 502/504
@@ -1060,7 +1060,7 @@ docker build --no-cache -f docker/frontend/Dockerfile.prod \
 docker compose ps
 
 # Проверить конфигурацию nginx
-docker exec loyacrm-nginx nginx -t
+docker exec crm-nginx nginx -t
 
 # Перезагрузить nginx
 docker compose restart nginx
@@ -1073,7 +1073,7 @@ docker compose restart nginx
 **ВАЖНО:** При первом деплое рекомендуется сгенерировать новые значения:
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Сгенерировать новый пароль БД
 NEW_DB_PASSWORD=$(openssl rand -base64 16)
@@ -1102,7 +1102,7 @@ docker compose ps
 1. **PostgreSQL пароль:**
 ```bash
 # Остановить сервисы
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose stop backend frontend
 
 # Изменить пароль в .env
@@ -1110,8 +1110,8 @@ nano .env
 # POSTGRES_PASSWORD=новый_пароль
 
 # Изменить пароль в PostgreSQL
-docker exec -it loyacrm-postgres psql -U loyacrm -d loyacrm \
-  -c "ALTER USER loyacrm WITH PASSWORD 'новый_пароль';"
+docker exec -it crm-postgres psql -U crm -d crm \
+  -c "ALTER USER crm WITH PASSWORD 'новый_пароль';"
 
 # Перезапустить сервисы
 docker compose up -d

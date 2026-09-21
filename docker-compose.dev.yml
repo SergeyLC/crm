@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database for local development
   postgres:
     image: postgres:15-alpine
-    container_name: loyacrm-postgres-dev
+    container_name: crm-postgres-dev
     env_file:
       - .env.dev
     ports:
@@ -11,18 +11,18 @@ services:
       - pg_data:/var/lib/postgresql/data
       - ./backups:/backups
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U loyacrm"]
+      test: ["CMD-SHELL", "pg_isready -U crm"]
       interval: 10s
       retries: 5
     networks:
-      - loyacrm-dev-network
+      - crm-dev-network
 
   # Backend Service for local development
   backend:
     build:
       context: .
       dockerfile: docker/backend/Dockerfile.dev
-    container_name: loyacrm-backend-dev
+    container_name: crm-backend-dev
     env_file:
       - .env.dev
     expose:
@@ -36,7 +36,7 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - loyacrm-dev-network
+      - crm-dev-network
     # Hot reload (WORKDIR is already /app/backend in Dockerfile.dev)
     command: sh -c "pnpm run dev"
     volumes:
@@ -53,7 +53,7 @@ services:
     build:
       context: .
       dockerfile: docker/frontend/Dockerfile.dev
-    container_name: loyacrm-frontend-dev
+    container_name: crm-frontend-dev
     env_file:
       - .env.dev
     environment:
@@ -66,7 +66,7 @@ services:
     depends_on:
       - backend
     networks:
-      - loyacrm-dev-network
+      - crm-dev-network
     # Hot reload (WORKDIR is already /app/frontend in Dockerfile.dev)
     command: sh -c "TURBO_FORCE=false pnpm run dev"
     volumes:
@@ -81,7 +81,7 @@ services:
   # Nginx Proxy for local development
   nginx:
     image: nginx:alpine
-    container_name: loyacrm-nginx-dev
+    container_name: crm-nginx-dev
     ports:
       - "3003:80"
     volumes:
@@ -90,12 +90,12 @@ services:
       - backend
       - frontend
     networks:
-      - loyacrm-dev-network
+      - crm-dev-network
 
 volumes:
   pg_data:
-    name: loyacrm_pg_data
+    name: crm_pg_data
 
 networks:
-  loyacrm-dev-network:
+  crm-dev-network:
     driver: bridge

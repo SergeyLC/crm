@@ -17,7 +17,7 @@ This guide covers routine tasks for managing Docker containers including:
 ### Production
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Start services
 docker compose up -d
@@ -38,7 +38,7 @@ docker compose ps
 ### Staging
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 
 # Start services
 docker compose -f docker-compose.stage.yml --env-file .env.stage up -d
@@ -116,10 +116,10 @@ docker ps
 docker ps -a
 
 # Detailed inspect
-docker inspect loyacrm-backend
+docker inspect crm-backend
 
 # Check health status
-docker inspect --format='{{.State.Health.Status}}' loyacrm-backend
+docker inspect --format='{{.State.Health.Status}}' crm-backend
 ```
 
 ## Log Management
@@ -185,47 +185,47 @@ services:
 
 ```bash
 # Check migration status
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate status'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate status'
 
 # Apply pending migrations
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Create new migration (development)
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate dev --name description'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate dev --name description'
 
 # Reset database (WARNING: DELETES ALL DATA!)
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate reset'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate reset'
 ```
 
 ### Database Access
 
 ```bash
 # Connect to PostgreSQL
-docker exec -it loyacrm-postgres psql -U loyacrm -d loyacrm
+docker exec -it crm-postgres psql -U crm -d crm
 
 # Run SQL query
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "SELECT COUNT(*) FROM users;"
+docker exec crm-postgres psql -U crm -d crm -c "SELECT COUNT(*) FROM users;"
 
 # List tables
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "\dt"
+docker exec crm-postgres psql -U crm -d crm -c "\dt"
 
 # Describe table
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "\d users"
+docker exec crm-postgres psql -U crm -d crm -c "\d users"
 
 # Database size
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "SELECT pg_size_pretty(pg_database_size('loyacrm'));"
+docker exec crm-postgres psql -U crm -d crm -c "SELECT pg_size_pretty(pg_database_size('crm'));"
 ```
 
 ### Seed Data
 
 ```bash
 # Run seed script
-docker exec loyacrm-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-backend sh -c 'cd /app/db && npm run seed'
 
 # Verify seed data
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "SELECT COUNT(*) FROM users;"
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "SELECT COUNT(*) FROM contacts;"
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "SELECT COUNT(*) FROM deals;"
+docker exec crm-postgres psql -U crm -d crm -c "SELECT COUNT(*) FROM users;"
+docker exec crm-postgres psql -U crm -d crm -c "SELECT COUNT(*) FROM contacts;"
+docker exec crm-postgres psql -U crm -d crm -c "SELECT COUNT(*) FROM deals;"
 ```
 
 ## Backup and Restore
@@ -234,37 +234,37 @@ docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "SELECT COUNT(*) FROM
 
 ```bash
 # Create backup directory
-mkdir -p /var/backups/loyacrm
+mkdir -p /var/backups/crm
 
 # Full database backup
-docker exec loyacrm-postgres pg_dump -U loyacrm -d loyacrm > \
-  /var/backups/loyacrm/backup-$(date +%Y%m%d-%H%M%S).sql
+docker exec crm-postgres pg_dump -U crm -d crm > \
+  /var/backups/crm/backup-$(date +%Y%m%d-%H%M%S).sql
 
 # Compressed backup
-docker exec loyacrm-postgres pg_dump -U loyacrm -d loyacrm | \
-  gzip > /var/backups/loyacrm/backup-$(date +%Y%m%d-%H%M%S).sql.gz
+docker exec crm-postgres pg_dump -U crm -d crm | \
+  gzip > /var/backups/crm/backup-$(date +%Y%m%d-%H%M%S).sql.gz
 
 # Custom format backup (faster restore)
-docker exec loyacrm-postgres pg_dump -U loyacrm -d loyacrm -Fc -f \
+docker exec crm-postgres pg_dump -U crm -d crm -Fc -f \
   /tmp/backup.dump
 
-docker cp loyacrm-postgres:/tmp/backup.dump \
-  /var/backups/loyacrm/backup-$(date +%Y%m%d-%H%M%S).dump
+docker cp crm-postgres:/tmp/backup.dump \
+  /var/backups/crm/backup-$(date +%Y%m%d-%H%M%S).dump
 
 # Backup specific tables
-docker exec loyacrm-postgres pg_dump -U loyacrm -d loyacrm -t users -t contacts > \
-  /var/backups/loyacrm/users-contacts-$(date +%Y%m%d).sql
+docker exec crm-postgres pg_dump -U crm -d crm -t users -t contacts > \
+  /var/backups/crm/users-contacts-$(date +%Y%m%d).sql
 ```
 
 ### Automated Backup Script
 
-Create `/usr/local/bin/backup-loyacrm.sh`:
+Create `/usr/local/bin/backup-crm.sh`:
 
 ```bash
 #!/bin/bash
 set -e
 
-BACKUP_DIR="/var/backups/loyacrm"
+BACKUP_DIR="/var/backups/crm"
 RETENTION_DAYS=30
 DATE=$(date +%Y%m%d-%H%M%S)
 
@@ -273,13 +273,13 @@ mkdir -p $BACKUP_DIR
 
 # Backup production database
 echo "Backing up production database..."
-docker exec loyacrm-postgres pg_dump -U loyacrm -d loyacrm -Fc > \
+docker exec crm-postgres pg_dump -U crm -d crm -Fc > \
   $BACKUP_DIR/production-$DATE.dump
 
 # Backup staging database (if exists)
-if docker ps | grep -q loyacrm-staging-postgres; then
+if docker ps | grep -q crm-staging-postgres; then
   echo "Backing up staging database..."
-  docker exec loyacrm-staging-postgres pg_dump -U loyacrm -d loyacrm_staging -Fc > \
+  docker exec crm-staging-postgres pg_dump -U crm -d crm_staging -Fc > \
     $BACKUP_DIR/staging-$DATE.dump
 fi
 
@@ -295,13 +295,13 @@ echo "Backup completed: $BACKUP_DIR/*-$DATE.dump.gz"
 Make executable and schedule:
 
 ```bash
-chmod +x /usr/local/bin/backup-loyacrm.sh
+chmod +x /usr/local/bin/backup-crm.sh
 
 # Add to crontab (daily at 2 AM)
 crontab -e
 
 # Add line:
-0 2 * * * /usr/local/bin/backup-loyacrm.sh >> /var/log/loyacrm-backup.log 2>&1
+0 2 * * * /usr/local/bin/backup-crm.sh >> /var/log/crm-backup.log 2>&1
 ```
 
 ### Database Restore
@@ -311,18 +311,18 @@ crontab -e
 docker compose stop backend
 
 # Restore from SQL dump
-docker exec -i loyacrm-postgres psql -U loyacrm -d loyacrm < \
-  /var/backups/loyacrm/backup-20240101-120000.sql
+docker exec -i crm-postgres psql -U crm -d crm < \
+  /var/backups/crm/backup-20240101-120000.sql
 
 # Restore from compressed SQL
-gunzip -c /var/backups/loyacrm/backup-20240101-120000.sql.gz | \
-  docker exec -i loyacrm-postgres psql -U loyacrm -d loyacrm
+gunzip -c /var/backups/crm/backup-20240101-120000.sql.gz | \
+  docker exec -i crm-postgres psql -U crm -d crm
 
 # Restore from custom format
-docker cp /var/backups/loyacrm/backup-20240101-120000.dump \
-  loyacrm-postgres:/tmp/restore.dump
+docker cp /var/backups/crm/backup-20240101-120000.dump \
+  crm-postgres:/tmp/restore.dump
 
-docker exec loyacrm-postgres pg_restore -U loyacrm -d loyacrm \
+docker exec crm-postgres pg_restore -U crm -d crm \
   -c /tmp/restore.dump
 
 # Restart backend
@@ -334,14 +334,14 @@ docker compose start backend
 ```bash
 # Backup database volume
 docker run --rm \
-  -v loyacrm_pg_data:/data \
-  -v /var/backups/loyacrm:/backup \
+  -v crm_pg_data:/data \
+  -v /var/backups/crm:/backup \
   alpine tar -czf /backup/pg_data-$(date +%Y%m%d).tar.gz -C /data .
 
 # Restore database volume
 docker run --rm \
-  -v loyacrm_pg_data:/data \
-  -v /var/backups/loyacrm:/backup \
+  -v crm_pg_data:/data \
+  -v /var/backups/crm:/backup \
   alpine tar -xzf /backup/pg_data-20240101.tar.gz -C /data
 ```
 
@@ -359,11 +359,11 @@ docker run --rm \
 ### Update from GitHub Container Registry
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Backup database first!
-docker exec loyacrm-postgres pg_dump -U loyacrm -d loyacrm > \
-  /var/backups/loyacrm/pre-update-$(date +%Y%m%d-%H%M%S).sql
+docker exec crm-postgres pg_dump -U crm -d crm > \
+  /var/backups/crm/pre-update-$(date +%Y%m%d-%H%M%S).sql
 
 # Pull new images
 docker compose pull
@@ -372,7 +372,7 @@ docker compose pull
 docker compose up -d
 
 # Run migrations
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Check logs
 docker compose logs -f --tail 50
@@ -382,46 +382,46 @@ docker compose logs -f --tail 50
 
 ```bash
 # Transfer new images to server (from local machine)
-scp loyacrm-frontend.tar.gz root@SERVER_IP:/tmp/
-scp loyacrm-backend.tar.gz root@SERVER_IP:/tmp/
+scp crm-frontend.tar.gz root@SERVER_IP:/tmp/
+scp crm-backend.tar.gz root@SERVER_IP:/tmp/
 
 # On server
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Backup database
-docker exec loyacrm-postgres pg_dump -U loyacrm -d loyacrm > \
-  /var/backups/loyacrm/pre-update-$(date +%Y%m%d-%H%M%S).sql
+docker exec crm-postgres pg_dump -U crm -d crm > \
+  /var/backups/crm/pre-update-$(date +%Y%m%d-%H%M%S).sql
 
 # Load new images
-docker load < /tmp/loyacrm-frontend.tar.gz
-docker load < /tmp/loyacrm-backend.tar.gz
+docker load < /tmp/crm-frontend.tar.gz
+docker load < /tmp/crm-backend.tar.gz
 
 # Restart services
 docker compose up -d --force-recreate
 
 # Run migrations
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Cleanup
-rm /tmp/loyacrm-*.tar.gz
+rm /tmp/crm-*.tar.gz
 ```
 
 ### Rollback
 
 ```bash
 # If update fails, restore from backup
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Stop services
 docker compose stop
 
 # Restore database
-docker exec -i loyacrm-postgres psql -U loyacrm -d loyacrm < \
-  /var/backups/loyacrm/pre-update-20240101-120000.sql
+docker exec -i crm-postgres psql -U crm -d crm < \
+  /var/backups/crm/pre-update-20240101-120000.sql
 
 # Load previous images
-docker load < /var/backups/loyacrm/images/loyacrm-frontend-v1.0.0.tar.gz
-docker load < /var/backups/loyacrm/images/loyacrm-backend-v1.0.0.tar.gz
+docker load < /var/backups/crm/images/crm-frontend-v1.0.0.tar.gz
+docker load < /var/backups/crm/images/crm-backend-v1.0.0.tar.gz
 
 # Restart with old images
 docker compose up -d
@@ -439,7 +439,7 @@ docker compose ps
 docker ps --format "table {{.Names}}\t{{.Status}}"
 
 # Detailed health check
-docker inspect loyacrm-backend | grep -A 20 Health
+docker inspect crm-backend | grep -A 20 Health
 
 # Monitor in real-time
 watch -n 5 'docker ps --format "table {{.Names}}\t{{.Status}}"'
@@ -452,7 +452,7 @@ watch -n 5 'docker ps --format "table {{.Names}}\t{{.Status}}"'
 docker stats
 
 # Specific container
-docker stats loyacrm-backend
+docker stats crm-backend
 
 # One-time snapshot
 docker stats --no-stream
@@ -488,16 +488,16 @@ docker volume ls -q | xargs docker volume inspect | grep Mountpoint | \
 docker network ls
 
 # Inspect network
-docker network inspect loyacrm-network
+docker network inspect crm-network
 
 # Test connectivity between containers
-docker exec loyacrm-backend ping -c 3 postgres
+docker exec crm-backend ping -c 3 postgres
 
 # Check listening ports
-docker exec loyacrm-backend netstat -tuln
+docker exec crm-backend netstat -tuln
 
 # Test external connectivity
-docker exec loyacrm-backend curl -I http://google.com
+docker exec crm-backend curl -I http://google.com
 ```
 
 ## Performance Optimization
@@ -528,16 +528,16 @@ docker compose up -d
 
 ```bash
 # Analyze database
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "ANALYZE;"
+docker exec crm-postgres psql -U crm -d crm -c "ANALYZE;"
 
 # Vacuum database
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "VACUUM ANALYZE;"
+docker exec crm-postgres psql -U crm -d crm -c "VACUUM ANALYZE;"
 
 # Reindex
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "REINDEX DATABASE loyacrm;"
+docker exec crm-postgres psql -U crm -d crm -c "REINDEX DATABASE crm;"
 
 # Check slow queries
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c \
+docker exec crm-postgres psql -U crm -d crm -c \
   "SELECT query, mean_exec_time FROM pg_stat_statements ORDER BY mean_exec_time DESC LIMIT 10;"
 ```
 
@@ -591,10 +591,10 @@ docker compose up -d --build
 
 ```bash
 # Scan image for vulnerabilities
-docker scan loyacrm-backend:latest
+docker scan crm-backend:latest
 
 # Scan with specific severity
-docker scan --severity high loyacrm-backend:latest
+docker scan --severity high crm-backend:latest
 ```
 
 ### Secrets Management
@@ -642,7 +642,7 @@ services:
 docker compose logs backend
 
 # Inspect container
-docker inspect loyacrm-backend
+docker inspect crm-backend
 
 # Try manual start with verbose output
 docker compose up backend
@@ -656,14 +656,14 @@ df -h
 
 ```bash
 # Test connection from backend
-docker exec loyacrm-backend sh -c \
+docker exec crm-backend sh -c \
   'psql $DATABASE_URL -c "SELECT 1;"'
 
 # Check DATABASE_URL
-docker exec loyacrm-backend env | grep DATABASE_URL
+docker exec crm-backend env | grep DATABASE_URL
 
 # Verify PostgreSQL is ready
-docker exec loyacrm-postgres pg_isready -U loyacrm
+docker exec crm-postgres pg_isready -U crm
 ```
 
 ### Port Conflicts
@@ -695,21 +695,21 @@ docker system prune -a --volumes
 find /var/lib/docker/containers -name "*.log" -mtime +7 -delete
 
 # Remove old backups
-find /var/backups/loyacrm -name "*.dump.gz" -mtime +30 -delete
+find /var/backups/crm -name "*.dump.gz" -mtime +30 -delete
 ```
 
 ## Useful Scripts
 
 ### Health Check Script
 
-Create `/usr/local/bin/check-loyacrm.sh`:
+Create `/usr/local/bin/check-crm.sh`:
 
 ```bash
 #!/bin/bash
 
-SERVICES="loyacrm-nginx loyacrm-frontend loyacrm-backend loyacrm-postgres"
+SERVICES="crm-nginx crm-frontend crm-backend crm-postgres"
 
-echo "=== LoyaCRM Health Check ==="
+echo "=== crm Health Check ==="
 echo "Time: $(date)"
 echo
 
@@ -734,35 +734,35 @@ docker system df
 
 Make executable:
 ```bash
-chmod +x /usr/local/bin/check-loyacrm.sh
+chmod +x /usr/local/bin/check-crm.sh
 ```
 
 Run:
 ```bash
-check-loyacrm.sh
+check-crm.sh
 ```
 
 ### Restart All Script
 
-Create `/usr/local/bin/restart-loyacrm.sh`:
+Create `/usr/local/bin/restart-crm.sh`:
 
 ```bash
 #!/bin/bash
 set -e
 
-echo "Restarting LoyaCRM services..."
+echo "Restarting crm services..."
 
 # Production
-if [ -d "/var/www/loyacrm-production" ]; then
+if [ -d "/var/www/crm-production" ]; then
   echo "Restarting production..."
-  cd /var/www/loyacrm-production
+  cd /var/www/crm-production
   docker compose restart
 fi
 
 # Staging
-if [ -d "/var/www/loyacrm-staging" ]; then
+if [ -d "/var/www/crm-staging" ]; then
   echo "Restarting staging..."
-  cd /var/www/loyacrm-staging
+  cd /var/www/crm-staging
   docker compose -f docker-compose.stage.yml restart
 fi
 

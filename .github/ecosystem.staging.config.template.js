@@ -1,9 +1,9 @@
 module.exports = {
   apps: [
     {
-      name: "loyacrm-staging-frontend",
+      name: "crm-staging-frontend",
       script: "pnpm run start",
-      cwd: "/var/www/loyacrm-staging/frontend",
+      cwd: "/var/www/crm-staging/frontend",
       env_file: "./.env.production.local",
       env: {
         NODE_ENV: "production",
@@ -14,14 +14,14 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: "500M",
-      error_file: "/var/log/pm2/loyacrm-staging-frontend-error.log",
-      out_file: "/var/log/pm2/loyacrm-staging-frontend-out.log",
-      log_file: "/var/log/pm2/loyacrm-staging-frontend.log"
+      error_file: "/var/log/pm2/crm-staging-frontend-error.log",
+      out_file: "/var/log/pm2/crm-staging-frontend-out.log",
+      log_file: "/var/log/pm2/crm-staging-frontend.log"
     },
     {
-      name: "loyacrm-staging-backend",
+      name: "crm-staging-backend",
       script: "pnpm run start:prod",
-      cwd: "/var/www/loyacrm-staging/backend",
+      cwd: "/var/www/crm-staging/backend",
       env_file: "./.env.production.local",
       env: {
         NODE_ENV: "production",
@@ -32,9 +32,9 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: "500M",
-      error_file: "/var/log/pm2/loyacrm-staging-backend-error.log",
-      out_file: "/var/log/pm2/loyacrm-staging-backend-out.log",
-      log_file: "/var/log/pm2/loyacrm-staging-backend.log"
+      error_file: "/var/log/pm2/crm-staging-backend-error.log",
+      out_file: "/var/log/pm2/crm-staging-backend-out.log",
+      log_file: "/var/log/pm2/crm-staging-backend.log"
     }
   ]
 };

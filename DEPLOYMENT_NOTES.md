@@ -3,19 +3,19 @@
 ## Database Configuration
 
 ### Production Environment
-- Database name: `loyacrm_production`
-- User: `loyacrm`
+- Database name: `crm_production`
+- User: `crm`
 - Password: Set via `POSTGRES_PASSWORD` in `.env`
-- Default password: `loyacrm2024secure`
+- Default password: `crm2024secure`
 
 ### Stage-Main Environment
-- Database name: `loyacrm_staging`
-- User: `loyacrm`
+- Database name: `crm_staging`
+- User: `crm`
 - Password: Set via `POSTGRES_PASSWORD` in `.env.stage-main`
 
 ### Stage-Develop Environment
-- Database name: `loyacrm_stage_develop`
-- User: `loyacrm`
+- Database name: `crm_stage_develop`
+- User: `crm`
 - Password: Set via `POSTGRES_PASSWORD` in `.env.stage-develop`
 
 ## Docker Configuration Issues Fixed
@@ -39,7 +39,7 @@
 - **Issue**: When PostgreSQL container is recreated with existing volume, environment variable password doesn't update the existing user
 - **Fix**: Manually update password in PostgreSQL:
   ```bash
-  docker exec loyacrm-production-postgres psql -U loyacrm -d postgres -c "ALTER USER loyacrm WITH PASSWORD 'your_password';"
+  docker exec crm-production-postgres psql -U crm -d postgres -c "ALTER USER crm WITH PASSWORD 'your_password';"
   ```
 
 ## Deployment Checklist
@@ -58,11 +58,11 @@
 
 ### Database Migration
 If database needs to be recreated:
-1. Backup existing data: `docker exec postgres pg_dump -U loyacrm dbname > backup.sql`
+1. Backup existing data: `docker exec postgres pg_dump -U crm dbname > backup.sql`
 2. Stop containers: `docker compose down`
 3. Remove volume: `docker volume rm volume_name` (if needed)
 4. Start containers: `docker compose up -d`
-5. Restore data: `docker exec -i postgres psql -U loyacrm dbname < backup.sql`
+5. Restore data: `docker exec -i postgres psql -U crm dbname < backup.sql`
 
 ## Server Information
 - **Host**: 217.154.173.36

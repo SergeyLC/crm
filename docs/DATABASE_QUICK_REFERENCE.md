@@ -27,15 +27,15 @@ db/ directory (for local development only):
    
    **Production** (`.env`):
    ```bash
-   POSTGRES_DB=loyacrm
-   POSTGRES_USER=loyacrm
+   POSTGRES_DB=crm
+   POSTGRES_USER=crm
    POSTGRES_PASSWORD=your_password
    ```
    
    **Staging** (`.env.stage`):
    ```bash
-   POSTGRES_DB=loyacrm_staging
-   POSTGRES_USER=loyacrm
+   POSTGRES_DB=crm_staging
+   POSTGRES_USER=crm
    POSTGRES_PASSWORD=your_staging_password
    ```
 
@@ -48,7 +48,7 @@ db/ directory (for local development only):
 
 3. **Prisma commands** inside container use the environment variable:
    ```bash
-   docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+   docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
    ```
 
 ### Local Development (Non-Docker)
@@ -57,7 +57,7 @@ For local development, Prisma reads from `db/.env` files:
 
 ```bash
 # db/.env
-DATABASE_URL="postgresql://postgres:password@localhost:5432/loyacrm_dev"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/crm_dev"
 ```
 
 ```bash
@@ -82,10 +82,10 @@ pnpm run seed            # Uses DATABASE_URL from db/.env
 **Docker Deployment:**
 ```bash
 # Run migrations
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Run seed
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 **Local Development:**
@@ -112,7 +112,7 @@ pnpm run seed            # Fill with test data
 **Docker Deployment:**
 ```bash
 # Only migrations
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # ❌ DO NOT run seed in production!
 ```
@@ -129,27 +129,27 @@ docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 # 1. Build Docker images with correct platform
 docker buildx build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
-  -t loyacrm-frontend:latest \
+  -t crm-frontend:latest \
   -f docker/frontend/Dockerfile .
 
 docker buildx build --platform linux/amd64 \
-  -t loyacrm-backend:latest \
+  -t crm-backend:latest \
   -f docker/backend/Dockerfile .
 
 # 2. Export and transfer to server
-docker save loyacrm-frontend:latest | gzip > frontend.tar.gz
-docker save loyacrm-backend:latest | gzip > backend.tar.gz
+docker save crm-frontend:latest | gzip > frontend.tar.gz
+docker save crm-backend:latest | gzip > backend.tar.gz
 scp *.tar.gz root@SERVER_IP:/tmp/
 
 # 3. On server: load images and start
 ssh root@SERVER_IP
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker load < /tmp/frontend.tar.gz
 docker load < /tmp/backend.tar.gz
 docker compose up -d
 
 # 4. Run migrations (NO SEED!)
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 ```
 
 ### Staging Deployment
@@ -158,28 +158,28 @@ docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 # 1. Build staging images
 docker buildx build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
-  -t loyacrm-frontend:staging \
+  -t crm-frontend:staging \
   -f docker/frontend/Dockerfile .
 
 docker buildx build --platform linux/amd64 \
-  -t loyacrm-backend:staging \
+  -t crm-backend:staging \
   -f docker/backend/Dockerfile .
 
 # 2. Export and transfer
-docker save loyacrm-frontend:staging | gzip > frontend-staging.tar.gz
-docker save loyacrm-backend:staging | gzip > backend-staging.tar.gz
+docker save crm-frontend:staging | gzip > frontend-staging.tar.gz
+docker save crm-backend:staging | gzip > backend-staging.tar.gz
 scp *-staging.tar.gz root@SERVER_IP:/tmp/
 
 # 3. On server: load and start
 ssh root@SERVER_IP
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 docker load < /tmp/frontend-staging.tar.gz
 docker load < /tmp/backend-staging.tar.gz
 docker compose -f docker-compose.stage.yml --env-file .env.stage up -d
 
 # 4. Run migrations AND seed
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 ---
@@ -190,48 +190,48 @@ docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
 
 ```bash
 # Check DATABASE_URL in container
-docker exec loyacrm-backend env | grep DATABASE_URL
+docker exec crm-backend env | grep DATABASE_URL
 
 # Check .env file on host
-cat /var/www/loyacrm-production/.env | grep POSTGRES
+cat /var/www/crm-production/.env | grep POSTGRES
 
 # Apply migrations (NO SEED!)
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Check migration status
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate status'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate status'
 
 # View backend logs
-docker compose -f /var/www/loyacrm-production/docker-compose.yml logs -f backend
+docker compose -f /var/www/crm-production/docker-compose.yml logs -f backend
 
 # ❌ NEVER run in production:
-# docker exec loyacrm-backend sh -c 'cd /app/db && npm run seed'  # DON'T!
-# docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate reset'  # DON'T!
+# docker exec crm-backend sh -c 'cd /app/db && npm run seed'  # DON'T!
+# docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate reset'  # DON'T!
 ```
 
 ### Docker Staging Environment
 
 ```bash
 # Check DATABASE_URL in container
-docker exec loyacrm-staging-backend env | grep DATABASE_URL
+docker exec crm-staging-backend env | grep DATABASE_URL
 
 # Check .env.stage file on host
-cat /var/www/loyacrm-staging/.env.stage | grep POSTGRES
+cat /var/www/crm-staging/.env.stage | grep POSTGRES
 
 # Apply migrations
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Run seed (always for staging!)
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 
 # Reset database and reseed
-docker compose -f /var/www/loyacrm-staging/docker-compose.stage.yml stop backend postgres
-docker compose -f /var/www/loyacrm-staging/docker-compose.stage.yml rm -f postgres
-docker volume rm loyacrm_pg_data_staging
-docker compose -f /var/www/loyacrm-staging/docker-compose.stage.yml up -d
+docker compose -f /var/www/crm-staging/docker-compose.stage.yml stop backend postgres
+docker compose -f /var/www/crm-staging/docker-compose.stage.yml rm -f postgres
+docker volume rm crm_pg_data_staging
+docker compose -f /var/www/crm-staging/docker-compose.stage.yml up -d
 sleep 20
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 ### Local Development (Non-Docker)
@@ -267,30 +267,30 @@ pnpm run studio
 **Docker Production:**
 ```bash
 # Check DATABASE_URL in backend container
-docker exec loyacrm-backend env | grep DATABASE_URL
-# Should show: postgresql://loyacrm:password@postgres:5432/loyacrm
+docker exec crm-backend env | grep DATABASE_URL
+# Should show: postgresql://crm:password@postgres:5432/crm
 
 # Check environment variables on host
-cat /var/www/loyacrm-production/.env | grep POSTGRES_DB
-# Should show: POSTGRES_DB=loyacrm
+cat /var/www/crm-production/.env | grep POSTGRES_DB
+# Should show: POSTGRES_DB=crm
 ```
 
 **Docker Staging:**
 ```bash
 # Check DATABASE_URL in staging backend container
-docker exec loyacrm-staging-backend env | grep DATABASE_URL
-# Should show: postgresql://loyacrm:password@postgres:5432/loyacrm_staging
+docker exec crm-staging-backend env | grep DATABASE_URL
+# Should show: postgresql://crm:password@postgres:5432/crm_staging
 
 # Check environment variables on host
-cat /var/www/loyacrm-staging/.env.stage | grep POSTGRES_DB
-# Should show: POSTGRES_DB=loyacrm_staging
+cat /var/www/crm-staging/.env.stage | grep POSTGRES_DB
+# Should show: POSTGRES_DB=crm_staging
 ```
 
 **Local Development:**
 ```bash
 cd db
 cat .env | grep DATABASE_URL
-# Should show: postgresql://postgres:password@localhost:5432/loyacrm_dev
+# Should show: postgresql://postgres:password@localhost:5432/crm_dev
 ```
 
 ### Verify Seed Created Users
@@ -298,7 +298,7 @@ cat .env | grep DATABASE_URL
 **Docker Staging:**
 ```bash
 # Query users from staging database
-docker exec loyacrm-staging-postgres psql -U loyacrm -d loyacrm_staging \
+docker exec crm-staging-postgres psql -U crm -d crm_staging \
   -c "SELECT email, role FROM \"User\" LIMIT 5;"
 
 # Should show:
@@ -310,7 +310,7 @@ docker exec loyacrm-staging-postgres psql -U loyacrm -d loyacrm_staging \
 
 **Local Development:**
 ```bash
-psql -U postgres -d loyacrm_dev \
+psql -U postgres -d crm_dev \
   -c "SELECT email, role FROM \"User\" LIMIT 5;"
 ```
 

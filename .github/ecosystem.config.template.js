@@ -1,9 +1,9 @@
 module.exports = {
   apps: [
     {
-      name: "loyacrm-frontend",
+      name: "crm-frontend",
       script: "pnpm run start",
-      cwd: "/var/www/loyacrm/frontend",
+      cwd: "/var/www/crm/frontend",
       env_file: "./.env.production.local", // Load secrets from .env.production.local
       env: {
         NODE_ENV: "production",
@@ -13,14 +13,14 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: "1G",
-      error_file: "/var/log/pm2/loyacrm-frontend-error.log",
-      out_file: "/var/log/pm2/loyacrm-frontend-out.log",
-      log_file: "/var/log/pm2/loyacrm-frontend.log"
+      error_file: "/var/log/pm2/crm-frontend-error.log",
+      out_file: "/var/log/pm2/crm-frontend-out.log",
+      log_file: "/var/log/pm2/crm-frontend.log"
     },
     {
-      name: "loyacrm-backend",
+      name: "crm-backend",
       script: "pnpm run start:prod",
-      cwd: "/var/www/loyacrm/backend",
+      cwd: "/var/www/crm/backend",
       env_file: "./.env.production.local", // Load secrets from .env.production.local
       env: {
         NODE_ENV: "production",
@@ -30,9 +30,9 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: "1G",
-      error_file: "/var/log/pm2/loyacrm-backend-error.log",
-      out_file: "/var/log/pm2/loyacrm-backend-out.log",
-      log_file: "/var/log/pm2/loyacrm-backend.log"
+      error_file: "/var/log/pm2/crm-backend-error.log",
+      out_file: "/var/log/pm2/crm-backend-out.log",
+      log_file: "/var/log/pm2/crm-backend.log"
     }
   ]
 };

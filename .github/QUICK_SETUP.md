@@ -26,8 +26,8 @@ Settings → Environments → [выберите staging] → Add Secret
 
 | Secret Name | Example Value | How to Generate |
 |-------------|---------------|-----------------|
-| `POSTGRES_DB` | `loyacrm_staging` или `loyacrm` | Придумайте имя БД |
-| `POSTGRES_USER` | `loyacrm` | Придумайте username |
+| `POSTGRES_DB` | `crm_staging` или `crm` | Придумайте имя БД |
+| `POSTGRES_USER` | `crm` | Придумайте username |
 | `POSTGRES_PASSWORD` | `x7K9mP2qR...` | `openssl rand -base64 32` |
 | `JWT_SECRET` | `L8nQ5tV9w...` | `openssl rand -base64 64` |
 

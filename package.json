@@ -2,7 +2,7 @@
   "name": "loya-crm-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "LoyaCRM - CRM system for managing leads, deals, and customer relationships",
+  "description": "crm - CRM system for managing leads, deals, and customer relationships",
   "scripts": {
     "test:ci": "pnpm -r --workspace-concurrency=1 run test",
     "test": "pnpm -r run test",

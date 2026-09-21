@@ -52,8 +52,8 @@ docker compose version
 
 #### 1. Repository klonen
 ```bash
-git clone <your-repository-url> loyacrm
-cd loyacrm
+git clone <your-repository-url> crm
+cd crm
 ```
 
 #### 2. Entwicklungsumgebung einrichten
@@ -138,20 +138,20 @@ docker compose logs -f [service-name]
 docker ps -a
 
 # Container-Logs prüfen
-docker logs loyacrm-backend-dev
-docker logs loyacrm-frontend-dev
+docker logs crm-backend-dev
+docker logs crm-frontend-dev
 
 # Ressourcennutzung prüfen
 docker stats
 
 # Container inspizieren
-docker inspect loyacrm-postgres-dev
+docker inspect crm-postgres-dev
 ```
 
 #### Datenbank-Operationen
 ```bash
 # PostgreSQL in Entwicklung zugreifen
-docker compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
+docker compose -f docker-compose.dev.yml exec postgres psql -U crm -d crm
 
 # Datenbank-Migrationen ausführen
 docker compose -f docker-compose.dev.yml exec backend sh -c "cd backend && pnpm prisma migrate deploy"
@@ -208,10 +208,10 @@ docker compose up -d
 #### Datenbank sichern (Entwicklung)
 ```bash
 # Backup erstellen
-docker compose -f docker-compose.dev.yml exec postgres pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
+docker compose -f docker-compose.dev.yml exec postgres pg_dump -U crm crm > backup_$(date +%Y%m%d).sql
 
 # Backup wiederherstellen
-docker compose -f docker-compose.dev.yml exec -T postgres psql -U loyacrm loyacrm < backup_20241201.sql
+docker compose -f docker-compose.dev.yml exec -T postgres psql -U crm crm < backup_20241201.sql
 ```
 
 ### 🔒 Sicherheitsüberlegungen
@@ -317,9 +317,9 @@ sudo -u postgres psql
 
 In der PostgreSQL-Konsole ausführen:
 ```sql
-CREATE USER loyacrm WITH PASSWORD 'your_strong_password';
-CREATE DATABASE loyacrm OWNER loyacrm;
-GRANT ALL PRIVILEGES ON DATABASE loyacrm TO loyacrm;
+CREATE USER crm WITH PASSWORD 'your_strong_password';
+CREATE DATABASE crm OWNER crm;
+GRANT ALL PRIVILEGES ON DATABASE crm TO crm;
 \q
 ```
 
@@ -337,7 +337,7 @@ sudo nano /etc/postgresql/*/main/pg_hba.conf
 ```
 Zeile hinzufügen:
 ```
-local   loyacrm         loyacrm                                 md5
+local   crm         crm                                 md5
 ```
 
 ```bash
@@ -386,9 +386,9 @@ sudo systemctl enable nginx
 ### 1. Repository klonen
 ```bash
 cd /var/www/
-sudo git clone <your-repository-url> loyacrm
-sudo chown -R $USER:$USER /var/www/loyacrm
-cd loyacrm
+sudo git clone <your-repository-url> crm
+sudo chown -R $USER:$USER /var/www/crm
+cd crm
 ```
 
 ### 2. Umgebungsvariablen konfigurieren
@@ -400,7 +400,7 @@ nano .env
 ```
 Inhalt der `.env`:
 ```env
-DATABASE_URL="postgresql://loyacrm:your_strong_password@localhost:5432/loyacrm"
+DATABASE_URL="postgresql://crm:your_strong_password@localhost:5432/crm"
 ```
 
 #### Backend:
@@ -410,7 +410,7 @@ nano .env
 ```
 Inhalt der `.env`:
 ```env
-DATABASE_URL="postgresql://loyacrm:your_strong_password@localhost:5432/loyacrm"
+DATABASE_URL="postgresql://crm:your_strong_password@localhost:5432/crm"
 JWT_SECRET="your_super_secret_jwt_key_here"
 PORT=4000
 NODE_ENV=production
@@ -430,7 +430,7 @@ NEXT_PUBLIC_API_URL=http://your-server-ip:4000
 
 #### Datenbank:
 ```bash
-cd /var/www/loyacrm/db
+cd /var/www/crm/db
 pnpm install
 pnpm exec prisma migrate deploy
 pnpm exec prisma generate
@@ -455,7 +455,7 @@ pnpm run build
 
 ### 1. PM2-Konfiguration erstellen
 ```bash
-cd /var/www/loyacrm
+cd /var/www/crm
 nano ecosystem.config.js
 ```
 
@@ -464,7 +464,7 @@ Inhalt der `ecosystem.config.js`:
 module.exports = {
   apps: [
     {
-      name: 'loyacrm-backend',
+      name: 'crm-backend',
       cwd: './backend',
       script: 'dist/server.js',
       env: {
@@ -477,7 +477,7 @@ module.exports = {
       max_memory_restart: '1G'
     },
     {
-      name: 'loyacrm-frontend',
+      name: 'crm-frontend',
       cwd: './frontend',
       script: 'node_modules/next/dist/bin/next',
       args: 'start',
@@ -506,7 +506,7 @@ pm2 startup
 
 ### 1. Site-Konfiguration erstellen
 ```bash
-sudo nano /etc/nginx/sites-available/loyacrm
+sudo nano /etc/nginx/sites-available/crm
 ```
 
 Konfigurationsinhalt:
@@ -551,7 +551,7 @@ server {
 
 ### 2. Site aktivieren
 ```bash
-sudo ln -s /etc/nginx/sites-available/loyacrm /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/crm /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -580,13 +580,13 @@ sudo ufw enable
 
 ### 1. Anwendungs-Update-Skript
 ```bash
-sudo nano /usr/local/bin/loyacrm-update.sh
+sudo nano /usr/local/bin/crm-update.sh
 ```
 
 Inhalt:
 ```bash
 #!/bin/bash
-cd /var/www/loyacrm
+cd /var/www/crm
 
 echo "Repository wird aktualisiert..."
 git pull origin main
@@ -612,12 +612,12 @@ echo "Update abgeschlossen!"
 ```
 
 ```bash
-sudo chmod +x /usr/local/bin/loyacrm-update.sh
+sudo chmod +x /usr/local/bin/crm-update.sh
 ```
 
 ### 2. Überwachungsskript
 ```bash
-sudo nano /usr/local/bin/loyacrm-status.sh
+sudo nano /usr/local/bin/crm-status.sh
 ```
 
 Inhalt:
@@ -633,11 +633,11 @@ echo "=== PostgreSQL Status ==="
 sudo systemctl status postgresql --no-pager
 
 echo "=== Festplattennutzung ==="
-df -h /var/www/loyacrm
+df -h /var/www/crm
 ```
 
 ```bash
-sudo chmod +x /usr/local/bin/loyacrm-status.sh
+sudo chmod +x /usr/local/bin/crm-status.sh
 ```
 
 ## 📊 Deployment-Überprüfung
@@ -680,22 +680,22 @@ curl http://localhost:3000
 
 ### 1. Backup-Skript erstellen
 ```bash
-sudo nano /usr/local/bin/loyacrm-backup.sh
+sudo nano /usr/local/bin/crm-backup.sh
 ```
 
 Inhalt:
 ```bash
 #!/bin/bash
-BACKUP_DIR="/var/backups/loyacrm"
+BACKUP_DIR="/var/backups/crm"
 DATE=$(date +"%Y%m%d_%H%M%S")
 
 mkdir -p $BACKUP_DIR
 
 # Datenbank-Backup
-pg_dump -h localhost -U loyacrm loyacrm > "$BACKUP_DIR/db_backup_$DATE.sql"
+pg_dump -h localhost -U crm crm > "$BACKUP_DIR/db_backup_$DATE.sql"
 
 # Code-Backup (ohne node_modules)
-tar --exclude='node_modules' --exclude='.git' -czf "$BACKUP_DIR/code_backup_$DATE.tar.gz" /var/www/loyacrm
+tar --exclude='node_modules' --exclude='.git' -czf "$BACKUP_DIR/code_backup_$DATE.tar.gz" /var/www/crm
 
 # Alte Backups entfernen (älter als 7 Tage)
 find $BACKUP_DIR -name "*.sql" -mtime +7 -delete
@@ -705,7 +705,7 @@ echo "Backup abgeschlossen: $DATE"
 ```
 
 ```bash
-sudo chmod +x /usr/local/bin/loyacrm-backup.sh
+sudo chmod +x /usr/local/bin/crm-backup.sh
 ```
 
 ### 2. Automatisches Backup einrichten
@@ -716,14 +716,14 @@ sudo crontab -e
 
 Zeile hinzufügen:
 ```
-0 2 * * * /usr/local/bin/loyacrm-backup.sh
+0 2 * * * /usr/local/bin/crm-backup.sh
 ```
 
 ## 📝 Abschließende Überprüfungsbefehle
 
 ```bash
 # Alle Services überprüfen
-loyacrm-status.sh
+crm-status.sh
 
 # Verfügbarkeit überprüfen
 echo "Im Browser öffnen: http://your-server-ip"
@@ -744,8 +744,8 @@ pm2 stop all
 pm2 start all
 
 # Logs anzeigen
-pm2 logs loyacrm-backend
-pm2 logs loyacrm-frontend
+pm2 logs crm-backend
+pm2 logs crm-frontend
 
 # Echtzeit-Überwachung
 pm2 monit
@@ -754,13 +754,13 @@ pm2 monit
 ### System-Verwaltung
 ```bash
 # Anwendung aktualisieren
-loyacrm-update.sh
+crm-update.sh
 
 # Status überprüfen
-loyacrm-status.sh
+crm-status.sh
 
 # Backup
-loyacrm-backup.sh
+crm-backup.sh
 
 # Nginx neu starten
 sudo systemctl restart nginx
@@ -805,8 +805,8 @@ sudo systemctl restart postgresql
 pm2 logs --lines 50
 
 # Spezifische Anwendung neu starten
-pm2 restart loyacrm-backend
-pm2 restart loyacrm-frontend
+pm2 restart crm-backend
+pm2 restart crm-frontend
 
 # Vollständigen PM2-Neustart
 pm2 kill
@@ -853,7 +853,7 @@ sudo tail -f /var/log/nginx/error.log
 
 Bei Problemen:
 1. Logs überprüfen: `pm2 logs`
-2. Service-Status überprüfen: `loyacrm-status.sh`
+2. Service-Status überprüfen: `crm-status.sh`
 3. Nginx-Konfiguration überprüfen: `sudo nginx -t`
 4. Entwickler kontaktieren: sergeydaub@gmail.com
 
@@ -911,9 +911,9 @@ sudo apt install postgresql postgresql-contrib -y
 
 # Datenbank und Benutzer erstellen
 sudo -u postgres psql
-CREATE DATABASE loyacrm;
-CREATE USER loyacrm_user WITH PASSWORD 'your_secure_password';
-GRANT ALL PRIVILEGES ON DATABASE loyacrm TO loyacrm_user;
+CREATE DATABASE crm;
+CREATE USER crm_user WITH PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE crm TO crm_user;
 \q
 ```
 
@@ -921,23 +921,23 @@ GRANT ALL PRIVILEGES ON DATABASE loyacrm TO loyacrm_user;
 ```bash
 sudo mkdir -p /var/www
 cd /var/www
-git clone https://github.com/your-username/LoyaCareCRM.git loyacrm
-cd loyacrm
+git clone https://github.com/your-username/LoyaCareCRM.git crm
+cd crm
 ```
 
 #### 4. Umgebungsvariablen konfigurieren
 Erstellen Sie `.env`-Dateien auf dem Server:
 
-**`/var/www/loyacrm/backend/.env`:**
+**`/var/www/crm/backend/.env`:**
 ```bash
 NODE_ENV=production
 PORT=4000
-DATABASE_URL="postgresql://loyacrm_user:your_secure_password@localhost:5432/loyacrm"
+DATABASE_URL="postgresql://crm_user:your_secure_password@localhost:5432/crm"
 JWT_SECRET="your_jwt_secret_here"
 USE_MOCK=false
 ```
 
-**`/var/www/loyacrm/frontend/.env.local`:**
+**`/var/www/crm/frontend/.env.local`:**
 ```bash
 NODE_ENV=production
 NEXT_PUBLIC_BACKEND_API_URL="https://your-domain.com/api"
@@ -960,7 +960,7 @@ Die Workflow-Datei `.github/workflows/deploy-production.yml` ist bereits konfigu
 
 #### Dateistruktur nach der Bereitstellung:
 ```
-/var/www/loyacrm/
+/var/www/crm/
 ├── frontend/          # Gebautes Next.js-Anwendung
 ├── backend/           # Gebautes Node.js-Anwendung
 ├── db/               # Prisma-Client und Migrationen
@@ -982,15 +982,15 @@ Sie können die Bereitstellung manuell auslösen:
 #### Bereitstellungsstatus prüfen:
 ```bash
 # Auf dem Server
-cd /var/www/loyacrm
+cd /var/www/crm
 pm2 status
 pm2 logs
 ```
 
 #### Anwendungs-Logs anzeigen:
 ```bash
-pm2 logs loyacrm-frontend
-pm2 logs loyacrm-backend
+pm2 logs crm-frontend
+pm2 logs crm-backend
 ```
 
 ### Fehlerbehebung
@@ -1033,7 +1033,7 @@ df -h
 free -h
 
 # Datenbank sichern
-pg_dump loyacrm > backup_$(date +%Y%m%d).sql
+pg_dump crm > backup_$(date +%Y%m%d).sql
 ```
 
 Diese Einrichtung bietet eine vollständige CI/CD-Pipeline für die automatisierte Bereitstellung Ihrer LoyaCareCRM-Anwendung! 🎉

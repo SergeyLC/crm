@@ -173,7 +173,7 @@ npm config set fetch-retry-maxtimeout 120000 --global
 #### 3. Warm up the cache (first deployment)
 
 ```bash
-cd /var/www/loyacrm
+cd /var/www/crm
 
 # First install will be slow (10+ min for db)
 # But it will populate the cache

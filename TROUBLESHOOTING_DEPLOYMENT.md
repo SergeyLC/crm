@@ -58,8 +58,8 @@ GitHub Actions требует, чтобы окружения были созда
 **Settings → Environments → [staging/production] → Add Secret**
 
 Обязательные секреты для каждого окружения:
-- `POSTGRES_DB` - имя базы данных (например: `loyacrm_staging` или `loyacrm`)
-- `POSTGRES_USER` - пользователь БД (например: `loyacrm`)
+- `POSTGRES_DB` - имя базы данных (например: `crm_staging` или `crm`)
+- `POSTGRES_USER` - пользователь БД (например: `crm`)
 - `POSTGRES_PASSWORD` - пароль БД (сгенерируйте: `openssl rand -base64 32`)
 - `JWT_SECRET` - JWT секрет (сгенерируйте: `openssl rand -base64 64`)
 

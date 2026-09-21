@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-Common issues and solutions for LoyaCRM deployment.
+Common issues and solutions for crm deployment.
 
 ## Quick Diagnosis
 
@@ -77,10 +77,10 @@ docker inspect CONTAINER_NAME | grep -A 5 State
 4. **Database Connection Failed**
    ```bash
    # Check DATABASE_URL
-   docker exec loyacrm-backend env | grep DATABASE_URL
+   docker exec crm-backend env | grep DATABASE_URL
    
    # Test connection
-   docker exec loyacrm-backend sh -c \
+   docker exec crm-backend sh -c \
      'psql $DATABASE_URL -c "SELECT 1;"'
    ```
 
@@ -150,7 +150,7 @@ docker ps
 
 ```bash
 # Check health check details
-docker inspect loyacrm-backend | grep -A 20 Health
+docker inspect crm-backend | grep -A 20 Health
 
 # Check logs
 docker compose logs backend
@@ -174,7 +174,7 @@ docker compose logs backend
 2. **Health Check Endpoint Failing**
    ```bash
    # Test health endpoint manually
-   docker exec loyacrm-backend curl -f http://localhost:5000/api/health
+   docker exec crm-backend curl -f http://localhost:5000/api/health
    
    # If fails, check application logs
    docker compose logs backend
@@ -273,7 +273,7 @@ docker compose logs backend
 1. **Wrong API URL in Frontend**
    ```bash
    # Check frontend environment
-   docker exec loyacrm-frontend cat /app/.env.local
+   docker exec crm-frontend cat /app/.env.local
    
    # Should show correct API URL
    # NEXT_PUBLIC_BACKEND_API_URL=http://SERVER_IP/api
@@ -281,17 +281,17 @@ docker compose logs backend
    # If wrong, rebuild frontend with correct build arg
    docker buildx build --platform linux/amd64 \
      --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://SERVER_IP/api \
-     -t loyacrm-frontend:latest \
+     -t crm-frontend:latest \
      -f docker/frontend/Dockerfile .
    ```
 
 2. **Backend Not Accessible from Frontend Container**
    ```bash
    # Test from frontend container
-   docker exec loyacrm-frontend curl http://backend:5000/api/health
+   docker exec crm-frontend curl http://backend:5000/api/health
    
    # If fails, check network
-   docker network inspect loyacrm-network
+   docker network inspect crm-network
    
    # Ensure both containers on same network
    ```
@@ -299,10 +299,10 @@ docker compose logs backend
 3. **Nginx Misconfigured**
    ```bash
    # Check nginx config
-   docker exec loyacrm-nginx cat /etc/nginx/nginx.conf
+   docker exec crm-nginx cat /etc/nginx/nginx.conf
    
    # Test nginx config
-   docker exec loyacrm-nginx nginx -t
+   docker exec crm-nginx nginx -t
    
    # If errors, fix nginx.conf and restart
    docker compose restart nginx
@@ -316,10 +316,10 @@ docker compose logs backend
 
 ```bash
 # Test from container
-docker exec loyacrm-backend curl -I https://google.com
+docker exec crm-backend curl -I https://google.com
 
 # Check DNS
-docker exec loyacrm-backend nslookup google.com
+docker exec crm-backend nslookup google.com
 ```
 
 **Solutions:**
@@ -363,7 +363,7 @@ docker ps | grep postgres
 docker compose logs postgres
 
 # Test connection
-docker exec loyacrm-backend sh -c \
+docker exec crm-backend sh -c \
   'psql $DATABASE_URL -c "SELECT 1;"'
 ```
 
@@ -376,7 +376,7 @@ docker exec loyacrm-backend sh -c \
    # postgres should show (healthy)
    
    # Check healthcheck
-   docker inspect loyacrm-postgres | grep -A 10 Health
+   docker inspect crm-postgres | grep -A 10 Health
    
    # Increase startup time in depends_on
    services:
@@ -389,7 +389,7 @@ docker exec loyacrm-backend sh -c \
 2. **Wrong DATABASE_URL**
    ```bash
    # Check DATABASE_URL in backend
-   docker exec loyacrm-backend env | grep DATABASE_URL
+   docker exec crm-backend env | grep DATABASE_URL
    
    # Should be: postgresql://user:password@postgres:5432/dbname?schema=public
    
@@ -410,7 +410,7 @@ docker exec loyacrm-backend sh -c \
    
    # If changed, need to recreate postgres container
    docker compose down
-   docker volume rm loyacrm_pg_data  # WARNING: DELETES DATA!
+   docker volume rm crm_pg_data  # WARNING: DELETES DATA!
    docker compose up -d
    ```
 
@@ -433,7 +433,7 @@ docker exec loyacrm-backend sh -c \
 
 ```bash
 # Check migration status
-docker exec loyacrm-backend sh -c \
+docker exec crm-backend sh -c \
   'cd /app/db && npx prisma migrate status'
 
 # Check postgres logs
@@ -445,29 +445,29 @@ docker compose logs postgres
 1. **Database Out of Sync**
    ```bash
    # Mark migrations as applied (if already applied manually)
-   docker exec loyacrm-backend sh -c \
+   docker exec crm-backend sh -c \
      'cd /app/db && npx prisma migrate resolve --applied MIGRATION_NAME'
    
    # Or reset and reapply all migrations (WARNING: DELETES DATA!)
-   docker exec loyacrm-backend sh -c \
+   docker exec crm-backend sh -c \
      'cd /app/db && npx prisma migrate reset'
    ```
 
 2. **Schema Conflict**
    ```bash
    # Generate Prisma client
-   docker exec loyacrm-backend sh -c \
+   docker exec crm-backend sh -c \
      'cd /app/db && npx prisma generate'
    
    # Apply migrations
-   docker exec loyacrm-backend sh -c \
+   docker exec crm-backend sh -c \
      'cd /app/db && npx prisma migrate deploy'
    ```
 
 3. **Migration File Missing**
    ```bash
    # Ensure migrations directory exists in image
-   docker exec loyacrm-backend ls -la /app/db/prisma/migrations
+   docker exec crm-backend ls -la /app/db/prisma/migrations
    
    # If missing, rebuild backend image with migrations
    ```
@@ -486,8 +486,8 @@ df -h
 docker system df -v
 
 # Check database size
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c \
-  "SELECT pg_size_pretty(pg_database_size('loyacrm'));"
+docker exec crm-postgres psql -U crm -d crm -c \
+  "SELECT pg_size_pretty(pg_database_size('crm'));"
 ```
 
 **Solutions:**
@@ -504,10 +504,10 @@ docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c \
 2. **Clean Database**
    ```bash
    # Vacuum database
-   docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "VACUUM FULL;"
+   docker exec crm-postgres psql -U crm -d crm -c "VACUUM FULL;"
    
    # Analyze database
-   docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "ANALYZE;"
+   docker exec crm-postgres psql -U crm -d crm -c "ANALYZE;"
    ```
 
 3. **Expand Disk**
@@ -528,7 +528,7 @@ docker stats
 docker stats --format "table {{.Name}}\t{{.CPUPerc}}"
 
 # Check processes inside container
-docker exec loyacrm-backend top -b -n 1
+docker exec crm-backend top -b -n 1
 ```
 
 **Solutions:**
@@ -598,7 +598,7 @@ free -h
 3. **Optimize Database**
    ```bash
    # Vacuum database
-   docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "VACUUM FULL;"
+   docker exec crm-postgres psql -U crm -d crm -c "VACUUM FULL;"
    
    # Adjust PostgreSQL memory settings
    # Edit postgresql.conf if needed
@@ -624,7 +624,7 @@ docker compose logs nginx | grep "upstream_response_time"
 1. **Add Database Indexes**
    ```sql
    -- Connect to database
-   docker exec -it loyacrm-postgres psql -U loyacrm -d loyacrm
+   docker exec -it crm-postgres psql -U crm -d crm
    
    -- Add indexes for slow queries
    CREATE INDEX idx_users_email ON users(email);
@@ -638,7 +638,7 @@ docker compose logs nginx | grep "upstream_response_time"
      redis:
        image: redis:alpine
        networks:
-         - loyacrm-network
+         - crm-network
    ```
 
 3. **Optimize Nginx**
@@ -681,11 +681,11 @@ uname -m
 
 # Rebuild image for correct platform
 docker buildx build --platform linux/amd64 \
-  -t loyacrm-backend:latest \
+  -t crm-backend:latest \
   -f docker/backend/Dockerfile .
 
 # Export, transfer, load
-docker save loyacrm-backend:latest | gzip > backend.tar.gz
+docker save crm-backend:latest | gzip > backend.tar.gz
 scp backend.tar.gz root@SERVER_IP:/tmp/
 ssh root@SERVER_IP 'docker load < /tmp/backend.tar.gz'
 ```
@@ -694,14 +694,14 @@ ssh root@SERVER_IP 'docker load < /tmp/backend.tar.gz'
 
 **Symptom:**
 ```
-Error: image not found: loyacrm-backend:latest
+Error: image not found: crm-backend:latest
 ```
 
 **Solutions:**
 
 ```bash
 # Check available images
-docker images | grep loyacrm
+docker images | grep crm
 
 # Pull from registry (if using)
 docker compose pull
@@ -783,17 +783,17 @@ ssh -L 8080:localhost:8080 root@SERVER_IP
 
 ```bash
 # Check database name
-docker exec loyacrm-staging-postgres psql -U loyacrm -l
+docker exec crm-staging-postgres psql -U crm -l
 
-# Should show: loyacrm_staging (not loyacrm)
+# Should show: crm_staging (not crm)
 
 # If wrong, check .env.stage
-cat /var/www/loyacrm-staging/.env.stage | grep POSTGRES_DB
+cat /var/www/crm-staging/.env.stage | grep POSTGRES_DB
 
-# Should be: POSTGRES_DB=loyacrm_staging
+# Should be: POSTGRES_DB=crm_staging
 
 # If wrong, fix and recreate
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 docker compose -f docker-compose.stage.yml down -v
 nano .env.stage  # Fix POSTGRES_DB
 docker compose -f docker-compose.stage.yml up -d
@@ -807,7 +807,7 @@ docker compose -f docker-compose.stage.yml up -d
 
 ```bash
 # Check frontend environment
-docker exec loyacrm-staging-frontend cat /app/.env.local
+docker exec crm-staging-frontend cat /app/.env.local
 
 # Should show: NEXT_PUBLIC_BACKEND_API_URL=http://SERVER_IP:8080/api
 # Note the :8080 port!
@@ -815,7 +815,7 @@ docker exec loyacrm-staging-frontend cat /app/.env.local
 # If wrong, rebuild frontend
 docker buildx build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://SERVER_IP:8080/api \
-  -t loyacrm-frontend:staging \
+  -t crm-frontend:staging \
   -f docker/frontend/Dockerfile .
 
 # Export, transfer, load, restart (see manual build guide)
@@ -837,15 +837,15 @@ docker ps | grep postgres
 df -h /var/backups
 
 # Ensure backup directory exists
-mkdir -p /var/backups/loyacrm
+mkdir -p /var/backups/crm
 
 # Check permissions
-ls -ld /var/backups/loyacrm
+ls -ld /var/backups/crm
 # Should be writable
 
 # Try backup again
-docker exec loyacrm-postgres pg_dump -U loyacrm -d loyacrm > \
-  /var/backups/loyacrm/backup-$(date +%Y%m%d).sql
+docker exec crm-postgres pg_dump -U crm -d crm > \
+  /var/backups/crm/backup-$(date +%Y%m%d).sql
 ```
 
 ### Restore Fails
@@ -859,14 +859,14 @@ docker exec loyacrm-postgres pg_dump -U loyacrm -d loyacrm > \
 docker compose stop backend
 
 # Drop and recreate database
-docker exec loyacrm-postgres psql -U loyacrm -c "DROP DATABASE IF EXISTS loyacrm;"
-docker exec loyacrm-postgres psql -U loyacrm -c "CREATE DATABASE loyacrm;"
+docker exec crm-postgres psql -U crm -c "DROP DATABASE IF EXISTS crm;"
+docker exec crm-postgres psql -U crm -c "CREATE DATABASE crm;"
 
 # Restore
-docker exec -i loyacrm-postgres psql -U loyacrm -d loyacrm < backup.sql
+docker exec -i crm-postgres psql -U crm -d crm < backup.sql
 
 # Or use --clean option
-docker exec -i loyacrm-postgres pg_restore -U loyacrm -d loyacrm -c backup.dump
+docker exec -i crm-postgres pg_restore -U crm -d crm -c backup.dump
 
 # Restart backend
 docker compose start backend
@@ -880,11 +880,11 @@ If everything fails:
 
 ```bash
 # 1. Stop all services
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose down
 
 # 2. Backup data (if possible)
-docker cp loyacrm-postgres:/var/lib/postgresql/data /var/backups/pg_data_emergency
+docker cp crm-postgres:/var/lib/postgresql/data /var/backups/pg_data_emergency
 
 # 3. Remove all containers and volumes
 docker compose down -v
@@ -919,14 +919,14 @@ docker compose up -d postgres
 sleep 10
 
 # 3. Restore from backup
-docker exec -i loyacrm-postgres psql -U loyacrm -d loyacrm < \
-  /var/backups/loyacrm/latest-backup.sql
+docker exec -i crm-postgres psql -U crm -d crm < \
+  /var/backups/crm/latest-backup.sql
 
 # 4. Start other services
 docker compose up -d
 
 # 5. Verify data
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "SELECT COUNT(*) FROM users;"
+docker exec crm-postgres psql -U crm -d crm -c "SELECT COUNT(*) FROM users;"
 ```
 
 ## Getting Help
@@ -935,7 +935,7 @@ docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "SELECT COUNT(*) FROM
 
 ```bash
 # Create diagnostic report
-cat > /tmp/loyacrm-diagnostics.txt << EOF
+cat > /tmp/crm-diagnostics.txt << EOF
 === System Info ===
 $(uname -a)
 $(docker --version)
@@ -959,7 +959,7 @@ $(docker events --since 1h --until 1s)
 EOF
 
 # View report
-cat /tmp/loyacrm-diagnostics.txt
+cat /tmp/crm-diagnostics.txt
 ```
 
 ## GitHub Actions / CI/CD Issues

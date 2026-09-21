@@ -12,10 +12,10 @@ pm2 status
 echo ""
 echo "📝 Application Logs:"
 echo "Frontend logs:"
-pm2 logs loyacrm-frontend --lines 10 --nostream
+pm2 logs crm-frontend --lines 10 --nostream
 echo ""
 echo "Backend logs:"
-pm2 logs loyacrm-backend --lines 10 --nostream
+pm2 logs crm-backend --lines 10 --nostream
 
 echo ""
 echo "🌐 Checking service availability:"

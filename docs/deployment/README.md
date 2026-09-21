@@ -54,11 +54,11 @@ Complete guide for deploying LoyaCareCRM on Ubuntu server using Docker.
 | Parameter | Production | Staging |
 |-----------|-----------|---------|
 | HTTP Port | 80 | 8080 |
-| Database | `loyacrm` | `loyacrm_staging` |
-| Volume | `loyacrm_pg_data` | `loyacrm_pg_data_staging` |
-| Containers | `loyacrm-*` | `loyacrm-staging-*` |
+| Database | `crm` | `crm_staging` |
+| Volume | `crm_pg_data` | `crm_pg_data_staging` |
+| Containers | `crm-*` | `crm-staging-*` |
 | Images | `:latest` | `:staging` |
-| Directory | `/var/www/loyacrm-production` | `/var/www/loyacrm-staging` |
+| Directory | `/var/www/crm-production` | `/var/www/crm-staging` |
 
 ## 📦 What's Included
 

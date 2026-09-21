@@ -11,21 +11,21 @@ Production:
   - Frontend: localhost:3000
   - Backend: localhost:4000
   - Database: loya_care_crm_prod
-  - Directory: /var/www/loyacrm
+  - Directory: /var/www/crm
 
 Staging:
   - Frontend: localhost:3001
   - Backend: localhost:4001
   - Database: loya_care_crm_staging
-  - Directory: /var/www/loyacrm-staging
+  - Directory: /var/www/crm-staging
 ```
 
 ## Step 1: Create staging directory
 
 ```bash
-sudo mkdir -p /var/www/loyacrm-staging
-sudo chown $USER:$USER /var/www/loyacrm-staging
-cd /var/www/loyacrm-staging
+sudo mkdir -p /var/www/crm-staging
+sudo chown $USER:$USER /var/www/crm-staging
+cd /var/www/crm-staging
 ```
 
 ## Step 2: Clone repository
@@ -66,7 +66,7 @@ psql "postgresql://loyacare_staging:staging_password@localhost:5432/loya_care_cr
 ### Backend staging environment
 
 ```bash
-cd /var/www/loyacrm-staging/backend
+cd /var/www/crm-staging/backend
 nano .env.production.local
 ```
 
@@ -89,7 +89,7 @@ chmod 600 .env.production.local
 ### Frontend staging environment
 
 ```bash
-cd /var/www/loyacrm-staging/frontend
+cd /var/www/crm-staging/frontend
 nano .env.production.local
 ```
 
@@ -110,7 +110,7 @@ chmod 600 .env.production.local
 ### Database staging environment
 
 ```bash
-cd /var/www/loyacrm-staging/db
+cd /var/www/crm-staging/db
 nano .env.production.local
 ```
 
@@ -146,7 +146,7 @@ pnpm config set enable-pre-post-scripts true
 ### Build project
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 
 # 1. Install dependencies and generate Prisma client
 cd db
@@ -199,7 +199,7 @@ cd ..
 ## Step 6: Create PM2 configuration for staging
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 nano ecosystem.staging.config.js
 ```
 
@@ -208,9 +208,9 @@ Content:
 module.exports = {
   apps: [
     {
-      name: 'loyacrm-staging-backend',
+      name: 'crm-staging-backend',
       script: './dist/server.js',
-      cwd: '/var/www/loyacrm-staging/backend',
+      cwd: '/var/www/crm-staging/backend',
       instances: 1,
       exec_mode: 'cluster',
       env: {
@@ -218,8 +218,8 @@ module.exports = {
         PORT: 4001
       },
       env_file: './.env.production.local',
-      error_file: '/var/log/pm2/loyacrm-staging-backend-error.log',
-      out_file: '/var/log/pm2/loyacrm-staging-backend-out.log',
+      error_file: '/var/log/pm2/crm-staging-backend-error.log',
+      out_file: '/var/log/pm2/crm-staging-backend-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
       max_memory_restart: '500M',
@@ -229,10 +229,10 @@ module.exports = {
       min_uptime: '10s'
     },
     {
-      name: 'loyacrm-staging-frontend',
+      name: 'crm-staging-frontend',
       script: 'node_modules/next/dist/bin/next',
       args: 'start -p 3001',
-      cwd: '/var/www/loyacrm-staging/frontend',
+      cwd: '/var/www/crm-staging/frontend',
       instances: 1,
       exec_mode: 'cluster',
       env: {
@@ -240,8 +240,8 @@ module.exports = {
         PORT: 3001
       },
       env_file: './.env.production.local',
-      error_file: '/var/log/pm2/loyacrm-staging-frontend-error.log',
-      out_file: '/var/log/pm2/loyacrm-staging-frontend-out.log',
+      error_file: '/var/log/pm2/crm-staging-frontend-error.log',
+      out_file: '/var/log/pm2/crm-staging-frontend-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
       max_memory_restart: '1G',
@@ -257,7 +257,7 @@ module.exports = {
 ## Step 7: Start staging services
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 pm2 start ecosystem.staging.config.js
 pm2 save
 ```
@@ -268,10 +268,10 @@ pm2 status
 ```
 
 You should see 4 processes:
-- `loyacrm-backend` (production)
-- `loyacrm-frontend` (production)
-- `loyacrm-staging-backend` (staging)
-- `loyacrm-staging-frontend` (staging)
+- `crm-backend` (production)
+- `crm-frontend` (production)
+- `crm-staging-backend` (staging)
+- `crm-staging-frontend` (staging)
 
 ## Step 8: Configure Nginx for staging
 
@@ -280,7 +280,7 @@ You should see 4 processes:
 Create configuration for staging subdomain:
 
 ```bash
-sudo nano /etc/nginx/sites-available/loyacrm-staging
+sudo nano /etc/nginx/sites-available/crm-staging
 ```
 
 Content:
@@ -327,7 +327,7 @@ server {
 Use ports to access staging:
 
 ```bash
-sudo nano /etc/nginx/sites-available/loyacrm-staging
+sudo nano /etc/nginx/sites-available/crm-staging
 ```
 
 Content:
@@ -380,7 +380,7 @@ server {
 
 Activate configuration:
 ```bash
-sudo ln -s /etc/nginx/sites-available/loyacrm-staging /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/crm-staging /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -437,7 +437,7 @@ After configuring Nginx, update URLs according to your configuration:
 ### If using domain name and SSL:
 
 ```bash
-cd /var/www/loyacrm-staging/frontend
+cd /var/www/crm-staging/frontend
 nano .env.production.local
 ```
 
@@ -451,7 +451,7 @@ PORT=3001
 ```
 
 ```bash
-cd /var/www/loyacrm-staging/backend
+cd /var/www/crm-staging/backend
 nano .env.production.local
 ```
 
@@ -463,7 +463,7 @@ CORS_ORIGIN="https://staging.your-domain.com"
 ### If using IP only (161.97.67.253) with ports:
 
 ```bash
-cd /var/www/loyacrm-staging/frontend
+cd /var/www/crm-staging/frontend
 nano .env.production.local
 ```
 
@@ -477,7 +477,7 @@ PORT=3001
 ```
 
 ```bash
-cd /var/www/loyacrm-staging/backend
+cd /var/www/crm-staging/backend
 nano .env.production.local
 ```
 
@@ -494,8 +494,8 @@ NODE_ENV=staging
 
 Restart services:
 ```bash
-pm2 restart loyacrm-staging-backend
-pm2 restart loyacrm-staging-frontend
+pm2 restart crm-staging-backend
+pm2 restart crm-staging-frontend
 ```
 
 ## Step 12: Configure GitHub Secrets for staging
@@ -535,13 +535,13 @@ STAGING_NEXT_PUBLIC_BACKEND_API_URL=http://161.97.67.253:8002/api
 ### 1. Check PM2 processes
 ```bash
 pm2 status
-pm2 logs loyacrm-staging-backend --lines 50
-pm2 logs loyacrm-staging-frontend --lines 50
+pm2 logs crm-staging-backend --lines 50
+pm2 logs crm-staging-frontend --lines 50
 ```
 
 ### 2. Check database connection
 ```bash
-cd /var/www/loyacrm-staging/backend
+cd /var/www/crm-staging/backend
 node -e "
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
@@ -581,8 +581,8 @@ curl http://161.97.67.253:8001
 
 ### 5. Check environment variables in PM2
 ```bash
-pm2 env loyacrm-staging-backend | grep DATABASE_URL
-pm2 env loyacrm-staging-frontend | grep NEXT_PUBLIC
+pm2 env crm-staging-backend | grep DATABASE_URL
+pm2 env crm-staging-frontend | grep NEXT_PUBLIC
 ```
 
 ## Simplified option without subdomains
@@ -614,7 +614,7 @@ sudo ufw status
 ### Manual staging update
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 git fetch origin
 git reset --hard origin/main
 pnpm install --frozen-lockfile
@@ -622,21 +622,21 @@ cd db && pnpm run generate && cd ..
 cd frontend && pnpm run build && cd ..
 cd backend && pnpm run build && cd ..
 cd db && pnpm run migrate:deploy && cd ..
-pm2 restart loyacrm-staging-backend loyacrm-staging-frontend
+pm2 restart crm-staging-backend crm-staging-frontend
 ```
 
 ### View logs
 
 ```bash
-pm2 logs loyacrm-staging-backend
-pm2 logs loyacrm-staging-frontend
+pm2 logs crm-staging-backend
+pm2 logs crm-staging-frontend
 pm2 monit
 ```
 
 ### Clear staging database
 
 ```bash
-cd /var/www/loyacrm-staging/db
+cd /var/www/crm-staging/db
 pnpm run migrate:reset
 # WARNING: This will delete all data in staging database!
 
@@ -674,21 +674,21 @@ sudo kill -9 $(sudo lsof -t -i:4001)
 
 Check:
 ```bash
-ls -la /var/www/loyacrm-staging/backend/.env.production.local
-ls -la /var/www/loyacrm-staging/frontend/.env.production.local
+ls -la /var/www/crm-staging/backend/.env.production.local
+ls -la /var/www/crm-staging/frontend/.env.production.local
 ```
 
 Fix permissions:
 ```bash
-chmod 600 /var/www/loyacrm-staging/backend/.env.production.local
-chmod 600 /var/www/loyacrm-staging/frontend/.env.production.local
+chmod 600 /var/www/crm-staging/backend/.env.production.local
+chmod 600 /var/www/crm-staging/frontend/.env.production.local
 ```
 
 ### Backend cannot connect to database
 
 Check connection string:
 ```bash
-cd /var/www/loyacrm-staging/backend
+cd /var/www/crm-staging/backend
 cat .env.production.local | grep DATABASE_URL
 ```
 
@@ -701,7 +701,7 @@ psql "postgresql://loyacare_staging:password@localhost:5432/loya_care_crm_stagin
 
 Make sure `CORS_ORIGIN` in backend matches frontend URL:
 ```bash
-cd /var/www/loyacrm-staging/backend
+cd /var/www/crm-staging/backend
 grep CORS_ORIGIN .env.production.local
 ```
 
@@ -775,7 +775,7 @@ Script `db/prisma/seed.ts` creates:
 If you need to recreate test data:
 
 ```bash
-cd /var/www/loyacrm-staging/db
+cd /var/www/crm-staging/db
 
 # Option 1: Full database reset and refill
 pnpm run migrate:reset
@@ -797,7 +797,7 @@ If you need to change initial data for staging:
 
 Or locally on server:
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 git pull origin main
 cd db
 pnpm run migrate:reset  # Will recreate database with new data

@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /var/www/loyacrm
+cd /var/www/crm
 
 echo "Pulling latest changes..."
 git pull origin main

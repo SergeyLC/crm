@@ -19,11 +19,11 @@ Complete guide for deploying staging environment alongside production.
 |-----------|-----------|---------|
 | **Port** | 80 | 8080 |
 | **URL** | http://SERVER_IP | http://SERVER_IP:8080 |
-| **Database** | loyacrm | loyacrm_staging |
-| **Volume** | loyacrm_pg_data | loyacrm_pg_data_staging |
-| **Network** | loyacrm-network | loyacrm-staging-network |
-| **Containers** | loyacrm-* | loyacrm-staging-* |
-| **Directory** | /var/www/loyacrm-production | /var/www/loyacrm-staging |
+| **Database** | crm | crm_staging |
+| **Volume** | crm_pg_data | crm_pg_data_staging |
+| **Network** | crm-network | crm-staging-network |
+| **Containers** | crm-* | crm-staging-* |
+| **Directory** | /var/www/crm-production | /var/www/crm-staging |
 | **Images** | :latest or :v1.0.0 | :staging |
 | **DevTools** | Disabled | Enabled |
 
@@ -41,8 +41,8 @@ Complete guide for deploying staging environment alongside production.
 ssh root@YOUR_SERVER_IP
 
 # Create staging directory
-mkdir -p /var/www/loyacrm-staging
-cd /var/www/loyacrm-staging
+mkdir -p /var/www/crm-staging
+cd /var/www/crm-staging
 ```
 
 ## Step 2: Transfer Configuration Files
@@ -51,9 +51,9 @@ cd /var/www/loyacrm-staging
 
 ```bash
 # Copy from production
-cp /var/www/loyacrm-production/docker-compose.yml docker-compose.stage.yml
-cp /var/www/loyacrm-production/.env .env.stage
-cp /var/www/loyacrm-production/nginx.conf nginx.stage.conf
+cp /var/www/crm-production/docker-compose.yml docker-compose.stage.yml
+cp /var/www/crm-production/.env .env.stage
+cp /var/www/crm-production/nginx.conf nginx.stage.conf
 ```
 
 ### Option B: From Local Repository
@@ -71,7 +71,7 @@ cp nginx.stage.conf staging-package/
 
 # Transfer to server
 tar -czf staging-config.tar.gz staging-package/
-scp staging-config.tar.gz root@YOUR_SERVER_IP:/var/www/loyacrm-staging/
+scp staging-config.tar.gz root@YOUR_SERVER_IP:/var/www/crm-staging/
 
 # Cleanup
 rm -rf staging-package staging-config.tar.gz
@@ -80,7 +80,7 @@ rm -rf staging-package staging-config.tar.gz
 On **server**:
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 tar -xzf staging-config.tar.gz
 mv staging-package/* .
 rm -rf staging-package staging-config.tar.gz
@@ -91,7 +91,7 @@ rm -rf staging-package staging-config.tar.gz
 Edit the staging compose file:
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 nano docker-compose.stage.yml
 ```
 
@@ -100,53 +100,53 @@ nano docker-compose.stage.yml
 ```yaml
 services:
   nginx:
-    container_name: loyacrm-staging-nginx
+    container_name: crm-staging-nginx
     image: nginx:alpine
     ports:
       - "8080:80"  # Staging port
     volumes:
       - ./nginx.stage.conf:/etc/nginx/nginx.conf:ro
     networks:
-      - loyacrm-staging-network
+      - crm-staging-network
     depends_on:
       - frontend
 
   frontend:
-    container_name: loyacrm-staging-frontend
-    image: ${FRONTEND_IMAGE:-loyacrm-frontend:staging}
+    container_name: crm-staging-frontend
+    image: ${FRONTEND_IMAGE:-crm-frontend:staging}
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_BACKEND_API_URL=${NEXT_PUBLIC_BACKEND_API_URL}
       - NEXT_PUBLIC_ENABLE_DEVTOOLS=true  # Enabled for staging
     networks:
-      - loyacrm-staging-network
+      - crm-staging-network
     depends_on:
       - backend
 
   backend:
-    container_name: loyacrm-staging-backend
-    image: ${BACKEND_IMAGE:-loyacrm-backend:staging}
+    container_name: crm-staging-backend
+    image: ${BACKEND_IMAGE:-crm-backend:staging}
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       - JWT_SECRET=${JWT_SECRET}
     networks:
-      - loyacrm-staging-network
+      - crm-staging-network
     depends_on:
       postgres:
         condition: service_healthy
 
   postgres:
-    container_name: loyacrm-staging-postgres
+    container_name: crm-staging-postgres
     image: postgres:16-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
-      - loyacrm_pg_data_staging:/var/lib/postgresql/data  # Separate volume
+      - crm_pg_data_staging:/var/lib/postgresql/data  # Separate volume
     networks:
-      - loyacrm-staging-network
+      - crm-staging-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
@@ -154,18 +154,18 @@ services:
       retries: 5
 
 networks:
-  loyacrm-staging-network:
+  crm-staging-network:
     driver: bridge
 
 volumes:
-  loyacrm_pg_data_staging:
+  crm_pg_data_staging:
     driver: local
 ```
 
 ## Step 4: Configure Environment Variables
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 nano .env.stage
 ```
 
@@ -176,8 +176,8 @@ nano .env.stage
 NGINX_PORT=8080
 
 # Database (staging)
-POSTGRES_DB=loyacrm_staging
-POSTGRES_USER=loyacrm
+POSTGRES_DB=crm_staging
+POSTGRES_USER=crm
 POSTGRES_PASSWORD=YOUR_STAGING_PASSWORD  # Use different from production
 
 # Security (staging)
@@ -187,8 +187,8 @@ JWT_SECRET=YOUR_STAGING_JWT_SECRET  # Use different from production
 NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api
 
 # Docker Images
-FRONTEND_IMAGE=loyacrm-frontend:staging
-BACKEND_IMAGE=loyacrm-backend:staging
+FRONTEND_IMAGE=crm-frontend:staging
+BACKEND_IMAGE=crm-backend:staging
 
 # Development
 NEXT_PUBLIC_ENABLE_DEVTOOLS=true
@@ -209,47 +209,47 @@ cd /path/to/LoyaCareCRM
 docker buildx build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
   --build-arg NEXT_PUBLIC_ENABLE_DEVTOOLS=true \
-  -t loyacrm-frontend:staging \
+  -t crm-frontend:staging \
   -f docker/frontend/Dockerfile .
 
 docker buildx build --platform linux/amd64 \
-  -t loyacrm-backend:staging \
+  -t crm-backend:staging \
   -f docker/backend/Dockerfile .
 
 # Export images
-docker save loyacrm-frontend:staging | gzip > loyacrm-frontend-staging.tar.gz
-docker save loyacrm-backend:staging | gzip > loyacrm-backend-staging.tar.gz
+docker save crm-frontend:staging | gzip > crm-frontend-staging.tar.gz
+docker save crm-backend:staging | gzip > crm-backend-staging.tar.gz
 
 # Transfer to server
-scp loyacrm-frontend-staging.tar.gz root@YOUR_SERVER_IP:/tmp/
-scp loyacrm-backend-staging.tar.gz root@YOUR_SERVER_IP:/tmp/
+scp crm-frontend-staging.tar.gz root@YOUR_SERVER_IP:/tmp/
+scp crm-backend-staging.tar.gz root@YOUR_SERVER_IP:/tmp/
 ```
 
 On **server**:
 
 ```bash
 # Load images
-docker load < /tmp/loyacrm-frontend-staging.tar.gz
-docker load < /tmp/loyacrm-backend-staging.tar.gz
+docker load < /tmp/crm-frontend-staging.tar.gz
+docker load < /tmp/crm-backend-staging.tar.gz
 
 # Verify
 docker images | grep staging
 
 # Cleanup
-rm /tmp/loyacrm-*-staging.tar.gz
+rm /tmp/crm-*-staging.tar.gz
 ```
 
 ### Option B: Use Production Images
 
 ```bash
 # Tag production images as staging
-docker tag loyacrm-frontend:latest loyacrm-frontend:staging
-docker tag loyacrm-backend:latest loyacrm-backend:staging
+docker tag crm-frontend:latest crm-frontend:staging
+docker tag crm-backend:latest crm-backend:staging
 
 # Update .env.stage if needed
-nano /var/www/loyacrm-staging/.env.stage
-# FRONTEND_IMAGE=loyacrm-frontend:staging
-# BACKEND_IMAGE=loyacrm-backend:staging
+nano /var/www/crm-staging/.env.stage
+# FRONTEND_IMAGE=crm-frontend:staging
+# BACKEND_IMAGE=crm-backend:staging
 ```
 
 **Note**: Using production images for staging may have incorrect API URLs if not rebuilt with staging build args.
@@ -266,7 +266,7 @@ sudo ufw status
 
 ```bash
 # Allow staging port
-sudo ufw allow 8080/tcp comment 'LoyaCRM Staging'
+sudo ufw allow 8080/tcp comment 'crm Staging'
 
 # Verify
 sudo ufw status numbered
@@ -277,7 +277,7 @@ sudo ufw status numbered
 To                         Action      From
 --                         ------      ----
 80/tcp (Nginx HTTP)        ALLOW       Anywhere
-8080/tcp (LoyaCRM Staging) ALLOW       Anywhere
+8080/tcp (crm Staging) ALLOW       Anywhere
 ```
 
 ### Check Hosting Provider Firewall
@@ -303,7 +303,7 @@ ssh -L 8080:localhost:8080 root@YOUR_SERVER_IP
 ## Step 7: Start Staging Services
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 
 # Start with staging configuration
 docker compose -f docker-compose.stage.yml --env-file .env.stage up -d
@@ -319,10 +319,10 @@ docker compose -f docker-compose.stage.yml ps
 
 ```
 NAME                         STATUS          PORTS
-loyacrm-staging-backend      Up (healthy)    
-loyacrm-staging-frontend     Up (healthy)    
-loyacrm-staging-nginx        Up              0.0.0.0:8080->80/tcp
-loyacrm-staging-postgres     Up (healthy)    
+crm-staging-backend      Up (healthy)    
+crm-staging-frontend     Up (healthy)    
+crm-staging-nginx        Up              0.0.0.0:8080->80/tcp
+crm-staging-postgres     Up (healthy)    
 ```
 
 ## Step 8: Database Setup
@@ -331,14 +331,14 @@ loyacrm-staging-postgres     Up (healthy)
 
 ```bash
 # Apply database schema
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 ```
 
 ### Seed Database (IMPORTANT!)
 
 ```bash
 # Populate with test data
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 **Seed creates:**
@@ -358,10 +358,10 @@ docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
 docker compose -f docker-compose.stage.yml ps
 
 # Detailed status
-docker ps --filter "name=loyacrm-staging"
+docker ps --filter "name=crm-staging"
 
 # Health checks
-docker inspect loyacrm-staging-backend | grep -A 10 Health
+docker inspect crm-staging-backend | grep -A 10 Health
 ```
 
 ### Check Logs
@@ -429,7 +429,7 @@ Open browser: `http://YOUR_SERVER_IP:8080/de`
 Edit staging nginx configuration:
 
 ```bash
-nano /var/www/loyacrm-staging/nginx.stage.conf
+nano /var/www/crm-staging/nginx.stage.conf
 ```
 
 **Sample staging configuration:**
@@ -494,37 +494,37 @@ git pull origin develop  # or main
 # Rebuild staging images
 docker buildx build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
-  -t loyacrm-frontend:staging \
+  -t crm-frontend:staging \
   -f docker/frontend/Dockerfile .
 
 docker buildx build --platform linux/amd64 \
-  -t loyacrm-backend:staging \
+  -t crm-backend:staging \
   -f docker/backend/Dockerfile .
 
 # Export and transfer
-docker save loyacrm-frontend:staging | gzip > loyacrm-frontend-staging.tar.gz
-docker save loyacrm-backend:staging | gzip > loyacrm-backend-staging.tar.gz
+docker save crm-frontend:staging | gzip > crm-frontend-staging.tar.gz
+docker save crm-backend:staging | gzip > crm-backend-staging.tar.gz
 
-scp loyacrm-frontend-staging.tar.gz root@YOUR_SERVER_IP:/tmp/
-scp loyacrm-backend-staging.tar.gz root@YOUR_SERVER_IP:/tmp/
+scp crm-frontend-staging.tar.gz root@YOUR_SERVER_IP:/tmp/
+scp crm-backend-staging.tar.gz root@YOUR_SERVER_IP:/tmp/
 ```
 
 On **server**:
 
 ```bash
 # Load new images
-docker load < /tmp/loyacrm-frontend-staging.tar.gz
-docker load < /tmp/loyacrm-backend-staging.tar.gz
+docker load < /tmp/crm-frontend-staging.tar.gz
+docker load < /tmp/crm-backend-staging.tar.gz
 
 # Restart staging
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 docker compose -f docker-compose.stage.yml up -d --force-recreate
 
 # Run migrations if database changed
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Cleanup
-rm /tmp/loyacrm-*-staging.tar.gz
+rm /tmp/crm-*-staging.tar.gz
 ```
 
 ## Managing Both Environments
@@ -533,10 +533,10 @@ rm /tmp/loyacrm-*-staging.tar.gz
 
 ```bash
 # Production
-docker compose -f /var/www/loyacrm-production/docker-compose.yml ps
+docker compose -f /var/www/crm-production/docker-compose.yml ps
 
 # Staging
-docker compose -f /var/www/loyacrm-staging/docker-compose.stage.yml ps
+docker compose -f /var/www/crm-staging/docker-compose.stage.yml ps
 
 # All containers
 docker ps
@@ -546,7 +546,7 @@ docker ps
 
 ```bash
 # Stop staging (production keeps running)
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 docker compose -f docker-compose.stage.yml stop
 
 # Start staging
@@ -560,13 +560,13 @@ docker compose -f docker-compose.stage.yml restart backend
 
 ```bash
 # Production logs
-docker compose -f /var/www/loyacrm-production/docker-compose.yml logs -f
+docker compose -f /var/www/crm-production/docker-compose.yml logs -f
 
 # Staging logs
-docker compose -f /var/www/loyacrm-staging/docker-compose.stage.yml logs -f
+docker compose -f /var/www/crm-staging/docker-compose.stage.yml logs -f
 
 # Specific container
-docker logs -f loyacrm-staging-backend
+docker logs -f crm-staging-backend
 ```
 
 ## Common Staging Issues
@@ -605,7 +605,7 @@ docker logs -f loyacrm-staging-backend
 # On local machine
 docker buildx build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api \
-  -t loyacrm-frontend:staging \
+  -t crm-frontend:staging \
   -f docker/frontend/Dockerfile .
 
 # Export, transfer, load, restart (see Update section)
@@ -614,7 +614,7 @@ docker buildx build --platform linux/amd64 \
 **Verify build args:**
 ```bash
 # On server
-docker exec loyacrm-staging-frontend sh -c 'cat /app/.env.local'
+docker exec crm-staging-frontend sh -c 'cat /app/.env.local'
 # Should show: NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP:8080/api
 ```
 
@@ -627,7 +627,7 @@ docker exec loyacrm-staging-frontend sh -c 'cat /app/.env.local'
 **Solution**: Run seed manually
 
 ```bash
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 ### Issue: Containers keep restarting
@@ -669,7 +669,7 @@ docker compose -f docker-compose.stage.yml logs backend
 ### Remove Staging Environment
 
 ```bash
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 
 # Stop and remove containers
 docker compose -f docker-compose.stage.yml down
@@ -679,11 +679,11 @@ docker compose -f docker-compose.stage.yml down -v
 
 # Remove staging directory
 cd /var/www
-rm -rf loyacrm-staging
+rm -rf crm-staging
 
 # Remove staging images
-docker rmi loyacrm-frontend:staging
-docker rmi loyacrm-backend:staging
+docker rmi crm-frontend:staging
+docker rmi crm-backend:staging
 
 # Close port 8080 (optional)
 sudo ufw delete allow 8080/tcp
@@ -700,7 +700,7 @@ docker compose -f docker-compose.stage.yml stop postgres
 
 # Remove postgres container and volume
 docker compose -f docker-compose.stage.yml rm -f postgres
-docker volume rm loyacrm_pg_data_staging
+docker volume rm crm_pg_data_staging
 
 # Restart services
 docker compose -f docker-compose.stage.yml up -d
@@ -709,10 +709,10 @@ docker compose -f docker-compose.stage.yml up -d
 sleep 20
 
 # Run migrations
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Seed database
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 ## Next Steps

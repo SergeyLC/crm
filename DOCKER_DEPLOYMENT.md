@@ -73,7 +73,7 @@ docker-example/                    # Production deployment configuration
 ├── .env.staging                  # Staging environment variables
 ├── nginx/
 │   └── conf.d/
-│       └── loyacrm.conf          # Nginx configuration with SSL
+│       └── crm.conf          # Nginx configuration with SSL
 ├── secrets/                      # Docker secrets (not in git)
 │   ├── db_password.txt           # Database password
 │   └── jwt_secret.txt            # JWT secret key
@@ -102,10 +102,10 @@ docker/                           # Build configurations (for CI/CD)
 
 ```bash
 # Copy the example configuration
-cp -r docker-example /var/www/loyacrm-production
+cp -r docker-example /var/www/crm-production
 
 # Navigate to deployment directory
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Create secrets (replace with actual values)
 echo "your-secure-db-password" > secrets/db_password.txt
@@ -126,7 +126,7 @@ nano .env.production  # Update domain and settings
 
 ### 3.1 Understanding Persistent Storage
 
-**Important:** PostgreSQL data is stored in a Docker named volume `loyacrm_prod_pg_data`. This volume persists data between container restarts, deployments, and even container recreation. The volume is automatically created by Docker Compose and survives `docker compose down` commands.
+**Important:** PostgreSQL data is stored in a Docker named volume `crm_prod_pg_data`. This volume persists data between container restarts, deployments, and even container recreation. The volume is automatically created by Docker Compose and survives `docker compose down` commands.
 
 **Volume location:** Docker manages the volume storage location automatically. To inspect:
 ```bash
@@ -134,7 +134,7 @@ nano .env.production  # Update domain and settings
 docker volume ls
 
 # Inspect volume details
-docker volume inspect loyacrm_prod_pg_data
+docker volume inspect crm_prod_pg_data
 
 # Check volume usage
 docker system df -v
@@ -145,7 +145,7 @@ docker system df -v
 ### 3.2 Run migrations for Docker database
 
 ```bash
-cd /var/www/loyacrm
+cd /var/www/crm
 
 # Start only database service first
 docker compose up -d postgres
@@ -158,7 +158,7 @@ docker compose exec backend sh -c "cd db && pnpm run migrate:deploy && pnpm run 
 
 # Or run migrations from host (if database is accessible)
 # cd db
-# export DATABASE_URL="postgresql://loyacrm:your_password@localhost:5432/loyacrm"
+# export DATABASE_URL="postgresql://crm:your_password@localhost:5432/crm"
 # pnpm run migrate:deploy
 # pnpm run generate
 ```
@@ -169,10 +169,10 @@ If you need to copy data from current database:
 
 ```bash
 # Create dump of current database
-pg_dump -h localhost -U loyacrm loyacrm > current_db_backup.sql
+pg_dump -h localhost -U crm crm > current_db_backup.sql
 
 # Restore to Docker database
-docker compose exec -T postgres psql -U loyacrm loyacrm < current_db_backup.sql
+docker compose exec -T postgres psql -U crm crm < current_db_backup.sql
 ```
 
 ## 🚀 Step 4: Start Docker Services
@@ -180,7 +180,7 @@ docker compose exec -T postgres psql -U loyacrm loyacrm < current_db_backup.sql
 ### 4.1 Production Deployment
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # For production environment
 docker compose --env-file .env.production up -d
@@ -235,7 +235,7 @@ docker compose exec backend curl -f http://localhost:4003/api/health
 docker compose exec frontend curl -f http://localhost:3003
 
 # Check database connectivity
-docker compose exec postgres pg_isready -U loyacrm
+docker compose exec postgres pg_isready -U crm
 ```
 
 ### 5.2 Functional testing
@@ -318,7 +318,7 @@ The Nginx container exposes port 80 to the host, so no additional host nginx con
 ### 7.1 Service Management
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # View all services status
 docker compose ps
@@ -345,13 +345,13 @@ docker compose up -d --scale backend=2
 docker compose --profile migrator run --rm migrator
 
 # Backup database
-docker compose exec db pg_dump -U loyacrm loyacrm > backups/backup_$(date +%Y%m%d).sql
+docker compose exec db pg_dump -U crm crm > backups/backup_$(date +%Y%m%d).sql
 
 # Restore database
-docker compose exec -T db psql -U loyacrm loyacrm < backups/backup.sql
+docker compose exec -T db psql -U crm crm < backups/backup.sql
 
 # Check database connectivity
-docker compose exec db pg_isready -U loyacrm
+docker compose exec db pg_isready -U crm
 ```
 
 ### 7.3 Health Checks
@@ -397,7 +397,7 @@ sudo systemctl stop postgresql
 
 ### 8.2 Switch Nginx
 
-Change `/etc/nginx/sites-available/loyacrm`:
+Change `/etc/nginx/sites-available/crm`:
 
 ```nginx
 # Change ports in proxy_pass
@@ -426,7 +426,7 @@ docker compose logs -f
 docker compose restart backend
 
 # Enter container
-docker exec -it loyacrm-backend-docker sh
+docker exec -it crm-backend-docker sh
 
 # Cleanup
 docker system prune -a
@@ -441,10 +441,10 @@ docker compose ps
 
 ```bash
 # Database backup from container
-docker compose exec postgres pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
+docker compose exec postgres pg_dump -U crm crm > backup_$(date +%Y%m%d).sql
 
 # Volume backup (if needed)
-docker run --rm -v loyacrm_prod_pg_data:/data -v $(pwd)/backup:/backup alpine tar czf /backup/postgres_data_$(date +%Y%m%d).tar.gz -C /data .
+docker run --rm -v crm_prod_pg_data:/data -v $(pwd)/backup:/backup alpine tar czf /backup/postgres_data_$(date +%Y%m%d).tar.gz -C /data .
 ```
 
 ## 🚨 Troubleshooting

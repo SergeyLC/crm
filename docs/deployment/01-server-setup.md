@@ -78,11 +78,11 @@ docker compose version
 
 ```bash
 # Create production directories
-mkdir -p /var/www/loyacrm-production
-mkdir -p /var/www/loyacrm-production/backups
+mkdir -p /var/www/crm-production
+mkdir -p /var/www/crm-production/backups
 
 # Set appropriate permissions
-chmod -R 755 /var/www/loyacrm-production
+chmod -R 755 /var/www/crm-production
 
 # Verify creation
 ls -la /var/www/
@@ -92,11 +92,11 @@ ls -la /var/www/
 
 ```bash
 # Create staging directories
-mkdir -p /var/www/loyacrm-staging
-mkdir -p /var/www/loyacrm-staging/backups
+mkdir -p /var/www/crm-staging
+mkdir -p /var/www/crm-staging/backups
 
 # Set permissions
-chmod -R 755 /var/www/loyacrm-staging
+chmod -R 755 /var/www/crm-staging
 ```
 
 ## Step 6: Configure Firewall

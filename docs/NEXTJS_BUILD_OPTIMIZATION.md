@@ -173,10 +173,10 @@ pnpm run analyze
 ## Pre-Deployment Checklist
 
 ### Docker Deployment
-- [ ] Verify Docker image builds successfully: `docker buildx build --platform linux/amd64 -t loyacrm-frontend:latest -f docker/frontend/Dockerfile .`
+- [ ] Verify Docker image builds successfully: `docker buildx build --platform linux/amd64 -t crm-frontend:latest -f docker/frontend/Dockerfile .`
 - [ ] Check bundle size locally: `cd frontend && pnpm run analyze`
 - [ ] Verify environment variables in `.env` or `.env.stage`
-- [ ] Test container startup: `docker run -p 3000:3000 loyacrm-frontend:latest`
+- [ ] Test container startup: `docker run -p 3000:3000 crm-frontend:latest`
 - [ ] Check container logs: `docker compose logs frontend`
 - [ ] Verify health check passes: `docker compose ps`
 
@@ -218,7 +218,7 @@ const productionConfig = {
 ### docker-compose.yml
 ```yaml
 frontend:
-  image: loyacrm-frontend:latest
+  image: crm-frontend:latest
   environment:
     - NODE_ENV=production
     - PORT=3000
@@ -263,7 +263,7 @@ frontend:
 Or for manual builds:
 ```bash
 docker buildx build --build-arg NODE_OPTIONS="--max-old-space-size=4096" \
-  --platform linux/amd64 -t loyacrm-frontend:latest -f docker/frontend/Dockerfile .
+  --platform linux/amd64 -t crm-frontend:latest -f docker/frontend/Dockerfile .
 ```
 
 **Symptom:** Prisma client not found during build

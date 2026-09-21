@@ -1,4 +1,4 @@
 #!/bin/bash
-cd /var/www/loyacrm
+cd /var/www/crm
 docker compose up -d
 echo "Docker services started"

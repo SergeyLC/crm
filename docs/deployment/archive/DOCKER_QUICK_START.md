@@ -38,14 +38,14 @@ docker compose -f docker-compose.dev.yml ps
 
 ### Prerequisites
 - Docker and Docker Compose installed
-- Project cloned to /var/www/loyacrm
+- Project cloned to /var/www/crm
 - **Create `.env.docker` file with real passwords (copy from `.env.docker.example`)**
 
 ### Quick Start
 
 1. **Configure environment variables:**
    ```bash
-   cd /var/www/loyacrm
+   cd /var/www/crm
    cp .env.docker.example .env.docker
    # Edit .env.docker with real values
    nano .env.docker

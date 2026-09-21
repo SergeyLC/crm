@@ -44,10 +44,10 @@ For testing in Docker containers:
 
 ```bash
 # Production container
-docker exec loyacrm-frontend sh -c "cd /app/frontend && pnpm run playwright"
+docker exec crm-frontend sh -c "cd /app/frontend && pnpm run playwright"
 
 # Staging container
-docker exec loyacrm-staging-frontend sh -c "cd /app/frontend && pnpm run playwright"
+docker exec crm-staging-frontend sh -c "cd /app/frontend && pnpm run playwright"
 ```
 
 ## Related Documentation

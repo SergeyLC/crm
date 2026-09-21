@@ -83,10 +83,10 @@ Playwright E2E tests are executed in:
 
 ```bash
 # On server, create npm cache directory
-mkdir -p /var/www/loyacrm/.npm-cache
+mkdir -p /var/www/crm/.npm-cache
 
 # In deploy-production.yml, add:
-export npm_config_cache=/var/www/loyacrm/.npm-cache
+export npm_config_cache=/var/www/crm/.npm-cache
 ```
 
 This will persist npm cache between deployments.

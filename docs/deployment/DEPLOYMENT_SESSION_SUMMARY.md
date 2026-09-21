@@ -61,14 +61,14 @@ RUN cd frontend && pnpm run build
 ```yaml
 backend:
   environment:
-    - DATABASE_URL=postgresql://${POSTGRES_USER:-loyacrm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-loyacrm}
+    - DATABASE_URL=postgresql://${POSTGRES_USER:-crm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-crm}
 ```
 
 Переменные берутся из `.env`:
 ```env
-POSTGRES_DB=loyacrm
-POSTGRES_USER=loyacrm
-POSTGRES_PASSWORD=loyacrm2024secure
+POSTGRES_DB=crm
+POSTGRES_USER=crm
+POSTGRES_PASSWORD=crm2024secure
 ```
 
 ## История проблем и их решения
@@ -110,18 +110,18 @@ POSTGRES_PASSWORD=loyacrm2024secure
 
 **Production:**
 ```
-loyacrm-frontend     Up (healthy)
-loyacrm-backend      Up (healthy)
-loyacrm-postgres     Up (healthy)
-loyacrm-nginx        Up
+crm-frontend     Up (healthy)
+crm-backend      Up (healthy)
+crm-postgres     Up (healthy)
+crm-nginx        Up
 ```
 
 **Staging:**
 ```
-loyacrm-staging-frontend   Up (healthy)
-loyacrm-staging-backend    Up (healthy)
-loyacrm-staging-postgres   Up (healthy)
-loyacrm-staging-nginx      Up
+crm-staging-frontend   Up (healthy)
+crm-staging-backend    Up (healthy)
+crm-staging-postgres   Up (healthy)
+crm-staging-nginx      Up
 ```
 
 ## Deployment Process
@@ -174,8 +174,8 @@ git pull --rebase
 - `docker/backend/Dockerfile` - backend образ
 
 ### Environment
-- `/var/www/loyacrm-production/.env` - production на сервере
-- `/var/www/loyacrm-staging/.env.stage` - staging на сервере
+- `/var/www/crm-production/.env` - production на сервере
+- `/var/www/crm-staging/.env.stage` - staging на сервере
 
 ## Lessons Learned
 
@@ -273,13 +273,13 @@ git pull --rebase
 ssh root@217.154.173.36 "docker ps --format 'table {{.Names}}\t{{.Status}}'"
 
 # Версия в production
-ssh root@217.154.173.36 "docker exec loyacrm-frontend env | grep NEXT_PUBLIC_APP_VERSION"
+ssh root@217.154.173.36 "docker exec crm-frontend env | grep NEXT_PUBLIC_APP_VERSION"
 
 # Версия образа
 ssh root@217.154.173.36 "docker images | grep ghcr.io/sergeylc/crm/frontend"
 
 # Логи контейнера
-ssh root@217.154.173.36 "docker logs loyacrm-frontend --tail 50"
+ssh root@217.154.173.36 "docker logs crm-frontend --tail 50"
 ```
 
 ### Deployment
@@ -299,13 +299,13 @@ git pull --rebase
 
 ```bash
 # Перезапустить контейнеры
-ssh root@217.154.173.36 "cd /var/www/loyacrm-production && docker compose restart"
+ssh root@217.154.173.36 "cd /var/www/crm-production && docker compose restart"
 
 # Пересоздать контейнер с новым .env
-ssh root@217.154.173.36 "cd /var/www/loyacrm-production && docker compose up -d --force-recreate frontend"
+ssh root@217.154.173.36 "cd /var/www/crm-production && docker compose up -d --force-recreate frontend"
 
 # Проверить переменные окружения
-ssh root@217.154.173.36 "cd /var/www/loyacrm-production && cat .env"
+ssh root@217.154.173.36 "cd /var/www/crm-production && cat .env"
 ```
 
 ## Контакты и ссылки

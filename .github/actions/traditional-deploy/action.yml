@@ -67,9 +67,9 @@ runs:
           set -e
 
           echo "📦 Traditional Deployment to ${{ inputs.environment }}"
-          echo "🏗️ Deployment directory: /var/www/loyacrm-${{ inputs.environment }}"
+          echo "🏗️ Deployment directory: /var/www/crm-${{ inputs.environment }}"
 
-          DEPLOY_DIR="/var/www/loyacrm-${{ inputs.environment }}"
+          DEPLOY_DIR="/var/www/crm-${{ inputs.environment }}"
 
           # Create deployment directory if it doesn't exist
           mkdir -p "$DEPLOY_DIR"

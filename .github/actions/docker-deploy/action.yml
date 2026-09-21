@@ -187,7 +187,7 @@ runs:
         username: ${{ inputs.server_user }}
         key: ${{ inputs.server_ssh_key }}
         source: "docker-compose.yml,docker-compose.production.yml,docker-compose.stage.yml,docker-compose.stage-main.yml,docker-compose.stage-develop.yml,nginx.conf,nginx.stage.conf,nginx.stage-main.conf,nginx.prod.conf,nginx.stage-develop.conf"
-        target: "/tmp/loyacrm-deploy-${{ github.run_id }}"
+        target: "/tmp/crm-deploy-${{ github.run_id }}"
         strip_components: 0
 
     - name: Deploy to ${{ inputs.environment }} server
@@ -205,30 +205,30 @@ runs:
           
           # Determine deployment directory and compose file
           if [[ "${{ inputs.environment }}" == "production" ]]; then
-            DEPLOY_DIR="/var/www/loyacrm-production"
+            DEPLOY_DIR="/var/www/crm-production"
             COMPOSE_FILE="docker-compose.production.yml"
             NGINX_CONF="nginx.prod.conf"
             ENV_FILE=".env.production"
-            CONTAINER_PREFIX="loyacrm-production"
+            CONTAINER_PREFIX="crm-production"
           elif [[ "${{ inputs.environment }}" == "stage-develop" ]]; then
-            DEPLOY_DIR="/var/www/loyacrm-stage-develop"
+            DEPLOY_DIR="/var/www/crm-stage-develop"
             COMPOSE_FILE="docker-compose.stage-develop.yml"
             NGINX_CONF="nginx.stage-develop.conf"
             ENV_FILE=".env.stage-develop"
-            CONTAINER_PREFIX="loyacrm-stage-develop"
+            CONTAINER_PREFIX="crm-stage-develop"
           elif [[ "${{ inputs.environment }}" == "stage-main" ]]; then
-            DEPLOY_DIR="/var/www/loyacrm-stage-main"
+            DEPLOY_DIR="/var/www/crm-stage-main"
             COMPOSE_FILE="docker-compose.stage-main.yml"
             NGINX_CONF="nginx.stage-main.conf"
             ENV_FILE=".env.stage-main"
-            CONTAINER_PREFIX="loyacrm-stage-main"
+            CONTAINER_PREFIX="crm-stage-main"
           else
             # Fallback for old 'staging' environment name
-            DEPLOY_DIR="/var/www/loyacrm-staging"
+            DEPLOY_DIR="/var/www/crm-staging"
             COMPOSE_FILE="docker-compose.stage.yml"
             NGINX_CONF="nginx.stage.conf"
             ENV_FILE=".env.stage"
-            CONTAINER_PREFIX="loyacrm-staging"
+            CONTAINER_PREFIX="crm-staging"
           fi
 
           echo "🏗️  Deployment directory: $DEPLOY_DIR"
@@ -240,7 +240,7 @@ runs:
           mkdir -p "$DEPLOY_DIR"
           
           # Copy deployment files from temp location
-          TEMP_DIR="/tmp/loyacrm-deploy-${{ github.run_id }}"
+          TEMP_DIR="/tmp/crm-deploy-${{ github.run_id }}"
           echo "📦 Copying deployment files..."
           cp -f "$TEMP_DIR/$COMPOSE_FILE" "$DEPLOY_DIR/"
           cp -f "$TEMP_DIR/$NGINX_CONF" "$DEPLOY_DIR/nginx.conf"

@@ -19,7 +19,7 @@ cp .env.example .env.development.local
 
 # 2. Edit and add your secrets
 # .env.development.local:
-DATABASE_URL="postgresql://postgres:password@localhost:5432/loyacrm_dev"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/crm_dev"
 JWT_SECRET="your-secret-key-min-32-chars"
 
 # 3. Start the server
@@ -93,10 +93,10 @@ pnpm exec tsx src/scripts/createUser.ts "John Doe" john@example.com securepass12
 
 ```bash
 # Production
-docker exec loyacrm-backend sh -c 'cd /app/backend && pnpm exec tsx src/scripts/createUser.ts "Admin" admin@example.com pass123 ADMIN'
+docker exec crm-backend sh -c 'cd /app/backend && pnpm exec tsx src/scripts/createUser.ts "Admin" admin@example.com pass123 ADMIN'
 
 # Staging
-docker exec loyacrm-staging-backend sh -c 'cd /app/backend && pnpm exec tsx src/scripts/createUser.ts "Admin" admin@example.com pass123 ADMIN'
+docker exec crm-staging-backend sh -c 'cd /app/backend && pnpm exec tsx src/scripts/createUser.ts "Admin" admin@example.com pass123 ADMIN'
 ```
 
 ## 📚 API Endpoints
@@ -241,10 +241,10 @@ docker compose logs -f backend
 docker compose restart backend
 
 # Execute command in container
-docker exec loyacrm-backend sh -c 'cd /app/backend && pnpm run type-check'
+docker exec crm-backend sh -c 'cd /app/backend && pnpm run type-check'
 
 # Check environment variables
-docker exec loyacrm-backend env | grep DATABASE_URL
+docker exec crm-backend env | grep DATABASE_URL
 ```
 
 ### Build and Deploy
@@ -252,7 +252,7 @@ docker exec loyacrm-backend env | grep DATABASE_URL
 ```bash
 # Build Docker image (from project root)
 docker buildx build --platform linux/amd64 \
-  -t loyacrm-backend:latest \
+  -t crm-backend:latest \
   -f docker/backend/Dockerfile .
 
 # Deploy to server

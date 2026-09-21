@@ -32,8 +32,8 @@ The project uses automated deployment with GitHub Actions:
 #### Development Environment
 ```bash
 # Clone repository
-git clone <your-repository-url> loyacrm
-cd loyacrm
+git clone <your-repository-url> crm
+cd crm
 
 # Copy environment file
 cp .env.dev.example .env.dev
@@ -138,7 +138,7 @@ docker-compose -f docker-compose.dev.yml logs -f
 docker-compose -f docker-compose.dev.yml down
 
 # Access database
-docker-compose -f docker-compose.dev.yml exec postgres psql -U loyacrm -d loyacrm
+docker-compose -f docker-compose.dev.yml exec postgres psql -U crm -d crm
 
 # Run backend commands
 docker-compose -f docker-compose.dev.yml exec backend sh -c "cd /app/db && pnpm run migrate"
@@ -284,7 +284,7 @@ frontend/src/
 ```bash
 # Clone repository
 git clone <repository-url>
-cd LoyaCRM
+cd crm
 
 # Development environment
 cp .env.dev.example .env.dev
@@ -306,7 +306,7 @@ docker-compose up --build -d
 #### 1. Clone Repository
 ```bash
 git clone <repository-url>
-cd LoyaCRM
+cd crm
 ```
 
 #### 2. Install Dependencies
@@ -335,12 +335,12 @@ Create `.env` files in respective directories:
 
 ##### db/.env
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/loyacrm"
+DATABASE_URL="postgresql://username:password@localhost:5432/crm"
 ```
 
 ##### backend/.env
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/loyacrm"
+DATABASE_URL="postgresql://username:password@localhost:5432/crm"
 JWT_SECRET="your-jwt-secret"
 PORT=4000
 ```

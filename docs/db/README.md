@@ -43,13 +43,13 @@ pnpm run seed
 
 ```bash
 # Migrations run inside backend container
-docker exec loyacrm-backend sh -c 'cd /app/db && pnpm run migrate:deploy'
+docker exec crm-backend sh -c 'cd /app/db && pnpm run migrate:deploy'
 
 # Seed staging database only (never production!)
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && pnpm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && pnpm run seed'
 
 # Generate Prisma client in container
-docker exec loyacrm-backend sh -c 'cd /app/db && pnpm run generate'
+docker exec crm-backend sh -c 'cd /app/db && pnpm run generate'
 ```
 
 **💡 Note:** This project is already initialized. **DO NOT run `npx prisma init`** as it will overwrite existing configuration.
@@ -133,7 +133,7 @@ pnpm run lint:check
 2. Rebuild Docker images to include schema changes
 3. Run migrations in container:
    ```bash
-   docker exec loyacrm-backend sh -c 'cd /app/db && pnpm run migrate:deploy'
+   docker exec crm-backend sh -c 'cd /app/db && pnpm run migrate:deploy'
    ```
 4. Restart containers: `docker compose restart backend frontend`
 
@@ -144,8 +144,8 @@ cd db
 pnpm run migrate:reset && pnpm run seed && pnpm run generate
 
 # Docker staging (⚠️ deletes all data)
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && pnpm run migrate:reset'
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && pnpm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && pnpm run migrate:reset'
+docker exec crm-staging-backend sh -c 'cd /app/db && pnpm run seed'
 ```
 
 ## 📁 Project Structure
@@ -174,7 +174,7 @@ db/
 
 **Local Development** (`db/.env`):
 ```env
-DATABASE_URL="postgresql://postgres:password@localhost:5432/loyacrm_dev"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/crm_dev"
 ```
 
 **Docker Deployment:**
@@ -182,14 +182,14 @@ DATABASE_URL is constructed by Docker Compose from environment variables in root
 
 ```env
 # Production (.env)
-POSTGRES_USER=loyacrm
+POSTGRES_USER=crm
 POSTGRES_PASSWORD=secure_password
-POSTGRES_DB=loyacrm
+POSTGRES_DB=crm
 
 # Staging (.env.stage)
-POSTGRES_USER=loyacrm
+POSTGRES_USER=crm
 POSTGRES_PASSWORD=secure_password
-POSTGRES_DB=loyacrm_staging
+POSTGRES_DB=crm_staging
 ```
 
 Docker Compose automatically constructs:

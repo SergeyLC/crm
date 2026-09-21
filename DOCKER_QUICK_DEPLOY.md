@@ -32,19 +32,19 @@ rsync -avz --progress \
   --exclude='node_modules' \
   --exclude='.git' \
   --exclude='*.log' \
-  ./LoyaCareCRM/ root@YOUR_SERVER_IP:/var/www/loyacrm-source/
+  ./LoyaCareCRM/ root@YOUR_SERVER_IP:/var/www/crm-source/
 ```
 
 ### 2.2 Создать директорию для развертывания
 ```bash
 # На сервере
-mkdir -p /var/www/loyacrm-production/{nginx/conf.d,backups}
-cd /var/www/loyacrm-production
+mkdir -p /var/www/crm-production/{nginx/conf.d,backups}
+cd /var/www/crm-production
 ```
 
 ### 2.3 Создать конфигурацию nginx
 ```bash
-cat > nginx/conf.d/loyacrm.conf << 'EOF'
+cat > nginx/conf.d/crm.conf << 'EOF'
 upstream backend {
     server backend:4000;
 }
@@ -113,7 +113,7 @@ cat > docker-compose.yml << 'EOF'
 services:
   nginx:
     image: nginx:alpine
-    container_name: loyacrm-nginx
+    container_name: crm-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -122,59 +122,59 @@ services:
     depends_on:
       - frontend
       - backend
-    networks: [loyacrm-network]
+    networks: [crm-network]
 
   frontend:
-    image: loyacrm-frontend:latest
-    container_name: loyacrm-frontend
+    image: crm-frontend:latest
+    container_name: crm-frontend
     restart: unless-stopped
     environment:
       - PORT=3000
       - NODE_ENV=production
       - NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api
       - NEXT_PUBLIC_APP_VERSION=production
-    networks: [loyacrm-network]
+    networks: [crm-network]
 
   backend:
-    image: loyacrm-backend:latest
-    container_name: loyacrm-backend
+    image: crm-backend:latest
+    container_name: crm-backend
     restart: unless-stopped
     environment:
       - PORT=4000
       - NODE_ENV=production
       - LOG_LEVEL=info
       - CORS_ORIGIN=http://YOUR_SERVER_IP
-      - DATABASE_URL=postgresql://loyacrm:CHANGE_THIS_PASSWORD@postgres:5432/loyacrm
+      - DATABASE_URL=postgresql://crm:CHANGE_THIS_PASSWORD@postgres:5432/crm
       - JWT_SECRET=CHANGE_THIS_SECRET
     depends_on:
       postgres:
         condition: service_healthy
-    networks: [loyacrm-network]
+    networks: [crm-network]
 
   postgres:
     image: postgres:16-alpine
-    container_name: loyacrm-postgres
+    container_name: crm-postgres
     restart: unless-stopped
     environment:
       - POSTGRES_PASSWORD=CHANGE_THIS_PASSWORD
-      - POSTGRES_USER=loyacrm
-      - POSTGRES_DB=loyacrm
+      - POSTGRES_USER=crm
+      - POSTGRES_DB=crm
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./backups:/backups
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U loyacrm"]
+      test: ["CMD-SHELL", "pg_isready -U crm"]
       interval: 5s
       timeout: 3s
       retries: 5
-    networks: [loyacrm-network]
+    networks: [crm-network]
 
 volumes:
   pg_data:
-    name: loyacrm_pg_data
+    name: crm_pg_data
 
 networks:
-  loyacrm-network:
+  crm-network:
     driver: bridge
 EOF
 ```
@@ -187,13 +187,13 @@ EOF
 ## 🏗️ Шаг 3: Сборка Docker образов
 
 ```bash
-cd /var/www/loyacrm-source
+cd /var/www/crm-source
 
 # Сборка backend образа
-docker build -f docker/backend/Dockerfile -t loyacrm-backend:latest .
+docker build -f docker/backend/Dockerfile -t crm-backend:latest .
 
 # Сборка frontend образа
-docker build -f docker/frontend/Dockerfile -t loyacrm-frontend:latest .
+docker build -f docker/frontend/Dockerfile -t crm-frontend:latest .
 ```
 
 **Примечание:** Сборка может занять 5-10 минут.
@@ -201,7 +201,7 @@ docker build -f docker/frontend/Dockerfile -t loyacrm-frontend:latest .
 ## 🗄️ Шаг 4: Запуск и настройка базы данных
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Запуск контейнеров
 docker compose up -d
@@ -210,10 +210,10 @@ docker compose up -d
 sleep 30
 
 # Применение миграций
-docker exec loyacrm-backend sh -c 'cd db && npx prisma migrate deploy'
+docker exec crm-backend sh -c 'cd db && npx prisma migrate deploy'
 
 # Создание начальных данных
-docker exec loyacrm-backend sh -c 'cd db && npx ts-node prisma/seed.ts'
+docker exec crm-backend sh -c 'cd db && npx ts-node prisma/seed.ts'
 ```
 
 ## ✅ Шаг 5: Проверка развертывания
@@ -243,7 +243,7 @@ curl -X POST http://localhost/api/auth/login \
 
 ### Просмотр логов
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose logs -f
 ```
 
@@ -260,7 +260,7 @@ docker compose down
 ### Полная переустановка (с удалением данных)
 ```bash
 docker compose down -v
-docker volume rm loyacrm_pg_data
+docker volume rm crm_pg_data
 # Затем повторить шаги 4-5
 ```
 
@@ -269,10 +269,10 @@ docker volume rm loyacrm_pg_data
 ### Nginx не запускается
 ```bash
 # Проверить конфигурацию
-docker exec loyacrm-nginx nginx -t
+docker exec crm-nginx nginx -t
 
 # Посмотреть логи
-docker logs loyacrm-nginx
+docker logs crm-nginx
 ```
 
 ### Backend не может подключиться к базе
@@ -281,22 +281,22 @@ docker logs loyacrm-nginx
 docker compose ps
 
 # Проверить логи postgres
-docker logs loyacrm-postgres
+docker logs crm-postgres
 
 # Проверить переменную DATABASE_URL
-docker exec loyacrm-backend sh -c 'echo $DATABASE_URL'
+docker exec crm-backend sh -c 'echo $DATABASE_URL'
 ```
 
 ### Страницы не загружаются
 ```bash
 # Проверить логи frontend
-docker logs loyacrm-frontend
+docker logs crm-frontend
 
 # Проверить логи nginx
-docker logs loyacrm-nginx
+docker logs crm-nginx
 
 # Проверить сетевое подключение
-docker network inspect loyacrm-production_loyacrm-network
+docker network inspect crm-production_crm-network
 ```
 
 ## 📋 Требования к серверу

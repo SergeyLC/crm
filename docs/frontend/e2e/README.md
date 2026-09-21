@@ -47,13 +47,13 @@ pnpm run playwright:report
 
 ```bash
 # Production container
-docker exec loyacrm-frontend sh -c "cd /app/frontend && pnpm run playwright"
+docker exec crm-frontend sh -c "cd /app/frontend && pnpm run playwright"
 
 # Staging container
-docker exec loyacrm-staging-frontend sh -c "cd /app/frontend && pnpm run playwright"
+docker exec crm-staging-frontend sh -c "cd /app/frontend && pnpm run playwright"
 
 # View test report from container
-docker exec loyacrm-frontend sh -c "cd /app/frontend && pnpm run playwright:report"
+docker exec crm-frontend sh -c "cd /app/frontend && pnpm run playwright:report"
 ```
 
 ## Test Structure

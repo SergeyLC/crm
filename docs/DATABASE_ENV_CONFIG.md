@@ -41,8 +41,8 @@ backend:
 
 postgres:
   environment:
-    - POSTGRES_DB=${POSTGRES_DB}      # e.g., loyacrm
-    - POSTGRES_USER=${POSTGRES_USER}  # e.g., loyacrm
+    - POSTGRES_DB=${POSTGRES_DB}      # e.g., crm
+    - POSTGRES_USER=${POSTGRES_USER}  # e.g., crm
     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 ```
 
@@ -54,7 +54,7 @@ backend:
 
 postgres:
   environment:
-    - POSTGRES_DB=${POSTGRES_DB}      # e.g., loyacrm_staging
+    - POSTGRES_DB=${POSTGRES_DB}      # e.g., crm_staging
     - POSTGRES_USER=${POSTGRES_USER}
     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 ```
@@ -63,8 +63,8 @@ postgres:
 
 ```bash
 # Database
-POSTGRES_DB=loyacrm
-POSTGRES_USER=loyacrm
+POSTGRES_DB=crm
+POSTGRES_USER=crm
 POSTGRES_PASSWORD=your_secure_password_here
 
 # Backend JWT
@@ -78,8 +78,8 @@ NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api
 
 ```bash
 # Database (different database name!)
-POSTGRES_DB=loyacrm_staging
-POSTGRES_USER=loyacrm
+POSTGRES_DB=crm_staging
+POSTGRES_USER=crm
 POSTGRES_PASSWORD=your_staging_password_here
 
 # Backend JWT (different secret!)
@@ -112,7 +112,7 @@ datasource db {
 
 ```bash
 # Connect to backend container
-docker exec -it loyacrm-backend sh
+docker exec -it crm-backend sh
 
 # Inside container
 cd /app/db
@@ -123,7 +123,7 @@ npx prisma migrate deploy
 
 ```bash
 # Connect to staging backend container
-docker exec -it loyacrm-staging-backend sh
+docker exec -it crm-staging-backend sh
 
 # Inside container
 cd /app/db
@@ -157,7 +157,7 @@ if (!process.env.DATABASE_URL) {
 
 ```bash
 # Connect to staging backend container
-docker exec -it loyacrm-staging-backend sh
+docker exec -it crm-staging-backend sh
 
 # Inside container
 cd /app/db
@@ -187,7 +187,7 @@ For local development without Docker, you can use `.env` files in the `db/` dire
 
 ```bash
 # Local PostgreSQL database
-DATABASE_URL="postgresql://postgres:password@localhost:5432/loyacrm_dev"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/crm_dev"
 ```
 
 ### Running Local Commands
@@ -245,7 +245,7 @@ Current scripts in `db/package.json`:
 
 ```bash
 # Check if DATABASE_URL is set in container
-docker exec loyacrm-staging-backend env | grep DATABASE_URL
+docker exec crm-staging-backend env | grep DATABASE_URL
 
 # If not found, check Docker Compose configuration
 cat docker-compose.stage.yml | grep -A 3 "DATABASE_URL"
@@ -254,7 +254,7 @@ cat docker-compose.stage.yml | grep -A 3 "DATABASE_URL"
 cat .env.stage | grep POSTGRES
 
 # Restart containers to apply environment changes
-cd /var/www/loyacrm-staging
+cd /var/www/crm-staging
 docker compose -f docker-compose.stage.yml down
 docker compose -f docker-compose.stage.yml up -d
 ```
@@ -272,13 +272,13 @@ docker compose -f docker-compose.stage.yml up -d
 docker ps | grep postgres
 
 # Check postgres container health
-docker inspect loyacrm-staging-postgres | grep -A 10 Health
+docker inspect crm-staging-postgres | grep -A 10 Health
 
 # Check postgres logs
 docker compose -f docker-compose.stage.yml logs postgres
 
 # Test connection from backend container
-docker exec loyacrm-staging-backend sh -c \
+docker exec crm-staging-backend sh -c \
   'psql $DATABASE_URL -c "SELECT 1;"'
 ```
 
@@ -292,18 +292,18 @@ docker exec loyacrm-staging-backend sh -c \
 
 ```bash
 # Check which database backend is using
-docker exec loyacrm-staging-backend env | grep DATABASE_URL
-# Should show: ...@postgres:5432/loyacrm_staging
+docker exec crm-staging-backend env | grep DATABASE_URL
+# Should show: ...@postgres:5432/crm_staging
 
-docker exec loyacrm-backend env | grep DATABASE_URL
-# Should show: ...@postgres:5432/loyacrm
+docker exec crm-backend env | grep DATABASE_URL
+# Should show: ...@postgres:5432/crm
 
 # Check postgres container database
-docker exec loyacrm-staging-postgres psql -U loyacrm -l
-# Should list loyacrm_staging
+docker exec crm-staging-postgres psql -U crm -l
+# Should list crm_staging
 
 # If wrong, update .env.stage and restart
-nano .env.stage  # Fix POSTGRES_DB=loyacrm_staging
+nano .env.stage  # Fix POSTGRES_DB=crm_staging
 docker compose -f docker-compose.stage.yml down
 docker compose -f docker-compose.stage.yml up -d
 ```
@@ -327,7 +327,7 @@ cp .env.development.example .env
 nano .env  # Edit DATABASE_URL
 
 # Or set environment variable directly
-export DATABASE_URL="postgresql://postgres:password@localhost:5432/loyacrm_dev"
+export DATABASE_URL="postgresql://postgres:password@localhost:5432/crm_dev"
 pnpm run seed
 ```
 
@@ -347,10 +347,10 @@ brew services list | grep postgresql
 brew services start postgresql@16
 
 # Test connection
-psql -U postgres -d loyacrm_dev
+psql -U postgres -d crm_dev
 
 # If database doesn't exist, create it
-psql -U postgres -c "CREATE DATABASE loyacrm_dev;"
+psql -U postgres -c "CREATE DATABASE crm_dev;"
 ```
 
 ## When to Seed
@@ -376,10 +376,10 @@ psql -U postgres -c "CREATE DATABASE loyacrm_dev;"
 
 ```bash
 # Docker Production
-docker exec loyacrm-backend env | grep DATABASE_URL
+docker exec crm-backend env | grep DATABASE_URL
 
 # Docker Staging  
-docker exec loyacrm-staging-backend env | grep DATABASE_URL
+docker exec crm-staging-backend env | grep DATABASE_URL
 
 # Local
 cd db && cat .env | grep DATABASE_URL
@@ -389,10 +389,10 @@ cd db && cat .env | grep DATABASE_URL
 
 ```bash
 # Docker Production
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Docker Staging
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Local
 cd db && pnpm run migrate:deploy
@@ -402,7 +402,7 @@ cd db && pnpm run migrate:deploy
 
 ```bash
 # Docker Staging (ONLY!)
-docker exec loyacrm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
 
 # Local
 cd db && pnpm run seed
@@ -412,7 +412,7 @@ cd db && pnpm run seed
 
 ```bash
 # Docker
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate status'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate status'
 
 # Local
 cd db && pnpm run migrate:status

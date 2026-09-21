@@ -55,11 +55,11 @@ If building on **Apple Silicon (M1/M2/M3)** or **ARM64** device for **AMD64 serv
 ```bash
 # Build for AMD64 platform
 docker buildx build --platform linux/amd64 \
-  -t loyacrm-frontend:latest \
+  -t crm-frontend:latest \
   -f docker/frontend/Dockerfile .
 
 docker buildx build --platform linux/amd64 \
-  -t loyacrm-backend:latest \
+  -t crm-backend:latest \
   -f docker/backend/Dockerfile .
 ```
 
@@ -67,8 +67,8 @@ If building on **AMD64** (Intel/AMD) for **AMD64 server**:
 
 ```bash
 # Build for native platform
-docker build -t loyacrm-frontend:latest -f docker/frontend/Dockerfile .
-docker build -t loyacrm-backend:latest -f docker/backend/Dockerfile .
+docker build -t crm-frontend:latest -f docker/frontend/Dockerfile .
+docker build -t crm-backend:latest -f docker/backend/Dockerfile .
 ```
 
 ### Configure Build Arguments (Optional)
@@ -78,7 +78,7 @@ For specific backend API URL:
 ```bash
 docker buildx build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api \
-  -t loyacrm-frontend:latest \
+  -t crm-frontend:latest \
   -f docker/frontend/Dockerfile .
 ```
 
@@ -91,11 +91,11 @@ Expected build times:
 ### Verify Images
 
 ```bash
-docker images | grep loyacrm
+docker images | grep crm
 
 # Expected output:
-# loyacrm-frontend    latest    abc123    2 minutes ago    150MB
-# loyacrm-backend     latest    def456    5 minutes ago    200MB
+# crm-frontend    latest    abc123    2 minutes ago    150MB
+# crm-backend     latest    def456    5 minutes ago    200MB
 ```
 
 ## Step 3: Export Images
@@ -104,10 +104,10 @@ docker images | grep loyacrm
 
 ```bash
 # Frontend
-docker save loyacrm-frontend:latest | gzip > loyacrm-frontend.tar.gz
+docker save crm-frontend:latest | gzip > crm-frontend.tar.gz
 
 # Backend
-docker save loyacrm-backend:latest | gzip > loyacrm-backend.tar.gz
+docker save crm-backend:latest | gzip > crm-backend.tar.gz
 
 # Check file sizes
 ls -lh *.tar.gz
@@ -121,10 +121,10 @@ ls -lh *.tar.gz
 
 ```bash
 # Transfer frontend
-scp loyacrm-frontend.tar.gz root@YOUR_SERVER_IP:/tmp/
+scp crm-frontend.tar.gz root@YOUR_SERVER_IP:/tmp/
 
 # Transfer backend
-scp loyacrm-backend.tar.gz root@YOUR_SERVER_IP:/tmp/
+scp crm-backend.tar.gz root@YOUR_SERVER_IP:/tmp/
 ```
 
 **Transfer time**: Depends on connection speed
@@ -134,8 +134,8 @@ scp loyacrm-backend.tar.gz root@YOUR_SERVER_IP:/tmp/
 ### Using rsync (faster for updates)
 
 ```bash
-rsync -avz --progress loyacrm-frontend.tar.gz root@YOUR_SERVER_IP:/tmp/
-rsync -avz --progress loyacrm-backend.tar.gz root@YOUR_SERVER_IP:/tmp/
+rsync -avz --progress crm-frontend.tar.gz root@YOUR_SERVER_IP:/tmp/
+rsync -avz --progress crm-backend.tar.gz root@YOUR_SERVER_IP:/tmp/
 ```
 
 ### Alternative: USB/Direct Copy
@@ -152,16 +152,16 @@ For servers without internet or slow connections:
 ssh root@YOUR_SERVER_IP
 
 # Load frontend image
-docker load < /tmp/loyacrm-frontend.tar.gz
+docker load < /tmp/crm-frontend.tar.gz
 
 # Load backend image
-docker load < /tmp/loyacrm-backend.tar.gz
+docker load < /tmp/crm-backend.tar.gz
 
 # Verify images loaded
-docker images | grep loyacrm
+docker images | grep crm
 
 # Cleanup transfer files
-rm /tmp/loyacrm-frontend.tar.gz /tmp/loyacrm-backend.tar.gz
+rm /tmp/crm-frontend.tar.gz /tmp/crm-backend.tar.gz
 ```
 
 ## Step 6: Prepare Configuration Files
@@ -182,13 +182,13 @@ cp .env.example deployment-package/
 cp nginx.conf deployment-package/
 
 # Create archive
-tar -czf loyacrm-config.tar.gz deployment-package/
+tar -czf crm-config.tar.gz deployment-package/
 
 # Transfer to server
-scp loyacrm-config.tar.gz root@YOUR_SERVER_IP:/var/www/
+scp crm-config.tar.gz root@YOUR_SERVER_IP:/var/www/
 
 # Cleanup local
-rm -rf deployment-package loyacrm-config.tar.gz
+rm -rf deployment-package crm-config.tar.gz
 ```
 
 ### Extract on Server
@@ -198,19 +198,19 @@ rm -rf deployment-package loyacrm-config.tar.gz
 cd /var/www
 
 # Extract
-tar -xzf loyacrm-config.tar.gz
+tar -xzf crm-config.tar.gz
 
 # Move to production directory
-mv deployment-package/* loyacrm-production/
+mv deployment-package/* crm-production/
 
 # Cleanup
-rm -rf deployment-package loyacrm-config.tar.gz
+rm -rf deployment-package crm-config.tar.gz
 ```
 
 ## Step 7: Configure Environment Variables
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Create .env from template
 cp .env.example .env
@@ -233,8 +233,8 @@ nano .env
 DOMAIN=YOUR_SERVER_IP
 
 # Database
-POSTGRES_DB=loyacrm
-POSTGRES_USER=loyacrm
+POSTGRES_DB=crm
+POSTGRES_USER=crm
 POSTGRES_PASSWORD=YOUR_GENERATED_PASSWORD
 
 # Security
@@ -244,8 +244,8 @@ JWT_SECRET=YOUR_GENERATED_JWT_SECRET
 NEXT_PUBLIC_BACKEND_API_URL=http://YOUR_SERVER_IP/api
 
 # Docker Images (use local images)
-FRONTEND_IMAGE=loyacrm-frontend:latest
-BACKEND_IMAGE=loyacrm-backend:latest
+FRONTEND_IMAGE=crm-frontend:latest
+BACKEND_IMAGE=crm-backend:latest
 ```
 
 ## Step 8: Update docker-compose.yml
@@ -261,10 +261,10 @@ nano docker-compose.yml
 ```yaml
 services:
   frontend:
-    image: ${FRONTEND_IMAGE:-loyacrm-frontend:latest}
+    image: ${FRONTEND_IMAGE:-crm-frontend:latest}
     
   backend:
-    image: ${BACKEND_IMAGE:-loyacrm-backend:latest}
+    image: ${BACKEND_IMAGE:-crm-backend:latest}
 ```
 
 **Remove** any `build:` directives if present.
@@ -272,7 +272,7 @@ services:
 ## Step 9: Start Services
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Start all services
 docker compose up -d
@@ -288,10 +288,10 @@ docker compose ps
 
 ```
 NAME                     STATUS          PORTS
-loyacrm-backend          Up (healthy)    
-loyacrm-frontend         Up (healthy)    
-loyacrm-nginx            Up              0.0.0.0:80->80/tcp
-loyacrm-postgres         Up (healthy)    
+crm-backend          Up (healthy)    
+crm-frontend         Up (healthy)    
+crm-nginx            Up              0.0.0.0:80->80/tcp
+crm-postgres         Up (healthy)    
 ```
 
 ## Step 10: Database Setup
@@ -300,14 +300,14 @@ loyacrm-postgres         Up (healthy)
 
 ```bash
 # Apply database schema
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 ```
 
 ### Seed Database (First Deployment Only)
 
 ```bash
 # Populate with test data
-docker exec loyacrm-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 **Seed creates:**
@@ -375,46 +375,46 @@ Open browser: `http://YOUR_SERVER_IP/de`
    ```bash
    # Frontend
    docker buildx build --platform linux/amd64 \
-     -t loyacrm-frontend:latest \
+     -t crm-frontend:latest \
      -f docker/frontend/Dockerfile .
    
    # Backend
    docker buildx build --platform linux/amd64 \
-     -t loyacrm-backend:latest \
+     -t crm-backend:latest \
      -f docker/backend/Dockerfile .
    ```
 
 3. **Export new images**:
    ```bash
-   docker save loyacrm-frontend:latest | gzip > loyacrm-frontend.tar.gz
-   docker save loyacrm-backend:latest | gzip > loyacrm-backend.tar.gz
+   docker save crm-frontend:latest | gzip > crm-frontend.tar.gz
+   docker save crm-backend:latest | gzip > crm-backend.tar.gz
    ```
 
 4. **Transfer to server**:
    ```bash
-   scp loyacrm-frontend.tar.gz root@YOUR_SERVER_IP:/tmp/
-   scp loyacrm-backend.tar.gz root@YOUR_SERVER_IP:/tmp/
+   scp crm-frontend.tar.gz root@YOUR_SERVER_IP:/tmp/
+   scp crm-backend.tar.gz root@YOUR_SERVER_IP:/tmp/
    ```
 
 5. **Load on server**:
    ```bash
    ssh root@YOUR_SERVER_IP
    
-   docker load < /tmp/loyacrm-frontend.tar.gz
-   docker load < /tmp/loyacrm-backend.tar.gz
+   docker load < /tmp/crm-frontend.tar.gz
+   docker load < /tmp/crm-backend.tar.gz
    
-   rm /tmp/loyacrm-*.tar.gz
+   rm /tmp/crm-*.tar.gz
    ```
 
 6. **Restart services**:
    ```bash
-   cd /var/www/loyacrm-production
+   cd /var/www/crm-production
    docker compose up -d --force-recreate
    ```
 
 7. **Run migrations** (if database changed):
    ```bash
-   docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+   docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
    ```
 
 ## Platform Compatibility Issues
@@ -434,11 +434,11 @@ unable to start container process: exec format error
 ```bash
 # On local machine
 docker buildx build --platform linux/amd64 \
-  -t loyacrm-frontend:latest \
+  -t crm-frontend:latest \
   -f docker/frontend/Dockerfile .
 
 docker buildx build --platform linux/amd64 \
-  -t loyacrm-backend:latest \
+  -t crm-backend:latest \
   -f docker/backend/Dockerfile .
 ```
 
@@ -454,7 +454,7 @@ uname -m
 ### Check Image Architecture
 
 ```bash
-docker inspect loyacrm-frontend:latest | grep Architecture
+docker inspect crm-frontend:latest | grep Architecture
 # Should match server architecture
 ```
 
@@ -496,7 +496,7 @@ Increase Docker memory limit:
 
 Resume with rsync:
 ```bash
-rsync -avz --progress --partial loyacrm-frontend.tar.gz root@YOUR_SERVER_IP:/tmp/
+rsync -avz --progress --partial crm-frontend.tar.gz root@YOUR_SERVER_IP:/tmp/
 ```
 
 ### Images not loading on server
@@ -517,7 +517,7 @@ docker compose logs backend
 docker compose up -d --force-recreate backend
 
 # Check if migrations needed
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate status'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate status'
 ```
 
 ## Automation Script
@@ -532,28 +532,28 @@ SERVER_IP="YOUR_SERVER_IP"
 SERVER_USER="root"
 
 echo "Building images..."
-docker buildx build --platform linux/amd64 -t loyacrm-frontend:latest -f docker/frontend/Dockerfile .
-docker buildx build --platform linux/amd64 -t loyacrm-backend:latest -f docker/backend/Dockerfile .
+docker buildx build --platform linux/amd64 -t crm-frontend:latest -f docker/frontend/Dockerfile .
+docker buildx build --platform linux/amd64 -t crm-backend:latest -f docker/backend/Dockerfile .
 
 echo "Exporting images..."
-docker save loyacrm-frontend:latest | gzip > loyacrm-frontend.tar.gz
-docker save loyacrm-backend:latest | gzip > loyacrm-backend.tar.gz
+docker save crm-frontend:latest | gzip > crm-frontend.tar.gz
+docker save crm-backend:latest | gzip > crm-backend.tar.gz
 
 echo "Transferring to server..."
-scp loyacrm-frontend.tar.gz ${SERVER_USER}@${SERVER_IP}:/tmp/
-scp loyacrm-backend.tar.gz ${SERVER_USER}@${SERVER_IP}:/tmp/
+scp crm-frontend.tar.gz ${SERVER_USER}@${SERVER_IP}:/tmp/
+scp crm-backend.tar.gz ${SERVER_USER}@${SERVER_IP}:/tmp/
 
 echo "Loading images on server..."
 ssh ${SERVER_USER}@${SERVER_IP} << 'EOF'
-docker load < /tmp/loyacrm-frontend.tar.gz
-docker load < /tmp/loyacrm-backend.tar.gz
-rm /tmp/loyacrm-*.tar.gz
-cd /var/www/loyacrm-production
+docker load < /tmp/crm-frontend.tar.gz
+docker load < /tmp/crm-backend.tar.gz
+rm /tmp/crm-*.tar.gz
+cd /var/www/crm-production
 docker compose up -d --force-recreate
 EOF
 
 echo "Cleaning up local files..."
-rm loyacrm-frontend.tar.gz loyacrm-backend.tar.gz
+rm crm-frontend.tar.gz crm-backend.tar.gz
 
 echo "Deployment complete!"
 ```

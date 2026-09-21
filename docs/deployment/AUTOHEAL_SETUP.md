@@ -16,12 +16,12 @@ Automatic monitoring and restart of containers when they become unhealthy is con
 ### Monitored Containers
 
 **Production:**
-- `loyacrm-frontend` - checked every 30s, restarts when unhealthy
-- `loyacrm-backend` - checked every 30s, restarts when unhealthy
+- `crm-frontend` - checked every 30s, restarts when unhealthy
+- `crm-backend` - checked every 30s, restarts when unhealthy
 
 **Staging:**
-- `loyacrm-staging-frontend` - checked every 30s, restarts when unhealthy
-- `loyacrm-staging-backend` - checked every 30s, restarts when unhealthy
+- `crm-staging-frontend` - checked every 30s, restarts when unhealthy
+- `crm-staging-backend` - checked every 30s, restarts when unhealthy
 
 ### Healthcheck Configuration
 
@@ -62,12 +62,12 @@ ssh root@217.154.173.36 "docker ps --filter 'name=autoheal'"
 
 ### Autoheal logs (Production)
 ```bash
-ssh root@217.154.173.36 "docker logs loyacrm-autoheal -f"
+ssh root@217.154.173.36 "docker logs crm-autoheal -f"
 ```
 
 ### Autoheal logs (Staging)
 ```bash
-ssh root@217.154.173.36 "docker logs loyacrm-staging-autoheal -f"
+ssh root@217.154.173.36 "docker logs crm-staging-autoheal -f"
 ```
 
 ### Check healthcheck status of all containers
@@ -81,11 +81,11 @@ To test autoheal, you can simulate an unhealthy container:
 
 ```bash
 # 1. Make container unhealthy (break the healthcheck)
-ssh root@217.154.173.36 "docker exec loyacrm-frontend sh -c 'rm /usr/bin/wget'"
+ssh root@217.154.173.36 "docker exec crm-frontend sh -c 'rm /usr/bin/wget'"
 
 # 2. Wait ~90 seconds (3 retries * 30s)
 # 3. Verify container became unhealthy
-docker ps --filter 'name=loyacrm-frontend'
+docker ps --filter 'name=crm-frontend'
 
 # 4. Autoheal should automatically restart the container in ~10 seconds
 # 5. After restart, container will be healthy again
@@ -118,20 +118,20 @@ If you need to temporarily disable autoheal:
 
 ```bash
 # Production
-ssh root@217.154.173.36 "cd /var/www/loyacrm-production && docker compose stop autoheal"
+ssh root@217.154.173.36 "cd /var/www/crm-production && docker compose stop autoheal"
 
 # Staging
-ssh root@217.154.173.36 "cd /var/www/loyacrm-staging && docker compose -f docker-compose.stage.yml stop autoheal"
+ssh root@217.154.173.36 "cd /var/www/crm-staging && docker compose -f docker-compose.stage.yml stop autoheal"
 ```
 
 ## Enabling Autoheal
 
 ```bash
 # Production
-ssh root@217.154.173.36 "cd /var/www/loyacrm-production && docker compose start autoheal"
+ssh root@217.154.173.36 "cd /var/www/crm-production && docker compose start autoheal"
 
 # Staging
-ssh root@217.154.173.36 "cd /var/www/loyacrm-staging && docker compose -f docker-compose.stage.yml start autoheal"
+ssh root@217.154.173.36 "cd /var/www/crm-staging && docker compose -f docker-compose.stage.yml start autoheal"
 ```
 
 ## Implementation Date

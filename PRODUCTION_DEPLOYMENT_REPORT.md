@@ -39,22 +39,22 @@
 
 #### PostgreSQL
 ```
-Container: loyacrm-postgres
+Container: crm-postgres
 Image: postgres:16-alpine
 Status: Up 46 minutes (healthy)
 Ports: 0.0.0.0:5432->5432/tcp
-Volume: loyacrm_pg_data
+Volume: crm_pg_data
 ```
 
 Конфигурация:
-- Database: loyacrm
-- User: loyacrm
-- Password: loyacrm2024
+- Database: crm
+- User: crm
+- Password: crm2024
 - Health check: pg_isready каждые 5 секунд
 
 #### Nginx
 ```
-Container: loyacrm-nginx
+Container: crm-nginx
 Image: nginx:alpine
 Status: Up 6 minutes
 Ports: 0.0.0.0:80->80/tcp
@@ -70,7 +70,7 @@ Ports: 0.0.0.0:80->80/tcp
 
 #### Backend
 ```
-Name: loyacrm-backend
+Name: crm-backend
 Script: dist/server.js
 Status: online (0 restarts)
 Memory: ~96 MB
@@ -81,13 +81,13 @@ CPU: 0%
 ```
 NODE_ENV=production
 PORT=4000
-DATABASE_URL=postgresql://loyacrm:loyacrm2024@localhost:5432/loyacrm
+DATABASE_URL=postgresql://crm:crm2024@localhost:5432/crm
 JWT_SECRET=your-secret-key-here-change-in-production
 ```
 
 #### Frontend
 ```
-Name: loyacrm-frontend
+Name: crm-frontend
 Script: pnpm start
 Status: online (45 restarts resolved)
 Memory: ~103 MB
@@ -98,7 +98,7 @@ CPU: 0%
 ```
 NODE_ENV=production
 PORT=3000
-DATABASE_URL=postgresql://loyacrm:loyacrm2024@localhost:5432/loyacrm
+DATABASE_URL=postgresql://crm:crm2024@localhost:5432/crm
 NEXT_PUBLIC_BACKEND_API_URL=http://217.160.74.128/api
 ```
 
@@ -154,17 +154,17 @@ API Response:
 ## Структура Файлов на Сервере
 
 ```
-/var/www/loyacrm-production/
+/var/www/crm-production/
 ├── docker-compose.simple.yml   # Simplified compose (postgres + nginx only)
 ├── .env                         # Environment variables
 ├── nginx/
 │   └── conf.d/
-│       └── loyacrm.conf        # Nginx reverse proxy config
+│       └── crm.conf        # Nginx reverse proxy config
 └── secrets/
     ├── db_password.txt
     └── jwt_secret.txt
 
-/var/www/loyacrm/
+/var/www/crm/
 ├── backend/                     # Backend source code
 │   ├── dist/                   # Compiled TypeScript
 │   ├── generated/prisma/       # Prisma client
@@ -229,7 +229,7 @@ pm2 restart all
 **Решение**:
 ```bash
 kill -9 $(ss -tulpn | grep :3000 | awk '{print $7}' | cut -d',' -f2 | cut -d'=' -f2)
-pm2 restart loyacrm-frontend
+pm2 restart crm-frontend
 ```
 
 ### 4. Nginx host.docker.internal
@@ -251,7 +251,7 @@ pm2 restart loyacrm-frontend
 
 ### Логи Docker
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose -f docker-compose.simple.yml logs -f
 docker compose -f docker-compose.simple.yml logs postgres
 docker compose -f docker-compose.simple.yml logs nginx
@@ -260,8 +260,8 @@ docker compose -f docker-compose.simple.yml logs nginx
 ### Логи PM2
 ```bash
 pm2 logs                    # Все процессы
-pm2 logs loyacrm-backend    # Backend only
-pm2 logs loyacrm-frontend   # Frontend only
+pm2 logs crm-backend    # Backend only
+pm2 logs crm-frontend   # Frontend only
 pm2 logs --lines 100        # Последние 100 строк
 pm2 logs --err              # Только ошибки
 ```
@@ -301,7 +301,7 @@ free -h                     # Использование памяти
 
 5. **Настроить Backup**
    - Регулярный бэкап PostgreSQL
-   - Использовать предоставленный скрипт /var/www/loyacrm-production/backups/
+   - Использовать предоставленный скрипт /var/www/crm-production/backups/
    - Настроить cron job для автоматического бэкапа
 
 6. **Мониторинг и Alerts**
@@ -325,12 +325,12 @@ free -h                     # Использование памяти
 ### Перезапуск Приложений
 ```bash
 # Перезапуск всех компонентов
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose -f docker-compose.simple.yml restart
 pm2 restart all
 
 # Перезапуск только приложений
-pm2 restart loyacrm-backend loyacrm-frontend
+pm2 restart crm-backend crm-frontend
 
 # Перезапуск только инфраструктуры
 docker compose -f docker-compose.simple.yml restart postgres nginx
@@ -341,17 +341,17 @@ docker compose -f docker-compose.simple.yml restart postgres nginx
 # На локальной машине:
 cd /Users/sergeydaub/work/BZH/LoyaCareCRM
 pnpm run build  # backend + frontend build
-rsync -avz --exclude='node_modules' --exclude='.git' . root@217.160.74.128:/var/www/loyacrm/
+rsync -avz --exclude='node_modules' --exclude='.git' . root@217.160.74.128:/var/www/crm/
 
 # На сервере:
-cd /var/www/loyacrm
+cd /var/www/crm
 pm2 restart all
 ```
 
 ### Database Operations
 ```bash
-cd /var/www/loyacrm/db
-export DATABASE_URL='postgresql://loyacrm:loyacrm2024@localhost:5432/loyacrm'
+cd /var/www/crm/db
+export DATABASE_URL='postgresql://crm:crm2024@localhost:5432/crm'
 
 # Миграции
 pnpm run migrate:deploy
@@ -363,7 +363,7 @@ pnpm run migrate:rollback
 pnpm run seed
 
 # Backup
-docker exec loyacrm-postgres pg_dump -U loyacrm loyacrm > backup_$(date +%Y%m%d).sql
+docker exec crm-postgres pg_dump -U crm crm > backup_$(date +%Y%m%d).sql
 ```
 
 ## Результат Развертывания

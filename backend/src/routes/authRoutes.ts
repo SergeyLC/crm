@@ -1,4 +1,4 @@
-// filepath: /Users/sergeydaub/Documents/work/LoyaCRM/backend/src/routes/authRoutes.ts
+// filepath: /Users/sergeydaub/Documents/work/crm/backend/src/routes/authRoutes.ts
 import express from "express";
 import { login, getCurrentUser, logout } from "../controllers/authController";
 import { authenticateToken } from "../middlewares/authMiddleware";

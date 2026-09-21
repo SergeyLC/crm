@@ -101,10 +101,10 @@ cp .env.example deployment-package/
 cp nginx.conf deployment-package/
 
 # Create archive
-tar -czf loyacrm-deployment.tar.gz deployment-package/
+tar -czf crm-deployment.tar.gz deployment-package/
 
 # Copy to server
-scp loyacrm-deployment.tar.gz root@YOUR_SERVER_IP:/var/www/
+scp crm-deployment.tar.gz root@YOUR_SERVER_IP:/var/www/
 ```
 
 ## Step 3: Extract and Configure on Server
@@ -117,16 +117,16 @@ ssh root@YOUR_SERVER_IP
 cd /var/www
 
 # Extract archive
-tar -xzf loyacrm-deployment.tar.gz
+tar -xzf crm-deployment.tar.gz
 
 # Move files to production directory
-mv deployment-package/* loyacrm-production/
+mv deployment-package/* crm-production/
 
 # Cleanup
-rm -rf deployment-package loyacrm-deployment.tar.gz
+rm -rf deployment-package crm-deployment.tar.gz
 
 # Go to production directory
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 ```
 
 ## Step 4: Update docker-compose.yml
@@ -178,7 +178,7 @@ docker login ghcr.io
 ## Step 6: Configure Environment Variables
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Create .env from template
 cp .env.example .env
@@ -201,8 +201,8 @@ nano .env
 DOMAIN=YOUR_SERVER_IP
 
 # Database
-POSTGRES_DB=loyacrm
-POSTGRES_USER=loyacrm
+POSTGRES_DB=crm
+POSTGRES_USER=crm
 POSTGRES_PASSWORD=YOUR_GENERATED_PASSWORD
 
 # Security
@@ -219,7 +219,7 @@ BACKEND_IMAGE=ghcr.io/YOUR_USERNAME/crm/backend:latest
 ## Step 7: Start Services
 
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 
 # Pull images from GitHub Container Registry
 docker compose pull
@@ -237,20 +237,20 @@ docker compose ps
 **Expected output:**
 ```
 NAME                     STATUS          PORTS
-loyacrm-backend          Up (healthy)    
-loyacrm-frontend         Up (healthy)    
-loyacrm-nginx            Up              0.0.0.0:80->80/tcp
-loyacrm-postgres         Up (healthy)    
+crm-backend          Up (healthy)    
+crm-frontend         Up (healthy)    
+crm-nginx            Up              0.0.0.0:80->80/tcp
+crm-postgres         Up (healthy)    
 ```
 
 ## Step 8: Run Database Migrations
 
 ```bash
 # Apply database migrations
-docker exec loyacrm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
+docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Run seed data (first deployment only)
-docker exec loyacrm-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-backend sh -c 'cd /app/db && npm run seed'
 ```
 
 **Seed creates**:
@@ -318,7 +318,7 @@ When new code is pushed to GitHub:
 
 3. **Update on server:**
    ```bash
-   cd /var/www/loyacrm-production
+   cd /var/www/crm-production
    
    # Pull new images
    docker compose pull
@@ -428,10 +428,10 @@ docker compose up -d --force-recreate backend
 docker compose logs postgres
 
 # Verify DATABASE_URL in backend
-docker exec loyacrm-backend env | grep DATABASE_URL
+docker exec crm-backend env | grep DATABASE_URL
 
 # Test connection
-docker exec loyacrm-postgres psql -U loyacrm -d loyacrm -c "SELECT 1;"
+docker exec crm-postgres psql -U crm -d crm -c "SELECT 1;"
 ```
 
 ## Security Best Practices

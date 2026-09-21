@@ -52,18 +52,18 @@ proxy_buffers 8 4k;  # Efficient buffering
 
 ### Step 1: Backup current configuration
 ```bash
-sudo cp /etc/nginx/sites-available/loyacrm /etc/nginx/sites-available/loyacrm.backup
+sudo cp /etc/nginx/sites-available/crm /etc/nginx/sites-available/crm.backup
 ```
 
 ### Step 2: Copy optimized configuration
 ```bash
 # Copy .github/nginx-optimized.conf from the repository
-sudo cp /path/to/repo/.github/nginx-optimized.conf /etc/nginx/sites-available/loyacrm
+sudo cp /path/to/repo/.github/nginx-optimized.conf /etc/nginx/sites-available/crm
 ```
 
 ### Step 3: Edit for your domain
 ```bash
-sudo nano /etc/nginx/sites-available/loyacrm
+sudo nano /etc/nginx/sites-available/crm
 ```
 
 Replace:

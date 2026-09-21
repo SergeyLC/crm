@@ -24,8 +24,8 @@ Successfully deployed LoyaCare CRM on production server using Docker containers.
 | Component | Image | Status | Port |
 |-----------|-------|--------|------|
 | **Nginx** | nginx:alpine | ✅ Running | 80 |
-| **Frontend** | loyacrm-frontend:latest | ✅ Running (healthy) | 3000 |
-| **Backend** | loyacrm-backend:latest | ✅ Running | 4000 |
+| **Frontend** | crm-frontend:latest | ✅ Running (healthy) | 3000 |
+| **Backend** | crm-backend:latest | ✅ Running | 4000 |
 | **PostgreSQL** | postgres:16-alpine | ✅ Running (healthy) | 5432 |
 
 ## 🛠️ Installation Steps Performed
@@ -36,23 +36,23 @@ Successfully deployed LoyaCare CRM on production server using Docker containers.
 - ✅ Installed Docker Compose (v5.0.0)
 
 ### 2. Project Setup
-- ✅ Copied project source code to `/var/www/loyacrm-source`
-- ✅ Created deployment directory `/var/www/loyacrm-production`
+- ✅ Copied project source code to `/var/www/crm-source`
+- ✅ Created deployment directory `/var/www/crm-production`
 - ✅ Configured environment variables for IP-based access
 
 ### 3. Docker Images
-- ✅ Built backend image from source (loyacrm-backend:latest)
-- ✅ Built frontend image from source (loyacrm-frontend:latest)
+- ✅ Built backend image from source (crm-backend:latest)
+- ✅ Built frontend image from source (crm-frontend:latest)
 - ✅ Pulled nginx:alpine and postgres:16-alpine
 
 ### 4. Database Setup
-- ✅ Created persistent volume `loyacrm_pg_data`
+- ✅ Created persistent volume `crm_pg_data`
 - ✅ Applied all migrations (3 migrations)
 - ✅ Seeded database with initial data (users, leads, deals)
 
 ### 5. Configuration Files
 - ✅ docker-compose.yml - Main orchestration file
-- ✅ nginx/conf.d/loyacrm.conf - Nginx reverse proxy configuration
+- ✅ nginx/conf.d/crm.conf - Nginx reverse proxy configuration
 - ✅ .env - Environment variables
 
 ## ⚙️ Configuration Details
@@ -70,14 +70,14 @@ PORT=4000
 NODE_ENV=production
 LOG_LEVEL=info
 CORS_ORIGIN=http://217.154.173.36
-DATABASE_URL=postgresql://loyacrm:loyacrm2024secure@postgres:5432/loyacrm
+DATABASE_URL=postgresql://crm:crm2024secure@postgres:5432/crm
 ```
 
 ### Database Credentials
 ```
-User: loyacrm
-Password: loyacrm2024secure
-Database: loyacrm
+User: crm
+Password: crm2024secure
+Database: crm
 Host: postgres (Docker network)
 Port: 5432
 ```
@@ -138,16 +138,16 @@ curl -X POST http://217.154.173.36/api/auth/login \
 ## 📂 Directory Structure on Server
 
 ```
-/var/www/loyacrm-production/
+/var/www/crm-production/
 ├── docker-compose.yml
 ├── .env
 ├── nginx/
 │   └── conf.d/
-│       └── loyacrm.conf
+│       └── crm.conf
 ├── backups/
 └── README.md
 
-/var/www/loyacrm-source/
+/var/www/crm-source/
 ├── backend/
 ├── frontend/
 ├── db/
@@ -159,13 +159,13 @@ curl -X POST http://217.154.173.36/api/auth/login \
 
 ### Start Services
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose up -d
 ```
 
 ### Stop Services
 ```bash
-cd /var/www/loyacrm-production
+cd /var/www/crm-production
 docker compose down
 ```
 
