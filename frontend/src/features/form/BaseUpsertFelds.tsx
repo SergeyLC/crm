@@ -98,8 +98,7 @@ export const BaseUpsertFields = <
 
   const handleStageChange = React.useCallback(
     (stage: EnumDealStage) => {
-      form.stage = stage as TState["stage"];
-      setForm({ ...form, stage });
+      setForm({ ...form, stage: stage as TState["stage"] });
     },
     [form, setForm]
   );

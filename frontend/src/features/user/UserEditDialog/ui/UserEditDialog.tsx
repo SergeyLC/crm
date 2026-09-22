@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -51,12 +51,13 @@ export const UserEditDialog: React.FC<UserEditDialogProps> = ({
   const isLoading =
     isLoadingUser || createUser.isPending || updateUser.isPending;
 
-  useEffect(() => {
-    // Reset error on dialog open/close
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setError(undefined);
     }
-  }, [open, id]);
+  }
 
   const handleSubmit = async (formData: CreateUserDTO | UpdateUserDTO) => {
     try {

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
@@ -26,16 +26,17 @@ export const PipelineGroupsDialog: React.FC<PipelineGroupsDialogProps> = ({
   onSuccess
 }) => {
   const { t } = useTranslation("PipelineGroupsDialog");
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>(
+    () => pipeline.groups?.map(pg => pg.groupId) ?? []
+  );
+  const [prevPipeline, setPrevPipeline] = useState(pipeline);
+  if (pipeline !== prevPipeline) {
+    setPrevPipeline(pipeline);
+    setSelectedGroups(pipeline.groups?.map(pg => pg.groupId) ?? []);
+  }
   
   const { data: allGroups, isLoading, isError } = useAllGroups();
   const { mutateAsync: assignGroups, isPending: isSubmitting } = useAssignGroupsToPipeline();
-
-  useEffect(() => {
-    if (pipeline.groups) {
-      setSelectedGroups(pipeline.groups.map(pg => pg.groupId));
-    }
-  }, [pipeline]);
 
   const handleToggleGroup = (groupId: string) => {
     setSelectedGroups(prev => {

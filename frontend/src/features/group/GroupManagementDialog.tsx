@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -30,9 +30,6 @@ export function GroupManagementDialog({
   const { t, ready } = useTranslation("group");
   const [addMembersDialogOpen, setAddMembersDialogOpen] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  
-  // Добавляем состояние для отслеживания успешного создания группы
-  const [groupCreated, setGroupCreated] = useState(false);
 
   const {
     control,
@@ -104,40 +101,26 @@ export function GroupManagementDialog({
     handleCloseAddMembersDialog();
   };
   
-  // Модифицируем функцию сохранения, чтобы отслеживать успешное создание группы
+  const isCreateMode = !group;
+
+  // After successful create, reset form and member queues
   const handleSaveGroup = async (
     data: GroupFormData
   ) => {
     const result = await handleSaveAllChanges(data);
 
-    // Если мы в режиме создания и операция была успешной
     if (isCreateMode && result) {
-      setGroupCreated(true);
-    }
-
-    return result;
-  };
-  
-  // Отслеживаем завершение создания группы
-  useEffect(() => {
-    // Если группа была создана успешно
-    if (groupCreated) {
-      // Очищаем форму
       reset({
         name: '',
         leaderId: '',
       });
-      
-      // Сбрасываем списки членов
       setMembersToAdd([]);
       setMembersToRemove([]);
-      
-      // Сбрасываем флаг создания группы
-      setGroupCreated(false);
     }
-  }, [groupCreated, reset, setMembersToAdd, setMembersToRemove]);
 
-  const isCreateMode = !group;
+    return result;
+  };
+
   const isAnyPending =
     updateGroupMutation.isPending ||
     createGroupMutation.isPending ||

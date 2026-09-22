@@ -10,6 +10,7 @@ import {
   rectIntersection,
   DragEndEvent,
   DragOverEvent,
+  DragStartEvent,
   useDroppable,
   DragOverlay,
   CollisionDetection,
@@ -20,7 +21,6 @@ import Paper from "@mui/material/Paper";
 import {
   CardsByRestStages,
   useDndSensors,
-  createChangeScheduler,
   processDragOver,
   processDragEnd,
   findCardById,
@@ -76,9 +76,25 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
 
   const pendingOnChangeRef = React.useRef<number | null>(null);
 
-  const scheduleOnChange = React.useMemo(
-    () => createChangeScheduler(onChange, pendingOnChangeRef),
-    [onChange, pendingOnChangeRef]
+  const scheduleOnChange = React.useCallback(
+    (next: KanbanStackData[], restStages?: CardsByRestStages) => {
+      if (!onChange) return;
+
+      if (pendingOnChangeRef.current !== null) {
+        cancelAnimationFrame(pendingOnChangeRef.current);
+        pendingOnChangeRef.current = null;
+      }
+
+      if (typeof window !== "undefined" && "requestAnimationFrame" in window) {
+        pendingOnChangeRef.current = window.requestAnimationFrame(() => {
+          pendingOnChangeRef.current = null;
+          onChange(next, restStages);
+        });
+      } else {
+        Promise.resolve().then(() => onChange(next, restStages));
+      }
+    },
+    [onChange]
   );
 
   const [currentOverId, setCurrentOverId] = React.useState<string | null>(null);
@@ -124,11 +140,11 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
       sensors={sensors}
       collisionDetection={customCollisionDetection}
       onDragOver={onDragOver}
-      onDragEnd={(e: any) => {
+      onDragEnd={(e: DragEndEvent) => {
         setActiveId(null);
         onDragEndInternal(e);
       }}
-      onDragStart={(e: any) => {
+      onDragStart={(e: DragStartEvent) => {
         setActiveId(String(e.active.id));
       }}
     >
@@ -207,7 +223,7 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
           style={{ zIndex: 1400 }}
           modifiers={[
             // Switch off automatic scaling
-            ({ transform }: any) => ({
+            ({ transform }: { transform: { x: number; y: number; scaleX: number; scaleY: number } }) => ({
               ...transform,
               scaleX: 1,
               scaleY: 1,

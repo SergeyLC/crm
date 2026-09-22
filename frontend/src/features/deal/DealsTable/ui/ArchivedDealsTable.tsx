@@ -84,18 +84,11 @@ export function ArchivedDealsTable<T extends DealExt>({
     showDialog,
   } = useEntityDialog();
 
-  const wasInitialDataUsed = React.useRef(false);
+  const [initialPlaceholder] = React.useState(initialData);
   const invalidateDeals = useInvalidateQueries();
 
-  React.useEffect(() => {
-    if (!wasInitialDataUsed.current && initialData) {
-      wasInitialDataUsed.current = true;
-    }
-  }, [initialData]);
-
-
   const { useQuery, queryKey } = useGetArchivedDealsQuery(undefined, {
-    placeholderData: wasInitialDataUsed.current ? undefined : initialData,
+    placeholderData: initialPlaceholder,
   });
 
   const { data: deals = [] } = useQuery;

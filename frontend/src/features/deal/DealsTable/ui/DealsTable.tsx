@@ -93,18 +93,11 @@ export function DealsTable<T extends DealExt>({
     handleDialogClose,
     showDialog,
   } = useEntityDialog();
-  // Use initialData only on first render, thereafter — undefined
-  const wasInitialDataUsed = React.useRef(false);
-
-  // After the first render, do not pass initialData anymore
-  React.useEffect(() => {
-    if (!wasInitialDataUsed.current && initialData) {
-      wasInitialDataUsed.current = true;
-    }
-  }, [initialData]);
+  // Capture initialData once at mount for placeholder use
+  const [initialPlaceholder] = React.useState(initialData);
 
   const { useQuery, queryKey } = useGetActiveDealsQuery(undefined, {
-    placeholderData: wasInitialDataUsed.current ? undefined : initialData,
+    placeholderData: initialPlaceholder,
   });
 
   const { data: deals = [] } = useQuery;

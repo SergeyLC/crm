@@ -152,6 +152,19 @@ export function UsersTable({
     return base.concat(groupActions[statusFilter]);
   }, [statusFilter, handleRefreshData, groupActions, handleCreateClick, t]);
 
+  const headerTitle = useMemo(
+    () =>
+      (
+        {
+          ACTIVE: t("view.active"),
+          ALL: t("view.all"),
+          BLOCKED: t("view.blocked"),
+          INACTIVE: t("view.inactive", "Inactive Users"),
+        } as Record<UserStatusFilter, string>
+      )[statusFilter],
+    [statusFilter, t]
+  );
+
   const ToolbarComponent = ({
     selected,
     clearSelection,
@@ -168,19 +181,6 @@ export function UsersTable({
       menuItems={toolbarMenuItems}
       clearSelection={clearSelection}
     />
-  );
-
-  const headerTitle = useMemo(
-    () =>
-      (
-        {
-          ACTIVE: t("view.active"),
-          ALL: t("view.all"),
-          BLOCKED: t("view.blocked"),
-          INACTIVE: t("view.inactive", "Inactive Users"),
-        } as Record<UserStatusFilter, string>
-      )[statusFilter],
-    [statusFilter, t]
   );
 
   const localizedColumns = React.useMemo(() => {

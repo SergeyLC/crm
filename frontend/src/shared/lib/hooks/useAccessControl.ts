@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useLocale, localePath } from '@/shared/lib/hooks/useLocale';
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { UserRole } from "@/entities/user";
 
 interface UseAccessControlOptions {
@@ -18,27 +18,36 @@ export function useAccessControl({
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const locale = useLocale();
-  const [hasAccess, setHasAccess] = useState(false);
+
+  const hasAccess =
+    !isLoading &&
+    !!isAuthenticated &&
+    !!user &&
+    ((requiredRole === "ADMIN" && user.role === "ADMIN") ||
+      (requiredRole === "EMPLOYEE" &&
+        ["ADMIN", "EMPLOYEE"].includes(user.role)));
 
   useEffect(() => {
-    // Если загрузка завершена и пользователь авторизован
-    if (!isLoading) {
-      if (isAuthenticated && user) {
-        // Проверяем роль пользователя
-        if (requiredRole === "ADMIN" && user.role === "ADMIN") {
-          setHasAccess(true);
-        } else if (requiredRole === "EMPLOYEE" && ["ADMIN", "EMPLOYEE"].includes(user.role)) {
-          setHasAccess(true);
-        } else {
-          // Если нет доступа - редирект
-          router.push(localePath(redirectPath, locale));
-        }
-      } else {
-        // Не авторизован - редирект
-  router.push(localePath('/login', locale));
-      }
+    if (isLoading) return;
+
+    if (!isAuthenticated || !user) {
+      router.push(localePath('/login', locale));
+      return;
     }
-  }, [isLoading, isAuthenticated, user, requiredRole, redirectPath, router, locale]);
+
+    if (!hasAccess) {
+      router.push(localePath(redirectPath, locale));
+    }
+  }, [
+    isLoading,
+    isAuthenticated,
+    user,
+    hasAccess,
+    requiredRole,
+    redirectPath,
+    router,
+    locale,
+  ]);
 
   return {
     hasAccess,

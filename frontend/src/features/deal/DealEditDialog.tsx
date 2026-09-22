@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
@@ -179,6 +179,18 @@ export function DealEditDialog({
   const [dealData, setDealData] = useState<CreateDealDTO | UpdateDealDTO>(
     data || (!id && isAuthenticated ? { assigneeId: user?.id || "" } : {})
   );
+  const [prevData, setPrevData] = useState(data);
+  const [prevUserId, setPrevUserId] = useState(user?.id);
+
+  if (data !== prevData) {
+    setPrevData(data);
+    if (data) {
+      setDealData(data);
+    }
+  } else if (!id && isAuthenticated && user?.id && user.id !== prevUserId) {
+    setPrevUserId(user.id);
+    setDealData({ assigneeId: user.id });
+  }
 
   const onChange = useCallback(
     (data: CreateDealDTO | UpdateDealDTO) => {
@@ -203,14 +215,6 @@ export function DealEditDialog({
     },
     [handleSubmit, dealData]
   );
-
-  useEffect(() => {
-    if (data) {
-      setDealData(data);
-    } else if (!id && isAuthenticated && user) {
-      setDealData({ assigneeId: user.id });
-    }
-  }, [data, id, isAuthenticated, user]);
 
   return (
     <Dialog

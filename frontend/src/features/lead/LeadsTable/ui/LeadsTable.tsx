@@ -85,16 +85,15 @@ export function LeadsTable<T extends LeadExt>({
     showDialog,
   } = useEntityDialog();
 
-  // Use initialData only on first render, thereafter — undefined
-  const wasInitialDataUsed = React.useRef(false);
+  // Capture initialData once at mount
+  const [initialPlaceholder] = React.useState(initialData);
 
   const {
     useQuery: { data: archivedLeads = [], isLoading: isLoadingArchived },
     queryKey: queryKeyArchived,
   } = useGetArchivedLeadsQuery({
     enabled: showArchived,
-    initialData:
-      showArchived && !wasInitialDataUsed.current ? initialData : undefined,
+    initialData: showArchived ? initialPlaceholder : undefined,
   });
 
   const {
@@ -102,16 +101,8 @@ export function LeadsTable<T extends LeadExt>({
     queryKey: queryKeyActive,
   } = useGetLeadsQuery({
     enabled: !showArchived,
-    initialData:
-      !showArchived && !wasInitialDataUsed.current ? initialData : undefined,
+    initialData: !showArchived ? initialPlaceholder : undefined,
   });
-
-  // After the first render, do not pass initialData anymore
-  React.useEffect(() => {
-    if (!wasInitialDataUsed.current && initialData) {
-      wasInitialDataUsed.current = true;
-    }
-  }, [initialData]);
 
   // Select the appropriate data based on showArchived prop
   const leads = showArchived ? archivedLeads : activeLeads;

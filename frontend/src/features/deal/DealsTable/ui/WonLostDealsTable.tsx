@@ -85,21 +85,14 @@ export function WonLostDealsTable<T extends DealExt>({
 
   const invalidateDeals = useInvalidateQueries();
 
-  const wasInitialDataUsed = React.useRef(false);
-
-  React.useEffect(() => {
-    if (!wasInitialDataUsed.current && initialData) {
-      wasInitialDataUsed.current = true;
-    }
-  }, [initialData]);
+  const [initialPlaceholder] = React.useState(initialData);
 
   const {
     useQuery: { data: wonDeals = [] },
     queryKey: queryKeyWon,
   } = useGetWonDealsQuery(undefined, {
     enabled: isWon,
-    placeholderData:
-      isWon && !wasInitialDataUsed.current ? initialData : undefined,
+    placeholderData: isWon ? initialPlaceholder : undefined,
   });
 
   const {
@@ -107,8 +100,7 @@ export function WonLostDealsTable<T extends DealExt>({
     queryKey: queryKeyLost,
   } = useGetLostDealsQuery(undefined, {
     enabled: !isWon,
-    placeholderData:
-      !isWon && !wasInitialDataUsed.current ? initialData : undefined,
+    placeholderData: !isWon ? initialPlaceholder : undefined,
   });
 
   const deals = isWon ? wonDeals : lostDeals;

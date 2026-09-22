@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 
 import {
   CardsByRestStages,
@@ -81,6 +81,13 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const [stacksInfo, setStacksInfo] = React.useState<KanbanStackData[]>(
     () => dealStacks
   );
+  const [prevDealStacks, setPrevDealStacks] = React.useState(dealStacks);
+  if (dealStacks !== prevDealStacks) {
+    setPrevDealStacks(dealStacks);
+    if (dealStacks.length) {
+      setStacksInfo(dealStacks);
+    }
+  }
 
   const invalidateDeals = useInvalidateQueries();
 
@@ -103,13 +110,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   const getDealById = useLazyGetDealByIdQuery();
   const updateDeal = useUpdateDealMutation({ onSuccess });
-
-  // Update state when data source changes
-  useEffect(() => {
-    if (dealStacks.length) {
-      setStacksInfo(dealStacks);
-    }
-  }, [dealStacks]);
 
   const footerItems: { id: DealStage | DealStatus; label: string }[] = [
     { id: "LOST", label: t("footer.lost") },

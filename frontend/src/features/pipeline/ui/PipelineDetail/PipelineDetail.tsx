@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { 
   Box, Paper, Typography, Button, Tabs, Tab, 
@@ -54,6 +54,13 @@ export const PipelineDetail = () => {
 
   // Fetch pipeline data
   const { data: pipeline, isLoading } = usePipeline(pipelineId);
+  const [prevPipeline, setPrevPipeline] = useState(pipeline);
+  if (pipeline !== prevPipeline) {
+    setPrevPipeline(pipeline);
+    if (pipeline) {
+      setPipelineData(pipeline);
+    }
+  }
   
   // Используем хуки для мутаций из '@/entities/pipeline'
   const { mutateAsync: updatePipelineMutation } = useUpdatePipeline();
@@ -63,12 +70,6 @@ export const PipelineDetail = () => {
   const { mutateAsync: removeGroupMutation } = useRemoveGroupFromPipeline();
   const { data: allUsers } = useAllUsers();
   const { data: allGroups } = useAllGroups();
-
-  useEffect(() => {
-    if (pipeline) {
-      setPipelineData(pipeline);
-    }
-  }, [pipeline]);
 
 
   const handleUpdatePipeline = () => {

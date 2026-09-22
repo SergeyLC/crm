@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
@@ -209,6 +209,18 @@ export function LeadEditDialog({
   const [leadData, setLeadData] = useState<CreateLeadDTO | UpdateLeadDTO>(
     data || (!id && isAuthenticated ? { assigneeId: user?.id || "" } : {})
   );
+  const [prevData, setPrevData] = useState(data);
+  const [prevUserId, setPrevUserId] = useState(user?.id);
+
+  if (data !== prevData) {
+    setPrevData(data);
+    if (data) {
+      setLeadData(data);
+    }
+  } else if (!id && isAuthenticated && user?.id && user.id !== prevUserId) {
+    setPrevUserId(user.id);
+    setLeadData({ assigneeId: user.id });
+  }
 
   const onChange = useCallback(
     (data: CreateLeadDTO | UpdateLeadDTO) => {
@@ -233,14 +245,6 @@ export function LeadEditDialog({
     },
     [handleSubmit, leadData]
   );
-
-  useEffect(() => {
-    if (data) {
-      setLeadData(data);
-    } else if (!id && isAuthenticated && user) {
-      setLeadData({ assigneeId: user.id });
-    }
-  }, [data, id, isAuthenticated, user]);
 
   if (!open) return null;
 

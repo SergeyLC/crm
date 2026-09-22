@@ -57,14 +57,12 @@ export const UrlViewSwitcher: React.FC<UrlViewSwitcherProps> = ({
   );
 
   // Get current active view based on the path
-  const getCurrentView = React.useCallback(() => {
+  const currentView = React.useMemo(() => {
     const activeElement = elements.find((element) =>
       pathnameWithoutQuery?.endsWith(element.path)
     );
     return activeElement?.name || "";
   }, [elements, pathnameWithoutQuery]);
-
-  const currentView = React.useMemo(getCurrentView, [getCurrentView]);
 
   const handleViewChange = React.useCallback(
     (newView: string) => {

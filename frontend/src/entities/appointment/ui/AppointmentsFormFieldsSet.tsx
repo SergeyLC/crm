@@ -40,11 +40,14 @@ export const AppointmentsFormFieldsSet: React.FC<
   );
 
   const handleAdd = useCallback(() => {
-    appointments.push({
-      type: null,
-      note: null,
-    } as CreateAppointmentDTO);
-    onChange?.(appointments);
+    const next = [
+      ...appointments,
+      {
+        type: null,
+        note: null,
+      } as CreateAppointmentDTO,
+    ];
+    onChange?.(next);
   }, [appointments, onChange]);
 
   const handleRemove = useCallback(
@@ -54,24 +57,31 @@ export const AppointmentsFormFieldsSet: React.FC<
       const removedAppointment = appointments[idx] as DeleteAppointmentDTO;
       if (!removedAppointment) return;
 
+      let next: typeof appointments;
       // save information about appointments should be deleted
       if (removedAppointment.id && removedAppointment.dealId) {
-        appointments[idx] = {
-          id: removedAppointment.id,
-          dealId: "REMOVED",
-        };
+        next = appointments.map((item, i) =>
+          i === idx
+            ? {
+                id: removedAppointment.id,
+                dealId: "REMOVED",
+              }
+            : item
+        );
       } else {
-        appointments.splice(idx, 1);
+        next = appointments.filter((_, i) => i !== idx);
       }
-      onChange?.(appointments);
+      onChange?.(next);
     },
     [appointments, onChange]
   );
 
   const handleChange = useCallback(
     (idx: number | string, value: Appointment) => {
-      appointments[Number(idx)] = value;
-      onChange?.(appointments);
+      const next = appointments.map((item, i) =>
+        i === Number(idx) ? value : item
+      );
+      onChange?.(next);
     },
     [appointments, onChange]
   );

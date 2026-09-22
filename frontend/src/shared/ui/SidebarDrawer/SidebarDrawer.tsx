@@ -117,7 +117,7 @@ export function SidebarDrawer() {
     if (!user?.role) return undefined;
     const key = user.role.toLowerCase();
     return t(`${key}`, user.role);
-  }, [user?.role, t]);
+  }, [user, t]);
 
   const secondaryUserLine = roleLabel;
 

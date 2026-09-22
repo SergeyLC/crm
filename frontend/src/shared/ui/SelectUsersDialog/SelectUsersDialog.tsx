@@ -33,7 +33,7 @@
  */
 
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -98,13 +98,15 @@ export function SelectUsersDialog({
 }: SelectUsersDialogProps) {
   const { t } = useTranslation('common');
   const [searchTerm, setSearchTerm] = useState('');
+  const [wasOpen, setWasOpen] = useState(open);
 
-  // Reset search when dialog opens or closes
-  useEffect(() => {
+  // Reset search when dialog opens (adjust state during render)
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setSearchTerm('');
     }
-  }, [open]);
+  }
 
   // Filter users based on search term
   const filteredUsers = searchTerm.trim() === '' 
