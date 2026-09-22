@@ -45,13 +45,19 @@ Add 3 secrets:
 |-------------|---------|-------------|
 | `SERVER_HOST` | `217.160.74.128` | Your server IP or domain |
 | `SERVER_USER` | `root` | SSH user |
-| `SERVER_SSH_KEY` | `-----BEGIN...` | Full SSH private key |
+| `SERVER_SSH_KEY` | `-----BEGIN...` | Full SSH **private** key (pair with public key on server) |
 
-**How to get the SSH key:**
+**How to get the SSH key pair** (private → GitHub, public → server):
+
 ```bash
-cat ~/.ssh/id_rsa  # or another path to your key
-# Copy EVERYTHING, including the -----BEGIN and -----END lines
+ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_deploy -N ""
+# Public key on server (as SERVER_USER, e.g. root → /root/.ssh/authorized_keys):
+cat ~/.ssh/github_deploy.pub >> ~/.ssh/authorized_keys
+# Private key into GitHub secret SERVER_SSH_KEY:
+cat ~/.ssh/github_deploy
 ```
+
+Full details: [GitHub Secrets Guide — SERVER_SSH_KEY](../docs/deployment/GITHUB_SECRETS_GUIDE.md#server_ssh_key)
 
 ### 4️⃣ (Optional) Set a Repository Variable
 

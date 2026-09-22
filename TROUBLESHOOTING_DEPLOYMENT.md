@@ -69,9 +69,13 @@ These secrets are shared across all environments:
 
 **Settings → Secrets and variables → Actions → Secrets → New repository secret**
 
-- `SERVER_HOST` - server IP or domain (e.g. `217.160.74.128`)
+- `SERVER_HOST` - server IP or domain (e.g. `217.154.173.36`)
 - `SERVER_USER` - SSH user (e.g. `root`)
-- `SERVER_SSH_KEY` - SSH private key (full key, including BEGIN/END)
+- `SERVER_SSH_KEY` - SSH **private** key (full key, including BEGIN/END)
+
+The matching **public** key must be in that user's `~/.ssh/authorized_keys` on the server  
+(for `root`: `/root/.ssh/authorized_keys`).  
+Details: [GITHUB_SECRETS_GUIDE.md — SERVER_SSH_KEY](docs/deployment/GITHUB_SECRETS_GUIDE.md#server_ssh_key)
 
 ### Step 4: Set the repository variable (optional)
 
@@ -165,6 +169,15 @@ Make sure that:
 **Cause:** Secrets were added at the repository level instead of the environment level
 
 **Solution:** Move POSTGRES_*, JWT_SECRET secrets to environment secrets (Settings → Environments → staging/production → Secrets)
+
+### ❌ SCP/SSH: `unable to authenticate, attempted methods [none publickey]`
+
+**Cause:** TCP to port 22 works, but `SERVER_SSH_KEY` does not match any key in the server user's `authorized_keys`.
+
+**Solution:**
+1. Public key → `/root/.ssh/authorized_keys` (if `SERVER_USER=root`) or `~SERVER_USER/.ssh/authorized_keys`
+2. Private key (full file) → GitHub secret `SERVER_SSH_KEY`
+3. See [GITHUB_SECRETS_GUIDE.md — SERVER_SSH_KEY](docs/deployment/GITHUB_SECRETS_GUIDE.md#server_ssh_key)
 
 ## Checking current settings
 

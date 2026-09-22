@@ -119,34 +119,41 @@ https://your-domain.com:4000/api
 
 ### SERVER_SSH_KEY
 
-Generate an SSH key pair for GitHub Actions:
+GitHub Actions authenticates to the server with a dedicated SSH key pair.
+
+| Key part | File | Where it must live |
+|----------|------|--------------------|
+| **Private key** | `~/.ssh/github_deploy` | GitHub repository secret **`SERVER_SSH_KEY`** |
+| **Public key** | `~/.ssh/github_deploy.pub` | Server: **`~/.ssh/authorized_keys`** for `SERVER_USER` |
+
+If `SERVER_USER=root`, the public key path on the server is:
+
+```text
+/root/.ssh/authorized_keys
+```
+
+Generate the key pair (on the server or locally):
 
 ```bash
-# On your local machine or server
-ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_deploy
+ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_deploy -N ""
 
-# View the public key (add to server)
-cat ~/.ssh/github_deploy.pub
+# Public key → server authorized_keys
+cat ~/.ssh/github_deploy.pub >> ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
 
-# View the private key (add to GitHub Secrets)
+# Private key → copy ALL output into GitHub secret SERVER_SSH_KEY
 cat ~/.ssh/github_deploy
 ```
 
 **Steps:**
 
-1. **Generate key pair** (run above command)
-2. **Add public key to server:**
-   ```bash
-   # SSH to your server
-   ssh user@your-server
+1. Generate the key pair (command above).
+2. Append the **public** key to the deploy user's `authorized_keys` on the server (`SERVER_USER`, usually `root`).
+3. Put the **entire private** key (including `-----BEGIN OPENSSH PRIVATE KEY-----` / `-----END ...-----`) into GitHub → **Settings → Secrets and variables → Actions →** secret `SERVER_SSH_KEY`.
+4. Ensure `SERVER_HOST` and `SERVER_USER` match that same account.
 
-   # Add public key to authorized_keys
-   echo "YOUR_PUBLIC_KEY_HERE" >> ~/.ssh/authorized_keys
-   ```
-
-3. **Add private key to GitHub Secret:**
-   - Copy the **entire** private key (including `-----BEGIN` and `-----END` lines)
-   - Paste into GitHub Secret `SERVER_SSH_KEY`
+Do **not** put the private key on the server for Actions, and do **not** put the public key into the GitHub secret.
 
 ## Verifying Secrets
 
@@ -223,14 +230,22 @@ To update a secret:
 
 **Problem:** `SERVER_SSH_KEY` authentication fails.
 
-**Solution:**
-1. Verify public key is in `~/.ssh/authorized_keys` on server
-2. Ensure private key includes `-----BEGIN` and `-----END` lines
-3. Check line breaks are preserved (GitHub should do this automatically)
-4. Test SSH connection manually:
+Typical Actions log errors:
+
+- `ssh: unable to authenticate, attempted methods [none publickey]` — TCP works, but the private key in `SERVER_SSH_KEY` does not match any public key in the server user's `authorized_keys`.
+- `dial tcp …:22: i/o timeout` — network/firewall; SSH port not reachable from GitHub runners.
+
+**Solution (publickey auth):**
+1. Confirm the **public** key belonging to `SERVER_SSH_KEY` is in `~/.ssh/authorized_keys` on the server for `SERVER_USER` (for root: `/root/.ssh/authorized_keys`).
+2. Ensure the private key in GitHub includes `-----BEGIN` and `-----END` lines (full file).
+3. Permissions on the server: `chmod 700 ~/.ssh` and `chmod 600 ~/.ssh/authorized_keys`.
+4. Check line breaks are preserved (GitHub usually does this automatically).
+5. Test SSH connection manually with the same private key:
    ```bash
-   ssh -i ~/.ssh/github_deploy user@server
+   ssh -i ~/.ssh/github_deploy root@YOUR_SERVER_IP
    ```
+
+See also: [SERVER_SSH_KEY setup](#server_ssh_key).
 
 ### Database Connection Fails
 

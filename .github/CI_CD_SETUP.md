@@ -184,7 +184,9 @@ cat ~/.ssh/id_ed25519
    - Value: `root`
 4. **New repository secret**:
    - Name: `SERVER_SSH_KEY`
-   - Value: Copy your entire private key including `-----BEGIN` and `-----END` lines
+   - Value: Copy your entire **private** key including `-----BEGIN` and `-----END` lines
+   - The matching **public** key must already be in `~/.ssh/authorized_keys` on the server for `SERVER_USER` (e.g. `/root/.ssh/authorized_keys`)
+   - Full setup: [docs/deployment/GITHUB_SECRETS_GUIDE.md#server_ssh_key](../docs/deployment/GITHUB_SECRETS_GUIDE.md#server_ssh_key)
 
 #### 5. Configure Repository Variables (Optional)
 
