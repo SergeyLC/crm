@@ -5,7 +5,7 @@ services:
     container_name: crm-stage-main-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
+      # stage-main only — production uses :80, stage-develop uses :8081
       - "${NGINX_PORT:-8080}:80"
     volumes:
       - ./nginx.stage-main.conf:/etc/nginx/nginx.conf:ro
