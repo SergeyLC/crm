@@ -241,6 +241,8 @@ runs:
           TEMP_DIR="/tmp/crm-deploy-${{ github.run_id }}"
           echo "📦 Copying deployment files..."
           cp -f "$TEMP_DIR/$COMPOSE_FILE" "$DEPLOY_DIR/"
+          # Compose files mount ./$NGINX_CONF — keep the original filename
+          cp -f "$TEMP_DIR/$NGINX_CONF" "$DEPLOY_DIR/$NGINX_CONF"
           cp -f "$TEMP_DIR/$NGINX_CONF" "$DEPLOY_DIR/nginx.conf"
           cp -f "$TEMP_DIR/nginx.conf" "$DEPLOY_DIR/" 2>/dev/null || true
           
@@ -314,21 +316,24 @@ runs:
           # Convert repository name to lowercase for Docker
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           
-          echo "� Logging in to GitHub Container Registry..."
+          echo "🔐 Logging in to GitHub Container Registry..."
           echo "${{ inputs.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           
-          echo "�🐳 Pulling Docker images..."
+          echo "🐳 Pulling Docker images..."
           docker pull ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}
           docker pull ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}
 
-          echo "🗄️  Running database migrations..."
-          docker exec ${CONTAINER_PREFIX}-backend sh -c 'cd /app/db && pnpm run migrate:deploy' || echo "⚠️  Migration failed or already up to date"
+          echo "🐳 Ensuring full stack is up (postgres, nginx, autoheal, app)..."
+          docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --remove-orphans
 
-          echo "🐳 Restarting services with new images..."
+          echo "🐳 Recreating app containers with new images..."
           docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate --no-deps backend frontend
 
           echo "⏳ Waiting for services to be healthy..."
-          sleep 10
+          sleep 15
+
+          echo "🗄️  Running database migrations..."
+          docker exec ${CONTAINER_PREFIX}-backend sh -c 'cd /app/db && pnpm run migrate:deploy' || echo "⚠️  Migration failed or already up to date"
           
           echo "✅ Checking service status..."
           docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps
