@@ -33,7 +33,7 @@ jobs:
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.force_deploy != 'true'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run tests
         uses: ./.github/actions/run-tests
@@ -53,7 +53,7 @@ jobs:
       is_release: ${{ steps.setup.outputs.is_release }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup deployment
         id: setup
@@ -130,7 +130,7 @@ jobs:
           echo "🔍 Will test if action can be called..."
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Deploy with Docker
         uses: ./.github/actions/docker-deploy
@@ -156,7 +156,7 @@ jobs:
     environment: ${{ needs.setup.outputs.environment }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Deploy traditionally
         uses: ./.github/actions/traditional-deploy
