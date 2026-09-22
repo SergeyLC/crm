@@ -13,8 +13,9 @@ COPY ../pnpm-lock.yaml ./
 COPY ../backend/package.json ./backend/package.json
 COPY ../db/package.json ./db/package.json
 
-# Copy db prisma files for client generation
+# Copy db prisma files for client generation (schema + Prisma 7 config)
 COPY ../db/prisma/ ./db/prisma/
+COPY ../db/prisma.config.ts ./db/prisma.config.ts
 
 # Install pnpm and prisma globally (pin to project Prisma major)
 RUN npm install -g pnpm prisma@7.0.1
@@ -25,7 +26,7 @@ RUN pnpm install --no-frozen-lockfile
 # Copy backend source code
 COPY ../backend/ ./backend/
 
-# Copy db source code
+# Copy db source code (includes prisma.config.ts, seed, tsconfig)
 COPY ../db/ ./db/
 
 # Generate Prisma client in backend
@@ -49,8 +50,9 @@ COPY ../pnpm-lock.yaml ./
 COPY ../backend/package.json ./backend/package.json
 COPY ../db/package.json ./db/package.json
 
-# Copy db prisma files (needed for Prisma client)
+# Copy db prisma files + Prisma 7 config (needed for migrate deploy / client)
 COPY ../db/prisma/ ./db/prisma/
+COPY ../db/prisma.config.ts ./db/prisma.config.ts
 
 # Install pnpm and prisma globally (pin to project Prisma major)
 RUN npm install -g pnpm prisma@7.0.1
@@ -63,6 +65,9 @@ COPY --from=builder /app/backend/dist ./backend/dist
 
 # Copy generated Prisma client from builder stage
 COPY --from=builder /app/backend/generated ./backend/generated
+
+# Ensure prisma.config.ts is present for migrate/seed at runtime
+COPY --from=builder /app/db/prisma.config.ts ./db/prisma.config.ts
 
 # Generate Prisma client in production (needed for runtime)
 RUN cd backend && prisma generate --schema ../db/prisma/schema.prisma
