@@ -329,6 +329,9 @@ runs:
           echo "🐳 Recreating app containers with new images..."
           docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate --no-deps backend frontend
 
+          echo "🔄 Recreating nginx so upstream DNS picks up new container IPs..."
+          docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate --no-deps nginx
+
           echo "⏳ Waiting for services to be healthy..."
           sleep 15
 
