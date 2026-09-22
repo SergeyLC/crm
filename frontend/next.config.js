@@ -12,8 +12,12 @@ const nextConfig = () => {
     i18n: null,
     // Set the workspace root for proper file tracing in monorepo
     outputFileTracingRoot: path.join(__dirname, '..'),
-    // Enable standalone output for Docker deployment
-    output: isProduction ? 'standalone' : undefined,
+    // Standalone is for Docker/Linux images. On Windows, Next.js creates
+    // symlinks during standalone tracing and fails with EPERM unless Developer
+    // Mode is enabled — that breaks local pre-push builds. Docker builds run
+    // on Linux and still get standalone output.
+    output:
+      isProduction && process.platform !== "win32" ? "standalone" : undefined,
     // Environment variables to be exposed to the client
     env: {
       NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
