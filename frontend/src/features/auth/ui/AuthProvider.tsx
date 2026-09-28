@@ -10,20 +10,15 @@ interface AuthProviderProps {
 }
 
 /**
- * Client-side AuthProvider with full authentication logic
+ * AuthProvider — always mounts the same tree on server and client.
+ * Token / localStorage are read only in useEffect to avoid hydration mismatches.
  */
-function ClientAuthProvider({ children }: AuthProviderProps) {
-  // Initialize with isLoading: true if token exists
-  const hasToken = typeof window !== 'undefined' && localStorage.getItem("token");
-  const [state, dispatch] = useReducer(authReducer, {
-    ...initialState,
-    isLoading: hasToken ? true : false,
-  });
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Function for checking authentication
   const checkAuth = async () => {
     const token = localStorage.getItem("token");
-    
+
     if (!token) {
       dispatch({ type: "AUTH_CHECK_FAILURE" });
       return;
@@ -40,12 +35,10 @@ function ClientAuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Check authentication on load
-  useEffect(() => { 
-    checkAuth(); 
+  useEffect(() => {
+    checkAuth();
   }, []);
 
-  // Function for logging in
   const login = async (credentials: LoginCredentials) => {
     try {
       dispatch({ type: "LOGIN_START" });
@@ -53,12 +46,14 @@ function ClientAuthProvider({ children }: AuthProviderProps) {
       localStorage.setItem("token", token);
       dispatch({ type: "LOGIN_SUCCESS", payload: { user, token } });
     } catch (error) {
-      dispatch({ type: "LOGIN_FAILURE", payload: error instanceof Error ? error.message : "Unknown error" });
+      dispatch({
+        type: "LOGIN_FAILURE",
+        payload: error instanceof Error ? error.message : "Unknown error",
+      });
       throw error;
     }
   };
 
-  // Function for logging out
   const logout = async () => {
     try {
       if (state.token) {
@@ -82,17 +77,4 @@ function ClientAuthProvider({ children }: AuthProviderProps) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-/**
- * Universal AuthProvider that works on both server and client
- */
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  // On server, just return children (auth will be handled on client)
-  if (typeof window === 'undefined') {
-    return <>{children}</>;
-  }
-
-  // On client, use the client provider
-  return <ClientAuthProvider>{children}</ClientAuthProvider>;
 };
