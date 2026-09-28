@@ -38,7 +38,8 @@ import { useEntityDialog } from "@/shared/lib/hooks";
 
 import { DealTableRowData, buildDealTableColumns } from "../model";
 import { TFunction } from "i18next";
-import { mapDealsToDealRows, useDealRestoreOperations } from "../lib";
+import { mapDealsToDealRows } from "../lib/mappers";
+import { useDealRestoreOperations } from "../lib/useDealRestoreOperations";
 
 const makeDealsTableHead = (t: TFunction) => {
   const Head = <TTableData extends BaseTableRowData>(

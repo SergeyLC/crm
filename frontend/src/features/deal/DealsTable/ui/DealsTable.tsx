@@ -37,7 +37,8 @@ import { useEntityDialog } from "@/shared/lib/hooks";
 
 import { DealTableRowData, buildDealTableColumns } from "../model";
 import { TFunction } from "i18next";
-import { mapDealsToDealRows, useDealArchiveOperations } from "../lib";
+import { mapDealsToDealRows } from "../lib/mappers";
+import { useDealArchiveOperations } from "../lib/useDealArchiveOperations";
 
 // Will inject translated columns inside component (needs t), so export a factory.
 const makeDealsTableHead = (t: TFunction) => {

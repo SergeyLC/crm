@@ -16,32 +16,27 @@ import {
   BaseTableRowData,
   Order,
   SortableFields,
-  getComparator,
-  BaseTableHead,
-  defaultConvertSrcDataToDataRows,
-  BaseTableToolbarProps,
-} from "../index";
-import defaultColumnsConfig from "../model/columns";
-import {
   BaseTableHeadProps,
   Column,
   TablePaginationComponent,
 } from "../model/types";
+import {
+  getComparator,
+  defaultConvertSrcDataToDataRows,
+  type TConvertSrcDataToDataRows,
+} from "../lib/formatters";
+import { BaseTableHead } from "./BaseTableHead";
+import type { BaseTableToolbarProps } from "./BaseTableToolbar";
+import defaultColumnsConfig from "../model/columns";
 import { BaseTablePagination } from "./BaseTablePagination";
 import TableRow from "@mui/material/TableRow";
-import { TConvertSrcDataToDataRows } from "../lib/formatters";
 import { useSelection } from "../../../shared/lib/hooks/useSelection";
 import { ActionCell } from "./ActionCell";
 import { ActionMenu, ActionMenuItemProps, ActionMenuProps } from "./ActionMenu";
 
-// Import helper functions from lib.ts
-import {
-  createStickySx,
-  createTableSx,
-  calculateEmptyRows,
-  getVisibleRows,
-  createCellProps,
-} from "../lib";
+import { createStickySx, createTableSx } from "../lib/styling";
+import { calculateEmptyRows, getVisibleRows } from "../lib/pagination";
+import { createCellProps } from "../lib/tableCellHelpers";
 
 export interface BaseTableProps<T, TTableData extends BaseTableRowData> {
   columnsConfig?: Column<TTableData>[];

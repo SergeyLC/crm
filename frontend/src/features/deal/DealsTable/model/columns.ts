@@ -1,6 +1,7 @@
 import { DealTableRowData } from "./types";
-import { currencyFormatter, stageToComponentFormatter } from "@/features/base-table";
-import type { Column, TGetColumns } from "@/features/base-table";
+import { currencyFormatter } from "@/features/base-table/lib/formatters";
+import type { Column, TGetColumns } from "@/features/base-table/model/types";
+import { stageToComponentFormatter } from "../lib/stageFormatter";
 import { TFunction } from 'i18next';
 
 // Columns definition for the Deals table.

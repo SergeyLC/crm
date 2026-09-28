@@ -5,11 +5,12 @@ import React, {
   useState,
   useContext,
   useCallback,
-  ReactNode,
+  useEffect,
+  type ReactNode,
+  type ComponentType,
 } from "react";
-import { Dialog, DialogProps } from "@/shared/ui/Dialog/Dialog";
+import type { DialogProps } from "@/shared/ui/Dialog/Dialog";
 
-// Type for opening dialog options
 export interface OpenDialogOptions {
   title?: ReactNode;
   content: ReactNode;
@@ -18,13 +19,11 @@ export interface OpenDialogOptions {
   fullWidth?: boolean;
 }
 
-// Context interface
 interface DialogContextValue {
   openDialog: (options: OpenDialogOptions) => void;
   closeDialog: () => void;
 }
 
-// Creating context
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
 
 export const DialogProvider: React.FC<{ children: ReactNode }> = ({
@@ -36,13 +35,27 @@ export const DialogProvider: React.FC<{ children: ReactNode }> = ({
     open: false,
     content: null,
   });
+  const [DialogComp, setDialogComp] = useState<ComponentType<DialogProps> | null>(
+    null,
+  );
 
-  const openDialog = useCallback((options: OpenDialogOptions) => {
-    setDialogState({
-      ...options,
-      open: true,
+  const loadDialog = useCallback(() => {
+    if (DialogComp) return;
+    void import("@/shared/ui/Dialog/Dialog").then((mod) => {
+      setDialogComp(() => mod.Dialog);
     });
-  }, []);
+  }, [DialogComp]);
+
+  const openDialog = useCallback(
+    (options: OpenDialogOptions) => {
+      loadDialog();
+      setDialogState({
+        ...options,
+        open: true,
+      });
+    },
+    [loadDialog],
+  );
 
   const closeDialog = useCallback(() => {
     setDialogState((state) => ({
@@ -51,23 +64,30 @@ export const DialogProvider: React.FC<{ children: ReactNode }> = ({
     }));
   }, []);
 
+  // Prefetch after first paint so the dialog chunk is usually ready
+  useEffect(() => {
+    const timer = window.setTimeout(loadDialog, 1200);
+    return () => window.clearTimeout(timer);
+  }, [loadDialog]);
+
   return (
     <DialogContext.Provider value={{ openDialog, closeDialog }}>
       {children}
-      <Dialog
-        open={dialogState.open}
-        title={dialogState.title}
-        content={dialogState.content}
-        actions={dialogState.actions}
-        maxWidth={dialogState.maxWidth}
-        fullWidth={dialogState.fullWidth}
-        onClose={closeDialog}
-      />
+      {dialogState.open && DialogComp ? (
+        <DialogComp
+          open={dialogState.open}
+          title={dialogState.title}
+          content={dialogState.content}
+          actions={dialogState.actions}
+          maxWidth={dialogState.maxWidth}
+          fullWidth={dialogState.fullWidth}
+          onClose={closeDialog}
+        />
+      ) : null}
     </DialogContext.Provider>
   );
 };
 
-// Hook for using the dialog
 export const useDialog = (): DialogContextValue => {
   const context = useContext(DialogContext);
   if (!context) {

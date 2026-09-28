@@ -1,13 +1,11 @@
 import React from 'react';
-import { 
-  Dialog as MuiDialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions,
-  IconButton,
-  Typography,
-  Box
-} from '@mui/material';
+import MuiDialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 import CloseIcon from '@mui/icons-material/Close';
 
 export interface DialogProps {

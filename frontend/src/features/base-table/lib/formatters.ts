@@ -1,7 +1,6 @@
 import React from "react";
 import { BaseTableRowData } from "../model/types";
 import { currencyFormatter as defaultCurrencyFormatter, formatDate } from "@/shared/lib/";
-import { EnumDealStage, DealStageComponent } from "@/entities/deal";
 
 export function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -48,21 +47,8 @@ export const currencyFormatter = <T extends BaseTableRowData>(
     ? defaultCurrencyFormatter(value, currency, locale)
     : null;
 
-export const stageToComponentFormatter = (
-  value: string | undefined,
-): React.ReactNode => {
-  return (
-    value &&
-    React.createElement(DealStageComponent, {
-      stage: value as EnumDealStage,
-      readOnly: true,
-      compact: true,
-    })
-  );
-};
-
 export const dateFormatter = <T extends BaseTableRowData>(
   value: Date | string,
   row: T,
   locale: string = "de-DE"
-): React.ReactNode => (value ? formatDate(value, locale) as string : null);
+): React.ReactNode => (value ? (formatDate(value, locale) as string) : null);

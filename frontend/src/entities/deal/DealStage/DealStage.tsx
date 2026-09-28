@@ -8,7 +8,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import CheckIcon from "@mui/icons-material/Check";
 import Box from "@mui/material/Box";
-import type { EnumDealStage } from "@/entities/deal/";
+import type { EnumDealStage } from "./types";
 import { useTranslation } from "react-i18next";
 
 export const DEFAULT_STAGES: EnumDealStage[] = [
