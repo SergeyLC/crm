@@ -83,6 +83,28 @@ const nextConfig = () => {
   // Select configuration based on environment
   const config = isProduction ? productionConfig : developmentConfig;
 
+  // Next.js injects `polyfill-module` for all browsers (Array.at, Object.hasOwn, …)
+  // even when browserslist already targets modern engines. Drop it to clear
+  // Lighthouse "Legacy JavaScript" (~14 KiB). Do not do this if you must support
+  // older Safari / Chrome than our browserslist.
+  const emptyPolyfill = path.join(__dirname, 'src/lib/empty-polyfill.js');
+  config.turbopack = {
+    ...(config.turbopack || {}),
+    resolveAlias: {
+      ...((config.turbopack && config.turbopack.resolveAlias) || {}),
+      '../build/polyfills/polyfill-module': emptyPolyfill,
+      'next/dist/build/polyfills/polyfill-module': emptyPolyfill,
+    },
+  };
+  config.webpack = (webpackConfig) => {
+    webpackConfig.resolve.alias = {
+      ...webpackConfig.resolve.alias,
+      '../build/polyfills/polyfill-module': false,
+      'next/dist/build/polyfills/polyfill-module': false,
+    };
+    return webpackConfig;
+  };
+
   // Add CORS headers function
   config.headers = async () => {
     return [
