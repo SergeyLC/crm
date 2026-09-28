@@ -1,5 +1,5 @@
-import { DealExt } from "@/entities";
-import { DealsTable } from "@/features";
+import { DealExt } from "@/entities/deal";
+import { DealsTable } from "@/features/deal";
 import { ssrFetch } from "@/shared/api";
 
 // Pages with searchParams are always dynamic in Next.js

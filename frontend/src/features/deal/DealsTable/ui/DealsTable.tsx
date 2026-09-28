@@ -14,7 +14,7 @@ import {
   useGetActiveDealsQuery,
 } from "@/entities/deal";
 
-import { QueryKeyType, useInvalidateQueries } from "@/shared";
+import { QueryKeyType, useInvalidateQueries } from "@/shared/api";
 import {
   DealActiveQueryKey,
   DealArchivedQueryKey,
@@ -56,7 +56,7 @@ const makeDealsTableHead = (t: TFunction) => {
 
 const EditDialog = dynamic(
   () =>
-    import("@/features/deal/DealEditDialog").then((mod) => mod.DealEditDialog),
+    import("../../DealEditDialog").then((mod) => mod.DealEditDialog),
   { ssr: false }
 );
 

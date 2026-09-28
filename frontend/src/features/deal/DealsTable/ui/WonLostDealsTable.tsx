@@ -16,7 +16,7 @@ import {
   useGetWonDealsQuery,
 } from "@/entities/deal";
 
-import { QueryKeyType, useInvalidateQueries } from "@/shared";
+import { QueryKeyType, useInvalidateQueries } from "@/shared/api";
 
 import {
   BaseTable,
@@ -57,7 +57,7 @@ const invalidateDealsQueryKeys = [
 
 const EditDialog = dynamic(
   () =>
-    import("@/features/deal/DealEditDialog").then((mod) => mod.DealEditDialog),
+    import("../../DealEditDialog").then((mod) => mod.DealEditDialog),
   { ssr: false }
 );
 

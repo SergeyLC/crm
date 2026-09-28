@@ -1,3 +1,4 @@
-export * from "./DealsTable";
-export * from "./ArchivedDealsTable";
-export * from "./WonLostDealsTable";
+export { DealsTable } from "./DealsTable";
+export type { DealsTableProps } from "./DealsTable";
+export { ArchivedDealsTable } from "./ArchivedDealsTable";
+export { WonLostDealsTable } from "./WonLostDealsTable";
