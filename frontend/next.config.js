@@ -87,13 +87,14 @@ const nextConfig = () => {
   // even when browserslist already targets modern engines. Drop it to clear
   // Lighthouse "Legacy JavaScript" (~14 KiB). Do not do this if you must support
   // older Safari / Chrome than our browserslist.
-  const emptyPolyfill = path.join(__dirname, 'src/lib/empty-polyfill.js');
+  // Turbopack needs a project-relative path (absolute Windows paths fail).
+  const emptyPolyfillRel = './src/lib/empty-polyfill.js';
   config.turbopack = {
     ...(config.turbopack || {}),
     resolveAlias: {
       ...((config.turbopack && config.turbopack.resolveAlias) || {}),
-      '../build/polyfills/polyfill-module': emptyPolyfill,
-      'next/dist/build/polyfills/polyfill-module': emptyPolyfill,
+      '../build/polyfills/polyfill-module': emptyPolyfillRel,
+      'next/dist/build/polyfills/polyfill-module': emptyPolyfillRel,
     },
   };
   config.webpack = (webpackConfig) => {
