@@ -272,13 +272,15 @@ See also: [SERVER_SSH_KEY setup](#server_ssh_key).
 
 ## Alternative: Using Environment-Specific Secrets
 
-For multiple environments (staging, production), you can use environment-specific secrets:
+For multiple environments, use environment-specific secrets:
 
 ### Setup Environments
 
 1. Go to **Settings** → **Environments**
-2. Create environments: `staging`, `production`
-3. Add environment-specific secrets
+2. Create environments: `production`, `stage-main`, `stage-develop`
+3. Add environment-specific secrets (`POSTGRES_*`, `JWT_SECRET`)
+
+See [.github/CI_CD_SETUP.md](../../.github/CI_CD_SETUP.md) for the full matrix.
 
 ### Update Workflow
 

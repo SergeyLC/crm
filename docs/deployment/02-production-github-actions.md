@@ -30,7 +30,9 @@ name: Deploy Application
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -42,6 +44,13 @@ env:
 jobs:
   # ... your jobs
 ```
+
+**Deploy matrix (see [.github/CI_CD_SETUP.md](../../.github/CI_CD_SETUP.md)):**
+- `main` → `stage-main` (port 8080)
+- `develop` → `stage-develop` (port 8081)
+- tag `v*` → `production` (port 80)
+
+Production is **not** deployed by pushing `main` alone.
 
 **Without `packages: write` permission, you will see this error:**
 ```
@@ -246,18 +255,17 @@ crm-postgres         Up (healthy)
 ## Step 8: Run Database Migrations
 
 ```bash
-# Apply database migrations
-docker exec crm-backend sh -c 'cd /app/db && npx prisma migrate deploy'
-
-# Run seed data (first deployment only)
-docker exec crm-backend sh -c 'cd /app/db && npm run seed'
+# Apply database migrations (container names may be crm-production-*)
+docker exec crm-production-backend sh -c 'cd /app/db && pnpm run migrate:deploy'
 ```
 
-**Seed creates**:
-- 13 users (admin@example.com / password: 1)
-- 110 contacts
-- 110 deals
-- Test groups and notes
+Migrations also run automatically in CI. **Seed is not part of CI.** After a fresh DB, seed manually if you need demo users (`admin@example.com` / `1`):
+
+```bash
+docker exec -w /app/db crm-production-backend sh -c 'pnpm run seed'
+```
+
+The production image may lack TypeScript for compiling `seed.ts`; see [CI/CD setup](../../.github/CI_CD_SETUP.md).
 
 ## Step 9: Verify Deployment
 

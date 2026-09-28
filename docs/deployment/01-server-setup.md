@@ -88,16 +88,15 @@ chmod -R 755 /var/www/crm-production
 ls -la /var/www/
 ```
 
-### For Staging (Optional)
+### For Stage-main and Stage-develop
 
 ```bash
-# Create staging directories
-mkdir -p /var/www/crm-staging
-mkdir -p /var/www/crm-staging/backups
-
-# Set permissions
-chmod -R 755 /var/www/crm-staging
+mkdir -p /var/www/crm-stage-main /var/www/crm-stage-main/backups
+mkdir -p /var/www/crm-stage-develop /var/www/crm-stage-develop/backups
+chmod -R 755 /var/www/crm-stage-main /var/www/crm-stage-develop
 ```
+
+> Legacy path `/var/www/crm-staging` (compose `docker-compose.stage.yml`) is only a fallback for the old GitHub environment name `staging`. Prefer `stage-main` / `stage-develop`.
 
 ## Step 6: Configure Firewall
 
@@ -114,8 +113,11 @@ ufw allow 80/tcp
 # Allow HTTPS (if using SSL)
 ufw allow 443/tcp
 
-# Allow Staging port (if deploying staging)
+# Allow Stage-main port
 ufw allow 8080/tcp
+
+# Allow Stage-develop port
+ufw allow 8081/tcp
 
 # Enable firewall
 ufw enable

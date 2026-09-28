@@ -1,323 +1,103 @@
-# 🚀 Deployment Configuration Guide
+# Deployment Configuration Guide
 
-This guide explains how to configure the unified deployment system for CRM.
+How to configure the unified GitHub Actions deployment for this CRM.
 
-## 📋 Deployment Strategy
+**Source of truth for triggers and directories:** [.github/CI_CD_SETUP.md](.github/CI_CD_SETUP.md)  
+**Ops guides:** [docs/deployment/README.md](docs/deployment/README.md)
 
-The deployment system uses two dimensions:
-- **Environment:** Determined by trigger (`main` branch → staging, release tag → production)
-- **Deployment Type:** Determined by configuration priority (default: `docker`)
+## Deployment strategy
 
-### Supported Combinations
+Two dimensions:
 
-| Branch | Environment | Default Type | Override Methods |
-|--------|-------------|--------------|------------------|
-| `main` | production | docker | workflow_dispatch, vars, env |
-| `develop` | staging | docker | workflow_dispatch, vars, env |
+1. **Environment** — from git trigger (branch or tag)
+2. **Deployment type** — `docker` (default) or `traditional`
 
-### Deployment Type Selection Guide
+### Trigger → environment
 
-#### When to Use Docker Deployment 🐳
-- **Recommended for:** Production and staging environments
-- **Benefits:** Isolated containers, easy rollback, consistent environment
-- **Use case:** Standard deployments, microservices architecture
+| Trigger | GitHub Environment | Port | Server directory |
+|---------|--------------------|------|------------------|
+| Push to `main` | `stage-main` | 8080 | `/var/www/crm-stage-main` |
+| Push to `develop` | `stage-develop` | 8081 | `/var/www/crm-stage-develop` |
+| Tag `v*` (e.g. `v1.0.7`) | `production` | 80 | `/var/www/crm-production` |
 
-#### When to Use Traditional Deployment 📦
-- **Recommended for:** Development, testing, or legacy systems
-- **Benefits:** Direct server access, easier debugging, lower resource usage
-- **Use case:** Custom server configurations, development environments
+Compose files:
 
-#### How to Choose Deployment Type
+- Production → `docker-compose.production.yml`
+- Stage-main → `docker-compose.stage-main.yml`
+- Stage-develop → `docker-compose.stage-develop.yml`
 
-1. **For Production:**
-   - Use **Docker** (default) for stability and isolation
-   - Use **Traditional** only if Docker is not feasible
+CI runs **`prisma migrate deploy`**. It does **not** seed the database.
 
-2. **For Staging:**
-   - Use **Docker** (default) to match production environment
-   - Use **Traditional** for development/testing flexibility
+### Deployment type
 
-3. **For Manual Testing:**
-   - Use **workflow_dispatch** to override type per deployment
-   - Test both types before committing to repository variables
+| Type | When to use |
+|------|-------------|
+| **Docker** (default) | Production and staging — isolated containers, GHCR images |
+| **Traditional** | Legacy PM2 / source-on-server (rare) |
 
-## ⚙️ GitHub Configuration
+## GitHub configuration
 
-### 1. Repository Variables
+### 1. Repository variable
 
-Go to **Settings → Secrets and variables → Actions**
+**Settings → Secrets and variables → Actions → Variables**
 
-#### Repository Variables (apply to all environments):
 ```
-DEPLOYMENT_TYPE=docker  # or 'traditional'
+DEPLOYMENT_TYPE=docker
 ```
 
-### 2. Environment Setup
+### 2. Environments
 
-Create two environments in **Settings → Environments**:
+**Settings → Environments** — create three environments:
 
-#### Production Environment
-- **Name:** `production`
-- **Environment variables:**
-  ```
-  DEPLOYMENT_TYPE=docker  # override if needed
-  ```
-- **Environment secrets:** (same as before)
-  ```
-  SERVER_HOST=your-production-server.com
-  SERVER_USER=your-user
-  SERVER_SSH_KEY=your-private-key
-  DATABASE_URL=postgresql://user:pass@host:5432/db
-  JWT_SECRET=your-jwt-secret
-  ```
+| Name | Purpose |
+|------|---------|
+| `production` | Live site on port 80 |
+| `stage-main` | Pre-production on port 8080 (pushes to `main`) |
+| `stage-develop` | Feature staging on port 8081 (pushes to `develop`) |
 
-#### Staging Environment
-- **Name:** `staging`
-- **Environment variables:**
-  ```
-  DEPLOYMENT_TYPE=docker  # override if needed
-  ```
-- **Environment secrets:** (staging-specific)
-  ```
-  SERVER_HOST=your-staging-server.com
-  SERVER_USER=your-user
-  SERVER_SSH_KEY=your-private-key
-  DATABASE_URL=postgresql://user:pass@host:5432/db
-  JWT_SECRET=your-jwt-secret
-  ```
+Per environment, add secrets (same names, different values):
 
-## 🔄 How It Works
+| Secret | Example (stage-main) | Example (production) |
+|--------|----------------------|----------------------|
+| `POSTGRES_DB` | `crm_staging` | `crm` |
+| `POSTGRES_USER` | `crm` | `crm` |
+| `POSTGRES_PASSWORD` | strong random | strong random |
+| `JWT_SECRET` | ≥32 chars | ≥32 chars |
 
-### Deployment Type Priority
+### 3. Repository secrets (shared)
 
-The system determines deployment type using this priority order:
+| Secret | Description |
+|--------|-------------|
+| `SERVER_HOST` | Server IP or hostname |
+| `SERVER_USER` | SSH user (e.g. `root`) |
+| `SERVER_SSH_KEY` | Private SSH key for deploy |
 
-1. **Workflow Dispatch Override** (highest priority)
-   - Manual trigger via GitHub Actions UI
-   - Allows testing different deployment types
-   - Input: `deployment_type` (docker/traditional)
+Details: [docs/deployment/GITHUB_SECRETS_GUIDE.md](docs/deployment/GITHUB_SECRETS_GUIDE.md) · [.github/QUICK_SETUP.md](.github/QUICK_SETUP.md)
 
-2. **Environment Variable** (per-environment)
-   - Set in GitHub Environment variables
-   - Overrides repository default for specific environment
-   - Variable: `DEPLOYMENT_TYPE=docker`
+## Deployment type priority
 
-3. **Repository Variable** (global default)
-   - Set in repository Actions variables
-   - Applies to all branches/environments
-   - Variable: `DEPLOYMENT_TYPE=docker`
+1. **workflow_dispatch** input `deployment_type` (highest)
+2. Environment variable `DEPLOYMENT_TYPE`
+3. Repository variable `DEPLOYMENT_TYPE`
+4. Default: `docker`
 
-4. **Default: `docker`** (lowest priority)
-   - Used when no other configuration is found
-   - Ensures consistent behavior
-
-### Examples
+## Common workflows
 
 ```bash
-# Repository variable sets global default
-DEPLOYMENT_TYPE=traditional
-
-# Environment variable overrides for production only
-# Production environment: DEPLOYMENT_TYPE=docker
-# Result: Production uses Docker, Staging uses Traditional
-
-# Workflow dispatch overrides everything
-# Manual run with deployment_type=docker
-# Result: Uses Docker regardless of variables
-```
-
-### Automatic Deployment
-```bash
-# Push to main → Production deployment (type from config)
+# Stage-main (port 8080)
 git push origin main
 
-# Push to main → Staging deployment (type from config, except release commits)
-git push origin main
+# Stage-develop (port 8081)
+git push origin develop
+
+# Production (port 80) — release tag
+git tag v1.0.8
+git push origin v1.0.8
+# or: ./deploy.sh -m "feat: …" -t
 ```
 
-### Release Creation (Version Increment)
-```bash
-# Create and push version tag
-git tag v1.2.3
-git push origin v1.2.3
+## Troubleshooting
 
-# This triggers:
-# 1. Version increment in package.json
-# 2. GitHub release creation
-# 3. Production deployment with new version
-```
-
-### Manual Override
-
-Use **workflow_dispatch** to override deployment type for specific runs:
-
-1. Go to **Actions → Deploy Application**
-2. Click **Run workflow**
-3. **Choose branch:** `main` (for staging or testing)
-4. **Set inputs:**
-   - **Deployment type:** Choose `docker` or `traditional` (leave empty to use default)
-   - **Force deploy:** Check to bypass normal conditions
-   - **Version:** Specify version for release creation (optional)
-5. Click **Run workflow**
-
-### Environment Variable Override
-Set `DEPLOYMENT_TYPE` in repository variables to change default:
-
-```yaml
-# In GitHub: Settings → Secrets and variables → Actions → Variables
-DEPLOYMENT_TYPE=traditional  # All deployments will be traditional
-```
-
-Or override per environment in **Settings → Environments → [environment] → Variables**:
-```yaml
-DEPLOYMENT_TYPE=docker  # Override for specific environment
-```
-
-## 🐳 Docker Deployment
-
-### What happens:
-1. **Build:** Frontend and backend images are built and pushed to GHCR
-2. **Deploy:** Images are pulled on server and containers are started
-3. **Migrate:** Database migrations run automatically
-4. **Health Check:** Services are verified to be running
-
-### Server Requirements:
-- Docker and Docker Compose installed
-- `docker-example/` directory with configurations
-- SSH access for deployment user
-
-## 📦 Traditional Deployment
-
-### What happens:
-1. **Build:** Applications are built locally in CI
-2. **Deploy:** Source code is copied to server
-3. **Install:** Dependencies are installed
-4. **Migrate:** Database migrations run
-5. **Start:** Services are started with PM2/systemd
-
-### Server Requirements:
-- Node.js and pnpm installed
-- PM2 or systemd for process management
-- Database access
-- SSH access for deployment user
-
-## 🏷️ Release Management
-
-### Creating a New Release
-
-To create a new production release with automatic version increment:
-
-```bash
-# 1. Update version in package.json (optional, will be auto-updated)
-npm version patch  # or minor, major
-
-# 2. Create and push git tag
-git tag v1.2.3
-git push origin v1.2.3
-
-# 3. Workflow automatically:
-#    - Updates package.json version
-#    - Creates GitHub release
-#    - Deploys to production
-#    - Updates Docker images with version tag
-```
-
-### Release Process
-
-1. **Tag Creation:** Push tag `v*` to repository
-2. **Validation:** Checks if tag is on `main` branch
-3. **Version Update:** Updates `frontend/package.json` version
-4. **Git Commit:** Commits version change back to `main`
-5. **GitHub Release:** Creates release with changelog
-6. **Deployment:** Triggers production deployment with new version
-
-### Version Tags
-
-- `v1.2.3` → Production release 1.2.3
-- `latest` → Always points to latest production deployment
-- `staging-*` → Staging deployments with commit hash
-
-### Rollback
-
-To rollback to previous version:
-
-```bash
-# Deploy specific version
-# Use workflow_dispatch with version input
-# Or create tag pointing to previous commit
-git tag v1.2.2 <previous-commit-hash>
-git push origin v1.2.2
-```
-
-### Adding New Deployment Types
-
-1. Add new type to workflow validation:
-```yaml
-if [[ "$DEPLOYMENT_TYPE" != "docker" && "$DEPLOYMENT_TYPE" != "traditional" && "$DEPLOYMENT_TYPE" != "newtype" ]]; then
-```
-
-2. Create new job in workflow:
-```yaml
-deploy-newtype:
-  needs: setup
-  if: needs.setup.outputs.deployment_type == 'newtype'
-  # Implementation...
-```
-
-### Adding New Environments
-
-1. Add branch mapping in setup job:
-```yaml
-feature)
-  ENVIRONMENT="feature"
-  ;;
-```
-
-2. Create new GitHub environment with same name
-3. Add environment secrets and variables
-
-## 🚨 Troubleshooting
-
-### Deployment Not Triggering
-- Check branch name is `main`
-- Verify workflow file is in `.github/workflows/deploy.yml`
-- Check GitHub Actions permissions
-
-### Wrong Deployment Type
-- Check deployment type priority order (workflow_dispatch > env var > repo var > default)
-- Use workflow_dispatch to override manually for testing
-- Verify environment variables in GitHub Environments
-- Check repository variables in Actions → Variables
-
-### Docker Deployment Issues
-- Ensure `docker-example/` exists on server
-- Check Docker secrets are created
-- Verify image pull permissions
-
-### Traditional Deployment Issues
-- Implement the placeholder steps in workflow
-- Ensure server has required dependencies
-- Check PM2/systemd configuration
-
-## 📊 Monitoring
-
-### Deployment Status
-- Check **Actions** tab for workflow runs
-- Each deployment shows detailed logs
-- Environment badges show deployment status
-
-### Rollback
-- For Docker: Deploy previous image tag
-- For Traditional: Restore from backup directory
-
----
-
-**Last Updated:** November 2025
-
-## 📝 Recent Changes
-
-### November 2025 - Deployment Type Selection Enhancement
-- **Added workflow_dispatch override** for manual deployment type selection
-- **Implemented priority system** for deployment type determination
-- **Enhanced documentation** with selection guide and examples
-- **Improved troubleshooting** for deployment type issues
+- Deploy skipped → check environments exist and names match (`stage-main`, not legacy `staging`)
+- Empty login after first deploy → migrations ran, seed did not; seed manually in the backend container if needed
+- See [.github/CI_CD_SETUP.md](.github/CI_CD_SETUP.md) and [TROUBLESHOOTING_DEPLOYMENT.md](TROUBLESHOOTING_DEPLOYMENT.md)

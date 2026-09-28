@@ -1,46 +1,77 @@
-# Staging Environment Deployment
+# Staging Environments (stage-main / stage-develop)
 
-Complete guide for deploying staging environment alongside production.
+How staging works next to production on the same host.
 
-## Overview
+## Preferred path: GitHub Actions
 
-**Purpose**: Isolated testing environment that mirrors production
+| Environment | Trigger | Port | Directory | Compose |
+|-------------|---------|------|-----------|---------|
+| **stage-main** | Push to `main` | **8080** | `/var/www/crm-stage-main` | `docker-compose.stage-main.yml` |
+| **stage-develop** | Push to `develop` | **8081** | `/var/www/crm-stage-develop` | `docker-compose.stage-develop.yml` |
+| **production** | Tag `v*` | **80** | `/var/www/crm-production` | `docker-compose.production.yml` |
 
-**Key Features**:
-- ✅ Separate database, volumes, and containers
-- ✅ Runs on different port (8080 vs 80)
-- ✅ Independent from production
-- ✅ Can test updates before production deployment
-- ✅ Includes development tools enabled
+Full matrix: [docs/deployment/README.md](README.md) · [.github/CI_CD_SETUP.md](../../.github/CI_CD_SETUP.md)
 
-## Production vs Staging Comparison
+**CI behavior:** runs `prisma migrate deploy` only. **Seed is not automatic.** After a fresh DB:
 
-| Component | Production | Staging |
-|-----------|-----------|---------|
-| **Port** | 80 | 8080 |
-| **URL** | http://SERVER_IP | http://SERVER_IP:8080 |
-| **Database** | crm | crm_staging |
-| **Volume** | crm_pg_data | crm_pg_data_staging |
-| **Network** | crm-network | crm-staging-network |
-| **Containers** | crm-* | crm-staging-* |
-| **Directory** | /var/www/crm-production | /var/www/crm-staging |
-| **Images** | :latest or :v1.0.0 | :staging |
-| **DevTools** | Disabled | Enabled |
+```bash
+docker exec -w /app/db crm-stage-main-backend sh -c 'ppnpm run seed'
+# Demo login (when seed succeeds): admin@example.com / 1
+```
+
+## Comparison
+
+| Component | Production | Stage-main | Stage-develop |
+|-----------|------------|------------|---------------|
+| **Port** | 80 | 8080 | 8081 |
+| **URL** | http://SERVER_IP | http://SERVER_IP:8080 | http://SERVER_IP:8081 |
+| **Typical DB** | `crm` | `crm_staging` | `crm_stage_develop` |
+| **Containers** | `crm-production-*` | `crm-stage-main-*` | `crm-stage-develop-*` |
+| **Directory** | `/var/www/crm-production` | `/var/www/crm-stage-main` | `/var/www/crm-stage-develop` |
+| **GitHub env** | `production` | `stage-main` | `stage-develop` |
 
 ## Prerequisites
 
-- [Server setup completed](01-server-setup.md)
-- Production environment running (optional but recommended)
-- Port 8080 opened in firewall
-- Docker images built and available
+- [Server setup](01-server-setup.md) (directories + firewall for 8080 / 8081)
+- GitHub environments `stage-main` / `stage-develop` with secrets ([QUICK_SETUP](../../.github/QUICK_SETUP.md))
 
-## Step 1: Create Staging Directory
+## Automated deploy
+
+```bash
+# Stage-main
+git push origin main
+# → http://YOUR_SERVER_IP:8080
+
+# Stage-develop
+git push origin develop
+# → http://YOUR_SERVER_IP:8081
+```
+
+---
+
+## Legacy manual staging (`crm-staging`)
+
+The steps below describe an older **manual** layout (`/var/www/crm-staging`, `docker-compose.stage.yml`, containers `crm-staging-*`). Prefer the GitHub Actions path above. Kept for emergency/manual use only.
+
+### Seed note (manual / legacy)
+
+Seed is **optional** and **not** run by CI. Only run seed when you need demo data on an empty database — it is not a required deploy step.
+
+```bash
+# Preferred container names today:
+docker exec -w /app/db crm-stage-main-backend sh -c 'ppnpm run seed'
+
+# Legacy name (only if you still run crm-staging-*):
+# docker exec -w /app/db crm-staging-backend sh -c 'ppnpm run seed'
+```
+
+## Step 1: Create Staging Directory (legacy)
 
 ```bash
 # Connect to server
 ssh root@YOUR_SERVER_IP
 
-# Create staging directory
+# Legacy directory (prefer /var/www/crm-stage-main)
 mkdir -p /var/www/crm-staging
 cd /var/www/crm-staging
 ```
@@ -334,20 +365,19 @@ crm-staging-postgres     Up (healthy)
 docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 ```
 
-### Seed Database (IMPORTANT!)
+### Seed Database (optional, manual)
 
 ```bash
-# Populate with test data
-docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
+# Demo data only — CI does not run seed
+docker exec crm-staging-backend sh -c 'cd /app/db && ppnpm run seed'
+# Prefer: crm-stage-main-backend / crm-stage-develop-backend
 ```
 
-**Seed creates:**
-- 13 users (admin@example.com / password: 1)
-- 110 contacts
-- 110 deals  
-- Test groups and notes
+**Seed creates (when successful):**
+- Users including `admin@example.com` / `1`
+- Sample contacts, deals, appointments
 
-**⚠️ DO NOT SKIP**: Staging needs seed data for testing!
+Skipping seed is fine if you create users another way.
 
 ## Step 9: Verify Staging Deployment
 
@@ -627,7 +657,7 @@ docker exec crm-staging-frontend sh -c 'cat /app/.env.local'
 **Solution**: Run seed manually
 
 ```bash
-docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && pnpm run seed'
 ```
 
 ### Issue: Containers keep restarting
@@ -712,7 +742,7 @@ sleep 20
 docker exec crm-staging-backend sh -c 'cd /app/db && npx prisma migrate deploy'
 
 # Seed database
-docker exec crm-staging-backend sh -c 'cd /app/db && npm run seed'
+docker exec crm-staging-backend sh -c 'cd /app/db && pnpm run seed'
 ```
 
 ## Next Steps

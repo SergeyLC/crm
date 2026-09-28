@@ -7,10 +7,13 @@ This directory contains **legacy deployment documentation** that has been supers
 **These documents are OUTDATED and kept only for historical reference.**
 
 For current deployment instructions, please use:
-- **[Main Documentation](../README.md)** - Start here
-- **[Server Setup Guide](../01-server-setup.md)** - Initial server preparation
-- **[Production Deployment](../02-production-github-actions.md)** - Recommended deployment method
-- **[Staging Deployment](../04-staging-deployment.md)** - Test environment setup
+- **[Main Documentation](../README.md)** — environment matrix
+- **[.github/CI_CD_SETUP.md](../../.github/CI_CD_SETUP.md)** — branch/tag → environment (source of truth)
+- **[Server Setup Guide](../01-server-setup.md)**
+- **[Production via GitHub Actions](../02-production-github-actions.md)** — tag `v*` → port 80
+- **[Staging](../04-staging-deployment.md)** — `stage-main` :8080 / `stage-develop` :8081
+
+Do not follow archive guides for new deploys.
 
 ## 📚 What's in This Archive
 

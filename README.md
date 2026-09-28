@@ -1,31 +1,29 @@
 # CRM
 
-*🇺🇸 English  | [🇩🇪 Deutsch](docs/README.de.md)*
-
-## 📋 Project Description
+## Project Description
 
 CRM is a modern Customer Relationship Management (CRM) system built with modular architecture. The system is designed for managing leads, deals, contacts, and users with an intuitive interface based on Kanban boards and tables.
 
-## 🚀 Quick Start
+## Quick Start
 
-### 🎯 Automated Deployment (Recommended)
+### Automated Deployment (Recommended)
 
-The project uses automated deployment with GitHub Actions:
+The project uses automated deployment with GitHub Actions (Docker by default):
 
-#### Branch-Based Deployment
-- **`main` branch** → Production environment
-- **`develop` branch** → Staging environment
+| Trigger | Environment | Port | Deploy directory |
+|---------|-------------|------|------------------|
+| Push to **`main`** | `stage-main` | **8080** | `/var/www/crm-stage-main` |
+| Push to **`develop`** | `stage-develop` | **8081** | `/var/www/crm-stage-develop` |
+| Git tag **`v*`** (e.g. `v1.0.7`) | `production` | **80** | `/var/www/crm-production` |
 
-#### Deployment Types
-- **Docker** (default): Zero-source-code deployment with containers
-- **Traditional**: Source code deployment with PM2
+CI runs **database migrations** (`prisma migrate deploy`). It does **not** run seed; seed demo users manually after a fresh database if needed.
 
 #### Configuration
-1. Set `DEPLOYMENT_TYPE` variable in GitHub repository settings
-2. Configure environments in GitHub Settings → Environments
-3. Push to respective branches to trigger deployment
+1. Set `DEPLOYMENT_TYPE=docker` in GitHub repository variables (optional; docker is the default)
+2. Create environments `production`, `stage-main`, and `stage-develop` with secrets
+3. Push to the branch or push a `v*` tag to deploy
 
-📖 **Detailed Guide:** See [Deployment Configuration](DEPLOYMENT_CONFIG.md)
+**Guides:** [Deployment overview](docs/deployment/README.md) · [CI/CD setup](.github/CI_CD_SETUP.md) · [Deployment config](DEPLOYMENT_CONFIG.md)
 
 ### 🐳 Docker (Local Development)
 
@@ -66,13 +64,12 @@ docker-compose up --build -d
 # Backend API: http://localhost:4002/api
 ```
 
-### 🖥️ Manual Setup
+### Manual / server setup
 
-For manual Ubuntu server deployment, see [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)
-
-For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/deployment/DOCKER_DEVELOPMENT.md)
-
-For Docker production deployment, see [DEPLOYMENT_DOCKER.md](docs/deployment/DEPLOYMENT_DOCKER.md)
+- [Deployment documentation](docs/deployment/README.md) (canonical numbered guides)
+- [Server setup](docs/deployment/01-server-setup.md)
+- Local Docker development: `docker-compose -f docker-compose.dev.yml up --build -d` (see [Docker ports](docs/DOCKER_PORTS_ARCHITECTURE.md))
+- Legacy guides (may be outdated): [docs/deployment/archive/](docs/deployment/archive/)
 
 ## 🏗️ Project Architecture
 
@@ -119,9 +116,7 @@ CRM/
 
 ## 🐳 Docker Management
 
-For detailed Docker development setup, see [DOCKER_DEVELOPMENT.md](docs/deployment/DOCKER_DEVELOPMENT.md)
-
-For Docker production deployment, see [DEPLOYMENT_DOCKER.md](docs/deployment/DEPLOYMENT_DOCKER.md)
+See [docs/deployment/README.md](docs/deployment/README.md) and [docs/DOCKER_PORTS_ARCHITECTURE.md](docs/DOCKER_PORTS_ARCHITECTURE.md).
 
 ### Development Environment
 ```bash
@@ -539,13 +534,13 @@ docker-compose pull && docker-compose up -d
 docker-compose ps
 ```
 
-### 🖥️ Manual Ubuntu Server Deployment
+### Manual Ubuntu server deployment
 
-For detailed manual deployment instructions, see [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)
+See [docs/deployment/README.md](docs/deployment/README.md) and [01-server-setup.md](docs/deployment/01-server-setup.md).
 
-### 🚀 CI/CD with GitHub Actions
+### CI/CD with GitHub Actions
 
-The project includes automated deployment via GitHub Actions. See [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md#github-actions-ci/cd-setup) for details.
+See [.github/CI_CD_SETUP.md](.github/CI_CD_SETUP.md).
 
 ## 🤝 Contributing
 
@@ -579,58 +574,32 @@ This project is licensed under the MIT License.
 
 ---
 
-## 📚 Documentation
+## Documentation
 
-All project documentation is organized in the [`docs/`](./docs/) directory:
+Canonical docs live under [`docs/`](./docs/) and [`.github/`](./.github/).
 
-### 🚀 Deployment & Infrastructure
-- **[Deployment Guide](docs/deployment/DEPLOYMENT.md)** - Main deployment overview and quick start
-- **[Docker Deployment](docs/deployment/DEPLOYMENT_DOCKER.md)** - Complete Docker deployment guide
-- **[Traditional Deployment](docs/deployment/DEPLOYMENT_TRADITIONAL.md)** - Manual Ubuntu server deployment
-- **[CI/CD Workflow](docs/deployment/CI_CD_WORKFLOW.md)** - GitHub Actions automation
+### Deployment and infrastructure
+- **[Deployment overview](docs/deployment/README.md)** — numbered guides `01`–`06`
+- **[CI/CD setup](.github/CI_CD_SETUP.md)** — branch/tag → environment matrix (source of truth)
+- **[Deployment config](DEPLOYMENT_CONFIG.md)** — `DEPLOYMENT_TYPE` and GitHub environments
+- **[GitHub Secrets](docs/deployment/GITHUB_SECRETS_GUIDE.md)**
+- Legacy / outdated material: [docs/deployment/archive/](docs/deployment/archive/)
 
-### 🗄️ Database & Environment
-- **[Database Environment Config](docs/DATABASE_ENV_CONFIG.md)** - Database configuration
-- **[Database Quick Reference](docs/DATABASE_QUICK_REFERENCE.md)** - Database commands
-- **[Environment Setup](docs/README.env.md)** - Environment variables guide
+### Database and environment
+- **[Database environment config](docs/DATABASE_ENV_CONFIG.md)**
+- **[Database quick reference](docs/DATABASE_QUICK_REFERENCE.md)**
+- **[Environment variables](docs/README.env.md)**
+- **[Database README](docs/db/README.md)**
 
-### 🧪 Testing & Quality
-- **[Playwright Documentation](docs/PLAYWRIGHT_DOCUMENTATION_INDEX.md)** - E2E testing guide
-- **[Playwright Migration](docs/PLAYWRIGHT_MIGRATION_COMPLETE.md)** - Testing framework migration
-- **[Testing Strategy](docs/TESTING_STRATEGY.md)** - Testing approach and tools
+### Testing
+- **[Playwright index](docs/PLAYWRIGHT_DOCUMENTATION_INDEX.md)**
+- **[Testing strategy](docs/TESTING_STRATEGY.md)**
 
-### ⚡ Performance & Optimization
-- **[Next.js Optimization](docs/NEXTJS_BUILD_OPTIMIZATION.md)** - Frontend performance
-- **[Nginx Optimization](docs/deployment/NGINX_OPTIMIZATION.md)** - Server optimization
-- **[Server Performance](docs/deployment/SERVER_PERFORMANCE.md)** - Performance monitoring
+### Performance
+- **[Next.js build optimization](docs/NEXTJS_BUILD_OPTIMIZATION.md)**
+- **[Nginx optimization](docs/deployment/NGINX_OPTIMIZATION.md)**
+- **[Server performance](docs/deployment/SERVER_PERFORMANCE.md)**
 
-### 🛠️ Development Tools
-- **[GitHub Secrets Guide](docs/deployment/GITHUB_SECRETS_GUIDE.md)** - CI/CD secrets setup
-- **[PNPM Migration](docs/PNPM_MIGRATION.md)** - Package manager migration
-- **[PNPM Summary](docs/PNPM_SUMMARY.md)** - PNPM usage guide
-
-### 📁 Component Documentation
-- **[Backend README](docs/backend/README.md)** - Backend architecture and setup
-- **[Frontend README](docs/frontend/README.md)** - Frontend architecture and setup
-- **[Database README](docs/db/README.md)** - Database schema and migrations
-
-### 🌍 Internationalization
-- **[German Documentation](docs/README.de.md)** - German version of main README
-- **[German Deployment](docs/deployment/DEPLOYMENT.de.md)** - German deployment guide
-- **[German Playwright Migration](docs/PLAYWRIGHT_MIGRATION_COMPLETE.de.md)** - German testing docs
-
-### 🔧 Specialized Guides
-- **[Deployment Optimization](docs/deployment/DEPLOYMENT_OPTIMIZATION.md)** - Deployment improvements
-- **[Fix Seed Error](docs/deployment/FIX_SEED_ERROR.md)** - Database seeding fixes
-- **[Secrets Quickstart](docs/deployment/SECRETS_QUICKSTART.md)** - Quick secrets setup
-- **[Server Setup](docs/deployment/SERVER_SETUP.md)** - Server configuration
-- **[Staging Setup](docs/deployment/STAGING_SETUP.md)** - Staging environment setup
-- **[Staging Commands](docs/deployment/STAGING_COMMANDS.md)** - Staging management
-- **[Staging Quick Setup](docs/deployment/STAGING_QUICK_SETUP_IP.md)** - Quick staging setup
-
-### 📖 Additional Resources
-- **[Environment Backend](docs/backend/README.env.md)** - Backend environment config
-- **[Tests Backend](docs/backend/tests/README.md)** - Backend testing documentation
-- **[Playwright Tests Summary](docs/PLAYWRIGHT_TESTS_SUMMARY.md)** - Test results summary
-- **[User Entity](docs/frontend/entities/user/README.md)** - User entity documentation
-- **[Auth Feature](docs/frontend/features/auth/README.md)** - Authentication feature docs
+### App packages
+- **[Backend](docs/backend/README.md)** · **[Frontend](docs/frontend/README.md)** · **[DB](docs/db/README.md)**
+- **[Auth feature](docs/frontend/features/auth/README.md)** · **[User entity](docs/frontend/entities/user/README.md)**

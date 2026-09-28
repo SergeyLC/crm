@@ -1,108 +1,71 @@
-# CRM - Docker Deployment Documentation
+# CRM — Docker Deployment Documentation
 
-Complete guide for deploying CRM on Ubuntu server using Docker.
+Deploy CRM on Ubuntu with Docker. **Canonical ops docs** are the numbered guides below.  
+**Canonical CI/CD matrix:** [../../.github/CI_CD_SETUP.md](../../.github/CI_CD_SETUP.md)
 
-## 📋 Documentation Structure
+## Documentation structure
 
-### Getting Started
-- **[Server Setup Guide](01-server-setup.md)** - Initial server preparation, Docker installation, and directory structure
+### Getting started
+- **[Server Setup](01-server-setup.md)** — Docker install, directories, firewall
 
-### Production Deployment
-- **[GitHub Actions Deployment](02-production-github-actions.md)** - Recommended: Automated CI/CD deployment
-- **[Manual Build Deployment](03-production-manual-build.md)** - Manual local build and server deployment
+### Production
+- **[GitHub Actions](02-production-github-actions.md)** — recommended automated deploy (tag `v*`)
+- **[Manual build](03-production-manual-build.md)** — local build / transfer images
 
-### Additional Environments
-- **[Staging Deployment](04-staging-deployment.md)** - Test environment setup on port 8080
+### Staging environments
+- **[Staging (stage-main / stage-develop)](04-staging-deployment.md)** — ports 8080 and 8081
 
 ### Operations
-- **[Container Management](05-management.md)** - Day-to-day operations, updates, and backups
-- **[Troubleshooting](06-troubleshooting.md)** - Common issues and solutions
+- **[Container management](05-management.md)**
+- **[Troubleshooting](06-troubleshooting.md)**
 
-### Supplementary Guides
-- **[GitHub Secrets Setup](GITHUB_SECRETS_GUIDE.md)** - Configure GitHub Actions secrets for CI/CD
-- **[Nginx Optimization](NGINX_OPTIMIZATION.md)** - Performance tuning, caching, and HTTP/2 setup
-- **[Server Performance](SERVER_PERFORMANCE.md)** - pnpm migration, npm optimization, and speed improvements
-- **[Deployment Optimization](DEPLOYMENT_OPTIMIZATION.md)** - CI/CD workflow optimizations and time savings
+### Supplementary
+- **[GitHub Secrets](GITHUB_SECRETS_GUIDE.md)**
+- **[Nginx optimization](NGINX_OPTIMIZATION.md)**
+- **[Server performance](SERVER_PERFORMANCE.md)**
+- **[Deployment optimization](DEPLOYMENT_OPTIMIZATION.md)**
+- **[Release strategy](RELEASE_DEPLOYMENT_STRATEGY.md)** — `[skip ci]` on release commits
 
-## 🚀 Quick Start
+## Quick start
 
-### For Production (Recommended Path)
-1. [Set up your server](01-server-setup.md) - 15 minutes
-2. Choose deployment method:
-   - [GitHub Actions](02-production-github-actions.md) - Best for teams
-   - [Manual Build](03-production-manual-build.md) - Best for quick deployment
-3. Access your app at `http://YOUR_SERVER_IP`
+### Production (port 80)
+1. [Server setup](01-server-setup.md)
+2. Push a release tag `v*` (see [CI/CD setup](../../.github/CI_CD_SETUP.md))
+3. Open `http://YOUR_SERVER_IP`
 
-### For Staging Environment
-1. Complete production setup first
-2. Follow [Staging Deployment Guide](04-staging-deployment.md)
-3. Access staging at `http://YOUR_SERVER_IP:8080`
+### Stage-main (port 8080)
+1. Complete server directories / firewall for 8080
+2. Push to `main`
+3. Open `http://YOUR_SERVER_IP:8080`
 
-## 🏗️ Architecture Overview
+### Stage-develop (port 8081)
+1. Firewall for 8081
+2. Push to `develop`
+3. Open `http://YOUR_SERVER_IP:8081`
+
+## Environment matrix
+
+| Parameter | Production | Stage-main | Stage-develop |
+|-----------|------------|------------|---------------|
+| Trigger | Tag `v*` | Push `main` | Push `develop` |
+| GitHub env | `production` | `stage-main` | `stage-develop` |
+| HTTP port | 80 | 8080 | 8081 |
+| Directory | `/var/www/crm-production` | `/var/www/crm-stage-main` | `/var/www/crm-stage-develop` |
+| Compose | `docker-compose.production.yml` | `docker-compose.stage-main.yml` | `docker-compose.stage-develop.yml` |
+| Containers | `crm-production-*` | `crm-stage-main-*` | `crm-stage-develop-*` |
+| Typical DB name | `crm` | `crm_staging` | `crm_stage_develop` |
+
+CI applies **migrations only**. Seeding demo data is **manual** (not part of the deploy action).
+
+## Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│  Nginx (Port 80/8080)                   │
-│  ├─ Frontend (Next.js) - Port 3000      │
-│  └─ Backend (Express) - Port 4000       │
-│      └─ PostgreSQL 16 - Port 5432       │
-└─────────────────────────────────────────┘
+Nginx (host port 80 / 8080 / 8081)
+  ├─ Frontend (Next.js) :3000
+  └─ Backend (Express)  :4000
+       └─ PostgreSQL 16 :5432 (internal)
 ```
 
-### Production vs Staging
+## Archive
 
-| Parameter | Production | Staging |
-|-----------|-----------|---------|
-| HTTP Port | 80 | 8080 |
-| Database | `crm` | `crm_staging` |
-| Volume | `crm_pg_data` | `crm_pg_data_staging` |
-| Containers | `crm-*` | `crm-staging-*` |
-| Images | `:latest` | `:staging` |
-| Directory | `/var/www/crm-production` | `/var/www/crm-staging` |
-
-## 📦 What's Included
-
-- ✅ Docker-based deployment (no source code on server)
-- ✅ Nginx reverse proxy configuration
-- ✅ PostgreSQL 16 with automatic backups
-- ✅ Health checks for all services
-- ✅ Separate staging environment
-- ✅ Environment variable management
-- ✅ Zero-downtime updates
-
-## 🔒 Security
-
-- Database credentials stored in `.env` files
-- JWT secrets for authentication
-- Nginx SSL/TLS ready (optional)
-- Firewall configuration included
-- Automatic security updates recommended
-
-## 📊 Requirements
-
-- **OS**: Ubuntu 20.04 LTS or newer
-- **RAM**: Minimum 2GB (recommended 4GB)
-- **CPU**: 2+ cores
-- **Disk**: Minimum 10GB free space
-- **Access**: SSH with root/sudo privileges
-
-## 🆘 Need Help?
-
-1. Check [Troubleshooting Guide](06-troubleshooting.md)
-2. Review container logs: `docker compose logs`
-3. Verify service status: `docker compose ps`
-4. Search [archived documentation](archive/) for legacy deployment methods
-
-## 📂 Archive
-
-Old deployment documentation has been moved to the [archive/](archive/) directory. These guides are kept for reference but may contain outdated information. **Always use the main guides above for current deployments.**
-
-## 📝 License
-
-CRM - Internal Documentation
-
----
-
-**Last Updated**: December 20, 2025  
-**Version**: 2.0  
-**Project**: CRM
+Older guides live in [archive/](archive/). Prefer this README and guides `01`–`06` plus `.github/CI_CD_SETUP.md`.

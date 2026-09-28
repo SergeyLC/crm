@@ -8,29 +8,35 @@ This project uses GitHub Actions for automated deployment to three environments 
 
 ### Develop Staging Deployment
 - **Trigger**: Push to `develop` branch
-- **Environment**: Develop staging server
-- **Docker Images**: Tagged with `develop-{commit}-{timestamp}`
+- **Environment**: `stage-develop`
+- **Docker Images**: Tagged with `staging-{commit}-{timestamp}`
 - **Port**: 8081
-- **Database**: `crm_stage_develop`
+- **Directory**: `/var/www/crm-stage-develop`
+- **Compose**: `docker-compose.stage-develop.yml`
+- **Database**: `crm_stage_develop` (typical `POSTGRES_DB` secret)
 - **Purpose**: Testing features before merging to main
-- **Note**: Use `deploy.sh -m "message" -s` on develop branch (releases not allowed)
+- **Note**: Use `deploy.sh -m "message" -s` on develop branch (releases not allowed). CI runs migrations only (no seed).
 
 ### Main Staging Deployment
 - **Trigger**: Push to `main` branch (except release commits with `[skip ci]`)
-- **Environment**: Staging server
+- **Environment**: `stage-main`
 - **Docker Images**: Tagged with `staging-{commit}-{timestamp}`
 - **Port**: 8080
-- **Database**: `crm_staging`
+- **Directory**: `/var/www/crm-stage-main`
+- **Compose**: `docker-compose.stage-main.yml`
+- **Database**: `crm_staging` (typical `POSTGRES_DB` secret)
 - **Purpose**: Pre-production testing
-- **Note**: Release commits automatically skip staging deployment to avoid redundant builds
+- **Note**: Release commits automatically skip staging deployment to avoid redundant builds. CI runs migrations only (no seed).
 
 ### Production Deployment
 - **Trigger**: Push git tag `v*` (e.g., `v1.4.2`)
-- **Environment**: Production server
-- **Docker Images**: Tagged with version (e.g., `v1.4.2`)
+- **Environment**: `production`
+- **Docker Images**: Tagged with production commit/timestamp
 - **Port**: 80
-- **Database**: `crm`
-- **Note**: Release commits include `[skip ci]` to prevent staging deployment
+- **Directory**: `/var/www/crm-production`
+- **Compose**: `docker-compose.production.yml`
+- **Database**: `crm` (typical `POSTGRES_DB` secret)
+- **Note**: Release commits include `[skip ci]` to prevent staging deployment. CI runs migrations only (no seed).
 
 ## Required GitHub Secrets
 
@@ -55,15 +61,15 @@ Create three environments:
   | `POSTGRES_PASSWORD` | Production database password | Generated with `openssl rand -base64 32` |
   | `JWT_SECRET` | Production JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
 
-#### **Staging Environment**
-- **Name**: `staging`
+#### **Stage-main Environment**
+- **Name**: `stage-main`
 - **Environment secrets**:
   | Secret | Description | Example |
   |--------|-------------|---------|
-  | `POSTGRES_DB` | Staging database name | `crm_staging` |
-  | `POSTGRES_USER` | Staging database user | `crm` or `crm_staging` |
-  | `POSTGRES_PASSWORD` | Staging database password | Generated with `openssl rand -base64 32` |
-  | `JWT_SECRET` | Staging JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
+  | `POSTGRES_DB` | Stage-main database name | `crm_staging` |
+  | `POSTGRES_USER` | Stage-main database user | `crm` |
+  | `POSTGRES_PASSWORD` | Stage-main database password | Generated with `openssl rand -base64 32` |
+  | `JWT_SECRET` | Stage-main JWT secret (min 32 chars) | Generated with `openssl rand -base64 64` |
 
 #### **Develop Environment**
 - **Name**: `stage-develop`
@@ -110,11 +116,11 @@ GitHub Repository
 │   ├── POSTGRES_PASSWORD = (prod password)
 │   └── JWT_SECRET = (prod secret)
 │
-├── Environment: staging
+├── Environment: stage-main
 │   ├── POSTGRES_DB = crm_staging
 │   ├── POSTGRES_USER = crm
-│   ├── POSTGRES_PASSWORD = (staging password)
-│   └── JWT_SECRET = (staging secret)
+│   ├── POSTGRES_PASSWORD = (stage-main password)
+│   └── JWT_SECRET = (stage-main secret)
 │
 └── Environment: stage-develop
     ├── POSTGRES_DB = crm_stage_develop
@@ -153,21 +159,21 @@ cat ~/.ssh/id_ed25519
    - Name: `JWT_SECRET`, Value: `openssl rand -base64 64`
 4. (Optional) Add **Required reviewers** for deployment approval
 
-#### 2. Create Staging Environment
+#### 2. Create Stage-main Environment
 
 1. **New environment**
-2. Name: `staging`
+2. Name: `stage-main`
 3. **Add secret** for each (different values from production!):
    - Name: `POSTGRES_DB`, Value: `crm_staging`
    - Name: `POSTGRES_USER`, Value: `crm`
    - Name: `POSTGRES_PASSWORD`, Value: `openssl rand -base64 32`
    - Name: `JWT_SECRET`, Value: `openssl rand -base64 64`
 
-#### 3. Create Develop Environment
+#### 3. Create Stage-develop Environment
 
 1. **New environment**
 2. Name: `stage-develop`
-3. **Add secret** for each (different values from production and staging!):
+3. **Add secret** for each (different values from production and stage-main!):
    - Name: `POSTGRES_DB`, Value: `crm_stage_develop`
    - Name: `POSTGRES_USER`, Value: `crm`
    - Name: `POSTGRES_PASSWORD`, Value: `openssl rand -base64 32`
@@ -211,8 +217,8 @@ After setup, verify you have:
 
 **Environments:**
 - [ ] Environment `production` created
-- [ ] Environment `staging` created
-- [ ] Environment `develop` created
+- [ ] Environment `stage-main` created
+- [ ] Environment `stage-develop` created
 
 **Environment Secrets (production):**  
 - [ ] `production` has `POSTGRES_DB` secret
@@ -220,13 +226,13 @@ After setup, verify you have:
 - [ ] `production` has `POSTGRES_PASSWORD` secret
 - [ ] `production` has `JWT_SECRET` secret
 
-**Environment Secrets (staging):**
-- [ ] `staging` has `POSTGRES_DB` secret
-- [ ] `staging` has `POSTGRES_USER` secret
-- [ ] `staging` has `POSTGRES_PASSWORD` secret
-- [ ] `staging` has `JWT_SECRET` secret
+**Environment Secrets (stage-main):**
+- [ ] `stage-main` has `POSTGRES_DB` secret
+- [ ] `stage-main` has `POSTGRES_USER` secret
+- [ ] `stage-main` has `POSTGRES_PASSWORD` secret
+- [ ] `stage-main` has `JWT_SECRET` secret
 
-**Environment Secrets (develop):**
+**Environment Secrets (stage-develop):**
 - [ ] `stage-develop` has `POSTGRES_DB` secret
 - [ ] `stage-develop` has `POSTGRES_USER` secret
 - [ ] `stage-develop` has `POSTGRES_PASSWORD` secret
@@ -269,7 +275,7 @@ echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
 
 ```bash
 # Create deployment directory for main staging
-mkdir -p /var/www/crm-staging
+mkdir -p /var/www/crm-stage-main
 
 # Login to GitHub Container Registry if not done already
 echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
@@ -325,8 +331,17 @@ GitHub Actions will:
 2. Copy deployment files to server
 3. Create/update environment files with secrets
 4. Pull images
-5. Run database migrations
+5. Run database migrations (`migrate:deploy` only — **no automatic seed**)
 6. Start containers
+
+After a **fresh** database, seed demo users manually if needed:
+
+```bash
+# Example (stage-main); requires TypeScript/tsconfig in the image or a one-off script
+docker exec -w /app/db crm-stage-main-backend sh -c 'pnpm run seed'
+```
+
+Default seed login (when seed succeeds): `admin@example.com` / `1`
 
 ### Manual Database Setup (First Time Only)
 
@@ -338,8 +353,8 @@ cd /var/www/crm-production
 docker compose up -d postgres
 
 # Main Staging
-cd /var/www/crm-staging
-docker compose -f docker-compose.stage.yml up -d postgres
+cd /var/www/crm-stage-main
+docker compose -f docker-compose.stage-main.yml up -d postgres
 
 # Develop Staging
 cd /var/www/crm-stage-develop
@@ -374,8 +389,6 @@ docker ps
 
 ### Main Staging Deployment
 
-### Main Staging Deployment
-
 1. **Commit changes** to `main` branch:
    ```bash
    git checkout main
@@ -389,15 +402,13 @@ docker ps
 2. **GitHub Actions** will automatically:
    - Run tests
    - Build Docker images
-   - Deploy to main staging (port 8080)
-   - Push to GitHub Container Registry
-   - Deploy to staging server
+   - Deploy to stage-main server (`/var/www/crm-stage-main`)
    - Run database migrations
    - Restart containers
 
 3. **Check deployment** status:
    - GitHub: Actions tab
-   - Server: `docker ps` or `docker compose -f docker-compose.stage.yml ps`
+   - Server: `docker ps` or `docker compose -f docker-compose.stage-main.yml ps`
    - URL: `http://YOUR_SERVER_IP:8080`
 
 ### Production Deployment
@@ -467,7 +478,7 @@ docker compose logs -f frontend
 
 # Check specific container
 docker logs crm-backend
-docker logs crm-staging-backend
+docker logs crm-stage-main-backend
 ```
 
 ## Troubleshooting

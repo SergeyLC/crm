@@ -1,103 +1,81 @@
-# 🚀 Quick CI/CD Setup
+# Quick CI/CD Setup
 
-## Problem: Deploy with Docker - skipped?
+## Problem: Deploy with Docker skipped?
 
-Follow these steps in order:
+Follow these steps in order.
 
-### 1️⃣ Create Environments (2 minutes)
+### 1. Create Environments (2 minutes)
 
 ```
 GitHub Repo → Settings → Environments → New environment
 ```
 
-Create two environments:
-- ✅ **staging**
-- ✅ **production**
+Create **three** environments:
 
-### 2️⃣ Configure Environment Secrets (5 minutes)
+- `production`
+- `stage-main`
+- `stage-develop`
 
-For **EACH** environment (staging and production):
+### 2. Configure Environment Secrets (5 minutes)
+
+For **each** environment:
 
 ```
-Settings → Environments → [select staging] → Add Secret
+Settings → Environments → [select stage-main] → Add Secret
 ```
 
-Add 4 secrets:
+| Secret Name | Example (stage-main) | Example (production) |
+|-------------|----------------------|----------------------|
+| `POSTGRES_DB` | `crm_staging` | `crm` |
+| `POSTGRES_USER` | `crm` | `crm` |
+| `POSTGRES_PASSWORD` | `openssl rand -base64 32` | different value |
+| `JWT_SECRET` | `openssl rand -base64 64` | different value |
 
-| Secret Name | Example Value | How to Generate |
-|-------------|---------------|-----------------|
-| `POSTGRES_DB` | `crm_staging` or `crm` | Choose a database name |
-| `POSTGRES_USER` | `crm` | Choose a username |
-| `POSTGRES_PASSWORD` | `x7K9mP2qR...` | `openssl rand -base64 32` |
-| `JWT_SECRET` | `L8nQ5tV9w...` | `openssl rand -base64 64` |
+Repeat for `production` and `stage-develop` with different passwords/DB names (`crm_stage_develop` for develop).
 
-Repeat for the **production** environment with different values!
-
-### 3️⃣ Configure Repository Secrets (3 minutes)
+### 3. Configure Repository Secrets (3 minutes)
 
 ```
 Settings → Secrets and variables → Actions → Secrets → New repository secret
 ```
 
-Add 3 secrets:
-
 | Secret Name | Example | Description |
 |-------------|---------|-------------|
-| `SERVER_HOST` | `217.160.74.128` | Your server IP or domain |
+| `SERVER_HOST` | `217.154.173.36` | Server IP or domain |
 | `SERVER_USER` | `root` | SSH user |
-| `SERVER_SSH_KEY` | `-----BEGIN...` | Full SSH **private** key (pair with public key on server) |
+| `SERVER_SSH_KEY` | `-----BEGIN...` | Full SSH **private** key |
 
-**How to get the SSH key pair** (private → GitHub, public → server):
+Details: [GitHub Secrets Guide — SERVER_SSH_KEY](../docs/deployment/GITHUB_SECRETS_GUIDE.md#server_ssh_key)
 
-```bash
-ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_deploy -N ""
-# Public key on server (as SERVER_USER, e.g. root → /root/.ssh/authorized_keys):
-cat ~/.ssh/github_deploy.pub >> ~/.ssh/authorized_keys
-# Private key into GitHub secret SERVER_SSH_KEY:
-cat ~/.ssh/github_deploy
-```
-
-Full details: [GitHub Secrets Guide — SERVER_SSH_KEY](../docs/deployment/GITHUB_SECRETS_GUIDE.md#server_ssh_key)
-
-### 4️⃣ (Optional) Set a Repository Variable
-
-```
-Settings → Secrets and variables → Actions → Variables → New repository variable
-```
+### 4. (Optional) Repository Variable
 
 - **Name**: `DEPLOYMENT_TYPE`
 - **Value**: `docker`
 
-## ✅ Done!
+## Done
 
-Now a push to `main` will automatically start a staging deploy (except release commits with `[skip ci]`).
+| Push / tag | Environment | URL port |
+|------------|-------------|----------|
+| `main` | `stage-main` | **8080** |
+| `develop` | `stage-develop` | **8081** |
+| tag `v*` | `production` | **80** |
 
-### How to verify
+CI runs **migrations only** (no seed).
 
-1. Commit and push to main:
-   ```bash
-   git push origin main
-   ```
+### How to verify (stage-main)
 
-2. Open Actions and check the logs:
-   ```
-   Actions → Deploy Application → Setup Deployment Configuration
-   ```
+```bash
+git push origin main
+```
 
-3. You should see:
-   ```
-   ✅ deployment_type: docker
-   ✅ should_deploy: true
-   ✅ environment: staging
-   ```
+In Actions → Deploy Application → Setup Deployment Configuration you should see:
 
-4. The "Deploy with Docker" job should run (not skipped)
+```
+environment: stage-main
+deployment_type: docker
+should_deploy: true
+```
 
-## ❌ Still not working?
+## Still not working?
 
-See the detailed guide: [TROUBLESHOOTING_DEPLOYMENT.md](../TROUBLESHOOTING_DEPLOYMENT.md)
-
-## 📚 Additional documentation
-
-- [Full CI/CD instructions](CI_CD_SETUP.md)
-- [Deployment configuration](../DEPLOYMENT_CONFIG.md)
+See [TROUBLESHOOTING_DEPLOYMENT.md](../TROUBLESHOOTING_DEPLOYMENT.md) and [.github/CI_CD_SETUP.md](CI_CD_SETUP.md).
