@@ -11,7 +11,7 @@ export default async function LocaleLayout({
   children: ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  await params; // Still await to avoid unused variable warning
+  const { locale } = await params;
 
-  return <I18nProvider>{children}</I18nProvider>;
+  return <I18nProvider locale={locale}>{children}</I18nProvider>;
 }

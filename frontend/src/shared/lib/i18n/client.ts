@@ -42,7 +42,9 @@ if (!i18n.isInitialized) {
   
   i18n.use(initReactI18next).init({
     resources,
-    lng: typeof window !== 'undefined' ? window.localStorage.getItem('i18nextLng') || 'de' : 'de',
+    // URL locale is applied by I18nProvider; never read localStorage here
+    // (server/client mismatch → React hydration #418).
+    lng: 'de',
     fallbackLng: 'de',
     defaultNS: 'shared',
     ns: [...fixedNamespaces, ...generatedNS],

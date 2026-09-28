@@ -1,41 +1,36 @@
 "use client";
 
-import React, { useEffect, useSyncExternalStore } from 'react';
-import { usePathname } from 'next/navigation';
-import { I18nextProvider } from 'react-i18next';
-import i18n from '@/shared/lib/i18n/client';
-
-const emptySubscribe = () => () => {};
+import React, { useMemo, useEffect } from "react";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@/shared/lib/i18n/client";
 
 /**
- * Client-side I18nProvider that handles language switching and provides i18next context
+ * Always wrap with I18nextProvider (same tree on server + client).
+ * Locale comes from the URL segment via the server layout — not localStorage —
+ * so the first client render matches SSR (avoids React #418).
  */
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isClient = useSyncExternalStore(emptySubscribe, () => true, () => false);
+export function I18nProvider({
+  children,
+  locale = "de",
+}: {
+  children: React.ReactNode;
+  locale?: string;
+}) {
+  const lng = locale === "en" ? "en" : "de";
+
+  const i18nInstance = useMemo(
+    () => i18n.cloneInstance({ lng }),
+    [lng],
+  );
 
   useEffect(() => {
-    if (!pathname) return;
-
-    const segments = pathname.split('/').filter(Boolean);
-    const locale = segments[0] === 'en' ? 'en' : 'de';
-
-    if (i18n.language !== locale) {
-      i18n.changeLanguage(locale);
+    // Keep the singleton in sync for modules that import it directly.
+    if (i18n.language !== lng) {
+      void i18n.changeLanguage(lng);
     }
-  }, [pathname]);
+  }, [lng]);
 
-  // Don't render the I18nextProvider until we're on the client
-  // This prevents hydration mismatches
-  if (!isClient) {
-    return <>{children}</>;
-  }
-
-  return (
-    <I18nextProvider i18n={i18n}>
-      {children}
-    </I18nextProvider>
-  );
+  return <I18nextProvider i18n={i18nInstance}>{children}</I18nextProvider>;
 }
 
 export default I18nProvider;
