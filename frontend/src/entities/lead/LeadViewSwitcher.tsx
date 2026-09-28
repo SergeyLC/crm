@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { UrlViewSwitcher, UrlViewSwitcherElement } from "@/shared/ui";
+import { UrlViewSwitcher, UrlViewSwitcherElement } from "@/shared/ui/UrlViewSwitcher";
 import { Box, Typography } from "@mui/material";
 import { useLocale, localePath } from '@/shared/lib/hooks/useLocale';
 import { useTranslation } from 'react-i18next';

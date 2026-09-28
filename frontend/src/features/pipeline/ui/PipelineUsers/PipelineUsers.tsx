@@ -18,7 +18,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslation } from "react-i18next";
 import { User, PipelineUser } from "@/entities/pipeline/model/types";
-import { SelectUsersDialog } from "@/shared/ui"; // Импортируем переиспользуемый компонент
+import { SelectUsersDialog } from "@/shared/ui/SelectUsersDialog";
 
 interface PipelineUsersProps {
   pipelineId?: string;

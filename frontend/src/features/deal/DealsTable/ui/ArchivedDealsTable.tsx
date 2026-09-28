@@ -8,15 +8,15 @@ import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
 
+import type { DealExt } from "@/entities/deal/model/types";
+import { DealViewSwitcher } from "@/entities/deal/DealViewSwitcher";
+import { useGetArchivedDealsQuery } from "@/entities/deal/api/hooks";
 import {
   DealActiveQueryKey,
   DealArchivedQueryKey,
-  DealExt,
   DealLostQueryKey,
-  DealViewSwitcher,
   DealWonQueryKey,
-  useGetArchivedDealsQuery,
-} from "@/entities/deal";
+} from "@/entities/deal/api/queryKeys";
 
 import { queryClient } from "@/shared/lib/query";
 import { QueryKeyType, useInvalidateQueries } from "@/shared/api";

@@ -8,11 +8,9 @@ import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import {
-  DealExt,
-  DealViewSwitcher,
-  useGetActiveDealsQuery,
-} from "@/entities/deal";
+import type { DealExt } from "@/entities/deal/model/types";
+import { DealViewSwitcher } from "@/entities/deal/DealViewSwitcher";
+import { useGetActiveDealsQuery } from "@/entities/deal/api/hooks";
 
 import { QueryKeyType, useInvalidateQueries } from "@/shared/api";
 import {
@@ -20,7 +18,7 @@ import {
   DealArchivedQueryKey,
   DealLostQueryKey,
   DealWonQueryKey,
-} from "@/entities/deal";
+} from "@/entities/deal/api/queryKeys";
 
 import {
   BaseTable,

@@ -6,15 +6,17 @@ import { useTranslation } from "react-i18next";
 import EditIcon from "@mui/icons-material/Edit";
 import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import type { DealExt } from "@/entities/deal/model/types";
+import { DealViewSwitcher } from "@/entities/deal/DealViewSwitcher";
 import {
-  DealActiveQueryKey,
-  DealExt,
-  DealLostQueryKey,
-  DealViewSwitcher,
-  DealWonQueryKey,
   useGetLostDealsQuery,
   useGetWonDealsQuery,
-} from "@/entities/deal";
+} from "@/entities/deal/api/hooks";
+import {
+  DealActiveQueryKey,
+  DealLostQueryKey,
+  DealWonQueryKey,
+} from "@/entities/deal/api/queryKeys";
 
 import { QueryKeyType, useInvalidateQueries } from "@/shared/api";
 

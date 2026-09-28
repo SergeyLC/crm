@@ -1,3 +1,4 @@
 export * from "./ProtectedRoute";
 export * from "./AuthProvider";
-export * from "./LoginForm/LoginForm";
+// LoginForm is not part of the sidebar auth surface — import from
+// `@/features/auth/ui/LoginForm/LoginForm` on the login page only.

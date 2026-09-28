@@ -1,5 +1,5 @@
 import { DealExt } from '@/entities/deal';
-import { WonLostDealsTable } from '@/features/deal';
+import { WonLostDealsTable } from '@/features/deal/DealsTable/ui/WonLostDealsTable';
 import { ssrFetch } from '@/shared/api';
 
 export const revalidate = 60;

@@ -4,7 +4,7 @@ import { Box, Typography, SxProps, Theme } from "@mui/material";
 import PersonIcon from '@mui/icons-material/Person';
 import GroupIcon from '@mui/icons-material/Group';
 import BlockIcon from '@mui/icons-material/Block';
-import { SimpleViewSwitcher, SimpleViewSwitcherElement } from "@/shared/ui";
+import { SimpleViewSwitcher, SimpleViewSwitcherElement } from "@/shared/ui/SimpleViewSwitcher";
 import { UserStatus } from "../model/types";
 import { useTranslation } from 'react-i18next';
 

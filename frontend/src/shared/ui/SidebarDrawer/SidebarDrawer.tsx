@@ -28,13 +28,13 @@ import { usePathname } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { LogoutButton } from "@/features/side-menu/ui/LogoutButton";
 import { useAuth } from "@/features/auth/hooks";
-import { useUserPermissions, userHasPermission } from "@/entities/user";
+import { useUserPermissions, userHasPermission } from "@/entities/user/lib";
 import { useTranslation } from "react-i18next";
 import Box from "@mui/material/Box";
 import Avatar from "@mui/material/Avatar";
 import Collapse from "@mui/material/Collapse";
 import { LanguageSwitcher } from "../LanguageSwitcher";
-import { UserPermission } from "@/entities/user";
+import { UserPermission } from "@/entities/user/types";
 
 const drawerWidth = 220;
 const collapsedWidth = 60;

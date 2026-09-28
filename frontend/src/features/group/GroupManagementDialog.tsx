@@ -20,7 +20,7 @@ import { GroupFormData, GroupManagementDialogProps } from "./types";
 import { useGroupManagement } from "./hooks/useGroupManagement";
 import { GroupDetailsForm } from "./ui/GroupDetailsForm";
 import { MembersTable } from "./ui/MembersTable";
-import { SelectUsersDialog } from "@/shared/ui";
+import { SelectUsersDialog } from "@/shared/ui/SelectUsersDialog";
 
 export function GroupManagementDialog({
   open,

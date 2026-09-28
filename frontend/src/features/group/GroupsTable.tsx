@@ -22,7 +22,7 @@ import {
 import { useSnackbar } from "notistack";
 import { useUserPermissions } from "@/entities/user";
 import { GroupManagementDialog } from "./GroupManagementDialog";
-import { ConfirmDeleteDialog } from "@/shared/ui";
+import { ConfirmDeleteDialog } from "@/shared/ui/ConfirmDeleteDialog";
 
 export function GroupsTable() {
   const { t, ready } = useTranslation("group");

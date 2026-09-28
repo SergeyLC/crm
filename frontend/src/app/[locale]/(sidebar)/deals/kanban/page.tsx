@@ -4,9 +4,9 @@ import Box from "@mui/material/Box";
 
 import i18n from '@/shared/lib/i18n/server';
 import { KanbanBoard } from "@/features/kanban";
-import { DealViewSwitcher } from "@/entities/deal";
+import { DealViewSwitcher } from "@/entities/deal/DealViewSwitcher";
 import { ssrFetch } from "@/shared/api";
-import { DealExt } from "@/entities/deal";
+import type { DealExt } from "@/entities/deal/model/types";
 
 export const revalidate = 60;
 

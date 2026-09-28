@@ -1,6 +1,6 @@
-export * from "./SidebarDrawer/SidebarDrawer";
-export * from "./SimpleViewSwitcher";
-export * from "./UrlViewSwitcher";
-export * from "./ConfirmDeleteDialog";
-export { SelectUsersDialog } from './SelectUsersDialog';
-export * from "./SelectItemsDialog/SelectItemsDialog";
+/**
+ * Shared UI segment — intentionally empty public barrel.
+ * Import concrete modules (e.g. `@/shared/ui/UrlViewSwitcher`) to avoid
+ * pulling SidebarDrawer / dialogs into unrelated routes.
+ */
+export {};

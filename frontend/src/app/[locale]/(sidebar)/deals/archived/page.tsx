@@ -1,4 +1,4 @@
-import { ArchivedDealsTable } from '@/features/deal';
+import { ArchivedDealsTable } from '@/features/deal/DealsTable/ui/ArchivedDealsTable';
 import { Suspense } from 'react';
 import { ssrFetch } from '@/shared/api';
 import { DealExt } from '@/entities/deal';

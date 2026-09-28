@@ -18,7 +18,8 @@ import AddIcon from "@mui/icons-material/Add";
 import { useAllPipelines, useDeletePipeline } from "@/entities/pipeline";
 import { useTranslation } from "react-i18next";
 import { PipelineFormDialog } from "@/features/pipeline";
-import { ConfirmDeleteDialog, queryClient } from "@/shared/";
+import { ConfirmDeleteDialog } from "@/shared/ui/ConfirmDeleteDialog";
+import { queryClient } from "@/shared/lib/query";
 import { useToast } from "@/shared/lib/hooks";
 
 export const PipelineManagement = () => {
