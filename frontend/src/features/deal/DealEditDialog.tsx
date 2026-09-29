@@ -26,7 +26,10 @@ import {
   DealExt,
   UpdateDealDTO,
 } from "@/entities/deal";
-import { Appointment, sanitizeAppointments } from "@/entities/appointment";
+import {
+  Appointment,
+  sanitizeAppointments,
+} from "@/entities/appointment";
 import { useAuth } from "@/features/auth/";
 import { QueryKeyType } from "@/shared";
 import { BaseUpsertFields } from "@/features/form";

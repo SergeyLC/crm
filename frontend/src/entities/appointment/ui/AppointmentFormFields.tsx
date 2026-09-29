@@ -18,7 +18,7 @@ import {
   Appointment,
   AppointmentType,
   appointmentTypes,
-} from "@/entities/appointment";
+} from "../types";
 
 type AppointmentFormFieldsProps = {
   initialData?: Appointment;

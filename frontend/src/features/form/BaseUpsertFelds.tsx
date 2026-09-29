@@ -13,8 +13,8 @@ import {
 import {
   CreateAppointmentDTO,
   UpdateAppointmentDTO,
-  AppointmentsFormFieldsSet,
 } from "@/entities/appointment";
+import { AppointmentsFormFieldsSet } from "@/entities/appointment/form";
 import {
   ContactFormFields,
   CreateContactDTO,

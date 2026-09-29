@@ -25,8 +25,7 @@ import type { CreateLeadDTO, LeadExt, UpdateLeadDTO } from "@/entities/lead";
 import { QueryKeyType } from "@/shared";
 import { useAuth } from "@/features/auth/";
 import { BaseUpsertFields } from "@/features/form";
-import { sanitizeAppointments } from "@/entities/appointment";
-import { Appointment } from "@/entities/appointment";
+import { sanitizeAppointments, type Appointment } from "@/entities/appointment";
 
 export function LeadEditDialog({
   id,

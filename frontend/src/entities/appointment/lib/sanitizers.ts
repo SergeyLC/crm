@@ -1,4 +1,8 @@
-import { Appointment, CreateAppointmentDTO, UpdateAppointmentDTO } from "@/entities/appointment";
+import {
+  Appointment,
+  CreateAppointmentDTO,
+  UpdateAppointmentDTO,
+} from "../types";
 
 export function sanitizeAppointments(
   appointments: (Appointment | CreateAppointmentDTO | UpdateAppointmentDTO)[]
