@@ -13,7 +13,8 @@
     "build": "pnpm -r run build",
     "dev": "pnpm -r --parallel run dev",
     "lint": "pnpm -r run lint",
-    "type-check": "pnpm -r run type-check"
+    "type-check": "pnpm -r run type-check",
+    "deploy:release": "node scripts/deploy.js"
   },
   "keywords": ["crm", "leads", "deals", "customers"],
   "author": "SergeyLC",
