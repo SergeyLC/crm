@@ -15,6 +15,11 @@ Deploy CRM on Ubuntu with Docker. **Canonical ops docs** are the numbered guides
 ### Staging environments
 - **[Staging (stage-main / stage-develop)](04-staging-deployment.md)** — ports 8080 and 8081
 
+> **Current VPS (~4 GB RAM):** Only **production (port 80)** runs continuously.  
+> Push to `main`/`develop` runs tests but does **not** auto-deploy staging.  
+> Staging: GitHub Actions → workflow_dispatch (or temporarily start compose on the server).  
+> Production: push tag `v*`.
+
 ### Operations
 - **[Container management](05-management.md)**
 - **[Troubleshooting](06-troubleshooting.md)**
@@ -47,7 +52,7 @@ Deploy CRM on Ubuntu with Docker. **Canonical ops docs** are the numbered guides
 
 | Parameter | Production | Stage-main | Stage-develop |
 |-----------|------------|------------|---------------|
-| Trigger | Tag `v*` | Push `main` | Push `develop` |
+| Trigger | Tag `v*` | workflow_dispatch | workflow_dispatch |
 | GitHub env | `production` | `stage-main` | `stage-develop` |
 | HTTP port | 80 | 8080 | 8081 |
 | Directory | `/var/www/crm-production` | `/var/www/crm-stage-main` | `/var/www/crm-stage-develop` |

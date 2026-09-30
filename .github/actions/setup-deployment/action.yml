@@ -56,11 +56,11 @@ runs:
             case "${GITHUB_REF#refs/heads/}" in
               main)
                 ENVIRONMENT="stage-main"
-                echo "📌 Push to main branch → stage-main deployment (port 8080)"
+                echo "📌 Push to main → stage-main (manual/workflow_dispatch only on this VPS)"
                 ;;
               develop)
                 ENVIRONMENT="stage-develop"
-                echo "📌 Push to develop branch → stage-develop deployment (port 8081)"
+                echo "📌 Push to develop → stage-develop (manual/workflow_dispatch only on this VPS)"
                 ;;
               *)
                 echo "⚠️  Unsupported branch: ${GITHUB_REF#refs/heads/}"
@@ -69,6 +69,15 @@ runs:
                 ;;
             esac
           fi
+        fi
+
+        # Single ~4GB VPS: auto-deploy production only (port 80).
+        # Staging stacks (8080/8081) stay available via workflow_dispatch + environment override.
+        SHOULD_DEPLOY=true
+        if [[ "$IS_RELEASE" != "true" && "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ]]; then
+          SHOULD_DEPLOY=false
+          echo "⏸️  Skipping auto-deploy for ${ENVIRONMENT} (RAM policy: only production on this host)."
+          echo "   Use workflow_dispatch or a v* tag to deploy."
         fi
 
         # Determine deployment type (workflow_dispatch override or repository variable or default)
@@ -110,14 +119,14 @@ runs:
         echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
         echo "deployment_type=$DEPLOYMENT_TYPE" >> $GITHUB_OUTPUT
         echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-        echo "should_deploy=true" >> $GITHUB_OUTPUT
+        echo "should_deploy=${SHOULD_DEPLOY}" >> $GITHUB_OUTPUT
         echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
         
         echo "🔍 Debug outputs:"
         echo "  - environment: $ENVIRONMENT"
         echo "  - deployment_type: $DEPLOYMENT_TYPE"
         echo "  - image_tag: $IMAGE_TAG"
-        echo "  - should_deploy: true"
+        echo "  - should_deploy: ${SHOULD_DEPLOY}"
         echo "  - is_release: $IS_RELEASE"
 
         echo ""
@@ -125,6 +134,7 @@ runs:
         echo "  Environment: $ENVIRONMENT"
         echo "  Type: $DEPLOYMENT_TYPE"
         echo "  Image Tag: $IMAGE_TAG"
+        echo "  Should Deploy: ${SHOULD_DEPLOY}"
         echo "  Is Release: $IS_RELEASE"
       shell: bash
 

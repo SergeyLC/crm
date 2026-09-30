@@ -106,8 +106,7 @@ jobs:
     name: Deploy with Docker
     runs-on: ubuntu-latest
     needs: setup
-    # Simplified condition for testing - will check values in debug step
-    if: always()
+    if: needs.setup.outputs.should_deploy == 'true' && needs.setup.outputs.deployment_type == 'docker'
     # Environment is properly configured in GitHub Settings with secrets
     environment: ${{ needs.setup.outputs.environment }}
     steps:
