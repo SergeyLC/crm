@@ -11,16 +11,17 @@ RUN npm install -g pnpm
 COPY pnpm-workspace.yaml ./
 COPY pnpm-lock.yaml ./
 
-# Copy package.json files
+# Copy package.json files (all workspace importers must exist for frozen-lockfile)
 COPY frontend/package.json ./frontend/package.json
+COPY backend/package.json ./backend/package.json
 COPY db/package.json ./db/package.json
 
 # Skip Cypress binary download in Docker builds (not needed for app runtime)
 ENV CYPRESS_INSTALL_BINARY=0
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install frontend + db deps only (backend package.json is present for lockfile match)
+RUN pnpm install --frozen-lockfile --filter frontend... --filter db...
 
 # Copy source code
 COPY db/ ./db/
