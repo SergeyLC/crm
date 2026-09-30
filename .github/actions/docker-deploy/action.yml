@@ -190,31 +190,67 @@ runs:
 
     - name: Deploy to ${{ inputs.environment }} server
       uses: appleboy/ssh-action@v1.0.3
+      env:
+        # Pass secrets via env (not inline in script) so newlines/special chars
+        # cannot break the remote bash script or the Compose env-file parser.
+        DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+        DEPLOY_IMAGE_TAG: ${{ inputs.image_tag }}
+        DEPLOY_VERSION: ${{ inputs.version }}
+        DEPLOY_SERVER_HOST: ${{ inputs.server_host }}
+        DEPLOY_POSTGRES_DB: ${{ inputs.postgres_db }}
+        DEPLOY_POSTGRES_USER: ${{ inputs.postgres_user }}
+        DEPLOY_POSTGRES_PASSWORD: ${{ inputs.postgres_password }}
+        DEPLOY_JWT_SECRET: ${{ inputs.jwt_secret }}
+        DEPLOY_GITHUB_TOKEN: ${{ inputs.github_token }}
+        DEPLOY_GITHUB_ACTOR: ${{ github.actor }}
+        DEPLOY_GITHUB_REPOSITORY: ${{ github.repository }}
+        DEPLOY_RUN_ID: ${{ github.run_id }}
       with:
         host: ${{ inputs.server_host }}
         username: ${{ inputs.server_user }}
         key: ${{ inputs.server_ssh_key }}
         command_timeout: 30m
+        envs: DEPLOY_ENVIRONMENT,DEPLOY_IMAGE_TAG,DEPLOY_VERSION,DEPLOY_SERVER_HOST,DEPLOY_POSTGRES_DB,DEPLOY_POSTGRES_USER,DEPLOY_POSTGRES_PASSWORD,DEPLOY_JWT_SECRET,DEPLOY_GITHUB_TOKEN,DEPLOY_GITHUB_ACTOR,DEPLOY_GITHUB_REPOSITORY,DEPLOY_RUN_ID
         script: |
           set -e
 
-          echo "🐳 Docker Deployment to ${{ inputs.environment }}"
-          echo "📦 Image tag: ${{ inputs.image_tag }}"
+          echo "🐳 Docker Deployment to ${DEPLOY_ENVIRONMENT}"
+          echo "📦 Image tag: ${DEPLOY_IMAGE_TAG}"
+
+          # Strip CR/LF that GitHub UI / password managers often append to secrets
+          strip_ws() { printf '%s' "$1" | tr -d '\r\n'; }
+
+          DEPLOY_VERSION=$(strip_ws "$DEPLOY_VERSION")
+          DEPLOY_SERVER_HOST=$(strip_ws "$DEPLOY_SERVER_HOST")
+          DEPLOY_POSTGRES_DB=$(strip_ws "$DEPLOY_POSTGRES_DB")
+          DEPLOY_POSTGRES_USER=$(strip_ws "$DEPLOY_POSTGRES_USER")
+          DEPLOY_POSTGRES_PASSWORD=$(strip_ws "$DEPLOY_POSTGRES_PASSWORD")
+          DEPLOY_JWT_SECRET=$(strip_ws "$DEPLOY_JWT_SECRET")
+          DEPLOY_IMAGE_TAG=$(strip_ws "$DEPLOY_IMAGE_TAG")
+
+          # Write KEY="value" (quoted) so Compose never treats value chars as keys
+          env_set() {
+            local key="$1"
+            local val="$2"
+            val="${val//\\/\\\\}"
+            val="${val//\"/\\\"}"
+            printf '%s="%s"\n' "$key" "$val" >> "$ENV_FILE"
+          }
           
           # Determine deployment directory and compose file
-          if [[ "${{ inputs.environment }}" == "production" ]]; then
+          if [[ "${DEPLOY_ENVIRONMENT}" == "production" ]]; then
             DEPLOY_DIR="/var/www/crm-production"
             COMPOSE_FILE="docker-compose.production.yml"
             NGINX_CONF="nginx.prod.conf"
             ENV_FILE=".env.production"
             CONTAINER_PREFIX="crm-production"
-          elif [[ "${{ inputs.environment }}" == "stage-develop" ]]; then
+          elif [[ "${DEPLOY_ENVIRONMENT}" == "stage-develop" ]]; then
             DEPLOY_DIR="/var/www/crm-stage-develop"
             COMPOSE_FILE="docker-compose.stage-develop.yml"
             NGINX_CONF="nginx.stage-develop.conf"
             ENV_FILE=".env.stage-develop"
             CONTAINER_PREFIX="crm-stage-develop"
-          elif [[ "${{ inputs.environment }}" == "stage-main" ]]; then
+          elif [[ "${DEPLOY_ENVIRONMENT}" == "stage-main" ]]; then
             DEPLOY_DIR="/var/www/crm-stage-main"
             COMPOSE_FILE="docker-compose.stage-main.yml"
             NGINX_CONF="nginx.stage-main.conf"
@@ -238,7 +274,7 @@ runs:
           mkdir -p "$DEPLOY_DIR"
           
           # Copy deployment files from temp location
-          TEMP_DIR="/tmp/crm-deploy-${{ github.run_id }}"
+          TEMP_DIR="/tmp/crm-deploy-${DEPLOY_RUN_ID}"
           echo "📦 Copying deployment files..."
           cp -f "$TEMP_DIR/$COMPOSE_FILE" "$DEPLOY_DIR/"
           # Compose files mount ./$NGINX_CONF — keep the original filename
@@ -253,20 +289,20 @@ runs:
           cd "$DEPLOY_DIR"
 
           # Determine port based on environment
-          if [[ "${{ inputs.environment }}" == "production" ]]; then
+          if [[ "${DEPLOY_ENVIRONMENT}" == "production" ]]; then
             # Production uses port 80
             PORT="80"
-            BACKEND_URL="http://${{ inputs.server_host }}/api"
-            CORS_ORIGIN="http://${{ inputs.server_host }}"
-          elif [[ "${{ inputs.environment }}" == "stage-develop" ]]; then
+            BACKEND_URL="http://${DEPLOY_SERVER_HOST}/api"
+            CORS_ORIGIN="http://${DEPLOY_SERVER_HOST}"
+          elif [[ "${DEPLOY_ENVIRONMENT}" == "stage-develop" ]]; then
             PORT="8081"
-            BACKEND_URL="http://${{ inputs.server_host }}:8081/api"
-            CORS_ORIGIN="http://${{ inputs.server_host }}:8081"
+            BACKEND_URL="http://${DEPLOY_SERVER_HOST}:8081/api"
+            CORS_ORIGIN="http://${DEPLOY_SERVER_HOST}:8081"
           else
             # stage-main uses port 8080
             PORT="8080"
-            BACKEND_URL="http://${{ inputs.server_host }}:8080/api"
-            CORS_ORIGIN="http://${{ inputs.server_host }}:8080"
+            BACKEND_URL="http://${DEPLOY_SERVER_HOST}:8080/api"
+            CORS_ORIGIN="http://${DEPLOY_SERVER_HOST}:8080"
           fi
 
           # Update or create environment file with secrets
@@ -277,51 +313,38 @@ runs:
           touch "$ENV_FILE"
           
           # Convert repository name to lowercase for Docker
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          REPO_LOWER=$(echo "${DEPLOY_GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
           
-          # Add Docker images
-          echo "FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}" >> "$ENV_FILE"
-          echo "BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}" >> "$ENV_FILE"
-          
-          # Add network configuration
-          echo "NGINX_PORT=${PORT}" >> "$ENV_FILE"
-          echo "DOMAIN=${{ inputs.server_host }}" >> "$ENV_FILE"
-          
-          # Add frontend configuration  
-          echo "FRONTEND_PORT=3000" >> "$ENV_FILE"
-          echo "NEXT_PUBLIC_API_URL=/api" >> "$ENV_FILE"
-          echo "NEXT_PUBLIC_BACKEND_API_URL=${BACKEND_URL}" >> "$ENV_FILE"
-          echo "NEXT_PUBLIC_APP_VERSION=${{ inputs.version }}" >> "$ENV_FILE"
-          
-          # Add backend configuration
-          echo "BACKEND_PORT=4000" >> "$ENV_FILE"
-          echo "NODE_ENV=production" >> "$ENV_FILE"
-          echo "LOG_LEVEL=info" >> "$ENV_FILE"
-          echo "CORS_ORIGIN=${CORS_ORIGIN}" >> "$ENV_FILE"
-          
-          # Add database configuration
-          echo "POSTGRES_DB=${{ inputs.postgres_db }}" >> "$ENV_FILE"
-          echo "POSTGRES_USER=${{ inputs.postgres_user }}" >> "$ENV_FILE"
-          echo "POSTGRES_PASSWORD=${{ inputs.postgres_password }}" >> "$ENV_FILE"
-          echo "DATABASE_URL=postgresql://${{ inputs.postgres_user }}:${{ inputs.postgres_password }}@${CONTAINER_PREFIX}-postgres:5432/${{ inputs.postgres_db }}" >> "$ENV_FILE"
-          
-          # Add JWT secret
-          echo "JWT_SECRET=${{ inputs.jwt_secret }}" >> "$ENV_FILE"
+          env_set FRONTEND_IMAGE "ghcr.io/${REPO_LOWER}/frontend:${DEPLOY_IMAGE_TAG}"
+          env_set BACKEND_IMAGE "ghcr.io/${REPO_LOWER}/backend:${DEPLOY_IMAGE_TAG}"
+          env_set NGINX_PORT "${PORT}"
+          env_set DOMAIN "${DEPLOY_SERVER_HOST}"
+          env_set FRONTEND_PORT "3000"
+          env_set NEXT_PUBLIC_API_URL "/api"
+          env_set NEXT_PUBLIC_BACKEND_API_URL "${BACKEND_URL}"
+          env_set NEXT_PUBLIC_APP_VERSION "${DEPLOY_VERSION}"
+          env_set BACKEND_PORT "4000"
+          env_set NODE_ENV "production"
+          env_set LOG_LEVEL "info"
+          env_set CORS_ORIGIN "${CORS_ORIGIN}"
+          env_set POSTGRES_DB "${DEPLOY_POSTGRES_DB}"
+          env_set POSTGRES_USER "${DEPLOY_POSTGRES_USER}"
+          env_set POSTGRES_PASSWORD "${DEPLOY_POSTGRES_PASSWORD}"
+          env_set DATABASE_URL "postgresql://${DEPLOY_POSTGRES_USER}:${DEPLOY_POSTGRES_PASSWORD}@${CONTAINER_PREFIX}-postgres:5432/${DEPLOY_POSTGRES_DB}"
+          env_set JWT_SECRET "${DEPLOY_JWT_SECRET}"
 
           echo "✅ Environment configured with:"
-          echo "   - Server: ${{ inputs.server_host }}:${PORT}"
-          echo "   - Database: ${{ inputs.postgres_db }}"
-          echo "   - Environment: ${{ inputs.environment }}"
-
-          # Convert repository name to lowercase for Docker
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "   - Server: ${DEPLOY_SERVER_HOST}:${PORT}"
+          echo "   - Database: ${DEPLOY_POSTGRES_DB}"
+          echo "   - Environment: ${DEPLOY_ENVIRONMENT}"
+          echo "   - Env lines: $(wc -l < "$ENV_FILE")"
           
           echo "🔐 Logging in to GitHub Container Registry..."
-          echo "${{ inputs.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          echo "${DEPLOY_GITHUB_TOKEN}" | docker login ghcr.io -u "${DEPLOY_GITHUB_ACTOR}" --password-stdin
           
           echo "🐳 Pulling Docker images..."
-          docker pull ghcr.io/${REPO_LOWER}/backend:${{ inputs.image_tag }}
-          docker pull ghcr.io/${REPO_LOWER}/frontend:${{ inputs.image_tag }}
+          docker pull "ghcr.io/${REPO_LOWER}/backend:${DEPLOY_IMAGE_TAG}"
+          docker pull "ghcr.io/${REPO_LOWER}/frontend:${DEPLOY_IMAGE_TAG}"
 
           echo "🐳 Ensuring full stack is up (postgres, nginx, autoheal, app)..."
           docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --remove-orphans
@@ -344,6 +367,6 @@ runs:
           echo "🧹 Cleaning up old images..."
           docker image prune -f
 
-          echo "✅ Docker deployment to ${{ inputs.environment }} completed!"
+          echo "✅ Docker deployment to ${DEPLOY_ENVIRONMENT} completed!"
           echo "📊 Container status:"
           docker ps --filter "name=${CONTAINER_PREFIX}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
