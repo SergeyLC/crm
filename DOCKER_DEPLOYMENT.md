@@ -7,5 +7,3 @@ This root file previously described an alternate Docker layout and drifted out o
 - [docs/deployment/README.md](docs/deployment/README.md)
 - [docs/deployment/02-production-github-actions.md](docs/deployment/02-production-github-actions.md)
 - [.github/CI_CD_SETUP.md](.github/CI_CD_SETUP.md)
-
-Legacy material: [docs/deployment/archive/](docs/deployment/archive/).

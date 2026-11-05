@@ -70,7 +70,3 @@ Nginx (host port 80 / 8080 / 8081)
   └─ Backend (Express)  :4000
        └─ PostgreSQL 16 :5432 (internal)
 ```
-
-## Archive
-
-Older guides live in [archive/](archive/). Prefer this README and guides `01`–`06` plus `.github/CI_CD_SETUP.md`.
