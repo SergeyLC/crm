@@ -149,6 +149,7 @@ jobs:
           fi
           echo "✅ All required secrets are present for '${TARGET_ENV}'"
         shell: bash
+<<<<<<< HEAD
 
       - name: Validate seed confirmation
         env:
@@ -166,6 +167,8 @@ jobs:
           fi
           echo "✅ Seed requested for '${TARGET_ENV}' (confirmation OK)"
         shell: bash
+=======
+>>>>>>> bf73f24 (fix: fail deploy when secrets are missing instead of CHANGE_ME fallbacks)
 
       - name: Checkout code
         uses: actions/checkout@v5
