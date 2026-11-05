@@ -6,7 +6,7 @@
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "pnpm@11.10.0",
+  "packageManager": "pnpm@12.16.1",
   "scripts": {
     "test:ci": "pnpm -r --workspace-concurrency=1 run test",
     "test": "pnpm -r run test",
@@ -16,7 +16,12 @@
     "type-check": "pnpm -r run type-check",
     "deploy:release": "node scripts/deploy.js"
   },
-  "keywords": ["crm", "leads", "deals", "customers"],
+  "keywords": [
+    "crm",
+    "leads",
+    "deals",
+    "customers"
+  ],
   "author": "SergeyLC",
   "license": "MIT"
 }
