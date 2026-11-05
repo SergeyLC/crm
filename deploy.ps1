@@ -217,8 +217,9 @@ if ($creatingRelease) {
 }
 else {
   if ($unstagedChangesCommitted) {
+    # $commitMessage already includes [skip ci] when -s was used; do not prepend again.
     if ($unpushedText) {
-      $commitMessage = "$commitMessagePrefix$commitMessage`n`n$unpushedText"
+      $commitMessage = "$commitMessage`n`n$unpushedText"
       Write-Info "Including unpushed commits in message:"
       Write-Host $unpushedText
     }

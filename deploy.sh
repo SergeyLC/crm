@@ -286,8 +286,9 @@ else
   # For regular commits
   if [ "$UNSTAGED_CHANGES_COMMITTED" = true ]; then
     # Single commit with changes - amend with history
+    # COMMIT_MESSAGE already includes [skip ci] when -s was used; do not prepend again.
     if [ -n "$UNPUSHED_COMMITS" ]; then
-      COMMIT_MESSAGE="${COMMIT_MESSAGE_PREFIX}$COMMIT_MESSAGE
+      COMMIT_MESSAGE="$COMMIT_MESSAGE
 
 $UNPUSHED_COMMITS"
       echo -e "${CYAN}📋 Including unpushed commits in message:${NC}"
