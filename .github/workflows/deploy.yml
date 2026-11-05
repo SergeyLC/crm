@@ -20,7 +20,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 env:
   REGISTRY: ghcr.io
@@ -109,24 +108,38 @@ jobs:
     if: needs.setup.outputs.should_deploy == 'true' && needs.setup.outputs.deployment_type == 'docker'
     # Environment is properly configured in GitHub Settings with secrets
     environment: ${{ needs.setup.outputs.environment }}
+    # OPTIONAL: least privilege (GHCR push) + one deploy per environment at a time
+    permissions:
+      contents: read
+      packages: write
+    concurrency:
+      group: deploy-${{ needs.setup.outputs.environment }}
+      cancel-in-progress: false
     steps:
-      - name: Debug deployment conditions
+      - name: Validate required secrets
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          TARGET_ENV: ${{ needs.setup.outputs.environment }}
         run: |
-          echo "🔍 Checking deployment conditions:"
-          echo "should_deploy = '${{ needs.setup.outputs.should_deploy }}'"
-          echo "deployment_type = '${{ needs.setup.outputs.deployment_type }}'"
-          echo "environment = '${{ needs.setup.outputs.environment }}'"
-          echo ""
-          echo "🔍 Checking required inputs for docker-deploy action:"
-          echo "image_tag: '${{ needs.setup.outputs.image_tag }}'"
-          echo "version: '${{ needs.setup.outputs.version }}'"
-          echo "server_host exists: ${{ secrets.SERVER_HOST != '' }}"
-          echo "postgres_db: '${{ secrets.POSTGRES_DB }}'"
-          echo "postgres_user: '${{ secrets.POSTGRES_USER }}'"
-          echo "postgres_password exists: ${{ secrets.POSTGRES_PASSWORD != '' }}"
-          echo "jwt_secret exists: ${{ secrets.JWT_SECRET != '' }}"
-          echo ""
-          echo "🔍 Will test if action can be called..."
+          # Fail fast: names only, values are never printed.
+          missing=0
+          for name in SERVER_HOST SERVER_USER SERVER_SSH_KEY POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD JWT_SECRET; do
+            if [ -z "$(printf '%s' "${!name}" | tr -d '[:space:]')" ]; then
+              echo "::error title=Missing secret::Required secret '${name}' is not set (or empty) for environment '${TARGET_ENV}'"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+          echo "✅ All required secrets are present for '${TARGET_ENV}'"
+        shell: bash
 
       - name: Checkout code
         uses: actions/checkout@v5
@@ -140,10 +153,10 @@ jobs:
           server_host: ${{ secrets.SERVER_HOST }}
           server_user: ${{ secrets.SERVER_USER }}
           server_ssh_key: ${{ secrets.SERVER_SSH_KEY }}
-          postgres_db: ${{ secrets.POSTGRES_DB || 'crm_staging' }}
-          postgres_user: ${{ secrets.POSTGRES_USER || 'crm' }}
-          postgres_password: ${{ secrets.POSTGRES_PASSWORD || 'CHANGE_ME' }}
-          jwt_secret: ${{ secrets.JWT_SECRET || 'CHANGE_ME_JWT_SECRET' }}
+          postgres_db: ${{ secrets.POSTGRES_DB }}
+          postgres_user: ${{ secrets.POSTGRES_USER }}
+          postgres_password: ${{ secrets.POSTGRES_PASSWORD }}
+          jwt_secret: ${{ secrets.JWT_SECRET }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   # ==================== Traditional Deployment ====================
@@ -153,7 +166,32 @@ jobs:
     needs: setup
     if: needs.setup.outputs.should_deploy == 'true' && needs.setup.outputs.deployment_type == 'traditional'
     environment: ${{ needs.setup.outputs.environment }}
+    # OPTIONAL: one deploy per environment at a time
+    concurrency:
+      group: deploy-${{ needs.setup.outputs.environment }}
+      cancel-in-progress: false
     steps:
+      - name: Validate required secrets
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          TARGET_ENV: ${{ needs.setup.outputs.environment }}
+        run: |
+          # Fail fast: names only, values are never printed.
+          missing=0
+          for name in SERVER_HOST SERVER_USER SERVER_SSH_KEY; do
+            if [ -z "$(printf '%s' "${!name}" | tr -d '[:space:]')" ]; then
+              echo "::error title=Missing secret::Required secret '${name}' is not set (or empty) for environment '${TARGET_ENV}'"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+          echo "✅ All required secrets are present for '${TARGET_ENV}'"
+        shell: bash
+
       - name: Checkout code
         uses: actions/checkout@v5
 
@@ -161,6 +199,9 @@ jobs:
         uses: ./.github/actions/traditional-deploy
         with:
           environment: ${{ needs.setup.outputs.environment }}
+          server_host: ${{ secrets.SERVER_HOST }}
+          server_user: ${{ secrets.SERVER_USER }}
+          server_ssh_key: ${{ secrets.SERVER_SSH_KEY }}
 
   # ==================== Create GitHub Release (after successful deploy) ====================
   create-release:
@@ -190,7 +231,6 @@ jobs:
 
             ### Deployment
             - **Environment:** Production
-            - **Server:** ${{ secrets.SERVER_HOST }}
             - **Port:** 80
 
             ### Docker Images

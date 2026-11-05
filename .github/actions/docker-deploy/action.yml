@@ -45,7 +45,25 @@ runs:
         echo "Environment: ${{ inputs.environment }}"
         echo "Image tag: ${{ inputs.image_tag }}"
         echo "Version: ${{ inputs.version }}"
-        echo "Server host: ${{ inputs.server_host }}"
+      shell: bash
+
+    - name: Mask secret-derived values
+      env:
+        IN_POSTGRES_USER: ${{ inputs.postgres_user }}
+        IN_POSTGRES_PASSWORD: ${{ inputs.postgres_password }}
+        IN_POSTGRES_DB: ${{ inputs.postgres_db }}
+        IN_JWT_SECRET: ${{ inputs.jwt_secret }}
+        IN_SERVER_HOST: ${{ inputs.server_host }}
+      run: |
+        # Raw secrets are masked by GitHub; also mask the CR/LF-stripped variants
+        # and the composed DATABASE_URL, which GitHub cannot know about.
+        strip_ws() { printf '%s' "$1" | tr -d '\r\n'; }
+        for v in "$IN_POSTGRES_PASSWORD" "$IN_JWT_SECRET" "$IN_SERVER_HOST"; do
+          sv=$(strip_ws "$v")
+          [ -n "$sv" ] && echo "::add-mask::${sv}"
+        done
+        DB_URL="postgresql://$(strip_ws "$IN_POSTGRES_USER"):$(strip_ws "$IN_POSTGRES_PASSWORD")@"
+        echo "::add-mask::${DB_URL}"
       shell: bash
 
     - name: Checkout code
@@ -309,8 +327,9 @@ runs:
           echo "⚙️  Configuring environment file..."
           
           # Recreate the env file from scratch to avoid issues with existing corrupted data
+          # (owner-only permissions; values are written via printf, never echoed)
           rm -f "$ENV_FILE"
-          touch "$ENV_FILE"
+          ( umask 077 && touch "$ENV_FILE" )
           
           # Convert repository name to lowercase for Docker
           REPO_LOWER=$(echo "${DEPLOY_GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
@@ -334,8 +353,7 @@ runs:
           env_set JWT_SECRET "${DEPLOY_JWT_SECRET}"
 
           echo "✅ Environment configured with:"
-          echo "   - Server: ${DEPLOY_SERVER_HOST}:${PORT}"
-          echo "   - Database: ${DEPLOY_POSTGRES_DB}"
+          echo "   - Port: ${PORT}"
           echo "   - Environment: ${DEPLOY_ENVIRONMENT}"
           echo "   - Env lines: $(wc -l < "$ENV_FILE")"
           
