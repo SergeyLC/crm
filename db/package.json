@@ -10,6 +10,7 @@
     "migrate:status": "prisma migrate status",
     "studio": "prisma studio",
     "seed": "npx tsc && node temp/seed.js",
+    "seed:runtime": "node temp/seed.js",
     "type-check": "tsc --noEmit",
     "lint": "echo 'No linting configured for db'",
     "lint:check": "echo 'No linting configured for db'"

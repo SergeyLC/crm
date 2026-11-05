@@ -259,13 +259,21 @@ crm-postgres         Up (healthy)
 docker exec crm-production-backend sh -c 'cd /app/db && pnpm run migrate:deploy'
 ```
 
-Migrations also run automatically in CI. **Seed is not part of CI.** After a fresh DB, seed manually if you need demo users (`admin@example.com` / `1`):
+Migrations also run automatically in CI. **Seed is optional.**
+
+**Via Run workflow:** enable `run_seed` and set `confirm_seed_production` to `CONFIRM` (production only).
+
+**Via local script / SSH:**
 
 ```bash
-docker exec -w /app/db crm-production-backend sh -c 'pnpm run seed'
+# From repo (SSH to server)
+node scripts/seed-remote.js --env production --confirm CONFIRM
+
+# Or on the server directly (image must include seed:runtime / db/temp/seed.js)
+docker exec -w /app/db crm-production-backend sh -c 'pnpm run seed:runtime'
 ```
 
-The production image may lack TypeScript for compiling `seed.ts`; see [CI/CD setup](../../.github/CI_CD_SETUP.md).
+Demo login after seed: `admin@example.com` / `1`.
 
 ## Step 9: Verify Deployment
 

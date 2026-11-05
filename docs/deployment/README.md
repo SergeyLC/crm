@@ -39,14 +39,16 @@ Deploy CRM on Ubuntu with Docker. **Canonical ops docs** are the numbered guides
 3. Open `http://YOUR_SERVER_IP`
 
 ### Stage-main (port 8080)
-1. Complete server directories / firewall for 8080
-2. Push to `main`
-3. Open `http://YOUR_SERVER_IP:8080`
+1. Firewall: allow TCP **8080** on the VPS (`ufw allow 8080/tcp`)
+2. Actions → **Deploy Application** → **Run workflow** → branch `main`
+3. Optional: enable **run_seed** for demo users
+4. Open `http://YOUR_SERVER_IP:8080`
 
 ### Stage-develop (port 8081)
-1. Firewall for 8081
-2. Push to `develop`
-3. Open `http://YOUR_SERVER_IP:8081`
+1. Firewall: allow TCP **8081** (`ufw allow 8081/tcp`)
+2. Actions → **Deploy Application** → **Run workflow** → branch `develop`
+3. Optional: enable **run_seed** for demo users
+4. Open `http://YOUR_SERVER_IP:8081`
 
 ## Environment matrix
 
@@ -60,7 +62,12 @@ Deploy CRM on Ubuntu with Docker. **Canonical ops docs** are the numbered guides
 | Containers | `crm-production-*` | `crm-stage-main-*` | `crm-stage-develop-*` |
 | Typical DB name | `crm` | `crm_staging` | `crm_stage_develop` |
 
-CI applies **migrations only**. Seeding demo data is **manual** (not part of the deploy action).
+CI applies **migrations** on every deploy. **Seed is optional** (not automatic on push/tag):
+
+- **Run workflow**: check **run_seed**. For production also set **confirm_seed_production** to `CONFIRM`.
+- **Local script**: `node scripts/seed-remote.js --env stage-develop` (production: add `--confirm CONFIRM`).
+
+Demo login after seed: `admin@example.com` / `1` (also `v1@example.com` / `1`).
 
 ## Architecture
 

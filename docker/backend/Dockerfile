@@ -29,11 +29,13 @@ COPY ../backend/ ./backend/
 # Copy db source code (includes prisma.config.ts, seed, tsconfig)
 COPY ../db/ ./db/
 
-# Generate Prisma client in backend
+# Generate Prisma client in backend and db (seed imports db/generated)
 RUN cd backend && prisma generate --schema ../db/prisma/schema.prisma
+RUN cd db && prisma generate --schema prisma/schema.prisma
 
-# Build TypeScript code
+# Build TypeScript code (backend + seed script for runtime)
 RUN cd backend && pnpm run build
+RUN cd db && pnpm exec tsc
 
 # ============================================================
 # Stage 2: Production - only runtime dependencies
@@ -68,6 +70,10 @@ COPY --from=builder /app/backend/generated ./backend/generated
 
 # Ensure prisma.config.ts is present for migrate/seed at runtime
 COPY --from=builder /app/db/prisma.config.ts ./db/prisma.config.ts
+
+# Precompiled seed + Prisma client used by seed:runtime
+COPY --from=builder /app/db/temp ./db/temp
+COPY --from=builder /app/db/generated ./db/generated
 
 # Generate Prisma client in production (needed for runtime)
 RUN cd backend && prisma generate --schema ../db/prisma/schema.prisma

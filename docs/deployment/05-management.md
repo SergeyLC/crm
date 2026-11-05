@@ -219,8 +219,9 @@ docker exec crm-postgres psql -U crm -d crm -c "SELECT pg_size_pretty(pg_databas
 ### Seed Data
 
 ```bash
-# Run seed script
-docker exec crm-backend sh -c 'cd /app/db && npm run seed'
+# Run seed script (prefer seed:runtime in deployed images)
+docker exec -w /app/db crm-production-backend sh -c 'pnpm run seed:runtime'
+# Or: node scripts/seed-remote.js --env production --confirm CONFIRM
 
 # Verify seed data
 docker exec crm-postgres psql -U crm -d crm -c "SELECT COUNT(*) FROM users;"
