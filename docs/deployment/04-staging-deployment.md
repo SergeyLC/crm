@@ -6,17 +6,20 @@ How staging works next to production on the same host.
 
 | Environment | Trigger | Port | Directory | Compose |
 |-------------|---------|------|-----------|---------|
-| **stage-main** | Push to `main` | **8080** | `/var/www/crm-stage-main` | `docker-compose.stage-main.yml` |
-| **stage-develop** | Push to `develop` | **8081** | `/var/www/crm-stage-develop` | `docker-compose.stage-develop.yml` |
+| **stage-main** | workflow_dispatch on `main` | **8080** | `/var/www/crm-stage-main` | `docker-compose.stage-main.yml` |
+| **stage-develop** | workflow_dispatch on `develop` | **8081** | `/var/www/crm-stage-develop` | `docker-compose.stage-develop.yml` |
 | **production** | Tag `v*` | **80** | `/var/www/crm-production` | `docker-compose.production.yml` |
 
 Full matrix: [docs/deployment/README.md](README.md) · [.github/CI_CD_SETUP.md](../../.github/CI_CD_SETUP.md)
 
-**CI behavior:** runs `prisma migrate deploy` only. **Seed is not automatic.** After a fresh DB:
+**CI behavior:** runs `prisma migrate deploy`. **Seed is optional** — enable **run_seed** on Run workflow, or:
 
 ```bash
-docker exec -w /app/db crm-stage-main-backend sh -c 'ppnpm run seed'
-# Demo login (when seed succeeds): admin@example.com / 1
+node scripts/seed-remote.js --env stage-main
+node scripts/seed-remote.js --env stage-develop
+# Or on the server:
+docker exec -w /app/db crm-stage-main-backend sh -c 'pnpm run seed:runtime'
+# Demo login: admin@example.com / 1
 ```
 
 ## Comparison
@@ -37,14 +40,16 @@ docker exec -w /app/db crm-stage-main-backend sh -c 'ppnpm run seed'
 
 ## Automated deploy
 
-```bash
-# Stage-main
-git push origin main
-# → http://YOUR_SERVER_IP:8080
+Push to `main`/`develop` runs tests only on the ~4 GB VPS policy. Deploy staging via GitHub Actions:
 
-# Stage-develop
-git push origin develop
-# → http://YOUR_SERVER_IP:8081
+1. Actions → **Deploy Application** → **Run workflow**
+2. Branch `main` → stage-main (:8080) · Branch `develop` → stage-develop (:8081)
+3. Optional: check **run_seed**
+
+```bash
+# After deploy
+# → http://YOUR_SERVER_IP:8080  (stage-main)
+# → http://YOUR_SERVER_IP:8081  (stage-develop)
 ```
 
 ---
@@ -58,11 +63,13 @@ The steps below describe an older **manual** layout (`/var/www/crm-staging`, `do
 Seed is **optional** and **not** run by CI. Only run seed when you need demo data on an empty database — it is not a required deploy step.
 
 ```bash
-# Preferred container names today:
-docker exec -w /app/db crm-stage-main-backend sh -c 'ppnpm run seed'
+# Preferred:
+docker exec -w /app/db crm-stage-main-backend sh -c 'pnpm run seed:runtime'
+# Or from laptop:
+# node scripts/seed-remote.js --env stage-main
 
 # Legacy name (only if you still run crm-staging-*):
-# docker exec -w /app/db crm-staging-backend sh -c 'ppnpm run seed'
+# docker exec -w /app/db crm-staging-backend sh -c 'pnpm run seed:runtime'
 ```
 
 ## Step 1: Create Staging Directory (legacy)

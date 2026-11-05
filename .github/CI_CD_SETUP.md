@@ -331,17 +331,30 @@ GitHub Actions will:
 2. Copy deployment files to server
 3. Create/update environment files with secrets
 4. Pull images
-5. Run database migrations (`migrate:deploy` only — **no automatic seed**)
-6. Start containers
+5. Run database migrations (`migrate:deploy`)
+6. Optionally run seed when `run_seed` is enabled on **Run workflow**
+7. Start / recreate app containers
 
-After a **fresh** database, seed demo users manually if needed:
+### Optional seed
+
+Seed is **not** automatic on push or tag. Ways to seed:
+
+1. **Run workflow** → check **run_seed**. For **production**, also set **confirm_seed_production** to exactly `CONFIRM`.
+2. **Local script** (SSH):
 
 ```bash
-# Example (stage-main); requires TypeScript/tsconfig in the image or a one-off script
-docker exec -w /app/db crm-stage-main-backend sh -c 'pnpm run seed'
+node scripts/seed-remote.js --env stage-develop
+node scripts/seed-remote.js --env stage-main
+node scripts/seed-remote.js --env production --confirm CONFIRM
 ```
 
-Default seed login (when seed succeeds): `admin@example.com` / `1`
+3. **On server**:
+
+```bash
+docker exec -w /app/db crm-stage-main-backend sh -c 'pnpm run seed:runtime'
+```
+
+Default seed login: `admin@example.com` / `1` (also `v1@example.com` / `1`).
 
 ### Manual Database Setup (First Time Only)
 

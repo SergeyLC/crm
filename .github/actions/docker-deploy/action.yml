@@ -35,6 +35,10 @@ inputs:
   server_ssh_key:
     description: 'Server SSH private key'
     required: true
+  run_seed:
+    description: 'After migrate, run db seed:runtime'
+    required: false
+    default: 'false'
 
 runs:
   using: "composite"
@@ -223,12 +227,13 @@ runs:
         DEPLOY_GITHUB_ACTOR: ${{ github.actor }}
         DEPLOY_GITHUB_REPOSITORY: ${{ github.repository }}
         DEPLOY_RUN_ID: ${{ github.run_id }}
+        DEPLOY_RUN_SEED: ${{ inputs.run_seed }}
       with:
         host: ${{ inputs.server_host }}
         username: ${{ inputs.server_user }}
         key: ${{ inputs.server_ssh_key }}
         command_timeout: 30m
-        envs: DEPLOY_ENVIRONMENT,DEPLOY_IMAGE_TAG,DEPLOY_VERSION,DEPLOY_SERVER_HOST,DEPLOY_POSTGRES_DB,DEPLOY_POSTGRES_USER,DEPLOY_POSTGRES_PASSWORD,DEPLOY_JWT_SECRET,DEPLOY_GITHUB_TOKEN,DEPLOY_GITHUB_ACTOR,DEPLOY_GITHUB_REPOSITORY,DEPLOY_RUN_ID
+        envs: DEPLOY_ENVIRONMENT,DEPLOY_IMAGE_TAG,DEPLOY_VERSION,DEPLOY_SERVER_HOST,DEPLOY_POSTGRES_DB,DEPLOY_POSTGRES_USER,DEPLOY_POSTGRES_PASSWORD,DEPLOY_JWT_SECRET,DEPLOY_GITHUB_TOKEN,DEPLOY_GITHUB_ACTOR,DEPLOY_GITHUB_REPOSITORY,DEPLOY_RUN_ID,DEPLOY_RUN_SEED
         script: |
           set -e
 
@@ -378,6 +383,14 @@ runs:
 
           echo "🗄️  Running database migrations..."
           docker exec ${CONTAINER_PREFIX}-backend sh -c 'cd /app/db && pnpm run migrate:deploy' || echo "⚠️  Migration failed or already up to date"
+
+          if [[ "${DEPLOY_RUN_SEED}" == "true" ]]; then
+            echo "🌱 Seeding database (seed:runtime)..."
+            docker exec ${CONTAINER_PREFIX}-backend sh -c 'cd /app/db && pnpm run seed:runtime'
+            echo "✅ Seed completed"
+          else
+            echo "⏭️  Seed skipped (run_seed=false)"
+          fi
           
           echo "✅ Checking service status..."
           docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps
