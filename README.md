@@ -69,7 +69,6 @@ docker-compose up --build -d
 - [Deployment documentation](docs/deployment/README.md) (canonical numbered guides)
 - [Server setup](docs/deployment/01-server-setup.md)
 - Local Docker development: `docker-compose -f docker-compose.dev.yml up --build -d` (see [Docker ports](docs/DOCKER_PORTS_ARCHITECTURE.md))
-- Legacy guides (may be outdated): [docs/deployment/archive/](docs/deployment/archive/)
 
 ## 🏗️ Project Architecture
 
@@ -583,7 +582,6 @@ Canonical docs live under [`docs/`](./docs/) and [`.github/`](./.github/).
 - **[CI/CD setup](.github/CI_CD_SETUP.md)** — branch/tag → environment matrix (source of truth)
 - **[Deployment config](DEPLOYMENT_CONFIG.md)** — `DEPLOYMENT_TYPE` and GitHub environments
 - **[GitHub Secrets](docs/deployment/GITHUB_SECRETS_GUIDE.md)**
-- Legacy / outdated material: [docs/deployment/archive/](docs/deployment/archive/)
 
 ### Database and environment
 - **[Database environment config](docs/DATABASE_ENV_CONFIG.md)**
