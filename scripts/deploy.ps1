@@ -1,19 +1,21 @@
-# CRM - Production release (Windows)
-# Bumps db/package.json, commits, pushes, and creates tag v*.
-# Equivalent to: node scripts/deploy.js
+# Deprecated thin wrapper.
+# Use the repo-root Windows counterpart of deploy.sh instead:
+#   .\deploy.ps1 -m "message" -s          # develop
+#   .\deploy.ps1 -m "message" -t          # main → production tag
+#
+# This script used to always bump db version and create a v* tag (scripts/deploy.js).
+# Forwarding to root deploy.ps1 -t when no args, otherwise pass args through.
 
 $ErrorActionPreference = "Stop"
-$Root = Split-Path -Parent $PSScriptRoot
-Set-Location $Root
+$RootDeploy = Join-Path (Split-Path -Parent $PSScriptRoot) "deploy.ps1"
 
-$node = Get-Command node -ErrorAction SilentlyContinue
-if (-not $node) {
-  Write-Host "Node.js not found. Install Node >= 24 and ensure it is on PATH."
-  exit 1
-}
+Write-Host "Note: prefer .\deploy.ps1 at repo root (Windows equivalent of .\deploy.sh)." -ForegroundColor Yellow
 
-Write-Host "==> Running scripts/deploy.js ..."
-& node (Join-Path $PSScriptRoot "deploy.js")
-if ($LASTEXITCODE -ne 0) {
+if ($args.Count -eq 0) {
+  Write-Host "No args → forwarding to .\deploy.ps1 -t (production auto-increment release)." -ForegroundColor Yellow
+  & $RootDeploy -t
   exit $LASTEXITCODE
 }
+
+& $RootDeploy @args
+exit $LASTEXITCODE

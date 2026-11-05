@@ -15,7 +15,7 @@ This project uses GitHub Actions for automated deployment to three environments 
 - **Compose**: `docker-compose.stage-develop.yml`
 - **Database**: `crm_stage_develop` (typical `POSTGRES_DB` secret)
 - **Purpose**: Testing features before merging to main
-- **Note**: Use `deploy.sh -m "message" -s` on develop branch (releases not allowed). CI runs migrations only (no seed).
+- **Note**: On develop use `./deploy.sh -m "message" -s` or Windows `.\deploy.ps1 -m "message" -s` (releases not allowed). Staging deploy: Actions → Run workflow. Seed is optional (`run_seed` / `scripts/seed-remote.js`).
 
 ### Main Staging Deployment
 - **Trigger**: Push to `main` branch (except release commits with `[skip ci]`)
