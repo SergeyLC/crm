@@ -1,4 +1,4 @@
-﻿# CRM local deploy helper (Windows PowerShell)
+# CRM local deploy helper (Windows PowerShell)
 # ============================================
 # Counterpart: ./deploy.sh on Unix / Git Bash (same flags and branch rules).
 #
