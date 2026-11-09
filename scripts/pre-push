@@ -25,6 +25,15 @@ run_checks() {
         exit 1
     fi
 
+    # YAML syntax (workflows, actions, compose) — catches merge markers / broken CI config
+    echo "📄 Checking YAML syntax..."
+    if pnpm run check:yaml; then
+        print_status "YAML check passed"
+    else
+        print_error "YAML check failed"
+        exit 1
+    fi
+
     # Frontend checks
     echo "📦 Checking frontend..."
     cd frontend
@@ -162,6 +171,7 @@ run_checks() {
     cd ..
 
     print_status "All checks passed! Ready to push 🚀"
+    print_status "✅ YAML syntax: workflows + compose"
     print_status "✅ Code quality: TypeScript + ESLint"
     print_status "✅ Test coverage: Frontend + Backend + E2E tests"
     print_status "✅ Build verification: Frontend + Backend builds"

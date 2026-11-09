@@ -149,26 +149,6 @@ jobs:
           fi
           echo "✅ All required secrets are present for '${TARGET_ENV}'"
         shell: bash
-<<<<<<< HEAD
-
-      - name: Validate seed confirmation
-        env:
-          TARGET_ENV: ${{ needs.setup.outputs.environment }}
-          RUN_SEED: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_seed || 'false' }}
-          CONFIRM_SEED_PRODUCTION: ${{ github.event.inputs.confirm_seed_production || '' }}
-        run: |
-          if [[ "$RUN_SEED" != "true" ]]; then
-            echo "Seed skipped (run_seed is not true)"
-            exit 0
-          fi
-          if [[ "$TARGET_ENV" == "production" && "$CONFIRM_SEED_PRODUCTION" != "CONFIRM" ]]; then
-            echo "::error title=Seed confirmation required::Production seed requires confirm_seed_production=CONFIRM (got empty or mismatched value)"
-            exit 1
-          fi
-          echo "✅ Seed requested for '${TARGET_ENV}' (confirmation OK)"
-        shell: bash
-=======
->>>>>>> bf73f24 (fix: fail deploy when secrets are missing instead of CHANGE_ME fallbacks)
 
       - name: Validate seed confirmation
         env:
