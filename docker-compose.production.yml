@@ -32,7 +32,8 @@ services:
     image: ${FRONTEND_IMAGE:-crm-frontend:production}
     container_name: crm-production-frontend
     restart: unless-stopped
-    # Cap runaway Next.js memory (host has ~4GB, no room for multi-GB spikes)
+    # Cap Next.js RSS (host ~4GB). Do NOT raise further during incident response —
+    # unexplained growth may be malware, not an app leak.
     mem_limit: 768m
     mem_reservation: 256m
     labels:

@@ -39,6 +39,23 @@ Guidelines:
 
 If you ever need to add legacy pages (not recommended), ensure a proper `_app.tsx` is defined—otherwise keep relying solely on the App Router.
 
+### List pages rendering (SSR shell + CSR data)
+
+Deal and lead **list** routes (`deals`, `deals/kanban`, `deals/won|lost|archived`, `leads`, `leads/archived`) intentionally do **not** SSR the business data.
+
+| Layer | What runs where |
+|-------|-----------------|
+| Shell | Next.js still SSRs HTML for layout, sidebar, i18n, page chrome |
+| Rows / board data | Fetched in the browser via React Query → API after hydration |
+
+**Why:** Server `ssrFetch` of full deal/lead graphs (nested notes, appointments, no pagination) inflated the Node heap until Docker OOM-killed `crm-*-frontend` about every 15–20 minutes under a ~768–1024 MB `mem_limit`.
+
+**Not** “Next page cache full of live CRM rows” — list payloads were loaded into the **process heap** on each SSR (`cache: "no-store"`), previously worsened by a process-wide QueryClient + `setQueryData` during render.
+
+**First paint:** UI shell / empty table or loading state — not rows with live data.
+
+To bring back **true SSR of lists**, see backlog: [Restore true SSR for deal/lead list pages](../BACKLOG.md#restore-true-ssr-for-deallead-list-pages-only-with-slim-dto--pagination) (slim DTO + pagination only).
+
 ### Component-local locales
 
 You can colocate small i18n JSON files next to a component or feature instead of editing the central `src/locales` directory.

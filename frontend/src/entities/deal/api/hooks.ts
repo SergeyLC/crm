@@ -39,17 +39,10 @@ export const useGetActiveDealsQuery = (
   },
   cacheParams?: GetDealsChacheParams
 ) => {
-  const queryClient = useQueryClient();
-
   const initialData = cacheParams?.initialData;
   const placeholderData = cacheParams?.placeholderData;
   const enabled = !!(initialData ? false : cacheParams?.enabled ?? true);
   const queryKey = cacheParams?.queryKey || DealActiveQueryKey;
-  // Invalidate the archived deals query if initialData is provided
-  // to ensure we fetch the latest data
-  if (initialData) {
-    queryClient.setQueryData(queryKey, initialData);
-  }
 
   const query = useQuery({
     queryKey,
@@ -71,17 +64,14 @@ export const useGetDealsQuery = (
   },
   cacheParams?: GetDealsChacheParams
 ) => {
-  const queryClient = useQueryClient();
-
-  const initialData = cacheParams?.initialData?.length ? cacheParams?.initialData : undefined;
-  const placeholderData = cacheParams?.placeholderData?.length ? cacheParams?.placeholderData : undefined;
+  const initialData = cacheParams?.initialData?.length
+    ? cacheParams?.initialData
+    : undefined;
+  const placeholderData = cacheParams?.placeholderData?.length
+    ? cacheParams?.placeholderData
+    : undefined;
   const enabled = !!(initialData ? false : cacheParams?.enabled ?? true);
   const queryKey = cacheParams?.queryKey || DealListQueryKey;
-  // Invalidate the archived deals query if initialData is provided
-  // to ensure we fetch the latest data
-  if (initialData) {
-    queryClient.setQueryData(queryKey, initialData);
-  }
 
   const query = useQuery({
     queryKey,
@@ -103,16 +93,14 @@ export const useGetLostDealsQuery = (
   },
   cacheParams?: GetDealsChacheParams
 ) => {
-  const queryClient = useQueryClient();
-  const initialData = cacheParams?.initialData?.length ? cacheParams?.initialData : undefined;
-  const placeholderData = cacheParams?.placeholderData?.length ? cacheParams?.placeholderData : undefined ;
+  const initialData = cacheParams?.initialData?.length
+    ? cacheParams?.initialData
+    : undefined;
+  const placeholderData = cacheParams?.placeholderData?.length
+    ? cacheParams?.placeholderData
+    : undefined;
   const enabled = !!(initialData ? false : cacheParams?.enabled ?? true);
   const queryKey = cacheParams?.queryKey || DealLostQueryKey;
-  // Invalidate the archived deals query if initialData is provided
-  // to ensure we fetch the latest data
-  if (initialData) {
-    queryClient.setQueryData(queryKey, initialData);
-  }
 
   const query = useQuery({
     queryKey,
@@ -134,16 +122,15 @@ export const useGetArchivedDealsQuery = (
   },
   cacheParams?: GetDealsChacheParams
 ) => {
-  const queryClient = useQueryClient();
-  const initialData = cacheParams?.initialData?.length ? cacheParams?.initialData : undefined;
-  const placeholderData = cacheParams?.placeholderData?.length ? cacheParams?.placeholderData : undefined;
+  const initialData = cacheParams?.initialData?.length
+    ? cacheParams?.initialData
+    : undefined;
+  const placeholderData = cacheParams?.placeholderData?.length
+    ? cacheParams?.placeholderData
+    : undefined;
   const enabled = !!(initialData ? false : cacheParams?.enabled ?? true);
   const queryKey = cacheParams?.queryKey || DealArchivedQueryKey;
-  // Invalidate the archived deals query if initialData is provided
-  // to ensure we fetch the latest data
-  if (initialData) {
-    queryClient.setQueryData(queryKey, initialData);
-  }
+
   const query = useQuery({
     queryKey,
     queryFn: () => fetchArchivedDeals(params),
@@ -164,16 +151,14 @@ export const useGetWonDealsQuery = (
   },
   cacheParams?: GetDealsChacheParams
 ) => {
-  const queryClient = useQueryClient();
-  const initialData = cacheParams?.initialData?.length ? cacheParams?.initialData : undefined;
-  const placeholderData = cacheParams?.placeholderData?.length ? cacheParams?.placeholderData : undefined;
+  const initialData = cacheParams?.initialData?.length
+    ? cacheParams?.initialData
+    : undefined;
+  const placeholderData = cacheParams?.placeholderData?.length
+    ? cacheParams?.placeholderData
+    : undefined;
   const enabled = !!(initialData ? false : cacheParams?.enabled ?? true);
   const queryKey = cacheParams?.queryKey || DealWonQueryKey;
-  // Invalidate the archived deals query if initialData is provided
-  // to ensure we fetch the latest data
-  if (initialData) {
-    queryClient.setQueryData(queryKey, initialData);
-  }
 
   const query = useQuery({
     queryKey,

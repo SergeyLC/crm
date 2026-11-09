@@ -6,7 +6,6 @@ import { NEXT_PUBLIC_BACKEND_API_URL } from "../config";
  */
 export async function ssrFetch<T>(endpoint: string): Promise<T | null> {
   const url = `${NEXT_PUBLIC_BACKEND_API_URL || "/api"}/${endpoint.replace(/^\//, "")}`;
-  console.log(`ssrFetch called for ${url}`);
 
   try {
     const res = await fetch(url, {

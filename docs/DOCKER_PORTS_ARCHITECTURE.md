@@ -179,7 +179,9 @@ healthcheck:
 | Probe | Purpose |
 |---|---|
 | `GET /api/health` | Liveness only — cheap JSON, no SSR. Used by Docker/autoheal. |
-| `GET /` or app pages | Full site / SSR — **not** for healthchecks (was driving memory growth every 30s). |
+| `GET /` or app pages | App shell / pages — **not** for healthchecks (was driving memory growth every 30s). |
+
+Deal/lead **list data** is not SSR’d into the frontend container (CSR after hydration). See [frontend rendering notes](frontend/README.md#list-pages-rendering-ssr-shell--csr-data) and [BACKLOG](BACKLOG.md#restore-true-ssr-for-deallead-list-pages-only-with-slim-dto--pagination).
 
 Stages differ by **nginx host ports** (`80` / `8080` / `8081`). Inside the network, frontend stays on `PORT` (default `3000`) unless you intentionally change `FRONTEND_PORT`/`PORT` and keep nginx `upstream` in sync.
 

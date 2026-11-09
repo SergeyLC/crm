@@ -604,6 +604,22 @@ free -h
    # Edit postgresql.conf if needed
    ```
 
+### Frontend container OOM (`crm-production-frontend`)
+
+**Symptom:** Container restarts every ~15–20 minutes; `docker stats` shows MEM USAGE climbing toward `mem_limit` (historically 768 MB, now 1024 MB); host RAM still has free space. Logs may mention OOM / autoheal restarts. (There is **no pm2** in the Docker image — the process is `node frontend/server.js`.)
+
+**Root cause (addressed in app code):** SSR of unbounded deal/lead graphs into the Node heap, plus a former process-wide React Query singleton. Healthchecks must hit `/api/health`, not `/`.
+
+**Current mitigation:**
+
+- List pages: SSR **shell only**; list data via CSR (React Query). See [frontend rendering notes](../frontend/README.md#list-pages-rendering-ssr-shell--csr-data).
+- Per-tree `QueryClient` (no module singleton); no `setQueryData` during render for those lists.
+- Compose: `mem_limit: 1024m`, `NODE_OPTIONS=--max-old-space-size=768`, healthcheck → `/api/health`.
+
+**Do not** “fix” by only raising `mem_limit` without keeping list SSR bounded.
+
+**Backlog:** restore true SSR of lists only with slim DTO + pagination — [docs/BACKLOG.md](../BACKLOG.md#restore-true-ssr-for-deallead-list-pages-only-with-slim-dto--pagination).
+
 ### Slow Response Times
 
 **Diagnosis:**

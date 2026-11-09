@@ -27,12 +27,6 @@ export const useGetLeadsQuery = (params?: GetLeadsCacheParams) => {
   const { initialData = undefined } = params || {};
   const enabled = params?.enabled && !initialData ? true : false;
   const queryKey = params?.queryKey || LeadActiveQueryKey;
-  const queryClient = useQueryClient();
-  // Invalidate the archived deals query if initialData is provided
-  // to ensure we fetch the latest data
-  if (initialData) {
-    queryClient.setQueryData(queryKey, initialData);
-  }
 
   const query = useQuery({
     queryKey,
@@ -47,12 +41,6 @@ export const useGetArchivedLeadsQuery = (params?: GetLeadsCacheParams) => {
   const { initialData = undefined } = params || {};
   const enabled = params?.enabled && !initialData ? true : false;
   const queryKey = params?.queryKey || LeadArchivedQueryKey;
-  const queryClient = useQueryClient();
-  // Invalidate the archived deals query if initialData is provided
-  // to ensure we fetch the latest data
-  if (initialData) {
-    queryClient.setQueryData(queryKey, initialData);
-  }
 
   const query = useQuery({
     queryKey,
