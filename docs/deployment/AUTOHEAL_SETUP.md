@@ -25,10 +25,11 @@ Automatic monitoring and restart of containers when they become unhealthy is con
 
 ### Healthcheck Configuration
 
-**Frontend:**
+**Frontend** — liveness via `/api/health` (not `/`). Probe uses `$$PORT` so the container runtime port is used; do not interpolate host `FRONTEND_PORT` here (that can be an nginx publish port). See [DOCKER_PORTS_ARCHITECTURE.md](../DOCKER_PORTS_ARCHITECTURE.md#frontend-docker-healthcheck).
+
 ```yaml
 healthcheck:
-  test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1"]
+  test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:$${PORT:-3000}/api/health || exit 1"]
   interval: 30s
   timeout: 10s
   retries: 3

@@ -153,14 +153,35 @@ docker exec crm-frontend-dev env | grep PORT
 # Backend (inside Docker network)
 docker exec crm-backend-dev curl http://localhost:4000/api/health
 
-# Frontend (inside Docker network)
-docker exec crm-frontend-dev curl http://localhost:3000
+# Frontend liveness (inside Docker network)
+docker exec crm-frontend-dev wget -q -O- http://127.0.0.1:3000/api/health
 ```
 
 ### Check Nginx Logs
 ```bash
 docker compose -f docker-compose.dev.yml logs nginx
 ```
+
+## Frontend Docker healthcheck
+
+Healthchecks run **inside** the frontend container. They must hit the process bind port (`PORT`), not the host/nginx publish port.
+
+```yaml
+environment:
+  - PORT=${FRONTEND_PORT:-3000}
+healthcheck:
+  # $$PORT → container env at runtime. A bare ${FRONTEND_PORT} would be
+  # interpolated by Compose from the *host* .env and can point at nginx's
+  # external port (8080/8081), which nothing listens on inside the container.
+  test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:$${PORT:-3000}/api/health || exit 1"]
+```
+
+| Probe | Purpose |
+|---|---|
+| `GET /api/health` | Liveness only — cheap JSON, no SSR. Used by Docker/autoheal. |
+| `GET /` or app pages | Full site / SSR — **not** for healthchecks (was driving memory growth every 30s). |
+
+Stages differ by **nginx host ports** (`80` / `8080` / `8081`). Inside the network, frontend stays on `PORT` (default `3000`) unless you intentionally change `FRONTEND_PORT`/`PORT` and keep nginx `upstream` in sync.
 
 ## Migration from Old Schema
 

@@ -19,12 +19,13 @@ import { useAllPipelines, useDeletePipeline } from "@/entities/pipeline";
 import { useTranslation } from "react-i18next";
 import { PipelineFormDialog } from "@/features/pipeline";
 import { ConfirmDeleteDialog } from "@/shared/ui/ConfirmDeleteDialog";
-import { queryClient } from "@/shared/lib/query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/shared/lib/hooks";
 
 export const PipelineManagement = () => {
   const { t } = useTranslation("PipelineManagement");
   const toast = useToast();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPipelineId, setSelectedPipelineId] = useState<
     string | undefined

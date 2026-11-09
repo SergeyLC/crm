@@ -18,7 +18,7 @@ import {
   DealWonQueryKey,
 } from "@/entities/deal/api/queryKeys";
 
-import { queryClient } from "@/shared/lib/query";
+import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeyType, useInvalidateQueries } from "@/shared/api";
 
 import {
@@ -79,6 +79,7 @@ export function ArchivedDealsTable<T extends DealExt>({
   sx,
 }: ArchivedDealsTableProps<T>) {
   const { t } = useTranslation("deal");
+  const queryClient = useQueryClient();
   const {
     entityId: clickedId,
     handleEditClick,
@@ -107,7 +108,7 @@ export function ArchivedDealsTable<T extends DealExt>({
   const handleRefreshData = useCallback(async () => {
     invalidateDeals([queryKey as QueryKeyType]);
     await queryClient.refetchQueries({ queryKey });
-  }, [invalidateDeals, queryKey]);
+  }, [invalidateDeals, queryClient, queryKey]);
 
   const rowActionMenuItems: ActionMenuItemProps<DealTableRowData>[] =
     React.useMemo(

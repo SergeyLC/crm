@@ -32,7 +32,7 @@ import {
 } from "@/entities/pipeline";
 import { PipelineGroups } from "@/features/pipeline/ui/PipelineGroups";
 import { PipelineUsers } from "@/features/pipeline/ui/PipelineUsers";
-import { queryClient } from "@/shared/lib/query/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface FormValues {
   name: string;
@@ -51,6 +51,7 @@ export const PipelineFormDialog = ({
   pipelineId,
 }: PipelineFormDialogProps) => {
   const { t } = useTranslation(["PipelineFormDialog"]);
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
