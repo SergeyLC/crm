@@ -1,4 +1,31 @@
 #!/bin/bash
+#
+# CRM local deploy helper (Unix / Git Bash)
+# =========================================
+# Counterpart: .\deploy.ps1 on Windows (same flags and branch rules).
+#
+# Purpose
+#   Commit local changes, sync with origin, and push the current branch
+#   and/or a release tag. GitHub Actions then builds and deploys Docker
+#   images — this script does not SSH to the VPS or run docker compose.
+#
+# Environments (see docs/deployment/README.md and .github/CI_CD_SETUP.md)
+#   develop  → stage-develop (port 8081): use -m "…" -s only (no -t/-v).
+#              Staging is started via Actions → Deploy Application →
+#              Run workflow (branch develop), not by this script alone.
+#   main     → push runs tests; production deploy needs a v* tag (-t or -v).
+#   tag v*   → production (port 80)
+#
+# Quick examples
+#   ./deploy.sh -h
+#   ./deploy.sh -m "feat: …" -s              # develop (required -s)
+#   ./deploy.sh -m "fix: …"                  # main: commit + push
+#   ./deploy.sh -m "docs: …" -s               # push with [skip ci]
+#   ./deploy.sh -m "feat: …" -t               # main: auto patch release → prod
+#   ./deploy.sh -m "feat: …" -v 1.4.2         # main: explicit release → prod
+#
+# Prefer this file (and deploy.ps1) over scripts/deploy.js / scripts/deploy.ps1.
+#
 set -e
 
 # Colors for output

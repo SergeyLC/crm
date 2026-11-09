@@ -25,6 +25,20 @@ CI runs **database migrations** (`prisma migrate deploy`). It does **not** run s
 
 **Guides:** [Deployment overview](docs/deployment/README.md) · [CI/CD setup](.github/CI_CD_SETUP.md) · [Deployment config](DEPLOYMENT_CONFIG.md)
 
+#### Local deploy helpers
+
+Commit/push (and optionally tag a production release) from the repo root. Actions perform the real Docker deploy.
+
+```bash
+./deploy.sh -h                         # Linux / macOS / Git Bash
+.\deploy.ps1 -h                        # Windows PowerShell
+
+./deploy.sh -m "feat: …" -s            # develop ( -s required )
+./deploy.sh -m "feat: …" -t            # main → auto patch tag → production
+```
+
+Details: [docs/deployment/README.md](docs/deployment/README.md#local-helper-scripts-deploysh--deployps1).
+
 ### 🐳 Docker (Local Development)
 
 #### Development Environment

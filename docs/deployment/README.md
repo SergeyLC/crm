@@ -33,9 +33,34 @@ Deploy CRM on Ubuntu with Docker. **Canonical ops docs** are the numbered guides
 
 ## Quick start
 
+### Local helper scripts (`deploy.sh` / `deploy.ps1`)
+
+From the repo root, use these scripts to **commit, push, and optionally create a `v*` release tag**. They do **not** deploy on the server themselves — GitHub Actions builds images and runs Docker Compose.
+
+| Platform | Script |
+|----------|--------|
+| Linux / macOS / Git Bash | `./deploy.sh` |
+| Windows PowerShell | `.\deploy.ps1` |
+
+Both share the same options and branch rules:
+
+| Branch / action | Command | What happens next |
+|-----------------|---------|-------------------|
+| `develop` | `./deploy.sh -m "…" -s` (or `.\deploy.ps1 … -s`) | Push only (`-s` required; no release tags). Start stage-develop via Actions → **Run workflow**. |
+| `main` (no tag) | `./deploy.sh -m "…"` | Commit + push (tests). Stage-main via **Run workflow** when needed. |
+| `main` + release | `./deploy.sh -m "…" -t` or `-v X.Y.Z` | Creates tag `v*` → **production** deploy (port 80). |
+| Docs / no CI | add `-s` | Commit message gets `[skip ci]`. |
+
+```bash
+./deploy.sh -h          # full help (branch-aware)
+.\deploy.ps1 -h         # same on Windows
+```
+
+Prefer the repo-root scripts over `scripts/deploy.js` / `scripts/deploy.ps1` (legacy wrappers).
+
 ### Production (port 80)
 1. [Server setup](01-server-setup.md)
-2. Push a release tag `v*` (see [CI/CD setup](../../.github/CI_CD_SETUP.md))
+2. Push a release tag `v*` (see [CI/CD setup](../../.github/CI_CD_SETUP.md)) — e.g. `./deploy.sh -m "…" -t` on `main`
 3. Open `http://YOUR_SERVER_IP`
 
 ### Stage-main (port 8080)

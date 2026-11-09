@@ -1,10 +1,28 @@
-﻿# CRM Deployment Script (Windows) — counterpart to ./deploy.sh
-# Usage examples:
+﻿# CRM local deploy helper (Windows PowerShell)
+# ============================================
+# Counterpart: ./deploy.sh on Unix / Git Bash (same flags and branch rules).
+#
+# Purpose
+#   Commit local changes, sync with origin, and push the current branch
+#   and/or a release tag. GitHub Actions then builds and deploys Docker
+#   images — this script does not SSH to the VPS or run docker compose.
+#
+# Environments (see docs/deployment/README.md and .github/CI_CD_SETUP.md)
+#   develop  → stage-develop (port 8081): use -m "…" -s only (no -t/-v).
+#              Staging is started via Actions → Deploy Application →
+#              Run workflow (branch develop), not by this script alone.
+#   main     → push runs tests; production deploy needs a v* tag (-t or -v).
+#   tag v*   → production (port 80)
+#
+# Quick examples
+#   .\deploy.ps1 -h
 #   .\deploy.ps1 -m "feat: ..." -s                 # develop (required -s)
-#   .\deploy.ps1 -m "fix: ..."                     # main: push (no release tag)
-#   .\deploy.ps1 -m "docs: ..." -s                  # main: push with [skip ci]
-#   .\deploy.ps1 -m "feat: ..." -t                  # main: auto patch release tag
-#   .\deploy.ps1 -m "feat: ..." -v 1.4.2            # main: explicit release tag
+#   .\deploy.ps1 -m "fix: ..."                     # main: commit + push
+#   .\deploy.ps1 -m "docs: ..." -s                  # push with [skip ci]
+#   .\deploy.ps1 -m "feat: ..." -t                  # main: auto patch release → prod
+#   .\deploy.ps1 -m "feat: ..." -v 1.4.2            # main: explicit release → prod
+#
+# Prefer this file (and deploy.sh) over scripts/deploy.js / scripts/deploy.ps1.
 
 [CmdletBinding()]
 param(
