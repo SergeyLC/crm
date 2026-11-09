@@ -33,9 +33,11 @@ Commit/push (and optionally tag a production release) from the repo root. Action
 ./deploy.sh -h                         # Linux / macOS / Git Bash
 .\deploy.ps1 -h                        # Windows PowerShell
 
-./deploy.sh -m "feat: …" -s            # develop ( -s required )
+./deploy.sh -m "feat: …"               # develop or main: commit + push
 ./deploy.sh -m "feat: …" -t            # main → auto patch tag → production
+./deploy.sh -m "docs: …" -s            # optional: [skip ci]
 ```
+
 
 Details: [docs/deployment/README.md](docs/deployment/README.md#local-helper-scripts-deploysh--deployps1).
 

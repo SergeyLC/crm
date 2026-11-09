@@ -15,7 +15,7 @@ This project uses GitHub Actions for automated deployment to three environments 
 - **Compose**: `docker-compose.stage-develop.yml`
 - **Database**: `crm_stage_develop` (typical `POSTGRES_DB` secret)
 - **Purpose**: Testing features before merging to main
-- **Note**: On develop use `./deploy.sh -m "message" -s` or Windows `.\deploy.ps1 -m "message" -s` (releases not allowed). Staging deploy: Actions → Run workflow. Seed is optional (`run_seed` / `scripts/seed-remote.js`).
+- **Note**: On develop use `./deploy.sh -m "message"` or Windows `.\deploy.ps1 -m "message"` (no release tags; `-s` only if you want `[skip ci]`). Staging deploy: Actions → Run workflow. Seed is optional (`run_seed` / `scripts/seed-remote.js`).
 
 ### Main Staging Deployment
 - **Trigger**: Push to `main` branch (except release commits with `[skip ci]`)
@@ -391,14 +391,14 @@ docker ps
    ```bash
    git checkout develop
    git add .
-   # Must use -s flag on develop branch
-   ./deploy.sh -m "feat: add new feature" -s
+   ./deploy.sh -m "feat: add new feature"
+   # Optional: -s to add [skip ci] (skips workflows for that commit)
    ```
 
-2. **GitHub Actions** will automatically:
-   - Run tests
-   - Build Docker images
-   - Deploy to develop staging (port 8081)
+2. **Then start stage-develop manually**:
+   - Actions → **Deploy Application** → **Run workflow** → branch `develop`
+   - Optional: enable **run_seed**
+   - Push alone does **not** deploy staging on this VPS
 
 ### Main Staging Deployment
 

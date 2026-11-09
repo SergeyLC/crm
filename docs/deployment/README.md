@@ -46,10 +46,10 @@ Both share the same options and branch rules:
 
 | Branch / action | Command | What happens next |
 |-----------------|---------|-------------------|
-| `develop` | `./deploy.sh -m "…" -s` (or `.\deploy.ps1 … -s`) | Push only (`-s` required; no release tags). Start stage-develop via Actions → **Run workflow**. |
+| `develop` | `./deploy.sh -m "…"` (or `.\deploy.ps1 …`) | Commit + push (no release tags). Start stage-develop via Actions → **Run workflow**. |
 | `main` (no tag) | `./deploy.sh -m "…"` | Commit + push (tests). Stage-main via **Run workflow** when needed. |
 | `main` + release | `./deploy.sh -m "…" -t` or `-v X.Y.Z` | Creates tag `v*` → **production** deploy (port 80). |
-| Docs / no CI | add `-s` | Commit message gets `[skip ci]`. |
+| Docs / no CI | add `-s` | Commit message gets `[skip ci]` (optional on any branch). |
 
 ```bash
 ./deploy.sh -h          # full help (branch-aware)

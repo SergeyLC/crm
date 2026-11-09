@@ -10,19 +10,18 @@
 #   images — this script does not SSH to the VPS or run docker compose.
 #
 # Environments (see docs/deployment/README.md and .github/CI_CD_SETUP.md)
-#   develop  → stage-develop (port 8081): use -m "…" -s only (no -t/-v).
-#              Staging is started via Actions → Deploy Application →
-#              Run workflow (branch develop), not by this script alone.
+#   develop  → commit + push (no -t/-v). Staging is NOT auto-deployed;
+#              start stage-develop via Actions → Run workflow (branch develop).
 #   main     → push runs tests; production deploy needs a v* tag (-t or -v).
 #   tag v*   → production (port 80)
+#   -s       → optional on any branch: prefix commit with [skip ci]
 #
 # Quick examples
 #   ./deploy.sh -h
-#   ./deploy.sh -m "feat: …" -s              # develop (required -s)
-#   ./deploy.sh -m "fix: …"                  # main: commit + push
-#   ./deploy.sh -m "docs: …" -s               # push with [skip ci]
-#   ./deploy.sh -m "feat: …" -t               # main: auto patch release → prod
-#   ./deploy.sh -m "feat: …" -v 1.4.2         # main: explicit release → prod
+#   ./deploy.sh -m "feat: …"                 # develop or main: commit + push
+#   ./deploy.sh -m "docs: …" -s              # push with [skip ci]
+#   ./deploy.sh -m "feat: …" -t              # main: auto patch release → prod
+#   ./deploy.sh -m "feat: …" -v 1.4.2        # main: explicit release → prod
 #
 # Prefer this file (and deploy.ps1) over scripts/deploy.js / scripts/deploy.ps1.
 #
@@ -47,27 +46,29 @@ show_help() {
     echo -e "${CYAN}╚════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo -e ""
     echo -e "${YELLOW}⚠️  You are on the 'develop' branch${NC}"
-    echo -e "${YELLOW}⚠️  Only push without deployment is allowed${NC}"
+    echo -e "${YELLOW}⚠️  No release tags (-t/-v). Staging deploy is manual (Run workflow).${NC}"
     echo -e ""
     echo -e "${GREEN}USAGE:${NC}"
-    echo -e "  $0 -m MESSAGE -s"
+    echo -e "  $0 -m MESSAGE [-s]"
     echo -e ""
     echo -e "${GREEN}OPTIONS:${NC}"
-    echo -e "  ${YELLOW}-m MESSAGE${NC}    Commit message (required)"
-    echo -e "  ${YELLOW}-s${NC}            Push without triggering deployment (required on develop)"
+    echo -e "  ${YELLOW}-m MESSAGE${NC}    Commit message (required when there are changes)"
+    echo -e "  ${YELLOW}-s${NC}            Optional: prefix commit with [skip ci]"
     echo -e "  ${YELLOW}-h, --help${NC}    Show this help message"
     echo -e ""
     echo -e "${GREEN}EXAMPLES:${NC}"
-    echo -e "  ${CYAN}# Push changes to develop staging (port 8081)${NC}"
-    echo -e "  $0 -m \"feat: add new feature\" -s"
+    echo -e "  ${CYAN}# Commit and push to develop${NC}"
+    echo -e "  $0 -m \"feat: add new feature\""
+    echo -e ""
+    echo -e "  ${CYAN}# Push without triggering CI${NC}"
+    echo -e "  $0 -m \"docs: tweak readme\" -s"
     echo -e ""
     echo -e "${RED}RESTRICTIONS:${NC}"
     echo -e "  • Cannot create release tags (-t or -v) on develop branch"
-    echo -e "  • Must use -s flag to push to develop staging"
-    echo -e "  • Deployment happens automatically via GitHub Actions when pushing to develop"
     echo -e ""
     echo -e "${GREEN}WORKFLOW:${NC}"
-    echo -e "  ${YELLOW}Push to develop:${NC}  Changes deployed to develop staging (port 8081)"
+    echo -e "  ${YELLOW}Push to develop:${NC}  Commit + push (tests if not -s)"
+    echo -e "  ${YELLOW}Stage-develop:${NC}   Actions → Deploy Application → Run workflow (develop)"
     echo -e ""
   else
     # Help for main branch - full options
@@ -138,7 +139,7 @@ while getopts "m:v:tsh" opt; do
       if [ "$CURRENT_BRANCH" = "develop" ]; then
         echo -e "${RED}❌ Error: Cannot create release tags on develop branch${NC}"
         echo -e "${YELLOW}Release tags can only be created on main branch${NC}"
-        echo -e "${YELLOW}Use: $0 -m \"message\" -s${NC}"
+        echo -e "${YELLOW}Use: $0 -m \"message\"${NC}"
         exit 1
       fi
       VERSION="$OPTARG"
@@ -148,7 +149,7 @@ while getopts "m:v:tsh" opt; do
       if [ "$CURRENT_BRANCH" = "develop" ]; then
         echo -e "${RED}❌ Error: Cannot create release tags on develop branch${NC}"
         echo -e "${YELLOW}Release tags can only be created on main branch${NC}"
-        echo -e "${YELLOW}Use: $0 -m \"message\" -s${NC}"
+        echo -e "${YELLOW}Use: $0 -m \"message\"${NC}"
         exit 1
       fi
       # -t flag triggers auto-increment
@@ -174,17 +175,6 @@ done
 CREATING_RELEASE=false
 if [ -n "$VERSION" ] || [ "$AUTO_INCREMENT" = true ]; then
   CREATING_RELEASE=true
-fi
-
-# Additional validation for develop branch
-if [ "$CURRENT_BRANCH" = "develop" ]; then
-  # On develop branch, -s flag is mandatory
-  if [ "$SKIP_DEPLOY" = false ]; then
-    echo -e "${RED}❌ Error: On develop branch, you must use -s flag${NC}"
-    echo -e "${YELLOW}Usage: $0 -m \"message\" -s${NC}"
-    echo -e "${YELLOW}Deployment will happen automatically via GitHub Actions when pushing to develop${NC}"
-    exit 1
-  fi
 fi
 
 # Check if there are unstaged changes

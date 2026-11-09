@@ -8,16 +8,15 @@
 #   images — this script does not SSH to the VPS or run docker compose.
 #
 # Environments (see docs/deployment/README.md and .github/CI_CD_SETUP.md)
-#   develop  → stage-develop (port 8081): use -m "…" -s only (no -t/-v).
-#              Staging is started via Actions → Deploy Application →
-#              Run workflow (branch develop), not by this script alone.
+#   develop  → commit + push (no -t/-v). Staging is NOT auto-deployed;
+#              start stage-develop via Actions → Run workflow (branch develop).
 #   main     → push runs tests; production deploy needs a v* tag (-t or -v).
 #   tag v*   → production (port 80)
+#   -s       → optional on any branch: prefix commit with [skip ci]
 #
 # Quick examples
 #   .\deploy.ps1 -h
-#   .\deploy.ps1 -m "feat: ..." -s                 # develop (required -s)
-#   .\deploy.ps1 -m "fix: ..."                     # main: commit + push
+#   .\deploy.ps1 -m "feat: ..."                     # develop or main: commit + push
 #   .\deploy.ps1 -m "docs: ..." -s                  # push with [skip ci]
 #   .\deploy.ps1 -m "feat: ..." -t                  # main: auto patch release → prod
 #   .\deploy.ps1 -m "feat: ..." -v 1.4.2            # main: explicit release → prod
@@ -54,15 +53,15 @@ function Show-Help {
   $branch = (git branch --show-current).Trim()
   if ($branch -eq "develop") {
     Write-Info "CRM Deployment Script (develop)"
-    Write-Warn "On develop: only push with -s is allowed (no release tags)."
+    Write-Warn "On develop: no release tags (-t/-v). -s is optional ([skip ci])."
     Write-Host ""
     Write-Ok "USAGE:"
-    Write-Host "  .\deploy.ps1 -m `"MESSAGE`" -s"
+    Write-Host "  .\deploy.ps1 -m `"MESSAGE`" [-s]"
     Write-Host ""
     Write-Ok "OPTIONS:"
-    Write-Host "  -m / -Message   Commit message (required when there are changes)"
-    Write-Host "  -s / -SkipDeploy  Required on develop ([skip ci] prefix)"
-    Write-Host "  -h / -Help      Show this help"
+    Write-Host "  -m / -Message     Commit message (required when there are changes)"
+    Write-Host "  -s / -SkipDeploy  Optional: prefix commit with [skip ci]"
+    Write-Host "  -h / -Help        Show this help"
     Write-Host ""
     Write-Warn "Staging deploy is NOT automatic on this VPS."
     Write-Warn "After push: GitHub Actions → Deploy Application → Run workflow (branch develop)."
@@ -102,14 +101,7 @@ $commitMessage = ""
 
 if ($currentBranch -eq "develop" -and $creatingRelease) {
   Write-Err "Cannot create release tags on develop branch."
-  Write-Warn "Release tags only on main. Use: .\deploy.ps1 -m `"message`" -s"
-  exit 1
-}
-
-if ($currentBranch -eq "develop" -and -not $skipDeploy) {
-  Write-Err "On develop branch, you must use -s / -SkipDeploy."
-  Write-Warn "Usage: .\deploy.ps1 -m `"message`" -s"
-  Write-Warn "Staging: Actions → Deploy Application → Run workflow (develop)."
+  Write-Warn "Release tags only on main. Use: .\deploy.ps1 -m `"message`""
   exit 1
 }
 
