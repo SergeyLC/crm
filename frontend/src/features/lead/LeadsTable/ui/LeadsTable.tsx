@@ -42,7 +42,7 @@ import {
 import { useTranslation } from "react-i18next";
 import Refresh from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { TFunction } from "i18next/typescript/t";
+import { TFunction } from "i18next";
 import { useInvalidateQueries, QueryKeyType } from "@/shared";
 import { DealActiveQueryKey } from "@/entities";
 const EditDialog = dynamic(
