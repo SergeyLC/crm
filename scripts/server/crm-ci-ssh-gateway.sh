@@ -19,15 +19,22 @@ if [[ "$cmd" =~ ^mkdir[[:space:]]+-p[[:space:]]+\'?/tmp/crm-deploy-([0-9]+)\'?$ 
   exec mkdir -p "/tmp/crm-deploy-${BASH_REMATCH[1]}"
 fi
 
-# Legacy scp sink (client must use `scp -O`): scp [-v] -t [/]/tmp/crm-deploy-<digits>[/]
-# Also accept optional `--` before the path (OpenSSH variants).
-if [[ "$cmd" =~ ^scp([[:space:]]+-v)?[[:space:]]+-t([[:space:]]+--[[:space:]]+|[[:space:]]+)\'?/tmp/crm-deploy-([0-9]+)/?\'?$ ]]; then
-  run_id="${BASH_REMATCH[3]}"
-  mkdir -p "/tmp/crm-deploy-${run_id}"
-  if [[ "$cmd" == *"-v"* ]]; then
-    exec /usr/bin/scp -v -t "/tmp/crm-deploy-${run_id}"
+# Legacy scp sink (client must use `scp -O`).
+# CI copies multiple files into a directory → remote argv is often:
+#   scp -d -t /tmp/crm-deploy-<id>/
+# Optional -v; optional "--" before path; optional quotes/trailing slash.
+if [[ "$cmd" =~ ^scp[[:space:]]+ ]] && [[ "$cmd" =~ -t ]] && [[ "$cmd" =~ /tmp/crm-deploy-([0-9]+) ]]; then
+  run_id="${BASH_REMATCH[1]}"
+  # Reject anything that isn't clearly an scp transfer into that run dir.
+  if [[ ! "$cmd" =~ ^scp([[:space:]]+-[vd])*[[:space:]]+-t([[:space:]]+--[[:space:]]+|[[:space:]]+)\'?/tmp/crm-deploy-${run_id}/?\'?$ ]]; then
+    echo "crm-ci-ssh-gateway: unexpected scp argv denied" >&2
+    exit 1
   fi
-  exec /usr/bin/scp -t "/tmp/crm-deploy-${run_id}"
+  mkdir -p "/tmp/crm-deploy-${run_id}"
+  flags=()
+  [[ " $cmd " == *" -v "* ]] && flags+=(-v)
+  [[ " $cmd " == *" -d "* ]] && flags+=(-d)
+  exec /usr/bin/scp "${flags[@]}" -t "/tmp/crm-deploy-${run_id}"
 fi
 
 # Forced deploy entrypoint (absolute bash + script inside the scp target)
