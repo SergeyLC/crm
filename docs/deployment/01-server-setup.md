@@ -98,6 +98,41 @@ chmod -R 755 /var/www/crm-stage-main /var/www/crm-stage-develop
 
 > Legacy path `/var/www/crm-staging` (compose `docker-compose.stage.yml`) is only a fallback for the old GitHub environment name `staging`. Prefer `stage-main` / `stage-develop`.
 
+## Deploy user for CI
+
+GitHub Actions must SSH as a dedicated **`deploy`** user (not `root`). That user owns `/var/www/crm-*` and is in the `docker` group so Compose can pull/recreate containers.
+
+```bash
+# Create user + docker access
+useradd -m -s /bin/bash deploy
+usermod -aG docker deploy
+
+# Own app directories
+chown -R deploy:deploy \
+  /var/www/crm-production \
+  /var/www/crm-stage-main \
+  /var/www/crm-stage-develop \
+  /var/www/crm-staging 2>/dev/null || true
+
+# CI SSH key (public → authorized_keys; private → GitHub SERVER_SSH_KEY)
+install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
+sudo -u deploy ssh-keygen -t ed25519 -f /home/deploy/.ssh/github_actions_deploy -C "github-actions-deploy" -N ""
+cp /home/deploy/.ssh/github_actions_deploy.pub /home/deploy/.ssh/authorized_keys
+chmod 600 /home/deploy/.ssh/authorized_keys
+chown deploy:deploy /home/deploy/.ssh/authorized_keys
+
+# Copy private key into GitHub repo secret SERVER_SSH_KEY; set SERVER_USER=deploy
+cat /home/deploy/.ssh/github_actions_deploy
+```
+
+Verify:
+
+```bash
+ssh -i /home/deploy/.ssh/github_actions_deploy deploy@YOUR_SERVER_IP 'docker ps; ls /var/www/crm-production'
+```
+
+Do **not** install the CI public key into `/root/.ssh/authorized_keys`. Keep root SSH for admin keys only. See [GITHUB_SECRETS_GUIDE.md](GITHUB_SECRETS_GUIDE.md#server_ssh_key).
+
 ## Step 6: Configure Firewall
 
 ```bash

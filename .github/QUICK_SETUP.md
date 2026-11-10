@@ -42,8 +42,8 @@ Settings → Secrets and variables → Actions → Secrets → New repository se
 | Secret Name | Example | Description |
 |-------------|---------|-------------|
 | `SERVER_HOST` | `217.154.173.36` | Server IP or domain |
-| `SERVER_USER` | `root` | SSH user |
-| `SERVER_SSH_KEY` | `-----BEGIN...` | Full SSH **private** key |
+| `SERVER_USER` | `deploy` | SSH CI deploy user |
+| `SERVER_SSH_KEY` | `-----BEGIN...` | Full SSH **private** key for `deploy` |
 
 Details: [GitHub Secrets Guide — SERVER_SSH_KEY](../docs/deployment/GITHUB_SECRETS_GUIDE.md#server_ssh_key)
 

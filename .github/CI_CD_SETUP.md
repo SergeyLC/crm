@@ -90,8 +90,8 @@ These secrets are shared across all environments:
 | Secret | Description | Example |
 |--------|-------------|---------|
 | `SERVER_HOST` | Server IP address | `217.154.173.36` |
-| `SERVER_USER` | SSH username | `root` |
-| `SERVER_SSH_KEY` | Private SSH key for server access | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `SERVER_USER` | SSH username (CI deploy account) | `deploy` |
+| `SERVER_SSH_KEY` | Private SSH key for `deploy` | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
 
 ### Benefits of This Structure
 
@@ -107,8 +107,8 @@ These secrets are shared across all environments:
 GitHub Repository
 ├── Repository Secrets (shared)
 │   ├── SERVER_HOST = 217.154.173.36
-│   ├── SERVER_USER = root
-│   └── SERVER_SSH_KEY = (SSH private key)
+│   ├── SERVER_USER = deploy
+│   └── SERVER_SSH_KEY = (SSH private key for deploy)
 │
 ├── Environment: production
 │   ├── POSTGRES_DB = crm
@@ -187,11 +187,11 @@ cat ~/.ssh/id_ed25519
    - Value: `217.154.173.36`
 3. **New repository secret**:
    - Name: `SERVER_USER`
-   - Value: `root`
+   - Value: `deploy`
 4. **New repository secret**:
    - Name: `SERVER_SSH_KEY`
    - Value: Copy your entire **private** key including `-----BEGIN` and `-----END` lines
-   - The matching **public** key must already be in `~/.ssh/authorized_keys` on the server for `SERVER_USER` (e.g. `/root/.ssh/authorized_keys`)
+   - The matching **public** key must already be in `/home/deploy/.ssh/authorized_keys`
    - Full setup: [docs/deployment/GITHUB_SECRETS_GUIDE.md#server_ssh_key](../docs/deployment/GITHUB_SECRETS_GUIDE.md#server_ssh_key)
 
 #### 5. Configure Repository Variables (Optional)

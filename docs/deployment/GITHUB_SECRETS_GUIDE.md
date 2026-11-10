@@ -15,8 +15,8 @@ Your deployment workflow needs the following secrets:
 | Secret Name | Description | Example Value |
 |------------|-------------|---------------|
 | `SERVER_HOST` | Your server IP or domain | `161.97.67.253` or `server.example.com` |
-| `SERVER_USER` | SSH username on server | `ubuntu` or `root` |
-| `SERVER_SSH_KEY` | Private SSH key for authentication | Contents of `~/.ssh/id_ed25519` |
+| `SERVER_USER` | SSH username on server (CI deploy account) | `deploy` |
+| `SERVER_SSH_KEY` | Private SSH key for that user | Contents of deploy user's CI private key |
 
 ### Application Secrets
 
@@ -119,41 +119,42 @@ https://your-domain.com:4000/api
 
 ### SERVER_SSH_KEY
 
-GitHub Actions authenticates to the server with a dedicated SSH key pair.
+GitHub Actions authenticates as a dedicated non-root **`deploy`** user (member of the `docker` group, owner of `/var/www/crm-*`). Do **not** use `root` for CI.
 
-| Key part | File | Where it must live |
-|----------|------|--------------------|
-| **Private key** | `~/.ssh/github_deploy` | GitHub repository secret **`SERVER_SSH_KEY`** |
-| **Public key** | `~/.ssh/github_deploy.pub` | Server: **`~/.ssh/authorized_keys`** for `SERVER_USER` |
+| Key part | File (on server) | Where it must live |
+|----------|------------------|--------------------|
+| **Private key** | `/home/deploy/.ssh/github_actions_deploy` | GitHub repository secret **`SERVER_SSH_KEY`** |
+| **Public key** | `/home/deploy/.ssh/github_actions_deploy.pub` | `/home/deploy/.ssh/authorized_keys` |
 
-If `SERVER_USER=root`, the public key path on the server is:
+Set companion secret:
 
 ```text
-/root/.ssh/authorized_keys
+SERVER_USER=deploy
 ```
 
-Generate the key pair (on the server or locally):
+Generate the key pair on the server (as root during bootstrap):
 
 ```bash
-ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_deploy -N ""
-
-# Public key → server authorized_keys
-cat ~/.ssh/github_deploy.pub >> ~/.ssh/authorized_keys
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/authorized_keys
+# Assumes user "deploy" exists and is in group "docker" (see 01-server-setup.md)
+install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
+sudo -u deploy ssh-keygen -t ed25519 -f /home/deploy/.ssh/github_actions_deploy -C "github-actions-deploy" -N ""
+cp /home/deploy/.ssh/github_actions_deploy.pub /home/deploy/.ssh/authorized_keys
+chmod 600 /home/deploy/.ssh/authorized_keys
+chown deploy:deploy /home/deploy/.ssh/authorized_keys
 
 # Private key → copy ALL output into GitHub secret SERVER_SSH_KEY
-cat ~/.ssh/github_deploy
+cat /home/deploy/.ssh/github_actions_deploy
 ```
 
 **Steps:**
 
-1. Generate the key pair (command above).
-2. Append the **public** key to the deploy user's `authorized_keys` on the server (`SERVER_USER`, usually `root`).
+1. Create the `deploy` user and directories (see [01-server-setup.md](01-server-setup.md#deploy-user-for-ci)).
+2. Generate the key pair (commands above).
 3. Put the **entire private** key (including `-----BEGIN OPENSSH PRIVATE KEY-----` / `-----END ...-----`) into GitHub → **Settings → Secrets and variables → Actions →** secret `SERVER_SSH_KEY`.
-4. Ensure `SERVER_HOST` and `SERVER_USER` match that same account.
+4. Set `SERVER_USER=deploy` (same repository secrets).
+5. Do **not** leave the CI public key in `/root/.ssh/authorized_keys`.
 
-Do **not** put the private key on the server for Actions, and do **not** put the public key into the GitHub secret.
+Do **not** put the public key into the GitHub secret. After copying the private key into GitHub, remove any temporary copies (for example under `/root/incident-/`).
 
 ## Verifying Secrets
 
@@ -236,13 +237,13 @@ Typical Actions log errors:
 - `dial tcp …:22: i/o timeout` — network/firewall; SSH port not reachable from GitHub runners.
 
 **Solution (publickey auth):**
-1. Confirm the **public** key belonging to `SERVER_SSH_KEY` is in `~/.ssh/authorized_keys` on the server for `SERVER_USER` (for root: `/root/.ssh/authorized_keys`).
+1. Confirm the **public** key belonging to `SERVER_SSH_KEY` is in `/home/deploy/.ssh/authorized_keys` (when `SERVER_USER=deploy`).
 2. Ensure the private key in GitHub includes `-----BEGIN` and `-----END` lines (full file).
-3. Permissions on the server: `chmod 700 ~/.ssh` and `chmod 600 ~/.ssh/authorized_keys`.
+3. Permissions on the server: `chmod 700 /home/deploy/.ssh` and `chmod 600 /home/deploy/.ssh/authorized_keys`.
 4. Check line breaks are preserved (GitHub usually does this automatically).
 5. Test SSH connection manually with the same private key:
    ```bash
-   ssh -i ~/.ssh/github_deploy root@YOUR_SERVER_IP
+   ssh -i /path/to/github_actions_deploy deploy@YOUR_SERVER_IP
    ```
 
 See also: [SERVER_SSH_KEY setup](#server_ssh_key).
