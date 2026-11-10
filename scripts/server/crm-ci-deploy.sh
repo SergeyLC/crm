@@ -164,11 +164,18 @@ echo "Waiting for services..."
 sleep 15
 
 echo "Running database migrations..."
-docker exec "${CONTAINER_PREFIX}-backend" sh -c 'cd /app/db && pnpm run migrate:deploy' || echo "Migration failed or already up to date"
+# Prisma CLI is installed globally in the image; prisma.config.ts imports
+# 'prisma/config', which Node only resolves if NODE_PATH includes that install.
+docker exec -e NODE_PATH=/usr/local/lib/node_modules \
+  "${CONTAINER_PREFIX}-backend" \
+  sh -c 'cd /app/db && prisma migrate deploy' \
+  || echo "Migration failed or already up to date"
 
 if [[ "${DEPLOY_RUN_SEED}" == "true" ]]; then
   echo "Seeding database (seed:runtime)..."
-  docker exec "${CONTAINER_PREFIX}-backend" sh -c 'cd /app/db && pnpm run seed:runtime'
+  docker exec -e NODE_PATH=/usr/local/lib/node_modules \
+    "${CONTAINER_PREFIX}-backend" \
+    sh -c 'cd /app/db && pnpm run seed:runtime'
   echo "Seed completed"
 else
   echo "Seed skipped (run_seed=false)"
