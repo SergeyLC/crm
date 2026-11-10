@@ -124,7 +124,7 @@ GitHub Actions authenticates as a dedicated non-root **`deploy`** user (member o
 | Key part | File (on server) | Where it must live |
 |----------|------------------|--------------------|
 | **Private key** | `/home/deploy/.ssh/github_actions_deploy` | GitHub repository secret **`SERVER_SSH_KEY`** |
-| **Public key** | `/home/deploy/.ssh/github_actions_deploy.pub` | `/home/deploy/.ssh/authorized_keys` |
+| **Public key** | `/home/deploy/.ssh/github_actions_deploy.pub` | `/home/deploy/.ssh/authorized_keys` with `restrict,command=…` |
 
 Set companion secret:
 
@@ -132,13 +132,15 @@ Set companion secret:
 SERVER_USER=deploy
 ```
 
-Generate the key pair on the server (as root during bootstrap):
+Generate the key pair on the server (as root during bootstrap). Full steps (including the forced-command gateway) are in [01-server-setup.md](01-server-setup.md#deploy-user-for-ci). Short form:
 
 ```bash
-# Assumes user "deploy" exists and is in group "docker" (see 01-server-setup.md)
+# Assumes user "deploy" exists and is in group "docker"
 install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
 sudo -u deploy ssh-keygen -t ed25519 -f /home/deploy/.ssh/github_actions_deploy -C "github-actions-deploy" -N ""
-cp /home/deploy/.ssh/github_actions_deploy.pub /home/deploy/.ssh/authorized_keys
+install -m 755 scripts/server/crm-ci-ssh-gateway.sh /home/deploy/bin/crm-ci-ssh-gateway.sh
+PUB=$(cat /home/deploy/.ssh/github_actions_deploy.pub)
+printf 'restrict,command="/home/deploy/bin/crm-ci-ssh-gateway.sh" %s\n' "$PUB" > /home/deploy/.ssh/authorized_keys
 chmod 600 /home/deploy/.ssh/authorized_keys
 chown deploy:deploy /home/deploy/.ssh/authorized_keys
 
@@ -146,10 +148,12 @@ chown deploy:deploy /home/deploy/.ssh/authorized_keys
 cat /home/deploy/.ssh/github_actions_deploy
 ```
 
+The CI key must **not** allow an interactive shell (`docker` group ≈ root). The gateway only allows `mkdir`/`scp` under `/tmp/crm-deploy-<runId>` and `/bin/bash /tmp/crm-deploy-<runId>/crm-ci-deploy.sh`.
+
 **Steps:**
 
 1. Create the `deploy` user and directories (see [01-server-setup.md](01-server-setup.md#deploy-user-for-ci)).
-2. Generate the key pair (commands above).
+2. Generate the key pair and install the gateway (commands above).
 3. Put the **entire private** key (including `-----BEGIN OPENSSH PRIVATE KEY-----` / `-----END ...-----`) into GitHub → **Settings → Secrets and variables → Actions →** secret `SERVER_SSH_KEY`.
 4. Set `SERVER_USER=deploy` (same repository secrets).
 5. Do **not** leave the CI public key in `/root/.ssh/authorized_keys`.

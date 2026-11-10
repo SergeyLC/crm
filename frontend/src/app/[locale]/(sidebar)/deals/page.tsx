@@ -1,13 +1,36 @@
+import { DealExt } from "@/entities/deal";
 import { DealsTable } from "@/features/deal";
+import { ssrFetch } from "@/shared/api";
 
-// Client-side fetch only: SSR of full deal graphs (notes/appointments) was
-// driving frontend container OOM (~750MB / 15–20 min under the 768MB limit).
+// Pages with searchParams are always dynamic in Next.js
+// This is expected behavior
 export const revalidate = 60;
 
+// Generating static pages only for en and de
 export async function generateStaticParams() {
-  return [{ locale: "en" }, { locale: "de" }];
+  return [
+    { locale: 'en' },
+    { locale: 'de' },
+  ];
 }
 
-export default function DealsPage() {
-  return <DealsTable />;
+type DealsPageSearchParams = Record<string, string | string[] | undefined>;
+
+type DealsPageProps = {
+  params: { locale: string };
+  searchParams?: Promise<DealsPageSearchParams>;
+};
+
+export default async function DealsPage({ searchParams }: DealsPageProps) {
+
+  const resolvedSearchParams = (await searchParams) ?? {};
+
+  const shouldSkipSsr =
+    resolvedSearchParams.disableSsr == "on" || resolvedSearchParams.cypress == "on";
+
+  const deals = shouldSkipSsr
+    ? undefined
+    : (await ssrFetch<DealExt[]>("deals")) || undefined;
+
+  return <DealsTable initialData={deals} />;
 }

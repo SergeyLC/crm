@@ -30,7 +30,7 @@ Deploy CRM on Ubuntu with Docker. **Canonical ops docs** are the numbered guides
 - **[Server performance](SERVER_PERFORMANCE.md)**
 - **[Deployment optimization](DEPLOYMENT_OPTIMIZATION.md)**
 - **[Release strategy](RELEASE_DEPLOYMENT_STRATEGY.md)** — `[skip ci]` on release commits
-- **[Engineering backlog](../BACKLOG.md)** — e.g. restore SSR lists only with slim DTO + pagination
+- **[Engineering backlog](../BACKLOG.md)** — e.g. slim list DTOs + pagination for deal/lead SSR
 
 ## Quick start
 

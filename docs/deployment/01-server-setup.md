@@ -117,7 +117,13 @@ chown -R deploy:deploy \
 # CI SSH key (public → authorized_keys; private → GitHub SERVER_SSH_KEY)
 install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
 sudo -u deploy ssh-keygen -t ed25519 -f /home/deploy/.ssh/github_actions_deploy -C "github-actions-deploy" -N ""
-cp /home/deploy/.ssh/github_actions_deploy.pub /home/deploy/.ssh/authorized_keys
+
+# Forced-command gateway: key may only mkdir/scp /tmp/crm-deploy-<runId> and run crm-ci-deploy.sh
+install -d -m 755 /home/deploy/bin
+install -m 755 scripts/server/crm-ci-ssh-gateway.sh /home/deploy/bin/crm-ci-ssh-gateway.sh
+install -m 755 scripts/server/crm-ci-deploy.sh /home/deploy/bin/crm-ci-deploy.sh
+PUB=$(cat /home/deploy/.ssh/github_actions_deploy.pub)
+printf 'restrict,command="/home/deploy/bin/crm-ci-ssh-gateway.sh" %s\n' "$PUB" > /home/deploy/.ssh/authorized_keys
 chmod 600 /home/deploy/.ssh/authorized_keys
 chown deploy:deploy /home/deploy/.ssh/authorized_keys
 
@@ -125,10 +131,13 @@ chown deploy:deploy /home/deploy/.ssh/authorized_keys
 cat /home/deploy/.ssh/github_actions_deploy
 ```
 
-Verify:
+`deploy` is in the `docker` group (near-root via the socket). The `restrict,command=…` option on the CI key limits that key to the deploy gateway — not an interactive shell.
+
+Verify (must be **denied** for arbitrary commands):
 
 ```bash
-ssh -i /home/deploy/.ssh/github_actions_deploy deploy@YOUR_SERVER_IP 'docker ps; ls /var/www/crm-production'
+ssh -i /home/deploy/.ssh/github_actions_deploy deploy@YOUR_SERVER_IP 'docker ps'
+# → crm-ci-ssh-gateway: command denied
 ```
 
 Do **not** install the CI public key into `/root/.ssh/authorized_keys`. Keep root SSH for admin keys only. See [GITHUB_SECRETS_GUIDE.md](GITHUB_SECRETS_GUIDE.md#server_ssh_key).

@@ -39,22 +39,18 @@ Guidelines:
 
 If you ever need to add legacy pages (not recommended), ensure a proper `_app.tsx` is defined—otherwise keep relying solely on the App Router.
 
-### List pages rendering (SSR shell + CSR data)
+### List pages rendering (SSR data + CSR refresh)
 
-Deal and lead **list** routes (`deals`, `deals/kanban`, `deals/won|lost|archived`, `leads`, `leads/archived`) intentionally do **not** SSR the business data.
+Deal and lead **list** routes (`deals`, `deals/kanban`, `deals/won|lost|archived`, `leads`, `leads/archived`) use `ssrFetch` and pass `initialData` / `initialDeals` into the tables/board.
 
 | Layer | What runs where |
 |-------|-----------------|
-| Shell | Next.js still SSRs HTML for layout, sidebar, i18n, page chrome |
-| Rows / board data | Fetched in the browser via React Query → API after hydration |
+| First paint | Server fetches list JSON and hydrates React Query via `initialData` |
+| Later updates | Client React Query refetches / mutations as usual |
 
-**Why:** Server `ssrFetch` of full deal/lead graphs (nested notes, appointments, no pagination) inflated the Node heap until Docker OOM-killed `crm-*-frontend` about every 15–20 minutes under a ~768–1024 MB `mem_limit`.
+**Keep:** per-request `QueryClient` (no process-wide singleton) and **no** `setQueryData` during render — those were real leak patterns.
 
-**Not** “Next page cache full of live CRM rows” — list payloads were loaded into the **process heap** on each SSR (`cache: "no-store"`), previously worsened by a process-wide QueryClient + `setQueryData` during render.
-
-**First paint:** UI shell / empty table or loading state — not rows with live data.
-
-To bring back **true SSR of lists**, see backlog: [Restore true SSR for deal/lead list pages](../BACKLOG.md#restore-true-ssr-for-deallead-list-pages-only-with-slim-dto--pagination) (slim DTO + pagination only).
+**OOM note (2026-11):** unexplained RSS growth under ~768 MB was later tied to **React2Shell / malware** in the frontend container, not proven to be list SSR alone. Full-graph list SSR (notes/appointments, no pagination) can still be heavy; slim DTO + pagination remains a follow-up — see [BACKLOG](../BACKLOG.md#slim-list-dtos--pagination-for-deallead-ssr).
 
 ### Component-local locales
 

@@ -608,17 +608,15 @@ free -h
 
 **Symptom:** Container restarts every ~15–20 minutes; `docker stats` shows MEM USAGE climbing toward `mem_limit` (historically 768 MB, now 1024 MB); host RAM still has free space. Logs may mention OOM / autoheal restarts. (There is **no pm2** in the Docker image — the process is `node frontend/server.js`.)
 
-**Root cause (addressed in app code):** SSR of unbounded deal/lead graphs into the Node heap, plus a former process-wide React Query singleton. Healthchecks must hit `/api/health`, not `/`.
+**Likely causes (post-incident):** The Nov 2026 restart loop was dominated by **React2Shell malware** in the frontend container. Separately, a process-wide React Query singleton + render-time `setQueryData` could retain payloads across requests. Unbounded full-graph list SSR can still add heap pressure.
 
 **Current mitigation:**
 
-- List pages: SSR **shell only**; list data via CSR (React Query). See [frontend rendering notes](../frontend/README.md#list-pages-rendering-ssr-shell--csr-data).
-- Per-tree `QueryClient` (no module singleton); no `setQueryData` during render for those lists.
-- Compose: `mem_limit: 1024m`, `NODE_OPTIONS=--max-old-space-size=768`, healthcheck → `/api/health`.
+- List SSR restored (`ssrFetch` + `initialData`); keep per-tree `QueryClient` and **no** render-time `setQueryData`. See [frontend rendering notes](../frontend/README.md#list-pages-rendering-ssr-data--csr-refresh).
+- Patched Next/React; healthcheck → `/api/health` (not `/`).
+- Compose: respect `mem_limit` / `NODE_OPTIONS`; do **not** raise limits to paper over unexplained RSS during triage.
 
-**Do not** “fix” by only raising `mem_limit` without keeping list SSR bounded.
-
-**Backlog:** restore true SSR of lists only with slim DTO + pagination — [docs/BACKLOG.md](../BACKLOG.md#restore-true-ssr-for-deallead-list-pages-only-with-slim-dto--pagination).
+**Backlog:** slim list DTOs + pagination — [docs/BACKLOG.md](../BACKLOG.md#slim-list-dtos--pagination-for-deallead-ssr).
 
 ### Slow Response Times
 
