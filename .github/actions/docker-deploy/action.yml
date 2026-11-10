@@ -252,7 +252,9 @@ runs:
         REMOTE_DIR="/tmp/crm-deploy-${DEPLOY_RUN_ID}"
         SSH_OPTS=(-i "$KEY_FILE" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new)
         ssh "${SSH_OPTS[@]}" "${SERVER_USER}@${SERVER_HOST}" "mkdir -p ${REMOTE_DIR}"
-        scp "${SSH_OPTS[@]}" \
+        # -O: legacy scp protocol (scp -t). Default OpenSSH 9+ uses SFTP
+        # (/usr/lib/openssh/sftp-server), which the forced-command gateway denies.
+        scp -O "${SSH_OPTS[@]}" \
           docker-compose.yml \
           docker-compose.production.yml \
           docker-compose.stage.yml \

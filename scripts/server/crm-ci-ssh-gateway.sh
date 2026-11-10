@@ -19,11 +19,11 @@ if [[ "$cmd" =~ ^mkdir[[:space:]]+-p[[:space:]]+\'?/tmp/crm-deploy-([0-9]+)\'?$ 
   exec mkdir -p "/tmp/crm-deploy-${BASH_REMATCH[1]}"
 fi
 
-# scp sink: scp [-v] -t /tmp/crm-deploy-<digits>[/]
-if [[ "$cmd" =~ ^scp([[:space:]]+-v)?[[:space:]]+-t[[:space:]]+\'?/tmp/crm-deploy-([0-9]+)/?\'?$ ]]; then
-  run_id="${BASH_REMATCH[2]}"
+# Legacy scp sink (client must use `scp -O`): scp [-v] -t [/]/tmp/crm-deploy-<digits>[/]
+# Also accept optional `--` before the path (OpenSSH variants).
+if [[ "$cmd" =~ ^scp([[:space:]]+-v)?[[:space:]]+-t([[:space:]]+--[[:space:]]+|[[:space:]]+)\'?/tmp/crm-deploy-([0-9]+)/?\'?$ ]]; then
+  run_id="${BASH_REMATCH[3]}"
   mkdir -p "/tmp/crm-deploy-${run_id}"
-  # Prefer argv form; fall back to matching verbosity flag from client.
   if [[ "$cmd" == *"-v"* ]]; then
     exec /usr/bin/scp -v -t "/tmp/crm-deploy-${run_id}"
   fi
@@ -40,6 +40,11 @@ if [[ "$cmd" =~ ^(/bin/bash|/usr/bin/bash)[[:space:]]+/tmp/crm-deploy-([0-9]+)/c
     exit 1
   fi
   exec "$bash_bin" "$script"
+fi
+
+if [[ "$cmd" == *sftp-server* ]]; then
+  echo "crm-ci-ssh-gateway: SFTP denied; CI must use scp -O (legacy protocol)" >&2
+  exit 1
 fi
 
 echo "crm-ci-ssh-gateway: command denied" >&2
