@@ -8,11 +8,38 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 const TOKEN_EXPIRY = "24h";
 const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-export function getSessionCookieOptions(): CookieOptions {
+/**
+ * Secure cookies only when the browser connection is HTTPS.
+ * Do NOT key off NODE_ENV alone — stage runs NODE_ENV=production over plain HTTP
+ * (:8080/:8081); browsers drop Secure cookies on http:// and /auth/me 401s forever.
+ *
+ * Resolution order:
+ * 1. COOKIE_SECURE=true|false (explicit ops override)
+ * 2. X-Forwarded-Proto / req.secure (needs trust proxy)
+ * 3. false (safe default so HTTP stage/prod keep working)
+ */
+export function shouldUseSecureCookie(req?: Request): boolean {
+  const override = process.env.COOKIE_SECURE?.trim().toLowerCase();
+  if (override === "true" || override === "1") return true;
+  if (override === "false" || override === "0") return false;
+
+  if (req) {
+    const xfProto =
+      typeof req.get === "function" ? req.get("x-forwarded-proto") : undefined;
+    if (xfProto) {
+      return xfProto.split(",")[0].trim().toLowerCase() === "https";
+    }
+    return Boolean(req.secure);
+  }
+
+  return false;
+}
+
+export function getSessionCookieOptions(req?: Request): CookieOptions {
   return {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(req),
     path: "/",
     maxAge: SESSION_MAX_AGE_MS,
   };
@@ -57,7 +84,7 @@ export const login = async (req: Request, res: Response) => {
       expiresIn: TOKEN_EXPIRY,
     });
 
-    res.cookie(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
+    res.cookie(SESSION_COOKIE_NAME, token, getSessionCookieOptions(req));
 
     // Returning user data only (JWT lives in HttpOnly cookie)
     return res.status(200).json({
@@ -122,7 +149,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  const { maxAge: _maxAge, ...clearOptions } = getSessionCookieOptions();
+  const { maxAge: _maxAge, ...clearOptions } = getSessionCookieOptions(req);
   res.clearCookie(SESSION_COOKIE_NAME, clearOptions);
 
   return res.status(200).json({

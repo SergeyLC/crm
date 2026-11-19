@@ -25,10 +25,15 @@ export const authApi = {
     return { user: responseData.user };
   },
 
-  getCurrentUser: async (): Promise<User> => {
+  getCurrentUser: async (): Promise<User | null> => {
     const response = await fetch(`${API_BASE}/auth/me`, {
       credentials: "include",
     });
+
+    // Logged-out is normal (no session cookie) — not an error
+    if (response.status === 401) {
+      return null;
+    }
 
     if (!response.ok) {
       throw new Error("Failed to get user info");

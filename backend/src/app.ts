@@ -11,6 +11,9 @@ console.log(`✅ Mock mode is ${isMockEnabled ? "ENABLED" : "DISABLED"}`);
 
 const app = express();
 
+// Honor X-Forwarded-Proto from nginx so Secure cookies track real HTTPS
+app.set("trust proxy", 1);
+
 // Middleware
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
