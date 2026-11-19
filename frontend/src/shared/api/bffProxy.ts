@@ -25,6 +25,16 @@ export function upstreamHeaders(
     headers.set("authorization", authorization);
   }
 
+  // So backend Secure-cookie logic sees the browser's real scheme
+  const xfProto = req.headers.get("x-forwarded-proto");
+  if (xfProto) {
+    headers.set("x-forwarded-proto", xfProto);
+  } else if (req.nextUrl.protocol === "https:") {
+    headers.set("x-forwarded-proto", "https");
+  } else {
+    headers.set("x-forwarded-proto", "http");
+  }
+
   return headers;
 }
 

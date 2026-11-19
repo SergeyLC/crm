@@ -20,6 +20,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       dispatch({ type: "AUTH_CHECK_START" });
       const user = await authApi.getCurrentUser();
+      if (!user) {
+        dispatch({ type: "AUTH_CHECK_FAILURE" });
+        return;
+      }
       dispatch({ type: "AUTH_CHECK_SUCCESS", payload: { user } });
     } catch (error) {
       console.error("Auth check failed:", error);

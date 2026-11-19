@@ -1,5 +1,9 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { login, logout } from '@/controllers/authController';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  login,
+  logout,
+  shouldUseSecureCookie,
+} from '@/controllers/authController';
 import { SESSION_COOKIE_NAME } from '@/middlewares/authMiddleware';
 
 // Mock all dependencies at the top
@@ -95,6 +99,7 @@ describe('Auth Controller', () => {
         expect.objectContaining({
           httpOnly: true,
           sameSite: 'lax',
+          secure: false,
           path: '/',
           maxAge: 24 * 60 * 60 * 1000,
         })
@@ -131,6 +136,46 @@ describe('Auth Controller', () => {
         success: true,
         message: 'Logged out successfully',
       });
+    });
+  });
+
+  describe('shouldUseSecureCookie', () => {
+    const previous = process.env.COOKIE_SECURE;
+
+    afterEach(() => {
+      if (previous === undefined) {
+        delete process.env.COOKIE_SECURE;
+      } else {
+        process.env.COOKIE_SECURE = previous;
+      }
+    });
+
+    it('honors COOKIE_SECURE override', () => {
+      process.env.COOKIE_SECURE = 'true';
+      expect(shouldUseSecureCookie()).toBe(true);
+      process.env.COOKIE_SECURE = 'false';
+      expect(shouldUseSecureCookie()).toBe(false);
+    });
+
+    it('uses X-Forwarded-Proto when present', () => {
+      delete process.env.COOKIE_SECURE;
+      const httpReq = {
+        get: (name: string) =>
+          name.toLowerCase() === 'x-forwarded-proto' ? 'http' : undefined,
+        secure: false,
+      } as any;
+      const httpsReq = {
+        get: (name: string) =>
+          name.toLowerCase() === 'x-forwarded-proto' ? 'https' : undefined,
+        secure: false,
+      } as any;
+      expect(shouldUseSecureCookie(httpReq)).toBe(false);
+      expect(shouldUseSecureCookie(httpsReq)).toBe(true);
+    });
+
+    it('defaults to false without request or override (HTTP stage safe)', () => {
+      delete process.env.COOKIE_SECURE;
+      expect(shouldUseSecureCookie()).toBe(false);
     });
   });
 });
