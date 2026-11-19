@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config";
+import { upstreamHeaders } from "@/shared/api/bffProxy";
+
 
 // GET /api/pipelines - Alle Pipelines abrufen
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/pipelines`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders(request),
       credentials: "include",
       // next: { revalidate: 60 }, // Cache für 60 Sekunden
     });
@@ -36,9 +36,7 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/pipelines`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders(request),
       credentials: "include",
       body: JSON.stringify(body),
     });

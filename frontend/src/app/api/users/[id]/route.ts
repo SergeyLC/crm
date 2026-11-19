@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config";
+import { upstreamHeaders } from "@/shared/api/bffProxy";
+
 
 interface Params {
   params: Promise<{
@@ -13,9 +15,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 
   try {
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/users/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders(request),
       credentials: "include",
       // next: { revalidate: 60 }
     });
@@ -47,9 +47,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/users/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders(request),
       credentials: "include",
       body: JSON.stringify(body),
     });
@@ -79,9 +77,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   try {
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/users/${id}`, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders(request),
       credentials: "include",
     });
 

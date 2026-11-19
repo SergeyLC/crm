@@ -121,7 +121,7 @@ CRM/
 - **Express.js** - web framework
 - **TypeScript** - static typing
 - **Prisma ORM** - database interaction
-- **JWT** - authentication and authorization
+- **JWT in HttpOnly cookie** (`crm_session`) - authentication and role authorization
 - **bcrypt** - password hashing
 - **UUID** - unique identifier generation
 
@@ -266,9 +266,10 @@ frontend/src/
 - **Bulk operations** (archiving, restoring)
 
 ### 2. Authentication System
-- JWT-based authentication
-- User roles (ADMIN, EMPLOYEE)
-- Protected routes
+- HttpOnly cookie session (`crm_session`; SameSite=Lax; Secure in production)
+- JWT not stored in localStorage; browser calls use `credentials: 'include'`
+- User roles (ADMIN, EMPLOYEE) enforced on API and UI
+- Protected routes (UI + backend authn/authz)
 
 ### 3. Interactive Components
 - **BaseTable** - universal table with selection, sorting and actions

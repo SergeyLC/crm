@@ -8,15 +8,19 @@ export const mockUser = {
   role: "ADMIN",
 };
 
+const SESSION_COOKIE = "crm_session";
+
 export async function setupAuth(page: Page) {
-  // Mock authentication endpoints
+  // Mock authentication endpoints (cookie session — no token in JSON)
   await page.route('**/auth/login', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
+      headers: {
+        'Set-Cookie': `${SESSION_COOKIE}=test-token; Path=/; HttpOnly; SameSite=Lax`,
+      },
       body: JSON.stringify({
         success: true,
-        token: 'test-token',
         user: mockUser,
       }),
     });
@@ -33,8 +37,15 @@ export async function setupAuth(page: Page) {
     });
   });
 
-  // Set authentication token in localStorage
-  await page.addInitScript(() => {
-    window.localStorage.setItem('token', 'test-token');
-  });
+  // Inject HttpOnly-equivalent session cookie for the test origin
+  await page.context().addCookies([
+    {
+      name: SESSION_COOKIE,
+      value: 'test-token',
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
 }

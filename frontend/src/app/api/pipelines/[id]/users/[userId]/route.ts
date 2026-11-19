@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config";
+import { upstreamHeaders } from "@/shared/api/bffProxy";
+
 
 interface Params {
   params: Promise<{
@@ -16,9 +18,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       `${NEXT_PUBLIC_BACKEND_API_URL}/pipelines/${id}/users/${userId}`,
       {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: upstreamHeaders(request),
         credentials: "include",
       }
     );
