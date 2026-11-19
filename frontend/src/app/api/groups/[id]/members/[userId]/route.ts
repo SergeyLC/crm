@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared";
+import { upstreamHeaders } from "@/shared/api/bffProxy";
+
 
 export async function DELETE(
   req: NextRequest,
@@ -8,9 +10,7 @@ export async function DELETE(
   try {
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/groups/${params.id}/members/${params.userId}`, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders(req),
       credentials: "include",
     });
 

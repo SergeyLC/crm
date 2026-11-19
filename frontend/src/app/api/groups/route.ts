@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared";
+import { upstreamHeaders } from "@/shared/api/bffProxy";
 
-export async function GET() {
+
+export async function GET(request: NextRequest) {
   try {
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/groups`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders(request),
       credentials: "include",
     });
 
@@ -35,9 +35,7 @@ export async function POST(req: NextRequest) {
 
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/groups`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders(req),
       credentials: "include",
       body: JSON.stringify(body),
     });

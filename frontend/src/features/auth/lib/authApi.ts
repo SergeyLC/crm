@@ -1,13 +1,16 @@
 // features/auth/api.ts
 import { User, LoginCredentials } from "../model";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
+
 export const authApi = {
-  login: async (credentials: LoginCredentials): Promise<{user: User, token: string}> => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/login`, {
+  login: async (credentials: LoginCredentials): Promise<{ user: User }> => {
+    const response = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify(credentials),
     });
 
@@ -16,14 +19,15 @@ export const authApi = {
       throw new Error(error.message || "Failed to login");
     }
     const responseData = await response.json();
-    return responseData;
+    if (!responseData?.user || !responseData.success) {
+      throw new Error(responseData?.message || "Failed to login");
+    }
+    return { user: responseData.user };
   },
-  
-  getCurrentUser: async (token: string): Promise<User> => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+
+  getCurrentUser: async (): Promise<User> => {
+    const response = await fetch(`${API_BASE}/auth/me`, {
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -36,12 +40,11 @@ export const authApi = {
     }
     return responseData.user;
   },
-  logout: async (token: string): Promise<void> => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/logout`, {
+
+  logout: async (): Promise<void> => {
+    await fetch(`${API_BASE}/auth/logout`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      credentials: "include",
     });
   },
 };

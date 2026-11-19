@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config";
+import { upstreamHeaders } from "@/shared/api/bffProxy";
+
 
 interface Params {
   params: Promise<{
@@ -14,9 +16,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     const response = await fetch(
       `${NEXT_PUBLIC_BACKEND_API_URL}/pipelines/${userId}`,
       {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: upstreamHeaders(request),
         credentials: "include",
        // next: { revalidate: 60 },
       }

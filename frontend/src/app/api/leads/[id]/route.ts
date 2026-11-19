@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
+import { upstreamHeaders } from "@/shared/api/bffProxy";
+
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +10,7 @@ export async function GET(
   try {
     const { id } = await params;
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/leads/${id}`, {
-      headers: { "Content-Type": "application/json" },
+      headers: upstreamHeaders(request),
       cache: "no-store",
       credentials: "include",
     });
@@ -41,7 +43,7 @@ export async function PUT(
 
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/leads/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: upstreamHeaders(request),
       body: JSON.stringify(body),
       credentials: "include",
     });
@@ -77,7 +79,7 @@ export async function DELETE(
     const { id } = await params;
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/leads/${id}`, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers: upstreamHeaders(request),
       credentials: "include",
     });
 

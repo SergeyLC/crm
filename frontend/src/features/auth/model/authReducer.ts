@@ -2,11 +2,11 @@ import { User, AuthState } from "./types";
 
 export type AuthAction =
   | { type: "LOGIN_START" }
-  | { type: "LOGIN_SUCCESS"; payload: { user: User; token: string } }
+  | { type: "LOGIN_SUCCESS"; payload: { user: User } }
   | { type: "LOGIN_FAILURE"; payload: string }
   | { type: "LOGOUT" }
   | { type: "AUTH_CHECK_START" }
-  | { type: "AUTH_CHECK_SUCCESS"; payload: { user: User; token: string } }
+  | { type: "AUTH_CHECK_SUCCESS"; payload: { user: User } }
   | { type: "AUTH_CHECK_FAILURE" };
 
 export function authReducer(state: AuthState, action: AuthAction): AuthState {
@@ -21,7 +21,6 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLoading: false,
         isAuthenticated: true,
         user: action.payload.user,
-        token: action.payload.token,
         error: null,
       };
 
@@ -31,7 +30,6 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLoading: false,
         isAuthenticated: true,
         user: action.payload.user,
-        token: action.payload.token,
         error: null,
       };
 
@@ -41,7 +39,6 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLoading: false,
         isAuthenticated: false,
         user: null,
-        token: null,
         error: action.payload,
       };
 
@@ -51,7 +48,6 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLoading: false,
         isAuthenticated: false,
         user: null,
-        token: null,
         error: null,
       };
 
@@ -61,7 +57,6 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLoading: false,
         isAuthenticated: false,
         user: null,
-        token: null,
         error: null,
       };
 

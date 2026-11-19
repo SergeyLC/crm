@@ -70,10 +70,17 @@ test.describe('Group save under slow network', () => {
       });
     });
 
-    // Ensure token is present in localStorage so AuthProvider will call /auth/me
-    await page.addInitScript(() => {
-      localStorage.setItem('token', 'test-token');
-    });
+    // Session cookie so AuthProvider treats the browser as authenticated
+    await page.context().addCookies([
+      {
+        name: 'crm_session',
+        value: 'test-token',
+        domain: 'localhost',
+        path: '/',
+        httpOnly: true,
+        sameSite: 'Lax',
+      },
+    ]);
 
   // (fetch instrumentation and page console logging removed)
 

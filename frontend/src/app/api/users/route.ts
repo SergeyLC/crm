@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config";
+import { upstreamHeaders } from "@/shared/api/bffProxy";
+
 
 // GET /api/users - Alle Benutzer abrufen
 export async function GET(request: NextRequest) {
@@ -13,9 +15,7 @@ export async function GET(request: NextRequest) {
       : `${NEXT_PUBLIC_BACKEND_API_URL}/users`;
       
     const response = await fetch(apiUrl, {
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders(request),
       credentials: "include",
       // next: { revalidate: 60 }
     });
@@ -45,9 +45,7 @@ export async function POST(request: NextRequest) {
     
     const response = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/users`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders(request),
       credentials: "include",
       body: JSON.stringify(body),
     });

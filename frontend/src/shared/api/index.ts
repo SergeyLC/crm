@@ -8,4 +8,9 @@
 // export { ssrFetch } from './ssrFetch';
 export { apiRequest } from './apiRequest';
 export { ssrFetch } from './ssrFetch';
+export {
+  applySetCookie,
+  jsonFromUpstream,
+  upstreamHeaders,
+} from './bffProxy';
 export * from './invalidate';
