@@ -105,17 +105,22 @@ Base path: `/api`
 
 ### Authentication (`/auth`)
 
+Session cookie: `crm_session` (HttpOnly; SameSite=Lax; Path=/; Secure in production; ~24h). Prefer cookie auth; `Authorization: Bearer <jwt>` remains accepted for tools/e2e.
+
+Public (no auth): `POST /auth/login`, `GET /ping`, `GET /health`. All other resource routes require authentication. ADMIN-only mirrors UI permissions (users mutations, entire `/groups`, pipeline create/update/delete + assignment mutations, deletes of leads/deals/contacts/notes/appointments).
+
 - `POST /auth/login` - User login
   - Body: `{ email: string, password: string }`
-  - Response: 200 OK - `{ token: string, user: User }`
+  - Response: 200 OK - `{ success: true, user: { id, name, email, role } }` (no `token` in JSON)
+  - Sets `Set-Cookie: crm_session=…`
 
 - `GET /auth/me` - Get current authenticated user
-  - Headers: `Authorization: Bearer <token>`
-  - Response: 200 OK - User object
+  - Cookie `crm_session` or `Authorization: Bearer <token>`
+  - Response: 200 OK - `{ success: true, user }`
 
 - `POST /auth/logout` - Logout user
-  - Headers: `Authorization: Bearer <token>`
-  - Response: 200 OK
+  - Cookie `crm_session` or `Authorization: Bearer <token>`
+  - Clears `crm_session`; Response: 200 OK
 
 ### Users (`/users`)
 

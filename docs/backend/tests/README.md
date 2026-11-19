@@ -32,10 +32,11 @@ The tests cover the following functionality:
 
 ### Auth Middleware (`authMiddleware.test.js`)
 - ✅ `authenticateToken` function
-  - Returns 401 for missing authorization header
+  - Returns 401 when neither `crm_session` cookie nor Bearer is present
+  - Prefers `crm_session` over Bearer when both are set
   - Returns 401 for invalid Bearer token format
   - Returns 403 for invalid/expired tokens
-  - Calls next() and sets req.user for valid tokens
+  - Calls next() and sets req.user for valid cookie or Bearer tokens
 
 - ✅ `authorizeRoles` function
   - Returns 401 for unauthenticated users
@@ -47,10 +48,10 @@ The tests cover the following functionality:
   - Returns 400 for missing email/password
   - Returns 401 for non-existent users
   - Returns 401 for invalid passwords
-  - Returns 200 with user data and token for successful login
+  - Returns 200 with `{ success, user }` only (sets HttpOnly `crm_session`; no `token` in JSON)
 
 - ✅ `logout` function
-  - Returns 200 with success message
+  - Clears `crm_session` and returns 200 with success message
 
 ## Mocking Strategy
 

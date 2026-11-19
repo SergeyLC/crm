@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 
+export const SESSION_COOKIE_NAME = "crm_session";
+
 // Expand the Request interface to include user information
 declare global {
   namespace Express {
@@ -15,11 +17,26 @@ declare global {
   }
 }
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  // Get the authorization header
+function extractToken(req: Request): string | undefined {
+  const cookieToken = req.cookies?.[SESSION_COOKIE_NAME];
+  if (typeof cookieToken === "string" && cookieToken.length > 0) {
+    return cookieToken;
+  }
+
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
-  
+  if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+    const bearerToken = authHeader.slice(7).trim();
+    if (bearerToken.length > 0) {
+      return bearerToken;
+    }
+  }
+
+  return undefined;
+}
+
+export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+  const token = extractToken(req);
+
   if (!token) {
     return res.status(401).json({
       success: false,
@@ -28,7 +45,6 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   }
 
   try {
-    // Check token validity
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string };
     req.user = decoded;
     next();
@@ -49,14 +65,14 @@ export const authorizeRoles = (...roles: string[]) => {
         message: "User not authenticated",
       });
     }
-    
+
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: `Role ${req.user.role} is not allowed to access this resource`,
       });
     }
-    
+
     next();
   };
 };

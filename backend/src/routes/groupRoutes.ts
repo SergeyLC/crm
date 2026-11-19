@@ -12,8 +12,12 @@ import {
   replaceMembersBatch,
   getGroupMembers
 } from '../controllers/groupController';
+import { authenticateToken, authorizeRoles } from '../middlewares/authMiddleware';
 
 const router = Router();
+const requireAdmin = authorizeRoles('ADMIN');
+
+router.use(authenticateToken, requireAdmin);
 
 router.get('/', getAllGroups);
 router.get('/:id', getGroupById);
