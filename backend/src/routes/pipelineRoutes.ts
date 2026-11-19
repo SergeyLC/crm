@@ -5,32 +5,34 @@ import {
 } from '../controllers/pipelineController';
 import {
   assignUsersToPipeline, removeUserFromPipeline,
-  removeUsersFromPipeline, // Neue Controller-Methode importieren
+  removeUsersFromPipeline,
   assignGroupsToPipeline, removeGroupFromPipeline,
-  removeGroupsFromPipeline // Neue Controller-Methode importieren
+  removeGroupsFromPipeline
 } from '../controllers/pipelineAssignmentController';
 import { getUserPipelines } from '../controllers/userPipelineController';
+import { authenticateToken, authorizeRoles } from '../middlewares/authMiddleware';
 
 const router = Router();
+const requireAdmin = authorizeRoles('ADMIN');
+
+router.use(authenticateToken);
 
 // Pipeline-Management
 router.get('/', getAllPipelines);
-router.post('/', createPipeline);
-router.get('/:id',getPipeline);
-router.put('/:id',updatePipeline);
-router.delete('/:id', deletePipeline);
+router.post('/', requireAdmin, createPipeline);
+router.get('/:id', getPipeline);
+router.put('/:id', requireAdmin, updatePipeline);
+router.delete('/:id', requireAdmin, deletePipeline);
 
 // Benutzer-Pipeline Zuweisungen
-router.post('/:id/users', assignUsersToPipeline);
-router.delete('/:id/users/:userId', removeUserFromPipeline);
-// Neue Route für Bulk-Entfernen von Benutzern
-router.post('/:id/users/remove', removeUsersFromPipeline);
+router.post('/:id/users', requireAdmin, assignUsersToPipeline);
+router.delete('/:id/users/:userId', requireAdmin, removeUserFromPipeline);
+router.post('/:id/users/remove', requireAdmin, removeUsersFromPipeline);
 
 // Gruppen-Pipeline Zuweisungen
-router.post('/:id/groups', assignGroupsToPipeline);
-router.delete('/:id/groups/:groupId', removeGroupFromPipeline);
-// Neue Route für Bulk-Entfernen von Gruppen
-router.post('/:id/groups/remove', removeGroupsFromPipeline);
+router.post('/:id/groups', requireAdmin, assignGroupsToPipeline);
+router.delete('/:id/groups/:groupId', requireAdmin, removeGroupFromPipeline);
+router.post('/:id/groups/remove', requireAdmin, removeGroupsFromPipeline);
 
 // Benutzer-Dashboard
 router.get("/user/:userId", getUserPipelines);

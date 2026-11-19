@@ -1,10 +1,22 @@
-import { Request, Response } from "express";
+import { CookieOptions, Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../prisma/client";
+import { SESSION_COOKIE_NAME } from "../middlewares/authMiddleware";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 const TOKEN_EXPIRY = "24h";
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+export function getSessionCookieOptions(): CookieOptions {
+  return {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: SESSION_MAX_AGE_MS,
+  };
+}
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -45,7 +57,9 @@ export const login = async (req: Request, res: Response) => {
       expiresIn: TOKEN_EXPIRY,
     });
 
-    // Returning user data and token
+    res.cookie(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
+
+    // Returning user data only (JWT lives in HttpOnly cookie)
     return res.status(200).json({
       success: true,
       user: {
@@ -54,7 +68,6 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         role: user.role
       },
-      token,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -95,11 +108,6 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       });
     }
 
-    // Returning user data
-    console.log(
-      "Current user:",
-      JSON.stringify({ success: true, user }, null, 2)
-    );
     return res.status(200).json({
       success: true,
       user,
@@ -114,8 +122,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  // On the backend, there is no need for special logic for logout when using JWT
-  // The client simply removes the token from localStorage
+  const { maxAge: _maxAge, ...clearOptions } = getSessionCookieOptions();
+  res.clearCookie(SESSION_COOKIE_NAME, clearOptions);
 
   return res.status(200).json({
     success: true,
