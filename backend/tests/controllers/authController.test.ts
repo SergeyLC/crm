@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { login, logout } from '@/controllers/authController';
+import { SESSION_COOKIE_NAME } from '@/middlewares/authMiddleware';
 
 // Mock all dependencies at the top
 jest.mock("@/prisma/client", () => ({
@@ -24,6 +25,8 @@ describe('Auth Controller', () => {
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
+      cookie: jest.fn().mockReturnThis(),
+      clearCookie: jest.fn().mockReturnThis(),
     };
     mockRequest = {};
   });
@@ -57,26 +60,24 @@ describe('Auth Controller', () => {
       });
     });
 
-    it('should return 200 with user and token if login is successful', async () => {
+    it('should return 200 with user and set HttpOnly cookie if login is successful', async () => {
       const mockUser = {
         id: '123',
         name: 'Test User',
         email: 'test@example.com',
         password: 'hashedPassword',
-        role: 'user',
-        status: 'active',
+        role: 'ADMIN',
+        status: 'ACTIVE',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
       mockRequest.body = { email: 'test@example.com', password: 'correctpassword' };
 
-      // Get the mocked modules
       const prisma = require('../../src/prisma/client');
       const bcrypt = require('bcrypt');
       const jwt = require('jsonwebtoken');
 
-      // Set up mocks
       prisma.user.findUnique.mockResolvedValue(mockUser);
       bcrypt.compare.mockResolvedValue(true);
       jwt.sign.mockReturnValue('jwt.token.here');
@@ -88,14 +89,43 @@ describe('Auth Controller', () => {
       });
       expect(bcrypt.compare).toHaveBeenCalledWith('correctpassword', 'hashedPassword');
       expect(jwt.sign).toHaveBeenCalled();
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        SESSION_COOKIE_NAME,
+        'jwt.token.here',
+        expect.objectContaining({
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 24 * 60 * 60 * 1000,
+        })
+      );
       expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        user: {
+          id: '123',
+          name: 'Test User',
+          email: 'test@example.com',
+          role: 'ADMIN',
+        },
+      });
+      const jsonBody = mockResponse.json.mock.calls[0][0];
+      expect(jsonBody.token).toBeUndefined();
     });
   });
 
   describe('logout', () => {
-    it('should return 200 with success message', () => {
+    it('should clear session cookie and return 200', () => {
       logout(mockRequest, mockResponse);
 
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith(
+        SESSION_COOKIE_NAME,
+        expect.objectContaining({
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+        })
+      );
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: true,
