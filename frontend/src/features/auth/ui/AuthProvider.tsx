@@ -10,27 +10,19 @@ interface AuthProviderProps {
 }
 
 /**
- * AuthProvider — always mounts the same tree on server and client.
- * Token / localStorage are read only in useEffect to avoid hydration mismatches.
+ * AuthProvider — session via HttpOnly `crm_session` cookie.
+ * Auth check runs in useEffect so SSR/client trees match (no localStorage token).
  */
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      dispatch({ type: "AUTH_CHECK_FAILURE" });
-      return;
-    }
-
     try {
       dispatch({ type: "AUTH_CHECK_START" });
-      const user = await authApi.getCurrentUser(token);
-      dispatch({ type: "AUTH_CHECK_SUCCESS", payload: { user, token } });
+      const user = await authApi.getCurrentUser();
+      dispatch({ type: "AUTH_CHECK_SUCCESS", payload: { user } });
     } catch (error) {
       console.error("Auth check failed:", error);
-      localStorage.removeItem("token");
       dispatch({ type: "AUTH_CHECK_FAILURE" });
     }
   };
@@ -42,9 +34,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (credentials: LoginCredentials) => {
     try {
       dispatch({ type: "LOGIN_START" });
-      const { user, token } = await authApi.login(credentials);
-      localStorage.setItem("token", token);
-      dispatch({ type: "LOGIN_SUCCESS", payload: { user, token } });
+      const { user } = await authApi.login(credentials);
+      dispatch({ type: "LOGIN_SUCCESS", payload: { user } });
     } catch (error) {
       dispatch({
         type: "LOGIN_FAILURE",
@@ -56,11 +47,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     try {
-      if (state.token) {
-        await authApi.logout(state.token);
-      }
+      await authApi.logout();
     } finally {
-      localStorage.removeItem("token");
       dispatch({ type: "LOGOUT" });
     }
   };

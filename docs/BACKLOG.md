@@ -15,6 +15,19 @@ Engineering follow-ups that are intentionally deferred.
 - After any suspected RCE: rotate JWT, DB passwords, and all frontend/backend env secrets; audit Postgres; drop egress to known C2 (e.g. `62.60.226.31`).
 - Do **not** raise frontend `mem_limit` to “fix” unexplained RSS growth during incident triage.
 
+## Security / authz
+
+### Pipeline / group data scoping for deals and leads
+
+**Status:** open (deferred from HttpOnly auth hardening)  
+**Context:** API now enforces authentication and ADMIN role checks that mirror UI permissions. Row-level ACL by pipeline membership or group membership is **not** implemented: deals have no `pipelineId` (and related model work) needed to scope lists for employees.
+
+**Acceptance criteria:**
+
+- Schema links deals/leads to pipelines (and/or groups) as required for membership checks.
+- Authenticated employees only receive deals/leads in pipelines/groups they belong to; admins retain full access.
+- List + detail endpoints and SSR (`ssrFetch`) respect the same scoping rules.
+
 ## Frontend / Next.js
 
 ### Slim list DTOs + pagination for deal/lead SSR

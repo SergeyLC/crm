@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { upstreamHeaders } from "@/shared/api/bffProxy";
+
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:4000';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const response = await fetch(`${BACKEND_API_URL}/api/contacts`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: upstreamHeaders(request),
       credentials: "include",
     });
 
@@ -33,9 +33,7 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch(`${BACKEND_API_URL}/api/contacts`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: upstreamHeaders(request),
       body: JSON.stringify(body),
       credentials: "include",
     });

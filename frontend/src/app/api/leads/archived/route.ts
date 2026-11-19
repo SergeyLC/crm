@@ -1,10 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { NEXT_PUBLIC_BACKEND_API_URL } from "@/shared/config/urls";
+import { upstreamHeaders } from "@/shared/api/bffProxy";
 
-export async function GET() {
+
+export async function GET(request: NextRequest) {
   try {
     const res = await fetch(`${NEXT_PUBLIC_BACKEND_API_URL}/leads/archived`, {
-      headers: { "Content-Type": "application/json" },
+      headers: upstreamHeaders(request),
       cache: "no-store",
       credentials: "include",
     });
