@@ -1,3 +1,4 @@
+import { noteApiResponse } from '@/shared/lib/sessionExpiry';
 import { safeJsonParse } from '../lib/safeJsonParse';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -28,21 +29,22 @@ export const apiRequest = {
   },
   
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    // const baseUrl = endpoint.startsWith("/api")
-    //   ? API_URL
-    //   : NEXT_PUBLIC_BACKEND_API_URL;
     const baseUrl = API_URL;
+    const url = `${baseUrl}${endpoint}`;
 
     const headers = {
       "Content-Type": "application/json",
       ...options.headers,
     };
 
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    const response = await fetch(url, {
       ...options,
       headers,
       credentials: "include",
     });
+
+    // Belt-and-suspenders with the global fetch guard in AuthProvider
+    noteApiResponse(response, url);
 
     if (!response.ok) {
       const errorText = await response.text();
